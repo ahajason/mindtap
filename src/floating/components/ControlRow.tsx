@@ -1,7 +1,13 @@
 import { api, type Record } from "../../lib/tauri-bridge";
 import { SwitchDropdown } from "./SwitchDropdown";
 
-export function ControlRow({ active }: { active: Record | null }) {
+export function ControlRow({
+  active,
+  onCollapse,
+}: {
+  active: Record | null;
+  onCollapse?: () => void;
+}) {
   return (
     <div className="control-row">
       {active && (
@@ -25,7 +31,7 @@ export function ControlRow({ active }: { active: Record | null }) {
           </button>
         </>
       )}
-      <SwitchDropdown />
+      <SwitchDropdown onCollapse={onCollapse} />
     </div>
   );
 }

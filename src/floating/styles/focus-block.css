@@ -25,6 +25,22 @@
   min-height: 280px;
 }
 
+/* 折叠/展开过渡：scale + opacity 缩放淡入淡出 */
+.floating-root {
+  transform-origin: top right;
+  transition: opacity 150ms ease-out, transform 150ms ease-out;
+}
+.floating-root.folded,
+.floating-root.expanded {
+  opacity: 1;
+  transform: scale(1);
+}
+.floating-root.transitioning {
+  opacity: 0;
+  transform: scale(0.95);
+  pointer-events: none;
+}
+
 /* 右下角手动 resize 拖拽手柄（12×12 透明区域 + 视觉斜线） */
 .resize-handle {
   position: absolute;

@@ -6,7 +6,7 @@ import "../styles/expand-state.css";
 
 type Type = "task" | "idea" | "check_in";
 
-export function ExpandState() {
+export function ExpandState({ onCollapse }: { onCollapse?: () => void } = {}) {
   const active = useActiveTask();
   const [content, setContent] = useState("");
   const [type, setType] = useState<Type>("task");
@@ -25,6 +25,7 @@ export function ExpandState() {
         await api.checkInCreate(content);
       }
       setContent("");
+      onCollapse?.();
     } catch (e) {
       console.error(e);
     } finally {
@@ -53,7 +54,7 @@ export function ExpandState() {
           <span className="title">{active.content}</span>
         </div>
       )}
-      <ControlRow active={active} />
+      <ControlRow active={active} onCollapse={onCollapse} />
       <div className="divider" />
       <textarea
         className="content-input"

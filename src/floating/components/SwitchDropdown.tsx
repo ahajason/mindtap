@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { api, type Record } from "../../lib/tauri-bridge";
 import "../styles/switch-dropdown.css";
 
-export function SwitchDropdown() {
+export function SwitchDropdown({ onCollapse }: { onCollapse?: () => void } = {}) {
   const [open, setOpen] = useState(false);
   const [list, setList] = useState<Record[]>([]);
 
@@ -61,7 +61,11 @@ export function SwitchDropdown() {
             </span>
             <button
               className="item-play"
-              onClick={() => api.taskSwitch(r.source_id)}
+              onClick={() => {
+                api.taskSwitch(r.source_id);
+                setOpen(false);
+                onCollapse?.();
+              }}
             >
               ⏵
             </button>
