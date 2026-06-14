@@ -1,9 +1,12 @@
 /* src/floating/styles/glass.css */
 :root {
-  --glass-bg: rgba(255, 255, 255, 0.42);
-  --glass-bg-fold: rgba(255, 255, 255, 0.34);
-  --glass-bg-done: rgba(255, 255, 255, 0.32);
-  --glass-bg-empty: rgba(255, 255, 255, 0.28);
+  /* Liquid Glass regular 变体（HIG 03-hig-materials.md）：
+     浮动窗属于 controls/navigation 层，应用 regular 而非 clear。
+     较不透明 + 强 blur 保证文字可读性。 */
+  --glass-bg: rgba(255, 255, 255, 0.62);
+  --glass-bg-fold: rgba(255, 255, 255, 0.55);
+  --glass-bg-done: rgba(255, 255, 255, 0.50);
+  --glass-bg-empty: rgba(255, 255, 255, 0.45);
   --glass-border: rgba(255, 255, 255, 0.65);
   --glass-blur: blur(32px) saturate(200%);
   --ink: #1d1d1f;
