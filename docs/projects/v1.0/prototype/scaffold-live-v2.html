@@ -1,0 +1,785 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Scaffold · Live Style Switcher V2 · Mindtap</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,800;1,9..144,400&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Inter:wght@400;500;600;700;800&family=Inter+Tight:wght@500;600;700;800&family=Instrument+Serif:ital@0;1&family=Caveat:wght@400;500;700&family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Charter:opsz,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  /* ===============================================================
+     V2 (重写) · 8 variant · 全部基于 Apple Liquid Glass 4 条铁律
+     铁律：
+       1) 玻璃只承载控件/导航，不承载内容层（content 用 Standard material）
+       2) 节制（4 个 glass 上限：topbar + sidebar + inspector + fab）
+       3) clear 变体只在视觉丰富的背景上
+       4) 沿 regular / clear / Standard 变体轴做差异化
+     =============================================================== */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body { min-height: 100vh; }
+  body {
+    color: var(--ink);
+    background: var(--bg);
+    font-family: var(--font-body, "Manrope", system-ui, sans-serif);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    transition: background-color 400ms ease, color 400ms ease;
+    padding-bottom: 160px; overflow-x: hidden;
+  }
+
+  /* ====================================================================
+     Row A · 4 个 regular 变体（mid blur + dim，4 种背景轴）
+     ==================================================================== */
+
+  /* ─── A1 · Editorial · 暖纸 + 衬线 + 呼吸 ─── */
+  [data-skin="editorial"] {
+    --bg: #F4EFE3; --bg-2: #E9E1D0;
+    --ink: #1F1B16; --ink-2: #4D4438; --ink-3: #8C8170;
+    --accent: #C24A66; --accent-2: #8A2A40;
+    --glass-bg: rgba(255, 251, 240, 0.55);
+    --glass-bd: rgba(31, 27, 22, 0.07);
+    --glass-blur: 18px; --glass-sat: 160%;
+    --glass-hl: inset 0 1px 0 rgba(255, 255, 255, 0.7), inset 0 -1px 0 rgba(31, 27, 22, 0.03);
+    --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+    --font-body: "Fraunces", "Iowan Old Style", Georgia, serif;
+    --font-ui: "Manrope", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", monospace;
+    --grid-cols: 220px 1fr 240px;
+  }
+  [data-skin="editorial"] body {
+    background-image:
+      radial-gradient(ellipse at 12% 0%, rgba(194, 74, 102, 0.06), transparent 50%),
+      radial-gradient(ellipse at 90% 100%, rgba(180, 130, 80, 0.08), transparent 50%);
+  }
+  [data-skin="editorial"] body::before {
+    content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: .4;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.85  0 0 0 0 0.78  0 0 0 0 0.65  0 0 0 0.15 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    mix-blend-mode: multiply;
+  }
+  [data-skin="editorial"] h1 { font-family: var(--font-display); font-style: italic; font-weight: 400; font-size: 48px; line-height: 1.05; }
+  [data-skin="editorial"] h1 em { font-style: italic; color: var(--accent); }
+  [data-skin="editorial"] h2 { font-family: var(--font-ui); font-weight: 700; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; }
+  [data-skin="editorial"] .checklist li { font-family: var(--font-display); font-size: 16px; padding: 7px 0; }
+  [data-skin="editorial"] .checklist .box { display: none; }
+  [data-skin="editorial"] .checklist li::before { content: "— "; color: var(--accent); }
+  [data-skin="editorial"] .checklist .who { color: var(--ink-3); }
+  [data-skin="editorial"] .checklist .pill { font-family: var(--font-ui); font-size: 9.5px; letter-spacing: .08em; }
+  [data-skin="editorial"] .main .standfirst { font-size: 18px; line-height: 1.65; max-width: 56ch; }
+  [data-skin="editorial"] .lede::first-letter { font-family: var(--font-display); float: left; font-size: 70px; line-height: .85; font-weight: 600; padding: 8px 12px 0 0; color: var(--accent); }
+  [data-skin="editorial"] .kpi-cell .v { font-family: var(--font-display); font-style: italic; font-weight: 400; font-size: 28px; }
+  [data-skin="editorial"] .kpi-cell .l { font-family: var(--font-ui); font-weight: 600; }
+  [data-skin="editorial"] .kpi-cell .d { font-family: var(--font-mono); }
+  [data-skin="editorial"] .fab { border-radius: 50%; }
+
+  /* ─── A2 · Lab · 工程白 + mono + clear on grid ─── */
+  [data-skin="lab"] {
+    --bg: #F7F8FA; --bg-2: #ECEFF4;
+    --ink: #0F1419; --ink-2: #3A4452; --ink-3: #6B7585;
+    --accent: #0A84FF; --accent-2: #0058D4;
+    --glass-bg: rgba(255, 255, 255, 0.50);
+    --glass-bd: rgba(15, 20, 25, 0.06);
+    --glass-blur: 18px; --glass-sat: 170%;
+    --glass-hl: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    --font-display: "JetBrains Mono", monospace;
+    --font-body: "JetBrains Mono", "IBM Plex Mono", monospace;
+    --font-ui: "Inter", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", monospace;
+    --grid-cols: 260px 1fr 300px;
+  }
+  [data-skin="lab"] body {
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--ink) 3%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--ink) 3%, transparent) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+  [data-skin="lab"] * { font-feature-settings: "tnum", "zero"; }
+  [data-skin="lab"] h1 { font-family: var(--font-display); font-weight: 600; font-size: 26px; }
+  [data-skin="lab"] h1::before { content: "▸ "; color: var(--accent); }
+  [data-skin="lab"] h2 { font-family: var(--font-display); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; }
+  [data-skin="lab"] .checklist li { font-family: var(--font-body); font-size: 12.5px; padding: 5px 0; }
+  [data-skin="lab"] .checklist .box { border-radius: 4px; background: transparent; }
+  [data-skin="lab"] .checklist .who { color: var(--accent); }
+  [data-skin="lab"] .kpi-cell { font-family: var(--font-mono); }
+  [data-skin="lab"] .kpi-cell .v { font-size: 18px; font-weight: 700; }
+  [data-skin="lab"] .kpi-cell .l { font-size: 9.5px; }
+  [data-skin="lab"] .main { font-family: var(--font-body); }
+  [data-skin="lab"] .main .standfirst { font-size: 13px; line-height: 1.55; }
+  [data-skin="lab"] .main .kicker::before { content: "// "; color: var(--ink-3); }
+  [data-skin="lab"] .kpi-cell .d { font-family: var(--font-mono); }
+  [data-skin="lab"] .search .kbd { font-family: var(--font-mono); }
+
+  /* ─── A3 · Salon · 深黑 cinema · 衬线斜体大 · 金边 ─── */
+  [data-skin="salon"] {
+    --bg: #08080A; --bg-2: #0E0E12;
+    --ink: #F2EBD9; --ink-2: #B8AE96; --ink-3: #756B58;
+    --accent: #D4AF37; --accent-2: #B8941F;
+    --glass-bg: rgba(255, 247, 224, 0.04);
+    --glass-bd: rgba(212, 175, 55, 0.18);
+    --glass-blur: 24px; --glass-sat: 140%;
+    --glass-hl: inset 0 1px 0 rgba(255, 247, 224, 0.06);
+    --font-display: "Instrument Serif", "Iowan Old Style", serif;
+    --font-body: "Manrope", system-ui, sans-serif;
+    --font-ui: "Manrope", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", monospace;
+    --grid-cols: 60px 1fr 0px;
+  }
+  [data-skin="salon"] body {
+    background-image:
+      radial-gradient(ellipse at 50% 0%, rgba(212, 175, 55, 0.08), transparent 55%),
+      radial-gradient(ellipse at 50% 100%, rgba(212, 175, 55, 0.05), transparent 45%);
+  }
+  [data-skin="salon"] .topbar {
+    background: rgba(8, 8, 10, 0.6);
+    border-bottom: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+  [data-skin="salon"] .topbar .search { background: transparent; border: 0; border-bottom: 1px solid color-mix(in srgb, var(--accent) 20%, transparent); border-radius: 0; }
+  [data-skin="salon"] .sidebar {
+    background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none;
+    border: 0; padding: 12px 6px;
+  }
+  [data-skin="salon"] .sidebar h6 { display: none; }
+  [data-skin="salon"] .sidebar a {
+    /* horizontal icon-only：60px 宽只放首字母图标，文字靠 title 属性（不可见） */
+    justify-content: center; padding: 8px 0; color: var(--ink-3);
+    font-size: 0; /* 隐藏文字 */
+  }
+  [data-skin="salon"] .sidebar a .ic { font-size: 14px; width: auto; }
+  [data-skin="salon"] .sidebar a .badge { display: none; }
+  [data-skin="salon"] .sidebar a.on { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+  [data-skin="salon"] .inspector { display: none; }
+  [data-skin="salon"] h1 { font-family: var(--font-display); font-weight: 400; font-size: 64px; line-height: 1.0; letter-spacing: -.02em; font-style: italic; }
+  [data-skin="salon"] h1 em { color: var(--accent); font-style: italic; }
+  [data-skin="salon"] h2 { font-family: var(--font-ui); font-size: 10px; letter-spacing: .25em; text-transform: uppercase; color: var(--accent); }
+  [data-skin="salon"] .main { background: transparent; padding: 60px 80px; max-width: 900px; margin: 0 auto; border: 0; }
+  [data-skin="salon"] .main::before { content: "❦"; display: block; color: var(--accent); font-size: 28px; margin-bottom: 24px; }
+  [data-skin="salon"] .main .standfirst { font-size: 18px; line-height: 1.7; color: var(--ink-2); font-weight: 300; max-width: 50ch; }
+  [data-skin="salon"] .checklist li { font-family: var(--font-display); font-size: 16px; padding: 9px 0; font-style: italic; }
+  [data-skin="salon"] .checklist .box { display: none; }
+  [data-skin="salon"] .checklist li::before { content: "— "; color: var(--accent); font-style: normal; }
+  [data-skin="salon"] .checklist .what { font-style: italic; }
+  [data-skin="salon"] .checklist .who, [data-skin="salon"] .checklist .pill { font-family: var(--font-ui); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; font-style: normal; color: var(--ink-3); }
+  [data-skin="salon"] .kpi-cell .v { font-family: var(--font-display); font-style: italic; font-weight: 400; font-size: 28px; }
+  [data-skin="salon"] .kpi-cell .l { font-family: var(--font-ui); letter-spacing: .2em; }
+  [data-skin="salon"] .fab { width: 52px; height: 52px; background: var(--accent) !important; font-size: 22px; }
+
+  /* ─── A4 · Notebook · 米色 paper + 衬线 + 手写 ─── */
+  [data-skin="notebook"] {
+    --bg: #F8F3E5; --bg-2: #EFE6CE;
+    --ink: #2C2418; --ink-2: #5A4E3A; --ink-3: #8E7E5E;
+    --accent: #A8702F; --accent-2: #7A4E1E;
+    --glass-bg: rgba(255, 252, 240, 0.55);
+    --glass-bd: rgba(168, 112, 47, 0.12);
+    --glass-blur: 18px; --glass-sat: 160%;
+    --glass-hl: inset 0 1px 0 rgba(255, 252, 240, 0.7);
+    --font-display: "Caveat", cursive;
+    --font-body: "Charter", "Iowan Old Style", Georgia, serif;
+    --font-ui: "Manrope", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", monospace;
+    --grid-cols: 240px 1fr 220px;
+  }
+  [data-skin="notebook"] body {
+    background-image:
+      repeating-linear-gradient(to bottom, transparent 0, transparent 30px, color-mix(in srgb, var(--accent) 13%, transparent) 30px, color-mix(in srgb, var(--accent) 13%, transparent) 31px);
+  }
+  [data-skin="notebook"] .main { background: transparent; padding: 32px 48px 60px 64px; }
+  [data-skin="notebook"] h1 { font-family: var(--font-body); font-weight: 700; font-size: 30px; }
+  [data-skin="notebook"] h1::after { content: " ✎"; color: var(--accent); font-family: var(--font-display); }
+  [data-skin="notebook"] h1 em { color: var(--accent); font-style: italic; }
+  [data-skin="notebook"] h2 { font-family: var(--font-ui); font-size: 10.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+  [data-skin="notebook"] .main .standfirst { font-family: var(--font-body); font-size: 16px; line-height: 1.7; max-width: 60ch; }
+  [data-skin="notebook"] .checklist li { font-family: var(--font-body); font-size: 14.5px; padding: 6px 0 6px 50px; position: relative; }
+  [data-skin="notebook"] .checklist .box { display: none; }
+  [data-skin="notebook"] .checklist .who { position: absolute; left: 0; top: 6px; font-family: var(--font-display); font-size: 18px; color: var(--accent); }
+  [data-skin="notebook"] .checklist .pill { font-family: var(--font-display); font-size: 18px; background: transparent; }
+  [data-skin="notebook"] .kpi-cell .v { font-family: var(--font-body); font-style: italic; font-weight: 600; font-size: 22px; }
+  [data-skin="notebook"] .kpi-cell .l { font-family: var(--font-display); font-size: 18px; font-weight: 500; color: var(--accent); letter-spacing: 0; }
+  [data-skin="notebook"] .kpi-cell .d { font-family: var(--font-mono); }
+  [data-skin="notebook"] .topbar, [data-skin="notebook"] .sidebar { font-family: var(--font-ui); }
+  [data-skin="notebook"] .sidebar a { font-family: var(--font-body); font-size: 14px; }
+  [data-skin="notebook"] .fab { width: 56px; height: 56px; background: var(--accent) !important; font-family: var(--font-display); font-size: 30px; }
+
+  /* ====================================================================
+     Row B · 4 个差异化变体（clear 视觉丰富 / clear scanline / 极简 / bento）
+     全部严格守 4 条铁律：玻璃只在 chrome、内容用 Standard material、节制
+     ==================================================================== */
+
+  /* ─── B1 · Photo · 视觉丰富背景 + clear 玻璃（高透明 + dim） ─── */
+  [data-skin="photo"] {
+    --bg: #1A1830; --bg-2: #2A2545;
+    --ink: #FFFFFF; --ink-2: #D8D4E8; --ink-3: #968FB0;
+    --accent: #FF7BAC; --accent-2: #D54A8A;
+    --glass-bg: rgba(255, 255, 255, 0.10);
+    --glass-bd: rgba(255, 255, 255, 0.18);
+    --glass-blur: 30px; --glass-sat: 180%;
+    --glass-hl: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    --font-display: "Inter Tight", "Inter", sans-serif;
+    --font-body: "Inter", system-ui, sans-serif;
+    --font-ui: "Inter", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", monospace;
+    --grid-cols: 220px 1fr 240px;
+  }
+  [data-skin="photo"] body {
+    background:
+      radial-gradient(ellipse 60% 50% at 15% 20%, rgba(255, 123, 172, 0.55), transparent 70%),
+      radial-gradient(ellipse 50% 60% at 85% 30%, rgba(123, 170, 255, 0.55), transparent 65%),
+      radial-gradient(ellipse 70% 50% at 50% 85%, rgba(255, 175, 100, 0.40), transparent 60%),
+      radial-gradient(ellipse 50% 40% at 25% 70%, rgba(180, 130, 255, 0.45), transparent 70%),
+      linear-gradient(135deg, #1A1830 0%, #0E0C20 100%);
+  }
+  [data-skin="photo"] .topbar { box-shadow: inset 0 -1px 0 rgba(255,255,255,0.12), 0 8px 32px -8px rgba(0,0,0,0.3); }
+  [data-skin="photo"] .sidebar, [data-skin="photo"] .inspector { box-shadow: 0 8px 32px -8px rgba(0,0,0,0.3); }
+  [data-skin="photo"] .topbar .search { background: rgba(0, 0, 0, 0.20); border-color: rgba(255,255,255,0.18); }
+  [data-skin="photo"] .topbar .icon-btn:hover { background: rgba(255,255,255,0.10); }
+  [data-skin="photo"] .sidebar a:hover { background: rgba(255,255,255,0.10); }
+  [data-skin="photo"] .sidebar a.on { background: rgba(255,255,255,0.15); }
+  [data-skin="photo"] .main { background: rgba(0, 0, 0, 0.20); } /* content Standard material, NOT glass */
+  [data-skin="photo"] h1 { font-family: var(--font-display); font-weight: 700; font-size: 36px; line-height: 1.05; letter-spacing: -.01em; }
+  [data-skin="photo"] h1 em { color: var(--accent); font-style: normal; }
+  [data-skin="photo"] h2 { font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+  [data-skin="photo"] .main .standfirst { font-size: 16px; line-height: 1.6; color: var(--ink-2); }
+  [data-skin="photo"] .checklist li { font-size: 14px; }
+  [data-skin="photo"] .checklist .box { background: rgba(255,255,255,0.20); border-color: rgba(255,255,255,0.30); }
+  [data-skin="photo"] .checklist li.done .box { background: var(--accent); border-color: var(--accent); }
+  [data-skin="photo"] .kpi-cell .v { font-weight: 700; font-size: 24px; }
+  [data-skin="photo"] .kpi-cell .l { color: var(--ink-3); }
+  [data-skin="photo"] .kpi-cell .d { font-family: var(--font-mono); }
+  [data-skin="photo"] .fab { background: var(--accent) !important; }
+
+  /* ─── B2 · Terminal · 米色 + scanline + clear（CRT 感） ─── */
+  [data-skin="terminal"] {
+    --bg: #F0E8D0; --bg-2: #E5DBBE;
+    --ink: #1A2418; --ink-2: #3A4A36; --ink-3: #6A7A66;
+    --accent: #2A7A2A; --accent-2: #1A5A1A;
+    --glass-bg: rgba(255, 250, 230, 0.45);
+    --glass-bd: rgba(42, 122, 42, 0.15);
+    --glass-blur: 16px; --glass-sat: 130%;
+    --glass-hl: inset 0 1px 0 rgba(255, 250, 230, 0.7);
+    --font-display: "JetBrains Mono", "IBM Plex Mono", monospace;
+    --font-body: "JetBrains Mono", "IBM Plex Mono", monospace;
+    --font-ui: "JetBrains Mono", monospace;
+    --font-mono: "JetBrains Mono", monospace;
+    --grid-cols: 220px 1fr 0px;
+  }
+  [data-skin="terminal"] body {
+    background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 2px, color-mix(in srgb, var(--accent) 3%, transparent) 2px, color-mix(in srgb, var(--accent) 3%, transparent) 3px);
+  }
+  [data-skin="terminal"] .topbar { font-family: var(--font-mono); padding: 10px 16px; }
+  [data-skin="terminal"] .topbar .brand .name { font-family: var(--font-mono); font-weight: 700; }
+  [data-skin="terminal"] .topbar .search { background: transparent; border: 0; border-bottom: 1px dashed color-mix(in srgb, var(--accent) 35%, transparent); border-radius: 0; }
+  [data-skin="terminal"] .topbar .search::before { content: "$ "; color: var(--accent); }
+  [data-skin="terminal"] .topbar .search input::placeholder { color: var(--ink-3); font-style: italic; }
+  [data-skin="terminal"] .topbar .avatar { background: var(--accent) !important; }
+  [data-skin="terminal"] .sidebar { font-family: var(--font-mono); padding: 10px; }
+  [data-skin="terminal"] .sidebar a { font-size: 12.5px; padding: 4px 8px; }
+  [data-skin="terminal"] .sidebar a.on { background: color-mix(in srgb, var(--accent) 20%, transparent); }
+  [data-skin="terminal"] .sidebar a .ic { display: none; }
+  [data-skin="terminal"] .sidebar a::before { content: "▸ "; color: var(--accent); opacity: 0; }
+  [data-skin="terminal"] .sidebar a.on::before { opacity: 1; }
+  [data-skin="terminal"] .sidebar h6 { font-size: 9px; color: var(--accent); }
+  [data-skin="terminal"] .sidebar h6::before { content: "## "; }
+  [data-skin="terminal"] .inspector { display: none; }
+  [data-skin="terminal"] .main { font-family: var(--font-mono); background: transparent; padding: 24px 32px; border: 0; }
+  [data-skin="terminal"] .main .kicker { color: var(--accent); }
+  [data-skin="terminal"] .main .kicker::before { content: "> "; }
+  [data-skin="terminal"] .main .breadcrumb::before { content: "cd "; color: var(--accent); }
+  [data-skin="terminal"] .main .breadcrumb b { color: var(--ink); }
+  [data-skin="terminal"] h1 { font-family: var(--font-mono); font-weight: 700; font-size: 22px; }
+  [data-skin="terminal"] h1::before { content: "$ mindtap note show --id=MIN-204\n\n"; display: block; color: var(--accent); font-size: 12px; font-weight: 400; }
+  [data-skin="terminal"] h1 em { color: var(--accent); font-style: normal; }
+  [data-skin="terminal"] h2 { font-size: 12px; color: var(--accent); border-bottom: 1px dashed var(--accent); }
+  [data-skin="terminal"] h2::before { content: "## "; }
+  [data-skin="terminal"] .standfirst { font-size: 12.5px; line-height: 1.6; color: var(--ink-2); }
+  [data-skin="terminal"] .standfirst::before { content: "↳ "; color: var(--accent); }
+  [data-skin="terminal"] .checklist li { font-family: var(--font-mono); font-size: 12.5px; padding: 4px 0; }
+  [data-skin="terminal"] .checklist .box { display: none; }
+  [data-skin="terminal"] .checklist li::before { content: "[x] "; color: var(--accent); }
+  [data-skin="terminal"] .checklist li:not(.done)::before { content: "[ ] "; color: var(--ink-3); }
+  [data-skin="terminal"] .checklist .who::before { content: "by "; color: var(--ink-3); }
+  [data-skin="terminal"] .kpi-cell .v { font-family: var(--font-mono); font-weight: 700; }
+  [data-skin="terminal"] .kpi-cell .l { color: var(--ink-3); }
+  [data-skin="terminal"] .kpi-cell .l::before { content: "█ "; color: var(--accent); }
+  [data-skin="terminal"] .kpi-cell .d { color: var(--accent); }
+  [data-skin="terminal"] .kpi-cell .d::before { content: "▼ "; }
+  [data-skin="terminal"] .fab { background: var(--accent) !important; border-radius: 8px; width: 48px; height: 48px; font-family: var(--font-mono); }
+
+  /* ─── B3 · Glass Thick · HIG 4 种 Standard material 之一（深色背景上的厚玻璃） ─── */
+  [data-skin="thick"] {
+    --bg: #1A1F2A; --bg-2: #232A38;
+    --ink: #F2F4F8; --ink-2: #B8BFCC; --ink-3: #707A8A;
+    --accent: #5AC8FA; --accent-2: #2DA3E0;
+    --glass-bg: rgba(35, 42, 56, 0.78);             /* 厚：78% 不透明 */
+    --glass-bd: rgba(255, 255, 255, 0.10);
+    --glass-blur: 30px; --glass-sat: 150%;
+    --glass-hl: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    --font-display: "Inter Tight", "Inter", sans-serif;
+    --font-body: "Inter", system-ui, sans-serif;
+    --font-ui: "Inter", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", monospace;
+    --grid-cols: 220px 1fr 240px;
+  }
+  [data-skin="thick"] body {
+    background-image:
+      radial-gradient(ellipse at 30% 0%, rgba(90, 200, 250, 0.12), transparent 55%),
+      radial-gradient(ellipse at 80% 100%, rgba(90, 200, 250, 0.08), transparent 50%);
+  }
+  [data-skin="thick"] .topbar { box-shadow: inset 0 -1px 0 rgba(255,255,255,0.06), 0 8px 32px -8px rgba(0,0,0,0.4); }
+  [data-skin="thick"] .sidebar, [data-skin="thick"] .inspector { box-shadow: 0 8px 32px -8px rgba(0,0,0,0.4); }
+  [data-skin="thick"] h1 { font-family: var(--font-display); font-weight: 700; font-size: 30px; line-height: 1.1; letter-spacing: -.01em; }
+  [data-skin="thick"] h1 em { color: var(--accent); font-style: normal; }
+  [data-skin="thick"] h2 { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
+  [data-skin="thick"] .main { background: var(--bg-2); }  /* Standard material, NOT glass */
+  [data-skin="thick"] .main .standfirst { font-size: 15.5px; line-height: 1.6; color: var(--ink-2); }
+  [data-skin="thick"] .checklist li { font-size: 14px; padding: 8px 0; }
+  [data-skin="thick"] .checklist .box { border-color: color-mix(in srgb, var(--ink) 35%, transparent); }
+  [data-skin="thick"] .checklist li.done .box { background: var(--accent); border-color: var(--accent); }
+  [data-skin="thick"] .kpi-cell .v { font-family: var(--font-mono); font-weight: 700; font-size: 22px; }
+  [data-skin="thick"] .kpi-cell .l { color: var(--ink-3); }
+  [data-skin="thick"] .kpi-cell .d { font-family: var(--font-mono); color: var(--accent); }
+  [data-skin="thick"] .topbar .search { background: rgba(0,0,0,0.25); }
+  [data-skin="thick"] .topbar .icon-btn:hover { background: rgba(255,255,255,0.06); }
+  [data-skin="thick"] .sidebar a:hover { background: rgba(255,255,255,0.05); }
+  [data-skin="thick"] .sidebar a.on { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--ink); }
+  [data-skin="thick"] .fab { background: var(--accent) !important; }
+
+  /* ─── B4 · Bento · 标准 chrome + main 内 bento（Standard material，非 glass） ─── */
+  [data-skin="bento"] {
+    --bg: #ECECEC; --bg-2: #DEDEDE;
+    --ink: #111111; --ink-2: #3A3A3A; --ink-3: #6E6E6E;
+    --accent: #0066FF; --accent-2: #0044CC;
+    --glass-bg: rgba(255, 255, 255, 0.55);
+    --glass-bd: rgba(0, 0, 0, 0.06);
+    --glass-blur: 20px; --glass-sat: 170%;
+    --glass-hl: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    --font-display: "Inter Tight", "Inter", sans-serif;
+    --font-body: "Inter", system-ui, sans-serif;
+    --font-ui: "Inter", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", monospace;
+    --grid-cols: 220px 1fr 240px;
+  }
+  [data-skin="bento"] body { background-image: radial-gradient(ellipse at 50% 0%, rgba(0, 102, 255, 0.05), transparent 50%); }
+  [data-skin="bento"] h1 { font-family: var(--font-display); font-weight: 700; font-size: 22px; }
+  [data-skin="bento"] h1 em { color: var(--accent); font-style: normal; }
+  [data-skin="bento"] h2 { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+  [data-skin="bento"] .main .standfirst { font-size: 14px; line-height: 1.55; }
+  [data-skin="bento"] .checklist li { font-size: 14px; padding: 8px 0; }
+  [data-skin="bento"] .kpi-cell .v { font-family: var(--font-mono); font-size: 18px; font-weight: 700; }
+  [data-skin="bento"] .kpi-cell .l { font-size: 10px; }
+  [data-skin="bento"] .kpi-cell .d { font-family: var(--font-mono); }
+  [data-skin="bento"] .topbar .avatar { background: var(--accent) !important; }
+  [data-skin="bento"] .topbar .search { background: #fff; border: 1px solid color-mix(in srgb, var(--ink) 10%, transparent); }
+  [data-skin="bento"] .fab { background: var(--accent) !important; }
+
+  /* ===============================================================
+     共用 chrome —— Liquid Glass 标准做法
+     玻璃只承载 topbar / sidebar / inspector / fab
+     内容层（.main, .kpi-strip）用 Standard material
+     =============================================================== */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    display: grid; grid-template-columns: 220px 1fr auto; align-items: center; gap: 16px;
+    padding: 10px 20px;
+  }
+  .topbar.glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+    border-bottom: 1px solid var(--glass-bd);
+    box-shadow: var(--glass-hl), 0 8px 32px -8px color-mix(in srgb, var(--ink) 8%, transparent);
+  }
+  .topbar .brand { display: flex; align-items: center; gap: 10px; }
+  .topbar .brand .logo {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 800; font-size: 14px;
+  }
+  .topbar .brand .name { font-weight: 700; font-size: 14px; letter-spacing: -.01em; }
+  .topbar .brand .ver { font-family: var(--font-mono, monospace); font-size: 10px; color: var(--ink-3); margin-top: 1px; }
+  .topbar .search {
+    display: flex; align-items: center; gap: 8px;
+    height: 32px; padding: 0 10px; border-radius: 8px;
+    background: color-mix(in srgb, var(--glass-bg) 50%, transparent);
+    border: 1px solid var(--glass-bd);
+    font-size: 13px; color: var(--ink-2);
+    max-width: 420px;
+  }
+  .topbar .search .ic { font-size: 13px; }
+  .topbar .search input { flex: 1; background: none; border: 0; outline: none; color: var(--ink); font: inherit; }
+  .topbar .search .kbd { font-family: var(--font-mono, monospace); font-size: 10px; padding: 1px 5px; border-radius: 4px; border: 1px solid var(--glass-bd); color: var(--ink-3); }
+  .topbar .actions { display: flex; align-items: center; gap: 4px; }
+  .topbar .icon-btn {
+    width: 30px; height: 30px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink-2); cursor: pointer; border: 0; background: transparent; font-size: 14px;
+  }
+  .topbar .icon-btn:hover { background: color-mix(in srgb, var(--ink) 6%, transparent); }
+  .topbar .avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #fff; font-weight: 700; font-size: 11px;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+
+  .workspace {
+    display: grid; grid-template-columns: var(--grid-cols, 220px 1fr 240px);
+    gap: 12px; padding: 12px 20px 0;
+    max-width: 1480px; margin: 0 auto;
+    align-items: start;
+  }
+  .workspace > * { min-width: 0; }
+
+  .sidebar, .inspector {
+    border-radius: 12px; padding: 12px;
+    align-self: start; position: sticky; top: 60px;
+  }
+  .sidebar.glass, .inspector.glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+    border: 1px solid var(--glass-bd);
+    box-shadow: var(--glass-hl), 0 8px 32px -8px color-mix(in srgb, var(--ink) 8%, transparent);
+  }
+  .sidebar h6, .inspector h6 {
+    font-size: 9.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--ink-3); padding: 0 6px; margin: 10px 0 4px;
+  }
+  .sidebar h6:first-child, .inspector h6:first-child { margin-top: 0; }
+  .sidebar a {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 8px; border-radius: 6px;
+    color: var(--ink-2); text-decoration: none; font-size: 12.5px;
+  }
+  .sidebar a:hover { background: color-mix(in srgb, var(--ink) 5%, transparent); color: var(--ink); }
+  .sidebar a.on { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--ink); font-weight: 600; }
+  .sidebar a .ic { width: 16px; font-size: 13px; text-align: center; }
+  .sidebar a .badge {
+    margin-left: auto; font-size: 9.5px; padding: 1px 5px; border-radius: 99px;
+    background: color-mix(in srgb, var(--ink) 8%, transparent);
+    color: var(--ink-2); font-weight: 600;
+  }
+  .sidebar a .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
+
+  /* main · Standard material —— 不允许 backdrop-filter */
+  .main {
+    background: var(--bg-2);
+    border-radius: 12px;
+    padding: 28px 36px 48px;
+  }
+  .main .breadcrumb { font-size: 10.5px; color: var(--ink-3); margin-bottom: 12px; letter-spacing: .04em; }
+  .main .breadcrumb b { color: var(--ink); font-weight: 600; }
+  .main .kicker {
+    font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 8px;
+  }
+  .main h1 { margin-bottom: 10px; }
+  .main h1 em { font-style: italic; font-weight: 400; color: var(--ink-2); }
+  .main .standfirst { margin-bottom: 18px; max-width: 64ch; }
+  .main h2 {
+    margin: 24px 0 10px; padding-bottom: 5px;
+    border-bottom: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+  }
+  .lede::first-letter { font-weight: 700; }
+
+  .checklist { list-style: none; padding: 0; }
+  .checklist li {
+    display: flex; align-items: center; gap: 9px;
+    padding: 6px 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--ink) 5%, transparent);
+    color: var(--ink-2);
+  }
+  .checklist li:last-child { border-bottom: 0; }
+  .checklist li.done .what { color: var(--ink-3); text-decoration: line-through; }
+  .checklist .box {
+    width: 14px; height: 14px; border-radius: 3.5px;
+    border: 1.5px solid color-mix(in srgb, var(--ink) 25%, transparent);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 9px; font-weight: 800; flex-shrink: 0;
+  }
+  .checklist li.done .box { background: var(--accent); border-color: var(--accent); }
+  .checklist .what { flex: 1; }
+  .checklist .who { font-family: var(--font-mono, monospace); font-size: 10.5px; color: var(--ink-3); }
+  .checklist .pill { font-size: 9.5px; padding: 1px 5px; border-radius: 99px; background: color-mix(in srgb, var(--ink) 7%, transparent); color: var(--ink-2); }
+
+  /* KPI · Standard material 卡片，不是 glass */
+  .kpi-strip {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
+    border-top: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+    margin: 14px 0 0;
+  }
+  .kpi-cell { padding: 12px 14px 12px 0; border-right: 1px solid color-mix(in srgb, var(--ink) 8%, transparent); }
+  .kpi-cell:last-child { border-right: 0; }
+  .kpi-cell .l { font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); font-weight: 700; }
+  .kpi-cell .v { font-size: 19px; font-weight: 600; margin: 3px 0 1px; letter-spacing: -.01em; }
+  .kpi-cell .d { font-size: 11px; font-weight: 600; }
+  .kpi-cell .d.down { color: var(--accent); }
+
+  .inspector { font-size: 12px; }
+  .inspector .kv { display: flex; justify-content: space-between; padding: 3px 0; color: var(--ink-2); }
+  .inspector .kv b { color: var(--ink); font-weight: 600; }
+  .inspector .link { display: flex; align-items: center; gap: 6px; padding: 3px 0; color: var(--accent); text-decoration: none; font-size: 12px; }
+  .inspector .act { padding: 4px 0; border-bottom: 1px solid color-mix(in srgb, var(--ink) 6%, transparent); color: var(--ink-2); }
+  .inspector .act:last-child { border-bottom: 0; }
+  .inspector .act .when { font-family: var(--font-mono, monospace); font-size: 9.5px; color: var(--ink-3); }
+  .inspector .act b { color: var(--ink); font-weight: 600; }
+
+  .fab {
+    position: fixed; right: 20px; bottom: 20px; z-index: 40;
+    width: 50px; height: 50px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 22px; font-weight: 600; cursor: pointer; border: 0;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    box-shadow: 0 8px 24px -4px color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+
+  /* ===============================================================
+     浮动切换器（自己也是 chrome —— 用 glass）
+     =============================================================== */
+  .switcher {
+    position: fixed; left: 20px; bottom: 20px; z-index: 60;
+    border-radius: 14px; padding: 12px 12px 10px; min-width: 268px;
+  }
+  .switcher.glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+    border: 1px solid var(--glass-bd);
+    box-shadow: var(--glass-hl), 0 8px 32px -8px color-mix(in srgb, var(--ink) 12%, transparent);
+  }
+  .switcher .head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .switcher .head .t { font-size: 9px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); }
+  .switcher .head .collapse { background: transparent; border: 0; cursor: pointer; color: var(--ink-3); font-size: 12px; }
+  .switcher .now { font-size: 13px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 7px; }
+  .switcher .now::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+  .switcher .group { font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); margin: 6px 0 4px; }
+  .switcher .group:first-of-type { margin-top: 0; }
+  .switcher .row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+  .switcher .swatch {
+    aspect-ratio: 1; border-radius: 7px; cursor: pointer;
+    border: 1.5px solid transparent;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 10px; position: relative; overflow: hidden;
+  }
+  .switcher .swatch.on { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent); }
+  .switcher .swatch .label { position: relative; z-index: 1; }
+  .switcher .swatch .preview {
+    position: absolute; inset: 0;
+    background: var(--sw-bg, var(--bg));
+    color: var(--sw-ink, var(--ink));
+  }
+  .switcher .swatch .preview::after {
+    content: ""; position: absolute; left: 4px; right: 30%; top: 4px; height: 14%;
+    background: var(--sw-glass, var(--glass-bg));
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    border: 0.5px solid var(--sw-bd, var(--glass-bd));
+  }
+  .switcher .swatch .preview::before {
+    content: ""; position: absolute; left: 4px; top: 30%; bottom: 25%; width: 18%;
+    background: var(--sw-glass, var(--glass-bg));
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    border: 0.5px solid var(--sw-bd, var(--glass-bd));
+  }
+  .switcher .footer {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 8px; padding-top: 8px;
+    border-top: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
+    font-size: 10.5px; color: var(--ink-3);
+  }
+  .switcher .footer code { font-family: var(--font-mono, monospace); font-size: 10px; background: color-mix(in srgb, var(--ink) 8%, transparent); padding: 1px 5px; border-radius: 3px; }
+
+  @media (max-width: 1100px) {
+    .workspace { grid-template-columns: 200px 1fr !important; }
+    .inspector { display: none !important; }
+  }
+  @media (max-width: 760px) {
+    .workspace { grid-template-columns: 1fr !important; padding: 12px; }
+    .sidebar { display: none !important; }
+    .topbar { grid-template-columns: 1fr auto; padding: 10px 14px; }
+    .topbar .search { display: none; }
+  }
+</style>
+</head>
+<body data-skin="editorial">
+
+  <!-- Topbar (glass) -->
+  <header class="topbar glass">
+    <div class="brand">
+      <div class="logo">轻</div>
+      <div>
+        <div class="name">轻念 · Mindtap</div>
+        <div class="ver">v 2026.6.14 · Northwind</div>
+      </div>
+    </div>
+    <div class="search">
+      <span class="ic">⌕</span>
+      <input type="text" placeholder="搜笔记、链接、子任务…">
+      <span class="kbd">⌘K</span>
+    </div>
+    <div class="actions">
+      <button class="icon-btn" title="通知">◐</button>
+      <button class="icon-btn" title="设置">⚙</button>
+      <div class="avatar" title="Devon">D</div>
+    </div>
+  </header>
+
+  <div class="workspace">
+    <!-- Sidebar (glass) -->
+    <nav class="sidebar glass">
+      <h6>Workspace</h6>
+      <a class="on"><span class="ic">◇</span>All notes<span class="badge">42</span></a>
+      <a><span class="ic">★</span>Pinned<span class="badge">7</span></a>
+      <a><span class="ic">⏱</span>Recent<span class="dot"></span></a>
+      <a><span class="ic">⌗</span>Shared with me</a>
+
+      <h6>Collections</h6>
+      <a><span class="ic">▣</span>Capture cost</a>
+      <a><span class="ic">▣</span>Pipeline Q2</a>
+      <a><span class="ic">▣</span>Onboarding v1.2</a>
+      <a><span class="ic">▣</span>API contracts</a>
+
+      <h6>Tags</h6>
+      <a><span class="ic">#</span>sprint-4</a>
+      <a><span class="ic">#</span>cost</a>
+      <a><span class="ic">#</span>P0</a>
+      <a><span class="ic">#</span>devon</a>
+    </nav>
+
+    <!-- Main · Standard material, NOT glass -->
+    <article class="main">
+      <div class="breadcrumb">Northwind / Capture cost / <b>MIN-204 · optimization</b></div>
+      <div class="kicker">Feature · Sprint 4</div>
+      <h1>Capture cost, <em>three small lanes.</em></h1>
+      <p class="standfirst lede">
+        OCR batching and a tokenizer swap took the per-1k-note cost from $0.84 to $0.21 in a single sprint.
+        Drop the keystroke preview render and we land at $0.11. Three lanes, finished on time, no big-bang rewrite.
+      </p>
+
+      <h2>Sub-tasks · 3 of 7 done</h2>
+      <ul class="checklist">
+        <li class="done"><span class="box">✓</span><span class="what">Merge OCR batching (30s window)</span><span class="who">@devon</span><span class="pill">2d ago</span></li>
+        <li class="done"><span class="box">✓</span><span class="what">Swap to 32k BPE tokenizer</span><span class="who">@mei</span><span class="pill">1d ago</span></li>
+        <li class="done"><span class="box">✓</span><span class="what">Document pricing change in changelog</span><span class="who">@devon</span><span class="pill">6h ago</span></li>
+        <li><span class="box"></span><span class="what">Drop per-keystroke preview render</span><span class="who">@devon</span><span class="pill">in review</span></li>
+        <li><span class="box"></span><span class="what">Add warm-up cache for cold notes</span><span class="who">@r.okafor</span><span class="pill">queued</span></li>
+        <li><span class="box"></span><span class="what">Revalidate accuracy on EU dataset</span><span class="who">@mei</span><span class="pill">queued</span></li>
+        <li><span class="box"></span><span class="what">Write rollout postmortem</span><span class="who">@devon</span><span class="pill">queued</span></li>
+      </ul>
+
+      <h2>Cost per 1k notes</h2>
+      <div class="kpi-strip">
+        <div class="kpi-cell">
+          <div class="l">OCR batched</div>
+          <div class="v">$0.84 → $0.21</div>
+          <div class="d down">▼ 75%</div>
+        </div>
+        <div class="kpi-cell">
+          <div class="l">Tokenizer 32k</div>
+          <div class="v">$0.21 → $0.18</div>
+          <div class="d down">▼ 14%</div>
+        </div>
+        <div class="kpi-cell">
+          <div class="l">Drop preview</div>
+          <div class="v">$0.18 → $0.13</div>
+          <div class="d down">▼ 28%</div>
+        </div>
+        <div class="kpi-cell">
+          <div class="l">Total</div>
+          <div class="v">$0.84 → $0.11</div>
+          <div class="d down">▼ 87%</div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Inspector (glass) -->
+    <aside class="inspector glass">
+      <h6>Note meta</h6>
+      <div class="kv"><span>ID</span><b>MIN-204</b></div>
+      <div class="kv"><span>Created</span><b>2026-06-09</b></div>
+      <div class="kv"><span>Updated</span><b>2 min ago</b></div>
+      <div class="kv"><span>Words</span><b>1,247</b></div>
+
+      <h6>Backlinks · 4</h6>
+      <a class="link" href="#">→ Onboarding v1.2</a>
+      <a class="link" href="#">→ Pipeline Q2</a>
+      <a class="link" href="#">→ Sprint 4 retro</a>
+      <a class="link" href="#">→ Pricing page draft</a>
+
+      <h6>Activity</h6>
+      <div class="act"><div class="when">14:08</div><b>Devon</b> pushed a4f81c</div>
+      <div class="act"><div class="when">13:50</div><b>Mei</b> approved</div>
+      <div class="act"><div class="when">12:00</div><b>Devon</b> created</div>
+    </aside>
+  </div>
+
+  <!-- FAB (chrome) -->
+  <button class="fab" title="New note">+</button>
+
+  <!-- 浮动切换器 (glass) -->
+  <div class="switcher glass" id="switcher">
+    <div class="head">
+      <span class="t">玻璃方块 · 切换</span>
+      <button class="collapse" id="collapseBtn" title="折叠">▾</button>
+    </div>
+    <div class="body">
+      <div class="now" id="nowLabel">A1 · Editorial 编辑（暖纸 regular）</div>
+
+      <div class="group">Row A · regular 变体（4 种背景）</div>
+      <div class="row">
+        <div class="swatch on" data-skin="editorial" style="--sw-bg:#F4EFE3;--sw-ink:#1F1B16;--sw-glass:rgba(255,251,240,.55);--sw-bd:rgba(31,27,22,.07)"><span class="preview"></span><span class="label">A1</span></div>
+        <div class="swatch" data-skin="lab" style="--sw-bg:#F7F8FA;--sw-ink:#0F1419;--sw-glass:rgba(255,255,255,.50);--sw-bd:rgba(15,20,25,.06)"><span class="preview"></span><span class="label">A2</span></div>
+        <div class="swatch" data-skin="salon" style="--sw-bg:#08080A;--sw-ink:#F2EBD9;--sw-glass:rgba(255,247,224,.04);--sw-bd:rgba(212,175,55,.18)"><span class="preview"></span><span class="label">A3</span></div>
+        <div class="swatch" data-skin="notebook" style="--sw-bg:#F8F3E5;--sw-ink:#2C2418;--sw-glass:rgba(255,252,240,.55);--sw-bd:rgba(168,112,47,.12)"><span class="preview"></span><span class="label">A4</span></div>
+      </div>
+
+      <div class="group">Row B · clear 视觉丰富 / 极简 / 内容 bento</div>
+      <div class="row">
+        <div class="swatch" data-skin="photo" style="--sw-bg:#1A1830;--sw-ink:#FFF;--sw-glass:rgba(255,255,255,.10);--sw-bd:rgba(255,255,255,.18)"><span class="preview"></span><span class="label">B1</span></div>
+        <div class="swatch" data-skin="terminal" style="--sw-bg:#F0E8D0;--sw-ink:#1A2418;--sw-glass:rgba(255,250,230,.45);--sw-bd:rgba(42,122,42,.15)"><span class="preview"></span><span class="label">B2</span></div>
+        <div class="swatch" data-skin="thick" style="--sw-bg:#1A1F2A;--sw-ink:#F2F4F8;--sw-glass:rgba(35,42,56,.78);--sw-bd:rgba(255,255,255,.10)"><span class="preview"></span><span class="label">B3</span></div>
+        <div class="swatch" data-skin="bento" style="--sw-bg:#ECECEC;--sw-ink:#111;--sw-glass:rgba(255,255,255,.55);--sw-bd:rgba(0,0,0,.06)"><span class="preview"></span><span class="label">B4</span></div>
+      </div>
+
+      <div class="footer">
+        <span>当前 <code id="nowCode">editorial</code></span>
+        <span>8 / 8 · 全部基于 Apple Liquid Glass 4 条铁律</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const skins = {
+      editorial: 'A1 · Editorial 编辑（暖纸 regular）',
+      lab: 'A2 · Lab 工程（冷白 + 网格底）',
+      salon: 'A3 · Salon 沙龙 cinema（深黑 regular dim）',
+      notebook: 'A4 · Notebook 笔记本（米纸 regular）',
+      photo: 'B1 · Photo 视觉丰富（clear 玻璃 on mesh）',
+      terminal: 'B2 · Terminal CRT（米色 clear on scanline）',
+      thick: 'B3 · Glass Thick（Standard material .thick + 深色）',
+      bento: 'B4 · Bento 标准 chrome + 内容 bento（regular）'
+    };
+    const swatches = document.querySelectorAll('.swatch');
+    const nowLabel = document.getElementById('nowLabel');
+    const nowCode = document.getElementById('nowCode');
+    swatches.forEach(s => {
+      s.addEventListener('click', () => {
+        const k = s.dataset.skin;
+        document.body.dataset.skin = k;
+        nowLabel.textContent = skins[k];
+        nowCode.textContent = k;
+        swatches.forEach(x => x.classList.toggle('on', x === s));
+      });
+    });
+    const switcher = document.getElementById('switcher');
+    const collapseBtn = document.getElementById('collapseBtn');
+    let collapsed = false;
+    collapseBtn.addEventListener('click', () => {
+      collapsed = !collapsed;
+      document.querySelector('.switcher .head').style.display = collapsed ? 'none' : '';
+      document.querySelector('.switcher .body').style.display = collapsed ? 'none' : '';
+      switcher.style.minWidth = collapsed ? '0' : '';
+      switcher.style.padding = collapsed ? '8px' : '';
+      collapseBtn.textContent = collapsed ? '▴' : '▾';
+    });
+  </script>
+
+</body>
+</html>

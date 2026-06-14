@@ -42,3 +42,6 @@ Thumbs.db
 
 # WSL 元数据（如果项目被软链到 Windows）
 .wslconfig
+
+# Claude Code 插件运行时数据
+.superpowers/

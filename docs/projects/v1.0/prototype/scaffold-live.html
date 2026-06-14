@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Scaffold · Live Style Switcher · Mindtap</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,400;9..144,600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  /* =====================================================
+     Live 演示页 · 一份真实 APP（topbar + sidebar + main + inspector + fab）
+     8 个 variant 共享同一份 APP 框架，浮动切换器切 data-theme
+     不锁 1280×800 · scrollable · max-width 不强制
+     ===================================================== */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* 8 variant 主题（Subtle 18-20px / Balanced 24-28px × 4 主题） */
+  [data-theme="A1"] { --bg:#F5F4F0; --bg-2:#EAE6DC; --ink:#1A1A1A; --ink-2:#4A4A4A; --ink-3:#8A8A8A;
+    --accent:#F472B6; --accent-2:#EC4899;
+    --glass-bg:rgba(255,255,255,0.45); --glass-bd:rgba(26,26,26,0.08);
+    --glass-blur:18px; --glass-sat:160%;
+    --label:"A1 · Subtle 暖纸"; }
+  [data-theme="A2"] { --bg:#FAFAF9; --bg-2:#F0F0EE; --ink:#1A1A1A; --ink-2:#4A4A4A; --ink-3:#8A8A8A;
+    --accent:#0A84FF; --accent-2:#0066CC;
+    --glass-bg:rgba(255,255,255,0.50); --glass-bd:rgba(26,26,26,0.08);
+    --glass-blur:18px; --glass-sat:160%;
+    --label:"A2 · Subtle 工程白"; }
+  [data-theme="A3"] { --bg:#1A1A1A; --bg-2:#0F0F0F; --ink:#F5F5F7; --ink-2:#C7C7CC; --ink-3:#8E8E93;
+    --accent:#F59E0B; --accent-2:#D97706;
+    --glass-bg:rgba(255,255,255,0.06); --glass-bd:rgba(255,255,255,0.10);
+    --glass-blur:18px; --glass-sat:160%;
+    --label:"A3 · Subtle 暖黑"; }
+  [data-theme="A4"] { --bg:#ECEFF1; --bg-2:#CFD8DC; --ink:#263238; --ink-2:#455A64; --ink-3:#607D8B;
+    --accent:#38BDF8; --accent-2:#0EA5E9;
+    --glass-bg:rgba(255,255,255,0.55); --glass-bd:rgba(38,50,56,0.10);
+    --glass-blur:18px; --glass-sat:160%;
+    --label:"A4 · Subtle 冷灰"; }
+  [data-theme="B1"] { --bg:#F5F4F0; --bg-2:#EAE6DC; --ink:#1A1A1A; --ink-2:#4A4A4A; --ink-3:#8A8A8A;
+    --accent:#F472B6; --accent-2:#EC4899;
+    --glass-bg:rgba(255,255,255,0.62); --glass-bd:rgba(26,26,26,0.10);
+    --glass-blur:24px; --glass-sat:180%;
+    --label:"B1 · Balanced 暖纸"; }
+  [data-theme="B2"] { --bg:#FAFAF9; --bg-2:#F0F0EE; --ink:#1A1A1A; --ink-2:#4A4A4A; --ink-3:#8A8A8A;
+    --accent:#0A84FF; --accent-2:#0066CC;
+    --glass-bg:rgba(255,255,255,0.65); --glass-bd:rgba(26,26,26,0.10);
+    --glass-blur:24px; --glass-sat:180%;
+    --label:"B2 · Balanced 工程白"; }
+  [data-theme="B3"] { --bg:#1A1A1A; --bg-2:#0F0F0F; --ink:#F5F5F7; --ink-2:#C7C7CC; --ink-3:#8E8E93;
+    --accent:#F59E0B; --accent-2:#D97706;
+    --glass-bg:rgba(255,255,255,0.10); --glass-bd:rgba(255,255,255,0.14);
+    --glass-blur:24px; --glass-sat:180%;
+    --label:"B3 · Balanced 暖黑"; }
+  [data-theme="B4"] { --bg:#ECEFF1; --bg-2:#CFD8DC; --ink:#263238; --ink-2:#455A64; --ink-3:#607D8B;
+    --accent:#38BDF8; --accent-2:#0EA5E9;
+    --glass-bg:rgba(255,255,255,0.70); --glass-bd:rgba(38,50,56,0.12);
+    --glass-blur:24px; --glass-sat:180%;
+    --label:"B4 · Balanced 冷灰"; }
+
+  html, body {
+    font-family: "Manrope", -apple-system, system-ui, "PingFang SC", sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 320ms ease, color 320ms ease;
+    min-height: 100vh;
+  }
+  body {
+    background-image:
+      radial-gradient(circle at 15% 10%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 40%),
+      radial-gradient(circle at 85% 20%, color-mix(in srgb, var(--accent-2) 6%, transparent), transparent 40%),
+      radial-gradient(circle at 30% 85%, color-mix(in srgb, var(--accent) 5%, transparent), transparent 40%);
+    background-attachment: fixed;
+    padding-bottom: 140px; /* room for floating switcher */
+  }
+
+  /* glass mixin */
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+    border: 1px solid var(--glass-bd);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.4),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.04),
+      0 8px 32px -8px rgba(0, 0, 0, 0.10);
+  }
+
+  /* ============ 顶部 topbar（玻璃 · sticky） ============ */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    padding: 12px 24px;
+    display: grid; grid-template-columns: 220px 1fr auto; align-items: center; gap: 16px;
+  }
+  .topbar .brand { display: flex; align-items: center; gap: 10px; }
+  .topbar .brand .logo {
+    width: 32px; height: 32px; border-radius: 9px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 800; font-size: 16px;
+  }
+  .topbar .brand .name { font-weight: 700; font-size: 15px; letter-spacing: -.01em; }
+  .topbar .brand .ver { font-family: "JetBrains Mono", monospace; font-size: 10.5px; color: var(--ink-3); margin-top: 1px; }
+  .topbar .search {
+    display: flex; align-items: center; gap: 8px;
+    height: 36px; padding: 0 14px; border-radius: 10px;
+    background: color-mix(in srgb, var(--glass-bg) 60%, transparent);
+    border: 1px solid var(--glass-bd);
+    font-size: 13px; color: var(--ink-2);
+    max-width: 480px;
+  }
+  .topbar .search .ic { color: var(--ink-3); font-size: 14px; }
+  .topbar .search input {
+    flex: 1; background: none; border: 0; outline: none; color: var(--ink); font: inherit;
+  }
+  .topbar .search .kbd {
+    font-family: "JetBrains Mono", monospace; font-size: 10.5px;
+    padding: 1px 5px; border-radius: 4px; border: 1px solid var(--glass-bd);
+    color: var(--ink-3);
+  }
+  .topbar .actions { display: flex; align-items: center; gap: 8px; }
+  .topbar .icon-btn {
+    width: 34px; height: 34px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink-2); cursor: pointer; border: 0; background: transparent;
+    font-size: 16px; transition: background 160ms;
+  }
+  .topbar .icon-btn:hover { background: color-mix(in srgb, var(--ink) 6%, transparent); }
+  .topbar .avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #fff; font-weight: 700; font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+
+  /* ============ 工作区 grid：sidebar + main + inspector ============ */
+  .workspace {
+    display: grid;
+    grid-template-columns: 240px 1fr 280px;
+    gap: 14px;
+    padding: 14px 24px 0;
+    max-width: 1400px; margin: 0 auto;
+    min-height: calc(100vh - 64px);
+  }
+
+  /* sidebar 玻璃 */
+  .sidebar {
+    border-radius: 14px; padding: 14px 12px;
+    position: sticky; top: 76px; align-self: start;
+    max-height: calc(100vh - 90px); overflow-y: auto;
+  }
+  .sidebar h6 {
+    font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--ink-3); padding: 0 8px; margin: 14px 0 6px;
+  }
+  .sidebar h6:first-child { margin-top: 0; }
+  .sidebar a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 10px; border-radius: 8px;
+    color: var(--ink-2); text-decoration: none; font-size: 13px;
+    transition: background 120ms;
+  }
+  .sidebar a:hover { background: color-mix(in srgb, var(--ink) 5%, transparent); color: var(--ink); }
+  .sidebar a.on { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--ink); font-weight: 600; }
+  .sidebar a .ic { width: 18px; font-size: 14px; text-align: center; }
+  .sidebar a .badge {
+    margin-left: auto; font-size: 10px; padding: 1px 6px; border-radius: 99px;
+    background: color-mix(in srgb, var(--ink) 8%, transparent);
+    color: var(--ink-2); font-weight: 600;
+  }
+  .sidebar a .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+
+  /* main 内容区（不玻璃，纸基） */
+  .main {
+    background: var(--bg-2); border-radius: 14px;
+    padding: 32px 40px 60px;
+    min-height: 600px;
+  }
+  .main .breadcrumb { font-size: 11px; color: var(--ink-3); margin-bottom: 16px; letter-spacing: .04em; }
+  .main .breadcrumb b { color: var(--ink); font-weight: 600; }
+  .main .kicker {
+    font-size: 10.5px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 10px;
+  }
+  .main h1 {
+    font-family: "Fraunces", serif;
+    font-size: 32px; font-weight: 600; letter-spacing: -.02em; line-height: 1.15;
+    margin-bottom: 12px;
+  }
+  .main h1 em { font-style: italic; color: var(--ink-2); font-weight: 400; }
+  .main .standfirst {
+    font-size: 15.5px; color: var(--ink-2); line-height: 1.55; margin-bottom: 24px; max-width: 64ch;
+  }
+  .main h2 {
+    font-size: 14px; font-weight: 700; letter-spacing: -.005em;
+    margin: 32px 0 12px; padding-bottom: 6px; border-bottom: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+  }
+
+  /* checklist */
+  .checklist { list-style: none; padding: 0; }
+  .checklist li {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 0; border-bottom: 1px solid color-mix(in srgb, var(--ink) 6%, transparent);
+    font-size: 13.5px; color: var(--ink-2);
+  }
+  .checklist li:last-child { border-bottom: 0; }
+  .checklist li.done .what { color: var(--ink-3); text-decoration: line-through; }
+  .checklist .box {
+    width: 16px; height: 16px; border-radius: 4px;
+    border: 1.5px solid color-mix(in srgb, var(--ink) 20%, transparent);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 11px; font-weight: 800;
+    flex-shrink: 0;
+  }
+  .checklist li.done .box { background: var(--accent); border-color: var(--accent); }
+  .checklist .what { flex: 1; }
+  .checklist .who { font-size: 11px; color: var(--ink-3); font-family: "JetBrains Mono", monospace; }
+  .checklist .pill { font-size: 10px; padding: 1px 6px; border-radius: 99px; background: color-mix(in srgb, var(--ink) 7%, transparent); color: var(--ink-2); }
+
+  /* kpi strip */
+  .kpi-strip {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
+    border-top: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+    margin: 16px 0 0;
+  }
+  .kpi-cell { padding: 14px 16px 14px 0; border-right: 1px solid color-mix(in srgb, var(--ink) 8%, transparent); }
+  .kpi-cell:last-child { border-right: 0; }
+  .kpi-cell .l { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); font-weight: 700; }
+  .kpi-cell .v { font-family: "Fraunces", serif; font-size: 22px; font-weight: 600; margin: 4px 0 2px; letter-spacing: -.01em; }
+  .kpi-cell .d { font-size: 11.5px; font-weight: 600; }
+  .kpi-cell .d.down { color: var(--accent); }
+  .kpi-cell .d.up { color: #2c6a3a; }
+
+  /* inspector 玻璃 */
+  .inspector {
+    border-radius: 14px; padding: 18px 16px;
+    position: sticky; top: 76px; align-self: start;
+    max-height: calc(100vh - 90px); overflow-y: auto;
+    font-size: 12.5px;
+  }
+  .inspector h6 {
+    font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--ink-3); margin: 14px 0 6px;
+  }
+  .inspector h6:first-child { margin-top: 0; }
+  .inspector .kv { display: flex; justify-content: space-between; padding: 4px 0; color: var(--ink-2); }
+  .inspector .kv b { color: var(--ink); font-weight: 600; }
+  .inspector .link {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 0; color: var(--accent); text-decoration: none; font-size: 12.5px;
+  }
+  .inspector .link:hover { text-decoration: underline; }
+  .inspector .act {
+    padding: 6px 0; border-bottom: 1px solid color-mix(in srgb, var(--ink) 6%, transparent);
+    color: var(--ink-2);
+  }
+  .inspector .act:last-child { border-bottom: 0; }
+  .inspector .act .when { font-family: "JetBrains Mono", monospace; font-size: 10px; color: var(--ink-3); }
+  .inspector .act b { color: var(--ink); font-weight: 600; }
+
+  /* FAB 玻璃 · bottom-right */
+  .fab {
+    position: fixed; right: 24px; bottom: 24px; z-index: 40;
+    width: 52px; height: 52px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 22px; font-weight: 600; cursor: pointer;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    border: 1px solid color-mix(in srgb, #fff 18%, transparent);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.3),
+      0 12px 32px color-mix(in srgb, var(--accent) 40%, transparent);
+  }
+
+  /* ============ 浮动切换器 · bottom-left · 玻璃卡片 ============ */
+  .switcher {
+    position: fixed; left: 24px; bottom: 24px; z-index: 60;
+    border-radius: 16px; padding: 14px 14px 12px;
+    min-width: 252px;
+    transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .switcher .head {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
+  }
+  .switcher .head .t {
+    font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .switcher .head .collapse {
+    background: transparent; border: 0; cursor: pointer; color: var(--ink-3); font-size: 14px;
+    line-height: 1; padding: 0;
+  }
+  .switcher .now {
+    font-family: "Fraunces", serif; font-size: 15px; font-weight: 600; margin-bottom: 10px;
+    letter-spacing: -.01em; display: flex; align-items: center; gap: 8px;
+  }
+  .switcher .now::before {
+    content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+  }
+  .switcher .group { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); margin: 8px 0 6px; }
+  .switcher .group:first-of-type { margin-top: 0; }
+  .switcher .row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .switcher .swatch {
+    aspect-ratio: 1; border-radius: 9px; cursor: pointer;
+    border: 1.5px solid transparent;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 11px; letter-spacing: .04em;
+    position: relative; overflow: hidden;
+    transition: transform 160ms, border-color 160ms;
+  }
+  .switcher .swatch:hover { transform: translateY(-1px); }
+  .switcher .swatch.on {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent);
+  }
+  .switcher .swatch .id { position: relative; z-index: 1; }
+  .switcher .swatch .preview {
+    position: absolute; inset: 0;
+    background: var(--swatch-bg, var(--bg));
+    color: var(--swatch-ink, var(--ink));
+  }
+  .switcher .swatch .preview::after {
+    content: ""; position: absolute; inset: 4px; border-radius: 6px;
+    background: var(--swatch-glass, var(--glass-bg));
+    backdrop-filter: blur(calc(var(--swatch-blur, 18px) * 0.4)) saturate(180%);
+    -webkit-backdrop-filter: blur(calc(var(--swatch-blur, 18px) * 0.4)) saturate(180%);
+  }
+  .switcher .footer {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
+    font-size: 11px; color: var(--ink-3);
+  }
+  .switcher .footer code {
+    font-family: "JetBrains Mono", monospace; font-size: 10.5px;
+    background: color-mix(in srgb, var(--ink) 8%, transparent);
+    padding: 1px 5px; border-radius: 4px;
+  }
+
+  /* 折叠态：只留一个 chip 圆按钮 */
+  .switcher.collapsed { min-width: 0; padding: 0; }
+  .switcher.collapsed .body, .switcher.collapsed .head { display: none; }
+  .switcher.collapsed .fab-mini {
+    display: flex; width: 44px; height: 44px; border-radius: 50%;
+    align-items: center; justify-content: center;
+    color: #fff; font-size: 16px; font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 40%, transparent);
+  }
+
+  /* dark variant 下调整阴影对比 */
+  [data-theme="A3"] body, [data-theme="B3"] body { color-scheme: dark; }
+
+  @media (max-width: 1100px) {
+    .workspace { grid-template-columns: 220px 1fr; }
+    .inspector { display: none; }
+  }
+  @media (max-width: 760px) {
+    .workspace { grid-template-columns: 1fr; padding: 14px 14px 0; }
+    .sidebar { display: none; }
+    .topbar { grid-template-columns: 1fr auto; padding: 10px 14px; }
+    .topbar .search { display: none; }
+  }
+</style>
+</head>
+<body data-theme="A1">
+
+  <!-- ========== Topbar 玻璃 ========== -->
+  <header class="topbar glass">
+    <div class="brand">
+      <div class="logo">轻</div>
+      <div>
+        <div class="name">轻念 · Mindtap</div>
+        <div class="ver">v 2026.6.14 · workspace · Northwind</div>
+      </div>
+    </div>
+    <div class="search">
+      <span class="ic">⌕</span>
+      <input type="text" placeholder="搜笔记、链接、子任务…">
+      <span class="kbd">⌘K</span>
+    </div>
+    <div class="actions">
+      <button class="icon-btn" title="通知">◐</button>
+      <button class="icon-btn" title="设置">⚙</button>
+      <div class="avatar" title="Devon">D</div>
+    </div>
+  </header>
+
+  <!-- ========== Workspace ========== -->
+  <div class="workspace">
+
+    <!-- Sidebar 玻璃 -->
+    <nav class="sidebar glass">
+      <h6>Workspace</h6>
+      <a class="on"><span class="ic">◇</span>All notes<span class="badge">42</span></a>
+      <a><span class="ic">★</span>Pinned<span class="badge">7</span></a>
+      <a><span class="ic">⏱</span>Recent<span class="dot"></span></a>
+      <a><span class="ic">⌗</span>Shared with me</a>
+
+      <h6>Collections</h6>
+      <a><span class="ic">▣</span>Capture cost</a>
+      <a><span class="ic">▣</span>Pipeline Q2</a>
+      <a><span class="ic">▣</span>Onboarding v1.2</a>
+      <a><span class="ic">▣</span>API contracts</a>
+      <a><span class="ic">▣</span>Changelog drafts</a>
+
+      <h6>Tags</h6>
+      <a><span class="ic">#</span>sprint-4</a>
+      <a><span class="ic">#</span>cost</a>
+      <a><span class="ic">#</span>P0</a>
+      <a><span class="ic">#</span>devon</a>
+    </nav>
+
+    <!-- Main 内容（纸基，不玻璃） -->
+    <article class="main">
+      <div class="breadcrumb">Northwind / Capture cost / <b>MIN-204 · optimization</b></div>
+      <div class="kicker">Feature · Sprint 4</div>
+      <h1>Capture cost, <em>three small lanes.</em></h1>
+      <p class="standfirst">
+        OCR batching and a tokenizer swap took the per-1k-note cost from $0.84 to $0.21 in a single sprint.
+        Drop the keystroke preview render and we land at $0.11. Three lanes, finished on time, no big-bang rewrite.
+      </p>
+
+      <h2>Sub-tasks · 3 of 7 done</h2>
+      <ul class="checklist">
+        <li class="done"><span class="box">✓</span><span class="what">Merge OCR batching (30s window)</span><span class="who">@devon</span><span class="pill">2d ago</span></li>
+        <li class="done"><span class="box">✓</span><span class="what">Swap to 32k BPE tokenizer</span><span class="who">@mei</span><span class="pill">1d ago</span></li>
+        <li class="done"><span class="box">✓</span><span class="what">Document pricing change in changelog</span><span class="who">@devon</span><span class="pill">6h ago</span></li>
+        <li><span class="box"></span><span class="what">Drop per-keystroke preview render</span><span class="who">@devon</span><span class="pill">in review</span></li>
+        <li><span class="box"></span><span class="what">Add warm-up cache for cold notes</span><span class="who">@r.okafor</span><span class="pill">queued</span></li>
+        <li><span class="box"></span><span class="what">Revalidate accuracy on EU dataset</span><span class="who">@mei</span><span class="pill">queued</span></li>
+        <li><span class="box"></span><span class="what">Write rollout postmortem</span><span class="who">@devon</span><span class="pill">queued</span></li>
+      </ul>
+
+      <h2>Cost per 1k notes</h2>
+      <div class="kpi-strip">
+        <div class="kpi-cell">
+          <div class="l">OCR batched</div>
+          <div class="v">$0.84 → $0.21</div>
+          <div class="d down">▼ 75%</div>
+        </div>
+        <div class="kpi-cell">
+          <div class="l">Tokenizer 32k</div>
+          <div class="v">$0.21 → $0.18</div>
+          <div class="d down">▼ 14%</div>
+        </div>
+        <div class="kpi-cell">
+          <div class="l">Drop preview</div>
+          <div class="v">$0.18 → $0.13</div>
+          <div class="d down">▼ 28%</div>
+        </div>
+        <div class="kpi-cell">
+          <div class="l">Total</div>
+          <div class="v">$0.84 → $0.11</div>
+          <div class="d down">▼ 87%</div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Inspector 玻璃 -->
+    <aside class="inspector glass">
+      <h6>Note meta</h6>
+      <div class="kv"><span>ID</span><b>MIN-204</b></div>
+      <div class="kv"><span>Created</span><b>2026-06-09</b></div>
+      <div class="kv"><span>Updated</span><b>2 min ago</b></div>
+      <div class="kv"><span>Word count</span><b>1,247</b></div>
+      <div class="kv"><span>Reading time</span><b>5 min</b></div>
+
+      <h6>Backlinks · 4</h6>
+      <a class="link" href="#">→ Onboarding v1.2</a>
+      <a class="link" href="#">→ Pipeline Q2</a>
+      <a class="link" href="#">→ Sprint 4 retro</a>
+      <a class="link" href="#">→ Pricing page draft</a>
+
+      <h6>Activity</h6>
+      <div class="act"><div class="when">14:08</div><b>Devon</b> pushed commit a4f81c</div>
+      <div class="act"><div class="when">13:50</div><b>Mei</b> approved review</div>
+      <div class="act"><div class="when">12:00</div><b>Devon</b> created from voice memo</div>
+    </aside>
+
+  </div>
+
+  <!-- FAB -->
+  <button class="fab" title="New note">+</button>
+
+  <!-- ========== 浮动切换器 · bottom-left ========== -->
+  <div class="switcher glass" id="switcher">
+    <div class="head">
+      <span class="t">玻璃方块 · 切换</span>
+      <button class="collapse" id="collapseBtn" title="折叠">▾</button>
+    </div>
+    <div class="body">
+      <div class="now" id="nowLabel">A1 · Subtle 暖纸</div>
+
+      <div class="group">Subtle · 18px</div>
+      <div class="row">
+        <div class="swatch on" data-theme="A1" style="--swatch-bg:#F5F4F0; --swatch-ink:#1A1A1A; --swatch-glass:rgba(255,255,255,0.45); --swatch-blur:18px;"><span class="preview"></span><span class="id">A1</span></div>
+        <div class="swatch" data-theme="A2" style="--swatch-bg:#FAFAF9; --swatch-ink:#1A1A1A; --swatch-glass:rgba(255,255,255,0.50); --swatch-blur:18px;"><span class="preview"></span><span class="id">A2</span></div>
+        <div class="swatch" data-theme="A3" style="--swatch-bg:#1A1A1A; --swatch-ink:#F5F5F7; --swatch-glass:rgba(255,255,255,0.06); --swatch-blur:18px;"><span class="preview"></span><span class="id">A3</span></div>
+        <div class="swatch" data-theme="A4" style="--swatch-bg:#ECEFF1; --swatch-ink:#263238; --swatch-glass:rgba(255,255,255,0.55); --swatch-blur:18px;"><span class="preview"></span><span class="id">A4</span></div>
+      </div>
+
+      <div class="group">Balanced · 24px</div>
+      <div class="row">
+        <div class="swatch" data-theme="B1" style="--swatch-bg:#F5F4F0; --swatch-ink:#1A1A1A; --swatch-glass:rgba(255,255,255,0.62); --swatch-blur:24px;"><span class="preview"></span><span class="id">B1</span></div>
+        <div class="swatch" data-theme="B2" style="--swatch-bg:#FAFAF9; --swatch-ink:#1A1A1A; --swatch-glass:rgba(255,255,255,0.65); --swatch-blur:24px;"><span class="preview"></span><span class="id">B2</span></div>
+        <div class="swatch" data-theme="B3" style="--swatch-bg:#1A1A1A; --swatch-ink:#F5F5F7; --swatch-glass:rgba(255,255,255,0.10); --swatch-blur:24px;"><span class="preview"></span><span class="id">B3</span></div>
+        <div class="swatch" data-theme="B4" style="--swatch-bg:#ECEFF1; --swatch-ink:#263238; --swatch-glass:rgba(255,255,255,0.70); --swatch-blur:24px;"><span class="preview"></span><span class="id">B4</span></div>
+      </div>
+
+      <div class="footer">
+        <span>当前 <code id="nowCode">A1</code></span>
+        <span>8 / 8</span>
+      </div>
+    </div>
+    <div class="fab-mini" id="fabMini" style="display:none">轻</div>
+  </div>
+
+  <script>
+    // 切主题
+    const swatches = document.querySelectorAll('.swatch');
+    const nowLabel = document.getElementById('nowLabel');
+    const nowCode = document.getElementById('nowCode');
+    const labels = {A1:'A1 · Subtle 暖纸',A2:'A2 · Subtle 工程白',A3:'A3 · Subtle 暖黑',A4:'A4 · Subtle 冷灰',
+                    B1:'B1 · Balanced 暖纸',B2:'B2 · Balanced 工程白',B3:'B3 · Balanced 暖黑',B4:'B4 · Balanced 冷灰'};
+    swatches.forEach(s => {
+      s.addEventListener('click', () => {
+        const t = s.dataset.theme;
+        document.body.dataset.theme = t;
+        nowLabel.textContent = labels[t];
+        nowCode.textContent = t;
+        swatches.forEach(x => x.classList.toggle('on', x === s));
+      });
+    });
+
+    // 折叠
+    const switcher = document.getElementById('switcher');
+    const collapseBtn = document.getElementById('collapseBtn');
+    const fabMini = document.getElementById('fabMini');
+    let collapsed = false;
+    collapseBtn.addEventListener('click', () => {
+      collapsed = !collapsed;
+      switcher.classList.toggle('collapsed', collapsed);
+      document.querySelector('.switcher .head').style.display = collapsed ? 'none' : '';
+      document.querySelector('.switcher .body').style.display = collapsed ? 'none' : '';
+      fabMini.style.display = collapsed ? 'flex' : 'none';
+      collapseBtn.textContent = collapsed ? '▴' : '▾';
+    });
+    fabMini.addEventListener('click', () => collapseBtn.click());
+  </script>
+
+</body>
+</html>

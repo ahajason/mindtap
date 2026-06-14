@@ -36,7 +36,7 @@ cd /d C:\path\to\mindtap
 
 # 4. build
 npm run tauri build
-# 产物: src-tauri\target\release\tauri-app.exe
+# 产物: src-tauri\target\release\mindtap.exe
 ```
 
 > **macOS / Linux** 同样命令生成对应平台 .app / 可执行文件。
@@ -127,7 +127,7 @@ fn platform_specific() { /* gtk4-layer-shell */ }
 |---|---|
 | WSL `npm run tauri dev` 跑通 | ✅ commit 4b3f847 |
 | Windows `npm run tauri build` 跑通 | ✅ 21.39s 增量 |
-| `tauri-app.exe` 生成 | ✅ 9 MB |
+| `mindtap.exe` 生成 | ✅ 9 MB |
 | `.exe` 启动不崩 | ✅ 弹窗 OK |
 | Liquid Glass demo 渲染 | ✅（App.tsx 资产）|
 | Tauri 2 + React 19 + TS 栈 | ✅ |

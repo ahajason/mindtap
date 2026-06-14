@@ -1,8 +1,14 @@
 {
-  "name": "tauri-app",
+  "name": "mindtap",
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "description": "极简记录 APP · 跨平台桌面（Tauri 2 + React 19）",
+  "author": "AhaJason <Jason-c1@outlook.com>",
+  "license": "MIT",
+  "engines": {
+    "node": ">=24 <25"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
