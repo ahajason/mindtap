@@ -1,4 +1,4 @@
-import './styles/glass.css';
+import '@/styles/glass.css';
 
 /**
  * 脚手架交互单元演示页（V1.0 P3 脚手架）
