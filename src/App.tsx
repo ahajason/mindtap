@@ -14,7 +14,7 @@ import { RecordTimeline } from './timeline/RecordTimeline';
  * - 反 AI 味：暖白基色 + 真实字号 + 真实组件 demo
  *
  * 真实运行在 Tauri 桌面 + Web 端。
- * prototype 资产：docs/projects/v1.0/prototype/
+ * 浮动窗入口：Cmd/Ctrl+Shift+Space（或点 FAB 触发 floating_toggle）。
  */
 
 function App() {
@@ -24,15 +24,10 @@ function App() {
       <header className="topbar">
         <div className="brand">
           <h1>轻念 · Mindtap</h1>
-          <span className="meta">/ DESIGN SYSTEM</span>
+          <span className="meta">/ 浮动窗口快速记录</span>
         </div>
         <div className="crumb">
-          <a href="docs/projects/v1.0/compare-method.md" target="_blank" rel="noreferrer">docs</a> / <span className="now">scaffold</span>
-        </div>
-        <div className="topbar-actions">
-          <a className="btn btn-ghost" href="docs/projects/v1.0/prototype/index.html" target="_blank" rel="noreferrer">
-            打开原型目录
-          </a>
+          <span className="now">timeline</span>
         </div>
       </header>
 
@@ -40,46 +35,36 @@ function App() {
 
         {/* ============ 侧栏（玻璃） ============ */}
         <aside className="sidebar">
-          <h3>Fundamentals</h3>
-          <a className="nav-item active" href="#surface">
-            <span>Surface</span>
+          <h3>视图</h3>
+          <a className="nav-item active" href="#timeline">
+            <span>时间线</span>
             <span className="chevron">›</span>
           </a>
-          <a className="nav-item" href="#toolbar">
-            <span>Toolbar</span>
+          <a className="nav-item" href="#heatmap">
+            <span>热力图</span>
             <span className="chevron">›</span>
           </a>
-          <a className="nav-item" href="#button">
-            <span>Button</span>
+          <a className="nav-item" href="#ideas">
+            <span>灵感</span>
             <span className="chevron">›</span>
           </a>
-          <a className="nav-item" href="#card">
-            <span>Card</span>
-            <span className="chevron">›</span>
-          </a>
-
-          <h3>Patterns</h3>
-          <a className="nav-item" href="#heat">
-            <span>Heatmap</span>
-            <span className="chevron">›</span>
-          </a>
-          <a className="nav-item" href="#fab">
-            <span>Floating Button</span>
+          <a className="nav-item" href="#tasks">
+            <span>任务</span>
             <span className="chevron">›</span>
           </a>
 
-          <h3>Compare</h3>
-          <a className="nav-item" href="docs/projects/v1.0/prototype/index.html" target="_blank" rel="noreferrer">
-            <span>4 方向对比</span>
+          <h3>浮动窗</h3>
+          <a className="nav-item" href="#" onClick={(e) => e.preventDefault()}>
+            <span>3 秒记录 / 1 秒查看</span>
             <span className="chevron">→</span>
           </a>
-          <a className="nav-item" href="docs/projects/v1.0/compare-method.md" target="_blank" rel="noreferrer">
+          <a className="nav-item" href="#" onClick={(e) => e.preventDefault()}>
             <span>对比方法论</span>
             <span className="chevron">→</span>
           </a>
 
           <div className="foot">
-            v0.1 · 14.06.2026<br />
+            v1.3 · 14.06.2026<br />
             Tauri 2 + React 19
           </div>
         </aside>
@@ -90,7 +75,7 @@ function App() {
         </main>
       </div>
 
-      {/* 浮动 [+] 玻璃按钮 */}
+      {/* 浮动 [+] 玻璃按钮（V1.3 入口：触发 floating_toggle 唤起浮动窗） */}
       <button className="fab" aria-label="新记录" type="button">+</button>
     </>
   );
