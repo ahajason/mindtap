@@ -1,0 +1,185 @@
+<h2>浮动窗口形态 v3 — 三个方案都画展开/折叠双态</h2>
+<p class="subtitle">折叠态 = 计时器常驻 · 展开态 = 输入区。三个方案都给双态对比，方便你一起选</p>
+
+<style>
+  /* 比较表样式 */
+  .pair{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:10px 0 0}
+  .pair .mockup{margin:0}
+  .pair .mockup-header{padding:6px 10px;font-size:11px}
+  .pair .mockup-body{padding:14px;min-height:140px;display:flex;align-items:center;justify-content:center}
+</style>
+
+<div class="options" data-multiselect>
+  <!-- ============ 方案 A: 顶部胶囊条 ============ -->
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>顶部胶囊条</h3>
+      <p>顶部居中悬浮，折叠 320×40 / 展开 420×200。从顶部下拉出输入区。</p>
+
+      <div class="pair">
+        <!-- A 折叠 -->
+        <div class="mockup">
+          <div class="mockup-header">A · 折叠（计时）40px</div>
+          <div class="mockup-body" style="background:linear-gradient(180deg,#f5f5f7,#e8eaed)">
+            <div style="width:320px;height:40px;border-radius:20px;background:rgba(255,255,255,0.6);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.7);box-shadow:0 1px 0 rgba(255,255,255,0.6) inset, 0 8px 24px rgba(0,0,0,0.08);display:flex;align-items:center;padding:0 14px;gap:10px;font:600 13px -apple-system">
+              <span style="color:#1d1d1f;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">▌写 Q3 计划</span>
+              <span style="color:#007AFF;font-variant-numeric:tabular-nums">00:12:34</span>
+              <span style="color:#1d1d1f;background:rgba(0,0,0,0.05);border-radius:10px;padding:2px 8px;font-size:11px">⤓ 展开</span>
+            </div>
+          </div>
+        </div>
+        <!-- A 展开 -->
+        <div class="mockup">
+          <div class="mockup-header">A · 展开（输入）200px</div>
+          <div class="mockup-body" style="background:linear-gradient(180deg,#f5f5f7,#e8eaed)">
+            <div style="width:420px;height:200px;border-radius:16px;background:rgba(255,255,255,0.65);backdrop-filter:blur(30px);border:1px solid rgba(255,255,255,0.7);box-shadow:0 1px 0 rgba(255,255,255,0.7) inset, 0 12px 32px rgba(0,0,0,0.1);padding:12px 14px;font:13px -apple-system;color:#1d1d1f;display:flex;flex-direction:column;gap:10px;box-sizing:border-box">
+              <div style="display:flex;align-items:center;gap:6px;height:20px">
+                <span style="font-weight:600">新记录</span>
+                <span style="flex:1"></span>
+                <span style="color:#86868b;font-size:11px;background:rgba(0,0,0,0.05);border-radius:8px;padding:2px 8px">⤒ 收起</span>
+              </div>
+              <div style="display:flex;gap:6px;height:24px">
+                <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(0,122,255,0.12);color:#007AFF;border-radius:8px;font-size:11px;font-weight:600">✓ 待办</span>
+                <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">✎ 灵感</span>
+                <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">⚡ 打卡</span>
+              </div>
+              <textarea style="flex:1;background:rgba(255,255,255,0.5);border:1px solid rgba(0,0,0,0.06);border-radius:10px;padding:10px;font:13px -apple-system;color:#1d1d1f;resize:none;outline:none" placeholder="事项内容…">写完 Q3 计划并同步给团队</textarea>
+              <div style="display:flex;gap:6px;height:26px">
+                <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">📅 今天</span>
+                <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">📅 明天</span>
+                <span style="flex:1.5;display:flex;align-items:center;justify-content:center;background:#007AFF;color:white;border-radius:8px;font-size:12px;font-weight:600">⏎ 保存</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Pros</h4><ul><li>折叠最紧凑（40px），不打扰</li><li>顶部居中，符合注意力习惯</li><li>Mac/Windows Web 一致</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>展开后宽度大（420px）覆盖顶部空间</li><li>跟全屏 App 顶栏冲突</li><li>下拉动画比左右展开更"打扰"</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 方案 B: 矩形极简卡 ============ -->
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>矩形极简卡（推荐）</h3>
+      <p>屏幕右上角，折叠 280×110 / 展开 320×210。从底部向上展开输入区。</p>
+
+      <div class="pair">
+        <!-- B 折叠 -->
+        <div class="mockup">
+          <div class="mockup-header">B · 折叠（计时）110px</div>
+          <div class="mockup-body" style="background:linear-gradient(135deg,#fef9f3,#eef3fb 50%,#eaf3ee);justify-content:flex-end;padding-right:24px">
+            <div style="width:280px;height:110px;border-radius:18px;background:rgba(255,255,255,0.6);backdrop-filter:blur(30px);border:1px solid rgba(255,255,255,0.7);box-shadow:0 1px 0 rgba(255,255,255,0.7) inset, 0 12px 32px rgba(0,0,0,0.1);padding:12px 14px;font:13px -apple-system;color:#1d1d1f;display:flex;flex-direction:column;gap:8px;box-sizing:border-box">
+              <div style="display:flex;align-items:center;gap:6px;height:18px">
+                <span style="display:inline-block;width:6px;height:6px;background:#007AFF;border-radius:50%;box-shadow:0 0 0 3px rgba(0,122,255,0.2);flex-shrink:0"></span>
+                <span style="font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">写 Q3 计划</span>
+                <span style="color:#86868b;font-size:11px;flex-shrink:0">⤓ 展开</span>
+              </div>
+              <div style="font:700 30px -apple-system;color:#1d1d1f;font-variant-numeric:tabular-nums;letter-spacing:-0.5px;line-height:1;height:30px">00:12:34</div>
+              <div style="display:flex;gap:6px;height:28px">
+                <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(0,122,255,0.12);color:#007AFF;border-radius:8px;font-size:11px;font-weight:600">✓ 待办</span>
+                <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">✎ 灵感</span>
+                <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">⚡ 打卡</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- B 展开 -->
+        <div class="mockup">
+          <div class="mockup-header">B · 展开（输入）210px</div>
+          <div class="mockup-body" style="background:linear-gradient(135deg,#fef9f3,#eef3fb 50%,#eaf3ee);justify-content:flex-end;padding-right:24px">
+            <div style="width:320px;height:210px;border-radius:18px;background:rgba(255,255,255,0.65);backdrop-filter:blur(30px);border:1px solid rgba(255,255,255,0.7);box-shadow:0 1px 0 rgba(255,255,255,0.7) inset, 0 12px 32px rgba(0,0,0,0.1);padding:12px 14px;font:13px -apple-system;color:#1d1d1f;display:flex;flex-direction:column;gap:10px;box-sizing:border-box">
+              <div style="display:flex;align-items:center;gap:6px;height:18px">
+                <span style="display:inline-block;width:6px;height:6px;background:#007AFF;border-radius:50%;box-shadow:0 0 0 3px rgba(0,122,255,0.2)"></span>
+                <span style="font-weight:600">新记录 · 待办</span>
+                <span style="flex:1"></span>
+                <span style="color:#86868b;font-size:11px;background:rgba(0,0,0,0.05);border-radius:8px;padding:2px 8px">⤒ 收起</span>
+              </div>
+              <textarea style="flex:1;background:rgba(255,255,255,0.5);border:1px solid rgba(0,0,0,0.06);border-radius:10px;padding:10px;font:13px -apple-system;color:#1d1d1f;resize:none;outline:none" placeholder="事项内容…">写完 Q3 计划并同步给团队</textarea>
+              <div style="display:flex;gap:6px;height:28px">
+                <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">📅 今天</span>
+                <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">📅 明天</span>
+                <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">📅 自定义</span>
+                <span style="flex:1.4;display:flex;align-items:center;justify-content:center;background:#007AFF;color:white;border-radius:8px;font-size:12px;font-weight:600">⏎ 保存</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Pros</h4><ul><li>折叠 110px 信息密度刚好</li><li>展开 210px 不挤占主应用</li><li>类型 Tab 符合 0 思考</li><li>Mac/Windows Web 一致</li><li>展开方向"由下而上"对用户更自然</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>110px 对 13 寸笔记本偏大（可加超紧凑 64px 模式）</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 方案 C: 灵动岛 ============ -->
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>灵动岛风格 Pill（Mac 26 优先）</h3>
+      <p>顶部居中，折叠 360×48 / 展开 480×180。SwiftUI 嵌入实现，依赖 macOS 26 glassEffect API。</p>
+
+      <div class="pair">
+        <!-- C 折叠 -->
+        <div class="mockup">
+          <div class="mockup-header">C · 折叠（计时）48px</div>
+          <div class="mockup-body" style="background:linear-gradient(180deg,#1a1a1a,#2a2a2a)">
+            <div style="width:360px;height:48px;border-radius:24px;background:rgba(0,0,0,0.78);border:1px solid rgba(255,255,255,0.12);box-shadow:0 8px 24px rgba(0,0,0,0.4);display:flex;align-items:center;padding:0 18px;gap:10px;font:600 13px -apple-system;color:white;box-sizing:border-box">
+              <span style="font-size:10px;background:rgba(0,122,255,0.3);color:#5ac8fa;padding:2px 8px;border-radius:10px;font-weight:700">TODO</span>
+              <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">写 Q3 计划</span>
+              <span style="color:#5ac8fa;font-variant-numeric:tabular-nums">00:12:34</span>
+              <span style="color:#30d158">⏵</span>
+              <span style="color:#8e8e93">⤓</span>
+            </div>
+          </div>
+        </div>
+        <!-- C 展开 -->
+        <div class="mockup">
+          <div class="mockup-header">C · 展开（输入）180px</div>
+          <div class="mockup-body" style="background:linear-gradient(180deg,#1a1a1a,#2a2a2a)">
+            <div style="width:480px;height:180px;border-radius:20px;background:rgba(0,0,0,0.8);border:1px solid rgba(255,255,255,0.12);box-shadow:0 12px 32px rgba(0,0,0,0.5);padding:12px 16px;font:13px -apple-system;color:white;display:flex;flex-direction:column;gap:8px;box-sizing:border-box">
+              <div style="display:flex;align-items:center;gap:6px;height:18px">
+                <span style="font-size:10px;background:rgba(0,122,255,0.3);color:#5ac8fa;padding:2px 8px;border-radius:10px;font-weight:700">TODO</span>
+                <span style="font-weight:600">新记录</span>
+                <span style="flex:1"></span>
+                <span style="color:#8e8e93;font-size:11px">⤒ 收起</span>
+              </div>
+              <div style="display:flex;gap:6px;height:24px">
+                <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(0,122,255,0.2);color:#5ac8fa;border-radius:8px;font-size:11px;font-weight:600">✓ 待办</span>
+                <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.08);color:white;border-radius:8px;font-size:11px;font-weight:600">✎ 灵感</span>
+                <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.08);color:white;border-radius:8px;font-size:11px;font-weight:600">⚡ 打卡</span>
+              </div>
+              <textarea style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;font:13px -apple-system;color:white;resize:none;outline:none" placeholder="事项内容…">写完 Q3 计划并同步给团队</textarea>
+              <div style="display:flex;gap:6px;height:26px">
+                <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.08);color:white;border-radius:8px;font-size:11px;font-weight:600">📅 今天</span>
+                <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.08);color:white;border-radius:8px;font-size:11px;font-weight:600">📅 明天</span>
+                <span style="flex:1.5;display:flex;align-items:center;justify-content:center;background:#0a84ff;color:white;border-radius:8px;font-size:12px;font-weight:600">⏎ 保存</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Pros</h4><ul><li>Mac 26 Liquid Glass 还原度最高</li><li>深色 pill 视觉聚焦，展开后不抢戏</li><li>展开 480×180 横向空间足，文字输入舒适</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>仅 macOS 26+ 可用，Windows 必须降级为 B</li><li>依赖 SwiftUI 嵌入（混合架构风险 R1）</li><li>顶部居中跟全屏 App 冲突严重</li><li>R1 spike 必须先验证</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:24px;padding:16px;background:rgba(0,122,255,0.08);border-radius:12px;border:1px solid rgba(0,122,255,0.2)">
+  <h3 style="margin:0 0 8px;font-size:15px">v3 修正</h3>
+  <p style="margin:0;font-size:13px;color:#1d1d1f;line-height:1.7">
+    三个方案都画了 <strong>折叠态 / 展开态</strong>对照（B 高度 110px 已确认无溢出）。右侧"⤓ 展开/⤒ 收起"图标在所有方案中保持一致，符合 0 思考成本。
+  </p>
+</div>
+
+<p class="subtitle" style="margin-top:20px">浏览器里看 v3 → 选 A / B / C，或直接"定 B"进入下一步。</p>

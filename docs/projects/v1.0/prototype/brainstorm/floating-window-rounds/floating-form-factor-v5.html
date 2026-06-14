@@ -1,0 +1,201 @@
+<h2>浮动窗口形态 v5 — 紧凑单行 pill（按反馈重做）</h2>
+<p class="subtitle">回到 v3 灵动岛的紧凑感：单行 40-48px · 图标不带外框（用文字符号）· 浅色高透明 · 展开保留三类型 Tab</p>
+
+<style>
+  .pair5{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:10px 0 0}
+  .pair5 .mockup{margin:0}
+  .pair5 .mockup-header{padding:6px 10px;font-size:11px}
+  .pair5 .mockup-body{padding:14px;min-height:130px;display:flex;align-items:center;justify-content:center}
+  /* 高透明 clear 玻璃 */
+  .gc{background:rgba(255,255,255,0.34);backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%);border:1px solid rgba(255,255,255,0.6);box-shadow:0 1px 0 rgba(255,255,255,0.7) inset, 0 8px 24px rgba(0,0,0,0.08)}
+  .gc-strong{background:rgba(255,255,255,0.42);backdrop-filter:blur(32px) saturate(200%);-webkit-backdrop-filter:blur(32px) saturate(200%);border:1px solid rgba(255,255,255,0.65);box-shadow:0 1px 0 rgba(255,255,255,0.7) inset, 0 10px 28px rgba(0,0,0,0.1)}
+  .bg-w{background:linear-gradient(135deg,#fef9f3 0%,#f3eef9 40%,#eaf3fb 100%)}
+  .bg-c{background:linear-gradient(135deg,#f0f6ff 0%,#f5f5f7 50%,#fef9f3 100%)}
+  .bg-app{background:linear-gradient(135deg,#3a3a3c 0%,#2c2c2e 100%);color:white}
+</style>
+
+<div class="options" data-multiselect>
+  <!-- ============ 方案 1: 极简单行 pill · 顶部居中 ============ -->
+  <div class="option" data-choice="1" onclick="toggleSelect(this)">
+    <div class="letter">1</div>
+    <div class="content">
+      <h3>极简单行 pill · 40px</h3>
+      <p>顶部居中 320×40px。TODO pill · 任务 · 计时 · ▶︎/⏸ · ⤓。极简紧凑，所有元素文字符号不带框。</p>
+
+      <div class="pair5">
+        <div class="mockup">
+          <div class="mockup-header">① 折叠 · 计时 40px</div>
+          <div class="mockup-body bg-w">
+            <div style="width:320px;height:40px;border-radius:20px" class="gc">
+              <div style="display:flex;align-items:center;height:100%;padding:0 8px 0 10px;gap:8px;font:600 13px -apple-system;color:#1d1d1f">
+                <span style="font-size:9px;background:rgba(0,122,255,0.14);color:#007AFF;padding:2px 7px;border-radius:8px;font-weight:700;letter-spacing:0.3px">TODO</span>
+                <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600">写 Q3 计划</span>
+                <span style="color:#007AFF;font-variant-numeric:tabular-nums;font-weight:700;letter-spacing:-0.3px">00:12:34</span>
+                <span style="color:#34c759;font-size:14px">⏸</span>
+                <span style="color:#86868b;font-size:13px">⤓</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mockup">
+          <div class="mockup-header">① 展开 · 输入 200px</div>
+          <div class="mockup-body bg-w">
+            <div style="width:360px;height:200px;border-radius:18px" class="gc-strong">
+              <div style="padding:12px 14px;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;font:13px -apple-system;color:#1d1d1f">
+                <div style="display:flex;align-items:center;gap:8px;height:20px">
+                  <span style="font-size:9px;background:rgba(0,122,255,0.14);color:#007AFF;padding:2px 7px;border-radius:8px;font-weight:700">TODO</span>
+                  <span style="font-weight:600">新待办</span>
+                  <span style="flex:1"></span>
+                  <span style="color:#86868b;font-size:11px">⤒ 收起</span>
+                </div>
+                <textarea style="flex:1;background:rgba(255,255,255,0.45);border:1px solid rgba(0,0,0,0.06);border-radius:10px;padding:10px;font:13px -apple-system;color:#1d1d1f;resize:none;outline:none" placeholder="事项内容…">写完 Q3 计划并同步给团队</textarea>
+                <div style="display:flex;gap:6px;height:24px">
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(0,122,255,0.12);color:#007AFF;border-radius:8px;font-size:11px;font-weight:600">✓ 待办</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">✎ 灵感</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">⚡ 打卡</span>
+                </div>
+                <div style="display:flex;gap:6px;height:26px">
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">📅 今天</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">📅 明天</span>
+                  <span style="flex:1.4;display:flex;align-items:center;justify-content:center;background:#007AFF;color:white;border-radius:8px;font-size:12px;font-weight:600">⏎ 保存</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Pros</h4><ul><li>最紧凑 40px，几乎不挡视野</li><li>图标纯文字符号，无外框，干净</li><li>展开态三类型 Tab 完整保留</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>任务名空间小，长任务会截断</li><li>单行 5 元素稍密</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 方案 2: 加宽单行 pill · 48px ============ -->
+  <div class="option" data-choice="2" onclick="toggleSelect(this)">
+    <div class="letter">2</div>
+    <div class="content">
+      <h3>加宽单行 pill · 48px（推荐）</h3>
+      <p>顶部居中 380×48px。同 v3 灵动岛元素布局：TODO pill · 任务 · 计时 · ▶︎/⏸ · ⤓。加宽 60px 让任务名多放字。</p>
+
+      <div class="pair5">
+        <div class="mockup">
+          <div class="mockup-header">② 折叠 · 计时 48px</div>
+          <div class="mockup-body bg-c">
+            <div style="width:380px;height:48px;border-radius:24px" class="gc">
+              <div style="display:flex;align-items:center;height:100%;padding:0 10px 0 14px;gap:10px;font:600 13px -apple-system;color:#1d1d1f">
+                <span style="font-size:10px;background:rgba(0,122,255,0.14);color:#007AFF;padding:3px 8px;border-radius:10px;font-weight:700;letter-spacing:0.3px">TODO</span>
+                <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600">写 Q3 计划并同步团队</span>
+                <span style="color:#007AFF;font-variant-numeric:tabular-nums;font-weight:700;letter-spacing:-0.3px">00:12:34</span>
+                <span style="color:#34c759;font-size:15px">⏸</span>
+                <span style="color:#86868b;font-size:14px">⤓</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mockup">
+          <div class="mockup-header">② 展开 · 输入 220px</div>
+          <div class="mockup-body bg-c">
+            <div style="width:400px;height:220px;border-radius:18px" class="gc-strong">
+              <div style="padding:14px;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;font:13px -apple-system;color:#1d1d1f">
+                <div style="display:flex;align-items:center;gap:8px;height:22px">
+                  <span style="font-size:10px;background:rgba(0,122,255,0.14);color:#007AFF;padding:3px 8px;border-radius:10px;font-weight:700">TODO</span>
+                  <span style="font-weight:600">新待办</span>
+                  <span style="flex:1"></span>
+                  <span style="color:#86868b;font-size:11px">⤒ 收起</span>
+                </div>
+                <textarea style="flex:1;background:rgba(255,255,255,0.45);border:1px solid rgba(0,0,0,0.06);border-radius:10px;padding:10px;font:13px -apple-system;color:#1d1d1f;resize:none;outline:none" placeholder="事项内容…">写完 Q3 计划并同步给团队</textarea>
+                <div style="display:flex;gap:6px;height:26px">
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(0,122,255,0.12);color:#007AFF;border-radius:8px;font-size:11px;font-weight:600">✓ 待办</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">✎ 灵感</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">⚡ 打卡</span>
+                </div>
+                <div style="display:flex;gap:6px;height:28px">
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">📅 今天</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">📅 明天</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">📅 自定义</span>
+                  <span style="flex:1.5;display:flex;align-items:center;justify-content:center;background:#007AFF;color:white;border-radius:8px;font-size:12px;font-weight:600">⏎ 保存</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Pros</h4><ul><li>最像 v3 灵动岛的元素布局</li><li>48px 单行 + 380 宽 = 任务名不挤</li><li>展开 220px 高 + 完整三 Tab + 完整日期 + 保存</li><li>图标纯文字无外框</li><li>推荐·平衡</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>比 ① 略高 8px</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 方案 3: 紧凑右贴边 · 36px ============ -->
+  <div class="option" data-choice="3" onclick="toggleSelect(this)">
+    <div class="letter">3</div>
+    <div class="content">
+      <h3>右贴边超紧凑 · 36px</h3>
+      <p>屏幕右侧贴边 280×36px。最紧凑设计，仅显示 TODO 标签 + 任务（短名）+ 计时 + ⏸。无展开按钮，点击整窗展开输入。</p>
+
+      <div class="pair5">
+        <div class="mockup">
+          <div class="mockup-header">③ 折叠 · 计时 36px</div>
+          <div class="mockup-body bg-c" style="justify-content:flex-end;padding-right:20px">
+            <div style="width:280px;height:36px;border-radius:12px 0 0 12px" class="gc">
+              <div style="display:flex;align-items:center;height:100%;padding:0 8px 0 10px;gap:8px;font:600 12px -apple-system;color:#1d1d1f">
+                <span style="font-size:9px;background:rgba(0,122,255,0.14);color:#007AFF;padding:2px 6px;border-radius:6px;font-weight:700;letter-spacing:0.3px">TODO</span>
+                <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">写 Q3 计划</span>
+                <span style="color:#007AFF;font-variant-numeric:tabular-nums;font-weight:700">00:12:34</span>
+                <span style="color:#34c759;font-size:13px">⏸</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mockup">
+          <div class="mockup-header">③ 展开 · 输入（向左侧拉出 360×220）</div>
+          <div class="mockup-body bg-c" style="justify-content:flex-end;padding-right:20px">
+            <div style="width:360px;height:220px;border-radius:14px 0 0 14px" class="gc-strong">
+              <div style="padding:12px 14px;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;font:13px -apple-system;color:#1d1d1f">
+                <div style="display:flex;align-items:center;gap:8px;height:22px">
+                  <span style="font-size:10px;background:rgba(0,122,255,0.14);color:#007AFF;padding:3px 8px;border-radius:10px;font-weight:700">TODO</span>
+                  <span style="font-weight:600">新待办</span>
+                  <span style="flex:1"></span>
+                  <span style="color:#86868b;font-size:11px">⤒ 收起</span>
+                </div>
+                <textarea style="flex:1;background:rgba(255,255,255,0.45);border:1px solid rgba(0,0,0,0.06);border-radius:10px;padding:10px;font:13px -apple-system;color:#1d1d1f;resize:none;outline:none" placeholder="事项内容…">写完 Q3 计划并同步给团队</textarea>
+                <div style="display:flex;gap:6px;height:26px">
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(0,122,255,0.12);color:#007AFF;border-radius:8px;font-size:11px;font-weight:600">✓ 待办</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">✎ 灵感</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">⚡ 打卡</span>
+                </div>
+                <div style="display:flex;gap:6px;height:28px">
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">📅 今天</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">📅 明天</span>
+                  <span style="flex:1.5;display:flex;align-items:center;justify-content:center;background:#007AFF;color:white;border-radius:8px;font-size:12px;font-weight:600">⏎ 保存</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Pros</h4><ul><li>最最紧凑 36px</li><li>贴右边完全不抢顶部</li><li>整窗点击展开，无额外按钮</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>任务名短（280 宽 36 高）</li><li>贴边要处理 Win11 右贴的多任务视图冲突</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:24px;padding:16px;background:rgba(0,122,255,0.08);border-radius:12px;border:1px solid rgba(0,122,255,0.2)">
+  <h3 style="margin:0 0 8px;font-size:15px">v5 vs v4 修正点</h3>
+  <p style="margin:0;font-size:13px;color:#1d1d1f;line-height:1.7">
+    ① 高度全压到 <strong>36-48px</strong>（v4 是 64-96px，太高）<br/>
+    ② 图标 <strong>不带圆形外框</strong>，纯文字符号 ⏸ ⤓，回归 v3 灵动岛简洁感<br/>
+    ③ <strong>三类型 Tab 保留</strong>在展开态（v4 漏了）<br/>
+    ④ 单行布局回归 v3 灵动岛元素：TODO pill · 任务 · 计时 · 播放 · 展开<br/>
+    ⑤ 浅色高透明 clear，bg 0.34-0.42 + blur(30-32px)
+  </p>
+</div>
+
+<p class="subtitle" style="margin-top:20px">3 个紧凑单行方案 → 选 1 / 2 / 3，或"定 2"+ 微调意见。</p>

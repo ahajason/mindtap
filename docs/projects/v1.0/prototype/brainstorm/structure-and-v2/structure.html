@@ -1,0 +1,260 @@
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0a0a0c; color: #e6e6e6; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; padding: 32px; min-height: 100vh; }
+  h2 { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+  .sub { color: #888; font-size: 13px; margin-bottom: 28px; line-height: 1.6; }
+  .layout { display: grid; grid-template-columns: 360px 1fr; gap: 24px; }
+  /* 文件树 */
+  .tree {
+    background: #131316; border: 1px solid rgba(255,255,255,.08); border-radius: 12px;
+    padding: 18px; font-family: ui-monospace, monospace; font-size: 12px;
+    position: sticky; top: 24px; max-height: calc(100vh - 48px); overflow: auto;
+  }
+  .tree h3 { font-family: ui-sans-serif, sans-serif; font-size: 13px; color: #5e6ad2; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 14px; }
+  .tree .file { color: #c8c8d0; padding: 4px 0 4px 18px; position: relative; cursor: default; }
+  .tree .file::before { content: "·"; position: absolute; left: 4px; color: #5e6ad2; }
+  .tree .file.dir { color: #fff; font-weight: 600; padding-left: 0; }
+  .tree .file.dir::before { content: "▸ "; color: #888; position: static; margin-right: 4px; }
+  .tree .file.entry { background: rgba(10,132,255,0.12); color: #0a84ff; border-radius: 4px; padding: 4px 6px 4px 24px; font-weight: 600; }
+  .tree .file.entry::before { content: "→"; left: 8px; }
+  .tree .file.indent { padding-left: 36px; }
+  .tree .file.indent2 { padding-left: 54px; color: #888; }
+  .legend { margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.08); font-family: ui-sans-serif, sans-serif; font-size: 11px; color: #888; line-height: 1.7; }
+  .legend strong { color: #fff; }
+  /* 右侧 4 方向 */
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .card {
+    display: block; border-radius: 12px; background: #131316; border: 1px solid rgba(255,255,255,.08);
+    color: #e6e6e6; text-decoration: none; overflow: hidden;
+    transition: transform .15s, border-color .15s;
+    cursor: pointer;
+  }
+  .card:hover { transform: translateY(-2px); border-color: #0a84ff; }
+  .card .preview { aspect-ratio: 16/10; background: #0f0f12; border-bottom: 1px solid rgba(255,255,255,.06); overflow: hidden; }
+  .card .preview svg { display: block; width: 100%; height: 100%; }
+  .card .body { padding: 14px 16px; }
+  .card .tag { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: #5e6ad2; }
+  .card h4 { margin: 4px 0 4px; font-size: 15px; }
+  .card p { margin: 0; color: #888; font-size: 12px; }
+  .card .path { margin-top: 8px; font-family: ui-monospace, monospace; font-size: 10px; color: #5e6ad2; }
+  /* docs 沉淀 */
+  .docs-block {
+    background: #131316; border: 1px solid rgba(255,255,255,.08); border-radius: 12px;
+    padding: 18px; margin-top: 16px;
+  }
+  .docs-block h3 { font-size: 14px; margin-bottom: 10px; color: #5e6ad2; letter-spacing: .12em; text-transform: uppercase; }
+  .docs-block pre { font-family: ui-monospace, monospace; font-size: 12px; color: #c8c8d0; line-height: 1.7; background: #0a0a0c; padding: 12px; border-radius: 8px; overflow: auto; }
+  .docs-block .doc-file { font-family: ui-monospace, monospace; font-size: 11px; color: #0a84ff; margin-top: 6px; }
+  /* 选 */
+  .pick { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+  .pick button { padding: 8px 14px; background: rgba(255,255,255,.08); color: #fff; border: 1px solid rgba(255,255,255,.15); border-radius: 8px; font: inherit; font-size: 12px; cursor: pointer; }
+  .pick button:hover { background: rgba(10,132,255,.4); border-color: #0a84ff; }
+  .pick button.active { background: #0a84ff; border-color: #0a84ff; }
+</style>
+
+<h2>最终结构 · 目录页 + 2 对比页 + 内容</h2>
+<p class="sub">
+  用户诉求：脚手架首页 AI 味重 → 重做成"脚手架交互单元演示页"，保留 Liquid Glass 形式但不 AI 味；<br>
+  入口文件（<code>index.html</code>）能跳 2 个对比页；每个对比页能跳具体内容；docs 沉淀对比方法；视觉 HTML 形式快速对比。
+</p>
+
+<div class="layout">
+
+  <!-- 左侧：文件树 -->
+  <div class="tree">
+    <h3>docs/projects/v1.0/prototype/</h3>
+    <div class="file entry">index.html &nbsp;<span style="color:#888;font-weight:400">← 目录页（入口）</span></div>
+    <div class="file indent">compare.html &nbsp;<span style="color:#888">← 旧对比页（4×4 glass matrix）</span></div>
+    <div class="file indent2">Q1-light-creative.html</div>
+    <div class="file indent2">Q2-light-strict.html</div>
+    <div class="file indent2">Q3-heavy-creative.html</div>
+    <div class="file indent2">Q4-heavy-strict.html</div>
+    <div class="file indent2">D5-immersive.html</div>
+    <div class="file indent2">D6-productive.html</div>
+    <div class="file indent2">D7-adaptive.html</div>
+    <div class="file indent2">D8-expressive.html</div>
+    <div class="file indent">compare-v2.html &nbsp;<span style="color:#0a84ff">← 新对比页（V2 4 方向）</span></div>
+    <div class="file indent2">v2-a-macos26.html</div>
+    <div class="file indent2">v2-b-linear.html</div>
+    <div class="file indent2">v2-c-editorial.html</div>
+    <div class="file indent2">v2-d-engdoc.html</div>
+
+    <div class="legend">
+      <strong>说明</strong><br>
+      · <code>index.html</code>：目录页/入口（视觉仍是 Liquid Glass），跳转 2 个对比页<br>
+      · <code>compare.html</code>：恢复 git 中的旧 4×4 glass matrix 对比页<br>
+      · <code>compare-v2.html</code>：新做的 4 方向对比页（保留玻璃，非 AI 味）<br>
+      · <code>v2-a..d.html</code>：4 个独立可点的全屏方向文件<br>
+      · 脚手架首页 <code>src/App.tsx</code>：替换为新的演示页（保留 Surface 容器）
+    </div>
+  </div>
+
+  <!-- 右侧：4 个方向卡片 + docs 沉淀 -->
+  <div>
+    <div style="font-size:13px;color:#888;margin-bottom:12px">
+      <strong style="color:#fff">compare-v2.html</strong> 内的 4 方向 — 每个都是独立 HTML，可独立打开：
+    </div>
+
+    <div class="grid">
+      <a class="card" href="v2-a-macos26.html" target="_blank">
+        <div class="preview">
+          <svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">
+            <defs><linearGradient id="p1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff7a3d"/><stop offset="1" stop-color="#d92b6f"/></linearGradient><linearGradient id="p2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a8dff"/><stop offset="1" stop-color="#1a4fb8"/></linearGradient><linearGradient id="p3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#28c79a"/><stop offset="1" stop-color="#0f7a5a"/></linearGradient><linearGradient id="p4" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0c33b"/><stop offset="1" stop-color="#d68f00"/></linearGradient></defs>
+            <rect width="320" height="200" fill="#0f0f12"/>
+            <rect x="0" y="0" width="160" height="100" fill="url(#p1)"/>
+            <rect x="160" y="0" width="160" height="100" fill="url(#p2)"/>
+            <rect x="0" y="100" width="160" height="100" fill="url(#p3)"/>
+            <rect x="160" y="100" width="160" height="100" fill="url(#p4)"/>
+            <rect x="0" y="30" width="60" height="170" fill="rgba(255,255,255,0.2)"/>
+            <rect x="0" y="0" width="320" height="20" fill="rgba(255,255,255,0.15)"/>
+            <circle cx="285" cy="175" r="11" fill="rgba(255,255,255,0.4)" stroke="rgba(255,255,255,.6)"/>
+            <text x="285" y="180" font-family="sans-serif" font-size="9" font-weight="300" text-anchor="middle" fill="#fff">+</text>
+          </svg>
+        </div>
+        <div class="body">
+          <span class="tag">A · macOS 26</span>
+          <h4>4 色块 + 真实数据 + 玻璃 sidebar</h4>
+          <p>侧栏漂浮 · 顶栏光带 · 浮动 [+]</p>
+          <div class="path">v2-a-macos26.html</div>
+        </div>
+      </a>
+
+      <a class="card" href="v2-b-linear.html" target="_blank">
+        <div class="preview">
+          <svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">
+            <rect width="320" height="200" fill="#0a0a0c"/>
+            <rect x="8" y="28" width="304" height="14" rx="3" fill="#131316"/>
+            <rect x="8" y="46" width="304" height="14" rx="3" fill="#131316"/>
+            <rect x="8" y="74" width="304" height="10" rx="2" fill="#0e0e11"/>
+            <rect x="8" y="86" width="304" height="10" rx="2" fill="#0e0e11"/>
+            <rect x="8" y="98" width="304" height="10" rx="2" fill="#0e0e11"/>
+            <rect x="8" y="110" width="304" height="10" rx="2" fill="#0e0e11"/>
+            <rect x="0" y="0" width="320" height="14" fill="rgba(255,255,255,0.04)"/>
+            <rect x="296" y="4" width="17" height="7" rx="2" fill="rgba(94,106,210,0.85)"/>
+            <rect x="8" y="28" width="1" height="14" fill="#5e6ad2"/>
+            <rect x="8" y="46" width="1" height="14" fill="#f2994a"/>
+            <g font-family="monospace" font-size="3" fill="#e6e6e6">
+              <text x="22" y="38" font-weight="600">MNT-142</text>
+              <text x="22" y="55" font-weight="600">MNT-148</text>
+              <text x="22" y="81" fill="#9b9ba3">MNT-201  6 大类记录建模</text>
+              <text x="22" y="93" fill="#9b9ba3">MNT-202  浮动 [+] 按钮</text>
+              <text x="22" y="105" fill="#9b9ba3">MNT-203  本地存储选型</text>
+            </g>
+          </svg>
+        </div>
+        <div class="body">
+          <span class="tag">B · Linear / Vercel</span>
+          <h4>深色 + 任务流 + 玻璃顶栏</h4>
+          <p>IN PROGRESS / BACKLOG / DONE</p>
+          <div class="path">v2-b-linear.html</div>
+        </div>
+      </a>
+
+      <a class="card" href="v2-c-editorial.html" target="_blank">
+        <div class="preview">
+          <svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">
+            <rect width="320" height="200" fill="#f4f1ea"/>
+            <rect x="0" y="0" width="320" height="18" fill="rgba(255,255,255,0.55)"/>
+            <g font-family="Georgia, serif" fill="#1a1a1a">
+              <text x="20" y="55" font-size="16" font-weight="700">A Footnote,</text>
+              <text x="20" y="72" font-size="16" font-weight="300" font-style="italic" opacity=".75">not a monument.</text>
+              <text x="20" y="92" font-size="4" opacity=".85">脚手架已经立起。V1.0 启动中。</text>
+              <text x="200" y="60" font-size="6" font-style="italic" opacity=".7">a record is a structure</text>
+              <text x="200" y="68" font-size="6" font-style="italic" opacity=".7">meant to outlast the moment</text>
+              <text x="200" y="76" font-size="6" font-style="italic" opacity=".7">of its writing.</text>
+            </g>
+            <circle cx="295" cy="180" r="9" fill="rgba(255,255,255,0.7)" stroke="rgba(0,0,0,0.18)"/>
+            <text x="295" y="184" font-family="Georgia, serif" font-size="8" text-anchor="middle" fill="#1a1a1a">+</text>
+          </svg>
+        </div>
+        <div class="body">
+          <span class="tag">C · 编辑杂志</span>
+          <h4>暖米白 + 衬线 + 玻璃 nav</h4>
+          <p>正文 + 旁注 + 延伸阅读</p>
+          <div class="path">v2-c-editorial.html</div>
+        </div>
+      </a>
+
+      <a class="card" href="v2-d-engdoc.html" target="_blank">
+        <div class="preview">
+          <svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">
+            <rect width="320" height="200" fill="#fafaf9"/>
+            <rect x="0" y="0" width="65" height="200" fill="rgba(0,0,0,0.04)"/>
+            <line x1="65" y1="0" x2="65" y2="200" stroke="rgba(0,0,0,0.08)"/>
+            <rect x="65" y="0" width="255" height="14" fill="rgba(255,255,255,0.6)"/>
+            <g font-family="sans-serif">
+              <text x="75" y="32" font-size="9" font-weight="700" fill="#1a1a1a">Toolbar.</text>
+              <text x="75" y="64" font-size="9" font-weight="700" fill="#1a1a1a">Card.</text>
+              <rect x="75" y="38" width="230" height="17" rx="4" fill="rgba(255,255,255,0.65)" stroke="rgba(0,0,0,0.1)"/>
+              <rect x="75" y="72" width="110" height="70" rx="4" fill="#fff" stroke="rgba(0,0,0,0.1)"/>
+              <rect x="190" y="72" width="115" height="70" rx="4" fill="#fff" stroke="rgba(0,0,0,0.1)"/>
+              <rect x="262" y="43" width="30" height="7" rx="3.5" fill="#0a84ff"/>
+              <text x="80" y="93" font-size="6" font-weight="700" fill="#1a1a1a">Record #0014</text>
+              <text x="195" y="93" font-size="6" font-weight="700" fill="#1a1a1a">3/5 · 连续 7 天</text>
+            </g>
+          </svg>
+        </div>
+        <div class="body">
+          <span class="tag">D · 工程文档</span>
+          <h4>暖白 + 玻璃侧栏 + 真实组件 demo</h4>
+          <p>Surface / Toolbar / Card demo</p>
+          <div class="path">v2-d-engdoc.html</div>
+        </div>
+      </a>
+    </div>
+
+    <!-- docs 沉淀 -->
+    <div class="docs-block">
+      <h3>docs 沉淀 · 对比方法论</h3>
+      <div class="doc-file">docs/projects/v1.0/compare-method.md</div>
+      <pre>---
+title: V1 视觉对比方法
+tags: [prototype, design-system, projects-v1]
+---
+
+# V1 视觉对比方法
+
+## 目的
+当 V1.x 阶段需要决策"哪种视觉语言适合 Mindtap"时，
+不靠 PPT、不靠文字描述、不靠动效视频——
+直接产 4 个独立 HTML，在浏览器里**全屏并排对比**。
+
+## 4 个反 AI 味的硬约束
+1. **背景必须有真实内容**（色块/数据/任务/文本），不是紫色渐变
+2. **玻璃层漂浮在内容上**，不孤立成卡片
+3. **真实字号 + 真实间距**（1280×800 起，禁止缩略图）
+4. **不用 emoji 当主视觉**，用类型/几何/色块
+
+## 流程
+1. brainstorm 阶段在 .superpowers/brainstorm/&lt;session&gt;/content/
+   画 v2-X.html 草稿（1280×800 SVG 内联）
+2. 选 1 个方向后，落到 docs/projects/v1.0/prototype/ 下作为正式资产
+3. 每次 V1.x 升级时，重做一轮对比
+
+## 资产
+- prototype/index.html — 目录页（入口）
+- prototype/compare.html — 旧 4×4 glass matrix（保留对比历史）
+- prototype/compare-v2.html — 新 4 方向对比
+- prototype/v2-a..d.html — 4 个独立方向
+</pre>
+    </div>
+
+    <p class="pick">
+      <strong style="color:#aaa;width:100%;font-size:13px">确认这个结构？或调整：</strong>
+      <button onclick="pick(this,'结构 OK，按 A / B / C / D 中一个做最终版')" data-pick="a-macos26">结构 OK · 用 A</button>
+      <button onclick="pick(this,'结构 OK · 用 B')" data-pick="b-linear">结构 OK · 用 B</button>
+      <button onclick="pick(this,'结构 OK · 用 C')" data-pick="c-editorial">结构 OK · 用 C</button>
+      <button onclick="pick(this,'结构 OK · 用 D')" data-pick="d-engdoc">结构 OK · 用 D</button>
+      <button onclick="pick(this,'结构 OK · 4 个全做展示')" data-pick="all">结构 OK · 4 个全做展示</button>
+      <button onclick="pick(this,'结构需要改')" data-pick="restructure">结构需要改</button>
+    </p>
+  </div>
+</div>
+
+<script>
+  function pick(btn, label){
+    document.querySelectorAll('.pick button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.title = 'STRUCTURE: ' + label;
+  }
+</script>

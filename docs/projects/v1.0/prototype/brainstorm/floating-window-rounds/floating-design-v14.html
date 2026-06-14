@@ -1,0 +1,360 @@
+<h2>浮动窗口 v14 · 节 2-5 整体呈现（节 1 UI 形态已锁 A）</h2>
+<p class="subtitle">节 2 数据模型 / 节 3 架构 / 节 4 交互流程 / 节 5 视觉规范 · 一次过完避免来回</p>
+
+<style>
+  .sec14{margin:18px 0;padding:16px;background:rgba(255,255,255,0.4);border-radius:14px;border:1px solid rgba(0,0,0,0.06)}
+  .sec14 h3{margin:0 0 10px;font-size:15px;color:#007AFF;display:flex;align-items:center;gap:8px}
+  .sec14 h3 .num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:#007AFF;color:white;border-radius:6px;font-size:12px;font-weight:700}
+  .sec14 pre,.sec14 .ascii{background:rgba(0,0,0,0.04);border-radius:8px;padding:12px;font:11.5px/1.6 ui-monospace,monospace;white-space:pre;overflow-x:auto;margin:8px 0;color:#1d1d1f}
+  .sec14 table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px}
+  .sec14 th,.sec14 td{padding:6px 8px;border-bottom:1px solid rgba(0,0,0,0.06);text-align:left;vertical-align:top}
+  .sec14 th{background:rgba(0,122,255,0.06);font-weight:700;color:#1d1d1f}
+  .sec14 td code{background:rgba(0,122,255,0.08);color:#007AFF;padding:1px 5px;border-radius:3px;font-size:11px}
+  .sec14 .hl{background:rgba(52,199,89,0.12);color:#1f8a3f;padding:2px 6px;border-radius:4px;font-weight:600}
+  .sec14 .warn{background:rgba(255,149,0,0.12);color:#cc7a00;padding:2px 6px;border-radius:4px;font-weight:600}
+  .sec14 .ok{background:rgba(0,122,255,0.12);color:#007AFF;padding:2px 6px;border-radius:4px;font-weight:600}
+  .row-flex{display:flex;gap:12px;margin:8px 0}
+  .row-flex > *{flex:1}
+  .pill-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0}
+  .pill-row .swatch{display:inline-block;width:14px;height:14px;border-radius:4px;border:1px solid rgba(0,0,0,0.1);vertical-align:middle}
+  .pill-row code{background:rgba(0,0,0,0.04);padding:2px 5px;border-radius:3px;font-size:11px;margin-left:4px}
+</style>
+
+<!-- ===== 节 2：数据模型 ===== -->
+<div class="sec14">
+  <h3><span class="num">2</span> 数据模型 · 4 状态机 + SQLite 字段</h3>
+
+  <h4 style="font-size:13px;margin:6px 0">2.1 状态机</h4>
+<pre class="ascii">                            ┌────────────┐
+                            │   创建      │  ← 表单 → 点 ⏵ 开始计时
+                            └─────┬──────┘
+                                  │
+                  ┌───────────────┴───────────────┐
+                  ▼                               ▼
+            ┌──────────┐                   ┌──────────┐
+            │ 未开始   │                   │ 进行中   │ ← FOCUS + 呼吸灯
+            │ (创建时) │                   └─────┬────┘
+            └────┬─────┘                         │
+                 │  ⇄ 切换后开始                  │
+                 │  ┌──────────────────────────┐ │
+                 │  │  ⏸ 暂停  │  ✓ 完成     │ │
+                 │  └────┬─────┴────┬────────┘ │
+                 │       │          │          │
+                 │       ▼          ▼          │
+                 │  ┌────────┐  ┌────────┐    │
+                 │  │ 暂停   │  │ 完成   │    │
+                 │  └───┬────┘  └───┬────┘    │
+                 │      │  ⏸ 继续   │         │
+                 │      └─────┐    │ 历史归档 │
+                 │            ▼    │          │
+                 │         进行中  │          │
+                 │           │    │          │
+                 │           └──→─┴──→ 任何态都可"重新激活"
+                 │</pre>
+
+  <h4 style="font-size:13px;margin:10px 0 6px">2.2 状态 vs 视觉 + 出现位置</h4>
+  <table>
+    <tr><th>状态</th><th>标签颜色</th><th>主 Focus 块</th><th>⇄ 切换下拉</th><th>其他</th></tr>
+    <tr><td>未开始</td><td><code>rgba(0,0,0,0.05)</code> 灰</td><td>—</td><td>✓ 列出</td><td>列表默认</td></tr>
+    <tr><td><span class="hl">进行中</span></td><td><code>rgba(52,199,89,0.18)</code> 绿</td><td>✓ 唯一</td><td>—</td><td>呼吸灯</td></tr>
+    <tr><td><span class="warn">暂停</span></td><td><code>rgba(255,149,0,0.18)</code> 橙</td><td>—</td><td>✓ 列出（带已计时）</td><td>累计时间保留</td></tr>
+    <tr><td>完成</td><td><code>rgba(52,199,89,0.12)</code> 淡绿</td><td>—</td><td>—</td><td>归档</td></tr>
+  </table>
+
+  <h4 style="font-size:13px;margin:10px 0 6px">2.3 SQLite Schema（V1.2 单表扩展）</h4>
+<pre class="ascii">CREATE TABLE record (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  type         TEXT    NOT NULL,          -- 'todo' | 'idea' | 'check_in'
+  status       TEXT    NOT NULL DEFAULT 'pending',  -- 'pending' | 'active' | 'paused' | 'done'
+  content      TEXT    NOT NULL,
+  payload      TEXT    NOT NULL DEFAULT '{}',  -- JSON: { duration_ms, paused_at, focus_started_at, ... }
+  created_at   INTEGER NOT NULL,
+  updated_at   INTEGER NOT NULL
+);
+
+-- 索引
+CREATE INDEX idx_record_status ON record(status);
+CREATE INDEX idx_record_type   ON record(type);</pre>
+
+  <h4 style="font-size:13px;margin:10px 0 6px">2.4 payload 字段（计时用）</h4>
+  <table>
+    <tr><th>字段</th><th>类型</th><th>说明</th></tr>
+    <tr><td><code>duration_ms</code></td><td>number</td><td>累计计时（毫秒），暂停时冻结</td></tr>
+    <tr><td><code>focus_started_at</code></td><td>number | null</td><td>本次"开始计时"时间戳；暂停时保留，重新激活时叠加</td></tr>
+    <tr><td><code>paused_at</code></td><td>number | null</td><td>本次暂停时间戳</td></tr>
+    <tr><td><code>due_at</code></td><td>number | null</td><td>截止时间（📅稍后/明天快捷）</td></tr>
+  </table>
+
+  <h4 style="font-size:13px;margin:10px 0 6px">2.5 状态机不变量（写操作必须满足）</h4>
+  <ul style="margin:6px 0;font-size:12.5px;line-height:1.8">
+    <li><strong>L1</strong>：同时 <strong>只能有一个</strong> <code>status='active'</code> 的 record（全局唯一 Focus）</li>
+    <li><strong>L2</strong>：从 <code>paused → active</code> 时，<code>focus_started_at = now()</code>，<code>duration_ms</code> 保持累加</li>
+    <li><strong>L3</strong>：从 <code>active → paused</code> 时，<code>duration_ms += now() - focus_started_at</code>，<code>focus_started_at = null</code>，<code>paused_at = now()</code></li>
+    <li><strong>L4</strong>：从 <code>active → done</code> 时，累计完 <code>duration_ms</code> 后归档</li>
+    <li><strong>L5</strong>：从 <code>done → *</code> 不允许（终态）。可"重新激活"为 active（重置 duration_ms）</li>
+  </ul>
+</div>
+
+<!-- ===== 节 3：架构 ===== -->
+<div class="sec14">
+  <h3><span class="num">3</span> 架构 · Tauri 2 多窗口 + 跨平台浮动窗</h3>
+
+  <h4 style="font-size:13px;margin:6px 0">3.1 进程/窗口结构</h4>
+<pre class="ascii">┌──────────────────────────────────────────────────────────┐
+│                Mindtap App (Tauri 2)                       │
+│                                                              │
+│  ┌────────────────┐         ┌──────────────────────────┐  │
+│  │   MainWindow   │ event   │     FloatingWindow        │  │
+│  │  (主窗)        │ ◄────►  │     (浮动窗 - 核心)        │  │
+│  │                │  bus    │                            │  │
+│  │ · 设置         │         │  ┌────────┐  ┌──────────┐  │  │
+│  │ · 统计         │         │  │ 折叠态 │  │ 展开态   │  │  │
+│  │ · 数据管理     │         │  │ 320×36 │  │ 360×280  │  │  │
+│  │ · 完整记录     │         │  └────────┘  └──────────┘  │  │
+│  │  1000×700+    │         │  alwaysOnTop / focus: false │  │
+│  └────────────────┘         │  decorations: false         │  │
+│                             │  transparent: true          │  │
+│  ┌────────────────────────┐ └──────────────────────────┘  │
+│  │  SQLite (单 DB, 共享)  │                                │
+│  │  record 表            │                                │
+│  └────────────────────────┘                                │
+│                                                              │
+│  ┌────────────────────────────────────────────────────┐    │
+│  │ Tauri Commands + Event Bus                          │    │
+│  │  · cmd_record_start / pause / resume / complete     │    │
+│  │  · cmd_floating_toggle                              │    │
+│  │  · evt_record_updated  → 通知所有窗口刷新           │    │
+│  │  · evt_focus_changed   → 浮动窗自动更新 Focus 块     │    │
+│  └────────────────────────────────────────────────────┘    │
+└──────────────────────────────────────────────────────────┘</pre>
+
+  <h4 style="font-size:13px;margin:10px 0 6px">3.2 跨平台浮动窗 Tauri 2 配置</h4>
+  <div class="row-flex">
+    <div>
+      <h4 style="font-size:12.5px;margin:4px 0">macOS</h4>
+<pre class="ascii">{
+  label: "floating",
+  url: "floating.html",
+  width: 320, height: 36,
+  minWidth: 320, minHeight: 36,
+  maxWidth: 360, maxHeight: 320,
+  transparent: true,
+  decorations: false,
+  alwaysOnTop: true,
+  resizable: false,
+  skipTaskbar: true,
+  focus: false,
+  shadow: false,
+  visible: false,        // 全局快捷键触发
+  titleBarStyle: "Overlay",
+  // 关键：NSPanel
+  // 通过 tauri::WebviewWindow::set_panel(true) 提升为 NSPanel
+}</pre>
+    </div>
+    <div>
+      <h4 style="font-size:12.5px;margin:4px 0">Windows</h4>
+<pre class="ascii">{
+  label: "floating",
+  url: "floating.html",
+  width: 320, height: 36,
+  transparent: true,
+  decorations: false,
+  alwaysOnTop: true,
+  resizable: false,
+  skipTaskbar: true,
+  focus: false,
+  shadow: false,
+  visible: false,
+  // Tauri 2 自动处理 WS_EX_TOOLWINDOW
+  // 折叠态 36px 需手动 disable resize
+}</pre>
+    </div>
+  </div>
+
+  <h4 style="font-size:13px;margin:10px 0 6px">3.3 关键 Tauri 命令（Rust ↔ JS）</h4>
+  <table>
+    <tr><th>命令</th><th>方向</th><th>用途</th></tr>
+    <tr><td><code>record_start(content, type, due_at?)</code></td><td>JS → Rust</td><td>新建 + 启动计时，原子事务</td></tr>
+    <tr><td><code>record_pause(id)</code></td><td>JS → Rust</td><td>暂停，累加 duration_ms</td></tr>
+    <tr><td><code>record_resume(id)</code></td><td>JS → Rust</td><td>从暂停恢复，update focus_started_at</td></tr>
+    <tr><td><code>record_complete(id)</code></td><td>JS → Rust</td><td>完成，归档</td></tr>
+    <tr><td><code>record_switch(id)</code></td><td>JS → Rust</td><td>切换 Focus：当前 active → pending，新 id → active</td></tr>
+    <tr><td><code>floating_show / hide / toggle</code></td><td>JS → Rust</td><td>控制浮动窗可见</td></tr>
+    <tr><td><code>evt_focus_changed</code></td><td>Rust → JS</td><td>Focus 切换事件，浮动窗自动刷新</td></tr>
+    <tr><td><code>evt_tick</code></td><td>Rust → JS</td><td>每秒推送（前端不计时）</td></tr>
+  </table>
+
+  <h4 style="font-size:13px;margin:10px 0 6px">3.4 全局快捷键</h4>
+  <div class="pill-row">
+    <span class="ok">macOS</span> <code>Cmd+Shift+Space</code>
+    <span class="ok">Windows</span> <code>Ctrl+Shift+Space</code>
+    <span style="color:#86868b">→</span>
+    <span class="hl">toggle 浮动窗</span>
+  </div>
+  <p style="font-size:12px;color:#1d1d1f;margin:4px 0">策略：用户可改；首次启动使用默认值；与系统快捷键冲突时提示用户。</p>
+</div>
+
+<!-- ===== 节 4：交互流程 ===== -->
+<div class="sec14">
+  <h3><span class="num">4</span> 核心交互流程</h3>
+
+  <h4 style="font-size:13px;margin:6px 0">4.1 <span class="ok">3 秒记录</span> · 端到端</h4>
+<pre class="ascii">  T+0.0s   按 Cmd+Shift+Space
+  T+0.1s   浮动窗展开（折叠态 36px → 展开态 280px，200ms 动画）
+  T+0.5s   用户输入文字 "回复张三关于 Q3 的邮件"
+  T+1.5s   点 ⏵ 开始计时
+  T+1.6s   写 DB（status='active', focus_started_at=now）
+           浮动窗折叠（280px → 36px，200ms 动画）
+  T+1.8s   主 Focus 块显示该任务 + 时间从 00:00:00 开始走
+  T+2.0s   用户可继续工作
+
+  ✓ 总耗时 < 3s</pre>
+
+  <h4 style="font-size:13px;margin:10px 0 6px">4.2 <span class="ok">1 秒查看</span> · 任意时刻</h4>
+<pre class="ascii">  浮动窗常驻桌面任意位置
+  一眼：● FOCUS 写 Q3 计划     00:12:34  ⏸
+       ↑ 呼吸灯   ↑ 标签   ↑ 标题      ↑ 计时  ↑ 状态
+
+  · 无需打开主窗
+  · 折叠态 36px 可拖动
+  · 鼠标 hover → 200ms 渐变高亮（可选）</pre>
+
+  <h4 style="font-size:13px;margin:10px 0 6px">4.3 <span class="hl">切换 Focus</span></h4>
+<pre class="ascii">  1. 浮动窗展开
+  2. 点 ⇄ ▼ 顶靠右下拉（顶靠右浮在主窗内）
+  3. 下拉显示：未开始（灰）+ 已暂停（橙）清单
+  4. 点目标项右侧 ⏵
+  5. 后端原子操作：
+     - 当前 active → pending (or paused)
+     - 新 id → active (focus_started_at = now)
+  6. 浮动窗主 Focus 块自动更新（evt_focus_changed）
+  7. 下拉自动关闭，浮动窗回到默认展开态</pre>
+
+  <h4 style="font-size:13px;margin:10px 0 6px">4.4 <span class="warn">暂停</span> vs <span class="hl">完成</span></h4>
+  <div class="row-flex">
+    <div>
+      <h4 style="font-size:12.5px;margin:4px 0"><span class="warn">⏸ 暂停</span></h4>
+<pre class="ascii">  active → paused
+  · duration_ms += (now - focus_started_at)
+  · 出现在切换下拉，带已计时
+  · 状态机：可继续（paused → active）
+  · 视觉：暂停按钮浅蓝（视觉更突出）</pre>
+    </div>
+    <div>
+      <h4 style="font-size:12.5px;margin:4px 0"><span class="hl">✓ 完成</span></h4>
+<pre class="ascii">  active → done
+  · duration_ms 累加完毕
+  · 从切换下拉消失
+  · 归档到历史（主窗可见）
+  · 视觉：完成按钮淡绿（视觉更弱）</pre>
+    </div>
+  </div>
+
+  <h4 style="font-size:13px;margin:10px 0 6px">4.5 截止快捷 <code>📅 稍后 / 明天</code></h4>
+  <ul style="margin:6px 0;font-size:12.5px;line-height:1.8">
+    <li>📅 稍后 → <code>due_at = end_of_today(今天 23:59)</code></li>
+    <li>📅 明天 → <code>due_at = end_of_tomorrow(明天 23:59)</code></li>
+    <li>仅设置 due_at，不影响 status（仍要点 ⏵ 开始计时）</li>
+    <li>主窗列表按 due_at 排序显示</li>
+  </ul>
+
+  <h4 style="font-size:13px;margin:10px 0 6px">4.6 关闭主窗时浮动窗</h4>
+  <ul style="margin:6px 0;font-size:12.5px;line-height:1.8">
+    <li><strong>macOS</strong>：主窗关 → 浮动窗保留（用户不退出 app，符合 Mac 习惯）</li>
+    <li><strong>Windows</strong>：托盘图标常驻，右键托盘 → 退出</li>
+    <li><strong>自启动</strong>：浮动窗跟随系统启动后自动显示（折叠态）</li>
+  </ul>
+</div>
+
+<!-- ===== 节 5：视觉规范 ===== -->
+<div class="sec14">
+  <h3><span class="num">5</span> 视觉规范 · Liquid Glass + 动画</h3>
+
+  <h4 style="font-size:13px;margin:6px 0">5.1 颜色系统</h4>
+  <div class="pill-row">
+    <span class="swatch" style="background:#007AFF"></span> 主蓝 <code>#007AFF</code>  · CTA / 时间数字
+    <span class="swatch" style="background:#34c759"></span> 主绿 <code>#34c759</code>  · FOCUS 标签底 / 暂停图标
+    <span class="swatch" style="background:#1f8a3f"></span> 绿深 <code>#1f8a3f</code>  · FOCUS 文字 / 已完成文字
+    <span class="swatch" style="background:#ff9500"></span> 橙 <code>#ff9500</code>  · 暂停标签底
+    <span class="swatch" style="background:#cc7a00"></span> 橙深 <code>#cc7a00</code>  · 暂停标签文字
+    <span class="swatch" style="background:#86868b"></span> 灰 <code>#86868b</code>  · 次要文字
+    <span class="swatch" style="background:#1d1d1f"></span> 主文 <code>#1d1d1f</code>  · 内容文字
+  </div>
+
+  <h4 style="font-size:13px;margin:10px 0 6px">5.2 透明度梯度（Liquid Glass）</h4>
+  <table>
+    <tr><th>层级</th><th>rgba</th><th>用途</th></tr>
+    <tr><td>折叠态主底</td><td><code>rgba(255,255,255,0.34)</code></td><td>折叠态 320×36</td></tr>
+    <tr><td>展开态主底</td><td><code>rgba(255,255,255,0.42)</code></td><td>展开态 360×280</td></tr>
+    <tr><td>卡片元素</td><td><code>rgba(255,255,255,0.5)</code></td><td>内部按钮 / 类型选择</td></tr>
+    <tr><td>输入框</td><td><code>rgba(255,255,255,0.45)</code></td><td>textarea</td></tr>
+    <tr><td>蓝高亮</td><td><code>rgba(0,122,255,0.12)</code></td><td>暂停按钮 / 默认类型</td></tr>
+    <tr><td>绿高亮</td><td><code>rgba(52,199,89,0.12)</code></td><td>完成按钮</td></tr>
+    <tr><td>绿标签底</td><td><code>rgba(52,199,89,0.18)</code></td><td>FOCUS 标签</td></tr>
+    <tr><td>下拉</td><td><code>rgba(255,255,255,0.7-0.85)</code></td><td>下拉面板</td></tr>
+  </table>
+
+  <h4 style="font-size:13px;margin:10px 0 6px">5.3 模糊 + 边框 + 阴影</h4>
+<pre class="ascii">backdrop-filter: blur(30-32px) saturate(180-200%);
+-webkit-backdrop-filter: blur(30-32px) saturate(180-200%);
+
+border: 1px solid rgba(255,255,255,0.6-0.65);
+
+box-shadow:
+  inset 0 1px 0 rgba(255,255,255,0.7),  /* 顶部高光 */
+  0 8-10px 24-28px rgba(0,0,0,0.08-0.1); /* 投影 */
+
+border-radius:
+  折叠态 18px (胶囊)
+  展开态主容器 18px
+  内部按钮 5-8px (小按钮 5-6，按钮组 7-8)</pre>
+
+  <h4 style="font-size:13px;margin:10px 0 6px">5.4 动画规范</h4>
+  <table>
+    <tr><th>动画</th><th>参数</th><th>曲线</th><th>触发</th></tr>
+    <tr><td>呼吸灯 (pulse)</td><td>1.6s</td><td>ease-in-out infinite</td><td>Focus 状态常驻</td></tr>
+    <tr><td>折叠 → 展开</td><td>200ms</td><td>ease-out</td><td>点击折叠态 / 快捷键</td></tr>
+    <tr><td>展开 → 折叠</td><td>200ms</td><td>ease-in</td><td>点 ⏵ 开始计时 / 点外部</td></tr>
+    <tr><td>下拉打开</td><td>150ms</td><td>ease-out (opacity + translateY -4px)</td><td>点 ⇄ ▼</td></tr>
+    <tr><td>下拉关闭</td><td>100ms</td><td>ease-in</td><td>点外部 / 选中项</td></tr>
+    <tr><td>标签颜色切换</td><td>200ms</td><td>ease</td><td>状态变更</td></tr>
+    <tr><td>时间数字滚动</td><td>1s tick</td><td>—</td><td>每秒（后端 evt_tick）</td></tr>
+  </table>
+
+  <h4 style="font-size:13px;margin:10px 0 6px">5.5 视觉权重总览（高→低）</h4>
+  <ol style="margin:6px 0;font-size:12.5px;line-height:1.9">
+    <li><span class="ok">⏵ 开始计时</span> · 蓝实心 #007AFF · CTA 最高权重</li>
+    <li><span class="ok">⏸ 暂停</span> · 浅蓝底 rgba(0,122,255,0.12) · 文字按钮</li>
+    <li><span class="hl">✓ 完成</span> · 淡绿底 rgba(52,199,89,0.12) · 文字按钮</li>
+    <li>📅 稍后 / 明天 · 灰底 rgba(255,255,255,0.5) · 次要</li>
+    <li>类型 ✓待办 / ✎灵感 / ⚡打卡 · 灰底 · 切换型</li>
+    <li>⇄ ▼ · 灰底 · 最次要</li>
+  </ol>
+
+  <h4 style="font-size:13px;margin:10px 0 6px">5.6 排版规范</h4>
+  <table>
+    <tr><th>元素</th><th>字号 / 字重</th><th>颜色</th></tr>
+    <tr><td>FOCUS 标签</td><td>9px / 700 / letter-spacing 0.4px</td><td>#1f8a3f</td></tr>
+    <tr><td>标题</td><td>12.5px / 600</td><td>#1d1d1f</td></tr>
+    <tr><td>时间数字</td><td>12.5px / 700 / tabular-nums</td><td>#007AFF</td></tr>
+    <tr><td>按钮文字</td><td>10.5-11.5px / 600</td><td>随按钮</td></tr>
+    <tr><td>textarea</td><td>12.5px / 400</td><td>#1d1d1f</td></tr>
+  </table>
+</div>
+
+<!-- ===== 节 1 回顾 + 全套确认 ===== -->
+<div class="sec14" style="background:rgba(52,199,89,0.06);border-color:rgba(52,199,89,0.2)">
+  <h3><span class="num" style="background:#34c759">✓</span> 5 节汇总 · 待你最终确认</h3>
+  <ul style="margin:6px 0;font-size:13px;line-height:1.9">
+    <li><strong>节 1 UI 形态</strong> · 方案 A：360×280 上下分栏，文字按钮，⇄▼ 顶靠右下拉，折叠态 320×36 时间+暂停靠右 ✅ <span class="hl">已锁</span></li>
+    <li><strong>节 2 数据</strong> · 4 状态机 + SQLite 单表 + payload JSON 扩展 + 5 条不变量</li>
+    <li><strong>节 3 架构</strong> · Tauri 2 双窗口（主窗+浮动窗）+ 跨平台 NSPanel/WS_EX_TOOLWINDOW + 8 个 command + 全局快捷键</li>
+    <li><strong>节 4 流程</strong> · 3 秒记录 / 1 秒查看 / 切换 / 暂停 vs 完成 / 截止快捷 / 关闭策略</li>
+    <li><strong>节 5 视觉</strong> · Liquid Glass 颜色 / 透明度 / 模糊 / 圆角 / 7 类动画 / 视觉权重 / 排版</li>
+  </ul>
+  <p style="font-size:13px;margin:8px 0 0;color:#1d1d1f">
+    <strong>如果都 OK</strong> → 我直接写 <code>docs/superpowers/specs/2026-06-14-浮动窗口快速记录-design.md</code> 设计文档<br/>
+    <strong>如果某节要改</strong> → 告诉我节号 + 哪条要改<br/>
+    <strong>缺内容</strong> → 节 2-5 还有任何缺失（e.g. 移动端策略？主窗具体布局？自启动方案？）请告知
+  </p>
+</div>

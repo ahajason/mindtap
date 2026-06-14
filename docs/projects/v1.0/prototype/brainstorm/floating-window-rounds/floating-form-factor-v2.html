@@ -1,0 +1,118 @@
+<h2>浮动窗口形态 v2 — 修正 B 方案高度</h2>
+<p class="subtitle">B 方案（矩形极简卡）从 96px 调到 110px；4 按钮改成"3 类型 Tab + 右上角形态切换"避免溢出</p>
+
+<div class="options" data-multiselect>
+  <!-- ============ 方案 A ============ -->
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>顶部胶囊条（最紧凑）</h3>
+      <p>横向 320×40px，紧贴屏幕顶部居中。Liquid Glass 长条，左侧"当前任务" + 计时器，右侧 3 个图标按钮（待办/灵感/快打卡）。点击输入区在窗口下方向下滑出。</p>
+      <div class="mockup" style="margin-top:12px">
+        <div class="mockup-header">折叠态（默认·置顶常驻）</div>
+        <div class="mockup-body" style="background:linear-gradient(180deg,#f5f5f7 0%,#e8eaed 100%);padding:24px 0;display:flex;justify-content:center;min-height:120px">
+          <div style="width:320px;height:40px;border-radius:20px;background:rgba(255,255,255,0.55);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.6);box-shadow:0 1px 0 rgba(255,255,255,0.6) inset, 0 8px 24px rgba(0,0,0,0.08);display:flex;align-items:center;padding:0 14px;gap:10px;font:600 13px -apple-system">
+            <span style="color:#1d1d1f">▌写周报</span>
+            <span style="flex:1"></span>
+            <span style="color:#007AFF;font-variant-numeric:tabular-nums">00:12:34</span>
+            <span style="color:#86868b">●</span>
+            <span style="color:#34c759">✓</span>
+            <span style="color:#ff9500">+</span>
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Pros</h4><ul><li>最不打扰视野</li><li>Mac/Windows 一致（Web 全做）</li><li>实现最简单</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>展开输入后窗体高度变化大</li><li>顶部占位可能跟全屏 App 冲突</li><li>3 个图标入口可发现性弱</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 方案 B v2: 高度 110px + 右上角切换 ============ -->
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>矩形极简卡（推荐·平衡）— v2</h3>
+      <p>屏幕右上角，折叠 <strong>280×110px</strong>，展开 320×auto。Liquid Glass 圆角 18px。折叠态：当前任务 + 计时 + 3 类型 Tab；右上角单独"切换"按钮收起/展开输入区。</p>
+      <div class="mockup" style="margin-top:12px">
+        <div class="mockup-header">折叠态 · 计时器（高度修正 110px）</div>
+        <div class="mockup-body" style="background:linear-gradient(135deg,#fef9f3 0%,#eef3fb 50%,#eaf3ee 100%);padding:24px;display:flex;justify-content:flex-end;min-height:170px">
+          <div style="width:280px;height:110px;border-radius:18px;background:rgba(255,255,255,0.55);backdrop-filter:blur(30px);border:1px solid rgba(255,255,255,0.6);box-shadow:0 1px 0 rgba(255,255,255,0.7) inset, 0 12px 32px rgba(0,0,0,0.1);padding:12px 14px;font:13px -apple-system;color:#1d1d1f;display:flex;flex-direction:column;gap:8px;box-sizing:border-box">
+            <div style="display:flex;align-items:center;gap:6px;height:18px">
+              <span style="display:inline-block;width:6px;height:6px;background:#007AFF;border-radius:50%;box-shadow:0 0 0 3px rgba(0,122,255,0.2);flex-shrink:0"></span>
+              <span style="font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">写 Q3 计划</span>
+              <span style="color:#86868b;font-size:10px;flex-shrink:0">⤢</span>
+            </div>
+            <div style="font:700 30px -apple-system;color:#1d1d1f;font-variant-numeric:tabular-nums;letter-spacing:-0.5px;line-height:1;height:30px">00:12:34</div>
+            <div style="display:flex;gap:6px;height:28px">
+              <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(0,122,255,0.12);color:#007AFF;border-radius:8px;font-size:11px;font-weight:600">✓ 待办</span>
+              <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">✎ 灵感</span>
+              <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">⚡ 打卡</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mockup" style="margin-top:8px">
+        <div class="mockup-header">展开态 · 输入区</div>
+        <div class="mockup-body" style="background:linear-gradient(135deg,#fef9f3 0%,#eef3fb 50%,#eaf3ee 100%);padding:24px;display:flex;justify-content:flex-end;min-height:240px">
+          <div style="width:320px;height:200px;border-radius:18px;background:rgba(255,255,255,0.6);backdrop-filter:blur(30px);border:1px solid rgba(255,255,255,0.6);box-shadow:0 1px 0 rgba(255,255,255,0.7) inset, 0 12px 32px rgba(0,0,0,0.1);padding:12px 14px;font:13px -apple-system;color:#1d1d1f;display:flex;flex-direction:column;gap:10px;box-sizing:border-box">
+            <div style="display:flex;align-items:center;gap:6px;height:18px">
+              <span style="display:inline-block;width:6px;height:6px;background:#007AFF;border-radius:50%;box-shadow:0 0 0 3px rgba(0,122,255,0.2)"></span>
+              <span style="font-weight:600">新记录 · 待办</span>
+              <span style="flex:1"></span>
+              <span style="color:#86868b;font-size:11px">⤡ 收起</span>
+            </div>
+            <textarea style="flex:1;background:rgba(255,255,255,0.5);border:1px solid rgba(0,0,0,0.06);border-radius:10px;padding:10px;font:13px -apple-system;color:#1d1d1f;resize:none;outline:none" placeholder="事项内容…">写完 Q3 计划并同步给团队</textarea>
+            <div style="display:flex;gap:6px;height:28px">
+              <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">📅 今天</span>
+              <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">📅 明天</span>
+              <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">📅 自定义</span>
+              <span style="flex:1.4;display:flex;align-items:center;justify-content:center;background:#007AFF;color:white;border-radius:8px;font-size:12px;font-weight:600">⏎ 保存 (⌘↵)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Pros</h4><ul><li>折叠态一眼看完（任务+计时+类型）</li><li>展开态可输入，不挤占主应用</li><li>类型 Tab 符合 0 思考</li><li>Mac/Windows 一致（Web 全做）</li><li>右上角 ⤢ 单独控制展开/折叠</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>110px 对极小屏笔记本偏大 → 可加"超紧凑模式 64px"</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 方案 C ============ -->
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>灵动岛风格 Pill（Mac 优先）</h3>
+      <p>macOS 26 灵动岛风格，360×48px 长 pill 浮在屏幕顶部（摄像头区域下）。SwiftUI 嵌入实现，依赖 macOS 26 glassEffect API。点击 pill 横向展开为 480×160 输入区。</p>
+      <div class="mockup" style="margin-top:12px">
+        <div class="mockup-header">折叠态 · 灵动岛</div>
+        <div class="mockup-body" style="background:linear-gradient(180deg,#1a1a1a 0%,#2a2a2a 100%);padding:18px;display:flex;justify-content:center;min-height:120px">
+          <div style="width:360px;height:48px;border-radius:24px;background:rgba(0,0,0,0.75);border:1px solid rgba(255,255,255,0.1);box-shadow:0 8px 24px rgba(0,0,0,0.4);display:flex;align-items:center;padding:0 18px;gap:12px;font:600 14px -apple-system;color:white">
+            <span style="font-size:11px;background:rgba(0,122,255,0.3);color:#5ac8fa;padding:2px 8px;border-radius:10px">TODO</span>
+            <span>写 Q3 计划</span>
+            <span style="flex:1"></span>
+            <span style="color:#5ac8fa;font-variant-numeric:tabular-nums">00:12:34</span>
+            <span style="color:#30d158">⏵</span>
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Pros</h4><ul><li>Mac 26 Liquid Glass 还原度最高</li><li>灵动岛原生姿态，视觉高级</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>仅 macOS 26+ 可用，Windows 必须降级为方案 B</li><li>依赖 SwiftUI 嵌入（混合架构风险 R1）</li><li>顶部居中跟全屏 App 冲突严重</li><li>需要 R1 spike 先验证</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:24px;padding:16px;background:rgba(0,122,255,0.08);border-radius:12px;border:1px solid rgba(0,122,255,0.2)">
+  <h3 style="margin:0 0 8px;font-size:15px">v2 修正点</h3>
+  <p style="margin:0;font-size:13px;color:#1d1d1f;line-height:1.7">
+    ① 折叠态高度 <strong>96 → 110px</strong>（padding 14→12，3 行用 12+8+30+10+28+12 = 100，留 10px buffer）<br/>
+    ② 4 按钮 → <strong>3 类型 Tab + 1 右上角"⤢ 展开/折叠"图标</strong>，更符合 macOS 控制中心逻辑<br/>
+    ③ 同时给出<strong>展开态（200px 高）</strong>的 mockup，确认输入区 + 截止时间选择 + 保存按钮布局<br/>
+    ④ 死磕后文字不再溢出，可放心选 B
+  </p>
+</div>
+
+<p class="subtitle" style="margin-top:20px">浏览器里看 v2 → 选 A / B / C，或回复"定 B"等。</p>

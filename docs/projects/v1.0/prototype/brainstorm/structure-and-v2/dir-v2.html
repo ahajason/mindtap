@@ -1,0 +1,80 @@
+<style>
+  body { background: #0a0a0c; color: #e6e6e6; font-family: ui-sans-serif, system-ui, sans-serif; }
+  h2 { margin: 0 0 6px; }
+  .subtitle { color: #888; margin: 0 0 24px; font-size: 13px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .card {
+    display: block; padding: 20px; border-radius: 14px;
+    background: #131316; border: 1px solid rgba(255,255,255,.08);
+    color: #e6e6e6; text-decoration: none;
+    transition: transform .15s, border-color .15s, background .15s;
+  }
+  .card:hover { transform: translateY(-2px); border-color: #0a84ff; background: #1a1a1f; }
+  .card .tag { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: #5e6ad2; }
+  .card h3 { margin: 6px 0 8px; font-size: 18px; }
+  .card p { margin: 0 0 14px; color: #888; font-size: 13px; line-height: 1.5; }
+  .card .path { font-family: ui-monospace, monospace; font-size: 11px; color: #5e6ad2; }
+  .preview { width: 100%; aspect-ratio: 16/10; border-radius: 8px; overflow: hidden; margin-bottom: 14px; border: 1px solid rgba(255,255,255,.06); }
+  .preview svg { display: block; width: 100%; height: 100%; }
+  .legend { margin-top: 24px; padding: 16px; border-radius: 10px; background: rgba(255,255,255,.04); font-size: 12px; color: #aaa; line-height: 1.7; }
+  .legend code { color: #5e6ad2; font-family: ui-monospace, monospace; }
+  .legend strong { color: #fff; }
+</style>
+
+<h2>V2 方向 · 4 个独立 HTML</h2>
+<p class="subtitle">每个方向已独立成单个 HTML 文件，可单独打开全屏细看。下方的卡片可直接点击在新窗口打开。</p>
+
+<div class="grid">
+
+  <a class="card" href="v2-a-macos26.html" target="_blank">
+    <div class="preview"><svg viewBox="0 0 1280 800" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="a1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff7a3d"/><stop offset="1" stop-color="#d92b6f"/></linearGradient><linearGradient id="a2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a8dff"/><stop offset="1" stop-color="#1a4fb8"/></linearGradient><linearGradient id="a3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#28c79a"/><stop offset="1" stop-color="#0f7a5a"/></linearGradient><linearGradient id="a4" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0c33b"/><stop offset="1" stop-color="#d68f00"/></linearGradient></defs><rect x="0" y="0" width="640" height="400" fill="url(#a1)"/><rect x="640" y="0" width="640" height="400" fill="url(#a2)"/><rect x="0" y="400" width="640" height="400" fill="url(#a3)"/><rect x="640" y="400" width="640" height="400" fill="url(#a4)"/><rect x="0" y="120" width="240" height="680" fill="rgba(255,255,255,0.2)"/><rect x="0" y="0" width="1280" height="80" fill="rgba(255,255,255,0.15)"/><circle cx="1140" cy="700" r="44" fill="rgba(255,255,255,0.4)" stroke="rgba(255,255,255,.6)"/><text x="1140" y="713" font-family="sans-serif" font-size="36" font-weight="300" text-anchor="middle" fill="#fff">+</text><g font-family="sans-serif" fill="#fff"><text x="60" y="200" font-size="60" font-weight="600">12</text><text x="700" y="200" font-size="60" font-weight="600">3/5</text><text x="60" y="590" font-size="60" font-weight="600">08</text><text x="700" y="590" font-size="60" font-weight="600">4.2k</text></g></svg></div>
+    <span class="tag">A · macOS 26 Tahoe</span>
+    <h3>4 色块 + 真实数据 + 玻璃 sidebar</h3>
+    <p>侧栏漂浮、顶栏光带、浮动 [+]。数据/灵感/打卡/字数四区。</p>
+    <span class="path">v2-a-macos26.html</span>
+  </a>
+
+  <a class="card" href="v2-b-linear.html" target="_blank">
+    <div class="preview"><svg viewBox="0 0 1280 800" xmlns="http://www.w3.org/2000/svg"><rect width="1280" height="800" fill="#0a0a0c"/><rect x="32" y="116" width="1216" height="60" rx="10" fill="#131316"/><rect x="32" y="184" width="1216" height="60" rx="10" fill="#131316"/><rect x="32" y="298" width="1216" height="40" rx="8" fill="#0e0e11"/><rect x="32" y="346" width="1216" height="40" rx="8" fill="#0e0e11"/><rect x="32" y="394" width="1216" height="40" rx="8" fill="#0e0e11"/><rect x="32" y="442" width="1216" height="40" rx="8" fill="#0e0e11"/><rect x="32" y="490" width="1216" height="40" rx="8" fill="#0e0e11"/><rect x="0" y="0" width="1280" height="56" fill="rgba(255,255,255,0.04)"/><line x1="0" y1="56" x2="1280" y2="56" stroke="rgba(255,255,255,0.08)"/><rect x="1180" y="14" width="68" height="28" rx="8" fill="rgba(94,106,210,0.85)"/><g font-family="monospace" font-size="12" fill="#e6e6e6"><text x="92" y="148" font-weight="600">MNT-142</text><text x="92" y="216" font-weight="600">MNT-148</text><text x="92" y="322" fill="#9b9ba3">MNT-201  6 大类记录建模</text><text x="92" y="370" fill="#9b9ba3">MNT-202  浮动 [+] 按钮</text><text x="92" y="418" fill="#9b9ba3">MNT-203  本地存储选型</text></g></svg></div>
+    <span class="tag">B · Linear / Vercel</span>
+    <h3>深色 + 任务流 + 玻璃顶栏</h3>
+    <p>IN PROGRESS / BACKLOG / DONE 三段式；MNT-142 风格条目。</p>
+    <span class="path">v2-b-linear.html</span>
+  </a>
+
+  <a class="card" href="v2-c-editorial.html" target="_blank">
+    <div class="preview"><svg viewBox="0 0 1280 800" xmlns="http://www.w3.org/2000/svg"><rect width="1280" height="800" fill="#f4f1ea"/><rect x="0" y="0" width="1280" height="72" fill="rgba(255,255,255,0.55)"/><g font-family="Georgia, serif" fill="#1a1a1a"><text x="80" y="200" font-size="60" font-weight="700">A Footnote,</text><text x="80" y="270" font-size="60" font-weight="300" font-style="italic" opacity=".75">not a monument.</text><text x="80" y="350" font-size="14" opacity=".85">脚手架已经立起。这一篇，写给会回来</text><text x="80" y="372" font-size="14" opacity=".85">翻看自己的人。V1.0 启动中。</text><text x="820" y="220" font-size="20" font-style="italic" opacity=".7">a record is a structure</text><text x="820" y="250" font-size="20" font-style="italic" opacity=".7">meant to outlast the moment</text><text x="820" y="280" font-size="20" font-style="italic" opacity=".7">of its writing.</text></g><circle cx="1180" cy="720" r="38" fill="rgba(255,255,255,0.7)" stroke="rgba(0,0,0,0.18)"/><text x="1180" y="732" font-family="Georgia, serif" font-size="32" text-anchor="middle" fill="#1a1a1a">+</text></svg></div>
+    <span class="tag">C · 编辑杂志</span>
+    <h3>暖米白 + 衬线 + 玻璃 nav</h3>
+    <p>正文 + 旁注 + 延伸阅读。浮动玻璃 nav 漂浮在文字之上。</p>
+    <span class="path">v2-c-editorial.html</span>
+  </a>
+
+  <a class="card" href="v2-d-engdoc.html" target="_blank">
+    <div class="preview"><svg viewBox="0 0 1280 800" xmlns="http://www.w3.org/2000/svg"><rect width="1280" height="800" fill="#fafaf9"/><rect x="0" y="0" width="260" height="800" fill="rgba(0,0,0,0.04)"/><line x1="260" y1="0" x2="260" y2="800" stroke="rgba(0,0,0,0.08)"/><rect x="260" y="0" width="1020" height="56" fill="rgba(255,255,255,0.6)"/><g font-family="sans-serif"><text x="300" y="100" font-size="32" font-weight="700" fill="#1a1a1a">Toolbar.</text><text x="300" y="356" font-size="32" font-weight="700" fill="#1a1a1a">Card.</text><rect x="300" y="180" width="920" height="68" rx="14" fill="rgba(255,255,255,0.65)" stroke="rgba(0,0,0,0.1)"/><rect x="300" y="408" width="440" height="280" rx="18" fill="#fff" stroke="rgba(0,0,0,0.1)"/><rect x="760" y="408" width="460" height="280" rx="18" fill="#fff" stroke="rgba(0,0,0,0.1)"/><g font-size="13" fill="#1a1a1a"><rect x="1080" y="200" width="120" height="28" rx="14" fill="#0a84ff"/><text x="320" y="488" font-size="20" font-weight="700">Record #0014</text><text x="780" y="488" font-size="20" font-weight="700">3/5 · 连续 7 天</text></g></g></svg></div>
+    <span class="tag">D · 工程文档</span>
+    <h3>暖白 + 玻璃侧栏 + 真实组件 demo</h3>
+    <p>Surface / Toolbar / Card demo；左侧导航 / 主区内容 / 真实热力图。</p>
+    <span class="path">v2-d-engdoc.html</span>
+  </a>
+
+</div>
+
+<div class="legend">
+  <strong>本地路径</strong>：<code>/home/jason/workspace/mindtap/.superpowers/brainstorm/43513-1781418234/content/</code><br>
+  文件名：<code>v2-a-macos26.html</code> · <code>v2-b-linear.html</code> · <code>v2-c-editorial.html</code> · <code>v2-d-engdoc.html</code><br><br>
+  <strong>怎么打开</strong>：<br>
+  · 点上方卡片（在新窗口打开）<br>
+  · 或在终端：<code>open /home/jason/workspace/mindtap/.superpowers/brainstorm/43513-1781418234/content/v2-a-macos26.html</code>（macOS）<br>
+  · 或浏览器直接访问：<code>file:///home/jason/workspace/mindtap/.superpowers/brainstorm/43513-1781418234/content/v2-a-macos26.html</code>
+</div>
+
+<p class="pick" style="margin-top:20px">
+  <strong style="color:#aaa;width:100%;font-size:13px">看完后选一个（或告诉我"都不对"、"X+Y 组合"）：</strong>
+  <button data-pick="a-macos26" onclick="pick(this)" style="padding:8px 14px;background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;cursor:pointer;font:inherit;font-size:12px">A · macOS 26</button>
+  <button data-pick="b-linear" onclick="pick(this)" style="padding:8px 14px;background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;cursor:pointer;font:inherit;font-size:12px">B · Linear / Vercel</button>
+  <button data-pick="c-editorial" onclick="pick(this)" style="padding:8px 14px;background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;cursor:pointer;font:inherit;font-size:12px">C · 编辑杂志</button>
+  <button data-pick="d-engdoc" onclick="pick(this)" style="padding:8px 14px;background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;cursor:pointer;font:inherit;font-size:12px">D · 工程文档</button>
+  <button data-pick="mix" onclick="pick(this)" style="padding:8px 14px;background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;cursor:pointer;font:inherit;font-size:12px">组合 A+D / B+D / …</button>
+  <button data-pick="iterate" onclick="pick(this)" style="padding:8px 14px;background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;cursor:pointer;font:inherit;font-size:12px">都不对，重画</button>
+</p>

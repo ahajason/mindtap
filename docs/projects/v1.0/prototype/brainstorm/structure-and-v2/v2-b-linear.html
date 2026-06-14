@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>B · Linear / Vercel · V2 Liquid Glass 对比页</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #050507; color: #e6e6e6; font-family: ui-monospace, "JetBrains Mono", "SF Mono", monospace; min-height: 100vh; }
+  .label {
+    position: fixed; top: 12px; right: 16px; z-index: 99;
+    padding: 6px 10px; background: rgba(0,0,0,.7); border-radius: 6px;
+    font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #fff;
+    border: 1px solid rgba(94,106,210,.4);
+  }
+  .stage { width: 100vw; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+  svg { display: block; width: min(1280px, 100%); height: auto; box-shadow: 0 30px 80px rgba(94,106,210,.15); border-radius: 14px; }
+</style>
+</head>
+<body>
+<div class="label">B · Linear / Vercel · 1280×800</div>
+<div class="stage">
+<svg viewBox="0 0 1280 800" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1280" height="800" fill="#0a0a0c"/>
+  <rect x="0" y="0" width="1280" height="56" fill="rgba(255,255,255,0.04)"/>
+  <line x1="0" y1="56" x2="1280" y2="56" stroke="rgba(255,255,255,0.08)"/>
+  <g font-family="ui-monospace, monospace" font-size="13" fill="#e6e6e6">
+    <text x="32" y="34" fill="#5e6ad2" font-weight="600">⊕</text>
+    <text x="56" y="34" font-weight="600">Mindtap</text>
+    <text x="148" y="34" opacity=".5">/</text>
+    <text x="170" y="34" opacity=".75">V1.0 脚手架</text>
+    <rect x="700" y="14" width="240" height="28" rx="8" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.08)"/>
+    <text x="720" y="33" opacity=".55">⌘K  Search issues, files, anything</text>
+    <rect x="970" y="14" width="28" height="28" rx="8" fill="rgba(94,106,210,0.18)"/>
+    <text x="984" y="33" text-anchor="middle" opacity=".7">⌘</text>
+    <rect x="1006" y="14" width="28" height="28" rx="8" fill="rgba(94,106,210,0.18)"/>
+    <text x="1020" y="33" text-anchor="middle" opacity=".7">⌥</text>
+    <rect x="1180" y="14" width="68" height="28" rx="8" fill="rgba(94,106,210,0.85)"/>
+    <text x="1214" y="33" text-anchor="middle" font-weight="600">+ New</text>
+  </g>
+  <g font-family="ui-monospace, monospace" font-size="13" fill="#e6e6e6">
+    <text x="32" y="100" font-size="11" fill="#5e6ad2" letter-spacing="2">▼ IN PROGRESS · 2</text>
+    <rect x="32" y="116" width="1216" height="60" rx="10" fill="#131316" stroke="rgba(255,255,255,.06)"/>
+    <rect x="32" y="116" width="3" height="60" fill="#5e6ad2"/>
+    <circle cx="68" cy="146" r="7" fill="none" stroke="#5e6ad2" stroke-width="1.5"/>
+    <text x="92" y="142" font-weight="600">MNT-142</text>
+    <text x="92" y="162" font-size="12" opacity=".85">Liquid Glass 脚手架 — 验证 backdrop-filter / 多平台</text>
+    <text x="1140" y="142" font-size="11" fill="#5e6ad2" text-anchor="end">ENG-3</text>
+    <text x="1220" y="142" font-size="11" fill="#9b9ba3" text-anchor="end">5d</text>
+    <g font-size="11" fill="#9b9ba3">
+      <circle cx="1190" cy="160" r="8" fill="#ff7a3d"/>
+      <text x="1190" y="163" text-anchor="middle" fill="#fff" font-size="9" font-weight="600">J</text>
+      <circle cx="1208" cy="160" r="8" fill="#28c79a"/>
+      <text x="1208" y="163" text-anchor="middle" fill="#fff" font-size="9" font-weight="600">M</text>
+    </g>
+    <rect x="32" y="184" width="1216" height="60" rx="10" fill="#131316" stroke="rgba(255,255,255,.06)"/>
+    <rect x="32" y="184" width="3" height="60" fill="#f2994a"/>
+    <circle cx="68" cy="214" r="7" fill="#5e6ad2"/>
+    <text x="92" y="210" font-weight="600">MNT-148</text>
+    <text x="92" y="230" font-size="12" opacity=".85">V1.0 PRD v1.2 审阅 — 6 大类记录 / 浮动 + 按钮 / 本地存储</text>
+    <text x="1140" y="210" font-size="11" fill="#f2994a" text-anchor="end">DSGN-1</text>
+    <text x="1220" y="210" font-size="11" fill="#9b9ba3" text-anchor="end">2d</text>
+    <text x="32" y="282" font-size="11" fill="#9b9ba3" letter-spacing="2">▼ BACKLOG · 5</text>
+    <rect x="32" y="298" width="1216" height="40" rx="8" fill="#0e0e11"/>
+    <circle cx="68" cy="318" r="6" fill="none" stroke="#3f3f46" stroke-width="1"/>
+    <text x="92" y="322" font-size="12" fill="#9b9ba3">MNT-201  6 大类记录建模（灵感 / 打卡 / 笔记 / 备忘 / 待办 / 归档）</text>
+    <text x="1220" y="322" font-size="11" fill="#3f3f46" text-anchor="end">—</text>
+    <rect x="32" y="346" width="1216" height="40" rx="8" fill="#0e0e11"/>
+    <text x="92" y="370" font-size="12" fill="#9b9ba3">MNT-202  浮动 [+] 按钮 + GlassEffectContainer 形变动画</text>
+    <text x="1220" y="370" font-size="11" fill="#3f3f46" text-anchor="end">—</text>
+    <rect x="32" y="394" width="1216" height="40" rx="8" fill="#0e0e11"/>
+    <text x="92" y="418" font-size="12" fill="#9b9ba3">MNT-203  本地存储选型（SQLite / IndexedDB / 文件）</text>
+    <text x="1220" y="418" font-size="11" fill="#3f3f46" text-anchor="end">—</text>
+    <rect x="32" y="442" width="1216" height="40" rx="8" fill="#0e0e11"/>
+    <text x="92" y="466" font-size="12" fill="#9b9ba3">MNT-204  跨平台架构决策 — Tauri 2 + React 单 Surface</text>
+    <text x="1220" y="466" font-size="11" fill="#3f3f46" text-anchor="end">—</text>
+    <rect x="32" y="490" width="1216" height="40" rx="8" fill="#0e0e11"/>
+    <text x="92" y="514" font-size="12" fill="#9b9ba3">MNT-205  V1.0 README + 启动文档</text>
+    <text x="1220" y="514" font-size="11" fill="#3f3f46" text-anchor="end">—</text>
+    <text x="32" y="582" font-size="11" fill="#9b9ba3" letter-spacing="2">▼ DONE · 4</text>
+    <rect x="32" y="598" width="1216" height="36" rx="8" fill="#0e0e11" opacity=".65"/>
+    <text x="92" y="620" font-size="12" fill="#5e6ad2">✓</text>
+    <text x="120" y="620" font-size="12" fill="#5e6ad2">MNT-101  极简记录 APP 立项 + 命名（轻念 / Mindtap）</text>
+    <text x="1220" y="620" font-size="11" fill="#5e6ad2" text-anchor="end">v0.1</text>
+    <rect x="32" y="642" width="1216" height="36" rx="8" fill="#0e0e11" opacity=".65"/>
+    <text x="92" y="664" font-size="12" fill="#5e6ad2">✓</text>
+    <text x="120" y="664" font-size="12" fill="#5e6ad2">MNT-102  8 维度 Liquid Glass 验证（spec · 2026-06-14）</text>
+    <text x="1220" y="664" font-size="11" fill="#5e6ad2" text-anchor="end">v0.1</text>
+  </g>
+</svg>
+</div>
+</body>
+</html>

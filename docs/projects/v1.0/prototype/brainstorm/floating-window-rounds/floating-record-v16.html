@@ -1,0 +1,353 @@
+<h2>浮动窗口 v16 · 3 表 + 通用 record 关联设计</h2>
+<p class="subtitle">D1-A 修订：task/idea/check_in 独立表 + 通用 record 表（事件形式）用于统一列表展示</p>
+
+<style>
+  .sec16{margin:18px 0;padding:16px;background:rgba(255,255,255,0.4);border-radius:14px;border:1px solid rgba(0,0,0,0.06)}
+  .sec16 h3{margin:0 0 10px;font-size:15px;color:#007AFF;display:flex;align-items:center;gap:8px}
+  .sec16 h3 .num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:#007AFF;color:white;border-radius:6px;font-size:12px;font-weight:700}
+  .sec16 pre,.sec16 .ascii{background:rgba(0,0,0,0.04);border-radius:8px;padding:12px;font:11.5px/1.6 ui-monospace,monospace;white-space:pre;overflow-x:auto;margin:8px 0;color:#1d1d1f}
+  .sec16 table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px}
+  .sec16 th,.sec16 td{padding:6px 8px;border-bottom:1px solid rgba(0,0,0,0.06);text-align:left;vertical-align:top}
+  .sec16 th{background:rgba(0,122,255,0.06);font-weight:700;color:#1d1d1f}
+  .sec16 td code{background:rgba(0,122,255,0.08);color:#007AFF;padding:1px 5px;border-radius:3px;font-size:11px}
+  .sec16 .hl{background:rgba(52,199,89,0.12);color:#1f8a3f;padding:2px 6px;border-radius:4px;font-weight:600}
+  .sec16 .ok{background:rgba(0,122,255,0.12);color:#007AFF;padding:2px 6px;border-radius:4px;font-weight:600}
+  .sec16 .warn{background:rgba(255,149,0,0.12);color:#cc7a00;padding:2px 6px;border-radius:4px;font-weight:600}
+  .choice-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:10px 0}
+  .choice-card{padding:12px;border-radius:10px;background:rgba(255,255,255,0.5);border:2px solid rgba(0,0,0,0.08);position:relative;cursor:pointer}
+  .choice-card.recommended::before{content:"推荐";position:absolute;top:-8px;right:10px;background:#34c759;color:white;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700}
+  .choice-card h4{margin:0 0 4px;font-size:13px}
+  .choice-card p{margin:0;font-size:11.5px;color:#1d1d1f;line-height:1.5}
+  .mockup{background:rgba(255,255,255,0.5);border:1px solid rgba(0,0,0,0.08);border-radius:10px;margin:8px 0;overflow:hidden}
+  .mockup-header{padding:6px 12px;background:rgba(0,0,0,0.04);font-size:11px;font-weight:700;color:#86868b}
+  .mockup-body{padding:14px}
+</style>
+
+<!-- ===== 架构总览 ===== -->
+<div class="sec16">
+  <h3><span class="num">🏛</span> 整体架构 · 3 源表 + 1 通用 record 表</h3>
+
+  <pre class="ascii">┌─────────────────────────────────────────────────────────────┐
+│                        Mindtap V1.3                           │
+│                                                               │
+│  ┌─────────┐    ┌─────────┐    ┌──────────┐                │
+│  │  task   │    │  idea   │    │ check_in │  ← 3 源表       │
+│  │ (4 状态) │    │ (极简)  │    │  (频次)   │    (各自独立)   │
+│  └────┬────┘    └────┬────┘    └─────┬────┘                │
+│       │              │               │                       │
+│       │ INSERT/UPDATE │               │                       │
+│       ▼              ▼               ▼                       │
+│  ┌──────────────────────────────────────────────────┐       │
+│  │              SQLite TRIGGERS                      │       │
+│  │   task_ai / task_au / idea_ai / check_in_ai       │       │
+│  └────────────────────┬─────────────────────────────┘       │
+│                       │ 自动写入 / 更新                       │
+│                       ▼                                       │
+│  ┌──────────────────────────────────────────────────┐       │
+│  │                   record (通用)                    │       │
+│  │   统一列表展示用：所有创建的记录流                   │       │
+│  │   id, kind, source_id, content, status, created_at │       │
+│  └──────────────────────────────────────────────────┘       │
+│                       │                                       │
+│                       ▼                                       │
+│  ┌──────────────────────────────────────────────────┐       │
+│  │           主窗 "全部记录" 时间线视图                │       │
+│  │   任务 · 灵感 · 打卡 · 混排（按 created_at desc）  │       │
+│  └──────────────────────────────────────────────────┘       │
+└─────────────────────────────────────────────────────────────┘</pre>
+</div>
+
+<!-- ===== 3 种 record 关联设计 ===== -->
+<div class="sec16">
+  <h3><span class="num">D4</span> 3 种 record 关联设计 · 你选</h3>
+
+  <div class="choice-grid">
+    <div class="choice-card recommended">
+      <h4>方案 A · 触发器自动同步（推荐）</h4>
+      <p><code>record</code> 表 + SQLite 触发器自动写入/更新，业务层不需双写。<br/>UNIQUE(kind, source_id) 防止重复。</p>
+    </div>
+    <div class="choice-card">
+      <h4>方案 B · 业务层双写</h4>
+      <p>业务层每次创建 task/idea/check_in 同步写 record。<br/>简单直接，但易遗漏。</p>
+    </div>
+    <div class="choice-card">
+      <h4>方案 C · 纯视图 JOIN</h4>
+      <p>不建 record 表，用 <code>UNION ALL VIEW</code> 聚合 3 源表。<br/>无冗余但查询性能受限。</p>
+    </div>
+  </div>
+
+  <h4 style="font-size:13px;margin:10px 0 6px">📌 方案 A · 触发器自动同步（推荐）完整 Schema</h4>
+
+  <pre class="ascii">-- ===========================================
+-- 3 源表（V15 已有）
+-- ===========================================
+CREATE TABLE task (
+  id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+  content             TEXT    NOT NULL,
+  status              TEXT    NOT NULL DEFAULT 'pending',
+  duration_ms         INTEGER NOT NULL DEFAULT 0,
+  first_focused_at    INTEGER,
+  focus_started_at    INTEGER,
+  paused_at           INTEGER,
+  focused_count       INTEGER NOT NULL DEFAULT 0,
+  due_at              INTEGER,
+  created_at          INTEGER NOT NULL,
+  updated_at          INTEGER NOT NULL,
+  archived_at         INTEGER
+);
+
+CREATE TABLE idea (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  content     TEXT    NOT NULL,
+  created_at  INTEGER NOT NULL
+);
+
+CREATE TABLE check_in (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  habit       TEXT    NOT NULL,
+  note        TEXT,
+  checked_at  INTEGER NOT NULL
+);
+
+-- ===========================================
+-- 通用 record 表（统一列表）
+-- ===========================================
+CREATE TABLE record (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  kind        TEXT    NOT NULL,         -- 'task' | 'idea' | 'check_in'
+  source_id   INTEGER NOT NULL,         -- 指向 task/idea/check_in.id
+  content     TEXT    NOT NULL,         -- 实时同步源表 content（task.content / idea.content / check_in.habit+note）
+  status      TEXT,                     -- task 有 status；idea/check_in 为 NULL
+  created_at  INTEGER NOT NULL,         -- 复用源表时间戳
+  UNIQUE(kind, source_id)               -- 同源只能一条
+);
+CREATE INDEX idx_record_created_at ON record(created_at);
+CREATE INDEX idx_record_kind ON record(kind);
+CREATE INDEX idx_record_status ON record(status);
+
+-- ===========================================
+-- 触发器：INSERT 时自动写 record
+-- ===========================================
+CREATE TRIGGER task_after_insert AFTER INSERT ON task
+BEGIN
+  INSERT INTO record (kind, source_id, content, status, created_at)
+  VALUES ('task', NEW.id, NEW.content, NEW.status, NEW.created_at);
+END;
+
+CREATE TRIGGER idea_after_insert AFTER INSERT ON idea
+BEGIN
+  INSERT INTO record (kind, source_id, content, status, created_at)
+  VALUES ('idea', NEW.id, NEW.content, NULL, NEW.created_at);
+END;
+
+CREATE TRIGGER check_in_after_insert AFTER INSERT ON check_in
+BEGIN
+  INSERT INTO record (kind, source_id, content, status, created_at)
+  VALUES ('check_in', NEW.id,
+          NEW.habit || COALESCE(' · ' || NEW.note, ''),
+          NULL, NEW.checked_at);
+END;
+
+-- ===========================================
+-- 触发器：UPDATE 时同步 record.content/status
+-- ===========================================
+CREATE TRIGGER task_after_update AFTER UPDATE OF content, status ON task
+BEGIN
+  UPDATE record
+  SET content = NEW.content, status = NEW.status
+  WHERE kind = 'task' AND source_id = NEW.id;
+END;
+
+-- idea 只改 content
+CREATE TRIGGER idea_after_update AFTER UPDATE OF content ON idea
+BEGIN
+  UPDATE record
+  SET content = NEW.content
+  WHERE kind = 'idea' AND source_id = NEW.id;
+END;
+
+-- ===========================================
+-- 触发器：DELETE 时级联删除 record
+-- ===========================================
+CREATE TRIGGER task_after_delete AFTER DELETE ON task
+BEGIN
+  DELETE FROM record WHERE kind = 'task' AND source_id = OLD.id;
+END;
+
+CREATE TRIGGER idea_after_delete AFTER DELETE ON idea
+BEGIN
+  DELETE FROM record WHERE kind = 'idea' AND source_id = OLD.id;
+END;
+
+CREATE TRIGGER check_in_after_delete AFTER DELETE ON check_in
+BEGIN
+  DELETE FROM record WHERE kind = 'check_in' AND source_id = OLD.id;
+END;</pre>
+</div>
+
+<!-- ===== 主窗统一列表展示 ===== -->
+<div class="sec16">
+  <h3><span class="num">📋</span> 主窗"全部记录"统一列表 · 时间线视图</h3>
+
+  <div class="mockup">
+    <div class="mockup-header">主窗 · 全部记录时间线（按 created_at desc）</div>
+    <div class="mockup-body" style="background:linear-gradient(135deg,#fef9f3,#eaf3fb);min-height:280px">
+
+      <div style="background:rgba(255,255,255,0.6);border-radius:10px;padding:6px 12px;display:flex;gap:8px;align-items:center;margin-bottom:10px;font-size:11.5px">
+        <span style="font-weight:700;color:#1d1d1f">全部</span>
+        <span style="color:#007AFF;font-weight:600;border-bottom:2px solid #007AFF;padding-bottom:2px">42</span>
+        <span style="color:#86868b">任务 18</span>
+        <span style="color:#86868b">灵感 16</span>
+        <span style="color:#86868b">打卡 8</span>
+        <span style="flex:1"></span>
+        <span style="background:rgba(0,122,255,0.08);color:#007AFF;padding:3px 8px;border-radius:6px;font-weight:600">↓ 最新优先</span>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:6px">
+
+        <div style="background:rgba(255,255,255,0.55);border-radius:8px;padding:8px 10px;display:flex;align-items:center;gap:8px">
+          <span style="font-size:10px;background:rgba(0,122,255,0.12);color:#007AFF;padding:1px 6px;border-radius:5px;font-weight:700;width:30px;text-align:center">TASK</span>
+          <span style="background:rgba(52,199,89,0.18);color:#1f8a3f;font-size:9px;padding:1px 5px;border-radius:4px;font-weight:700">DONE</span>
+          <span style="flex:1;font-size:12.5px;font-weight:600;opacity:0.7;text-decoration:line-through">写完 Q3 计划并同步给团队</span>
+          <span style="color:#86868b;font-size:10.5px">00:32</span>
+          <span style="color:#86868b;font-size:10.5px">10 分钟前</span>
+        </div>
+
+        <div style="background:rgba(255,255,255,0.55);border-radius:8px;padding:8px 10px;display:flex;align-items:center;gap:8px">
+          <span style="font-size:10px;background:rgba(255,149,0,0.15);color:#cc7a00;padding:1px 6px;border-radius:5px;font-weight:700;width:30px;text-align:center">IDEA</span>
+          <span style="flex:1;font-size:12.5px;font-weight:500">让 v1.3 支持桌面小组件</span>
+          <span style="color:#86868b;font-size:10.5px">15 分钟前</span>
+        </div>
+
+        <div style="background:rgba(255,255,255,0.55);border-radius:8px;padding:8px 10px;display:flex;align-items:center;gap:8px">
+          <span style="font-size:10px;background:rgba(52,199,89,0.15);color:#1f8a3f;padding:1px 6px;border-radius:5px;font-weight:700;width:30px;text-align:center">打卡</span>
+          <span style="flex:1;font-size:12.5px;font-weight:500">🏃 晨跑 5km</span>
+          <span style="color:#86868b;font-size:10.5px">今早 7:00</span>
+        </div>
+
+        <div style="background:rgba(255,255,255,0.55);border-radius:8px;padding:8px 10px;display:flex;align-items:center;gap:8px">
+          <span style="font-size:10px;background:rgba(0,122,255,0.12);color:#007AFF;padding:1px 6px;border-radius:5px;font-weight:700;width:30px;text-align:center">TASK</span>
+          <span style="background:rgba(52,199,89,0.18);color:#1f8a3f;font-size:9px;padding:1px 5px;border-radius:4px;font-weight:700">DONE</span>
+          <span style="flex:1;font-size:12.5px;font-weight:600;opacity:0.7;text-decoration:line-through">回复张三关于 Q3 的邮件</span>
+          <span style="color:#86868b;font-size:10.5px">00:08</span>
+          <span style="color:#86868b;font-size:10.5px">1 小时前</span>
+        </div>
+
+        <div style="background:rgba(255,255,255,0.55);border-radius:8px;padding:8px 10px;display:flex;align-items:center;gap:8px">
+          <span style="font-size:10px;background:rgba(255,149,0,0.15);color:#cc7a00;padding:1px 6px;border-radius:5px;font-weight:700;width:30px;text-align:center">IDEA</span>
+          <span style="flex:1;font-size:12.5px;font-weight:500">用 Vercel KV 做缓存</span>
+          <span style="color:#86868b;font-size:10.5px">2 小时前</span>
+        </div>
+
+        <div style="background:rgba(255,255,255,0.55);border-radius:8px;padding:8px 10px;display:flex;align-items:center;gap:8px">
+          <span style="font-size:10px;background:rgba(0,122,255,0.12);color:#007AFF;padding:1px 6px;border-radius:5px;font-weight:700;width:30px;text-align:center">TASK</span>
+          <span style="background:rgba(0,0,0,0.05);color:#86868b;font-size:9px;padding:1px 5px;border-radius:4px;font-weight:700">未开始</span>
+          <span style="flex:1;font-size:12.5px;font-weight:600">设计 v2 界面</span>
+          <span style="color:#86868b;font-size:10.5px">截止 明天</span>
+          <span style="color:#86868b;font-size:10.5px">3 小时前</span>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <h4 style="font-size:13px;margin:10px 0 6px">主窗列表 SQL（按 record 表单表查询）</h4>
+  <pre class="ascii">-- 全部记录（最新优先）
+SELECT id, kind, content, status, created_at
+FROM record
+ORDER BY created_at DESC
+LIMIT 50;
+
+-- 仅任务
+SELECT * FROM record WHERE kind = 'task' ORDER BY created_at DESC;
+
+-- 今日
+SELECT * FROM record
+WHERE created_at >= strftime('%s', 'now', 'start of day') * 1000
+ORDER BY created_at DESC;
+
+-- 任务按状态分组
+SELECT status, COUNT(*) FROM record
+WHERE kind = 'task' AND created_at >= ...
+GROUP BY status;</pre>
+
+  <p style="font-size:12px;color:#1d1d1f;margin:6px 0"><strong>关键优势</strong>：单表查询，无需 UNION 3 源，索引高效，点击列表项 → 用 <code>kind</code> + <code>source_id</code> 跳转源表详情。</p>
+</div>
+
+<!-- ===== 3 方案对比 ===== -->
+<div class="sec16">
+  <h3><span class="num">⚖</span> 3 方案对比</h3>
+  <table>
+    <tr>
+      <th>维度</th>
+      <th><span class="ok">A 触发器自动同步（推荐）</span></th>
+      <th>B 业务层双写</th>
+      <th>C 纯视图 UNION</th>
+    </tr>
+    <tr>
+      <td>业务层负担</td>
+      <td>✅ 零负担（触发器自动）</td>
+      <td>⚠️ 每次创建/更新要双写</td>
+      <td>✅ 零负担</td>
+    </tr>
+    <tr>
+      <td>列表查询性能</td>
+      <td>✅ 单表 + 索引</td>
+      <td>✅ 单表 + 索引</td>
+      <td>⚠️ UNION 3 表 + 排序</td>
+    </tr>
+    <tr>
+      <td>数据一致性</td>
+      <td>✅ 触发器保证</td>
+      <td>⚠️ 双写遗漏风险</td>
+      <td>✅ 视图自动</td>
+    </tr>
+    <tr>
+      <td>源表删除/归档</td>
+      <td>⚠️ 需级联触发器</td>
+      <td>⚠️ 业务层处理</td>
+      <td>✅ 视图自动过滤</td>
+    </tr>
+    <tr>
+      <td>调试复杂度</td>
+      <td>⚠️ 触发器略复杂</td>
+      <td>✅ 简单直接</td>
+      <td>✅ 视图简单</td>
+    </tr>
+    <tr>
+      <td>扩展性</td>
+      <td>✅ 加表只加触发器</td>
+      <td>⚠️ 加表要改业务层</td>
+      <td>⚠️ 改视图 SQL</td>
+    </tr>
+    <tr>
+      <td>迁移 V1.2 数据</td>
+      <td>✅ 一次性脚本回填 record</td>
+      <td>✅ 一次性脚本回填</td>
+      <td>✅ 视图无数据</td>
+    </tr>
+  </table>
+  <p style="font-size:12px;color:#1d1d1f;margin:6px 0">
+    <strong>推荐 A</strong>：单表查询快 + 业务层零负担 + 长期扩展容易。触发器复杂度可接受（10 个 SQL 行）。
+  </p>
+</div>
+
+<!-- ===== 汇总 ===== -->
+<div class="sec16" style="background:rgba(52,199,89,0.06);border-color:rgba(52,199,89,0.2)">
+  <h3><span class="num" style="background:#34c759">✓</span> D4 决策</h3>
+  <ul style="margin:6px 0;font-size:13px;line-height:1.9">
+    <li>✅ 3 源表（<code>task</code> / <code>idea</code> / <code>check_in</code>）独立</li>
+    <li>✅ 1 通用 <code>record</code> 表（id, kind, source_id, content, status, created_at）</li>
+    <li>📌 待你选：<span class="ok">A 触发器</span> / <span class="warn">B 业务双写</span> / <span class="warn">C 视图</span></li>
+    <li>✅ 主窗"全部记录"时间线单表查询（见上方 mockup）</li>
+    <li>✅ 列表项点击 → kind+source_id 跳转源表详情</li>
+  </ul>
+  <p style="font-size:13px;margin:10px 0 0">
+    <strong>还需要关注</strong>：
+    <ul style="margin:4px 0 0 18px;font-size:12px">
+      <li>V1.2 → V1.3 数据迁移：旧 <code>record</code> 表（type 字段）→ 新 <code>record</code> 表（kind 字段） + 拆分到 3 源表？</li>
+      <li>主窗时间线是否要支持"按类型筛选/分组"？</li>
+      <li>归档（archived_at 不为 null）的 task 是否从 record 隐藏？</li>
+    </ul>
+  </p>
+</div>

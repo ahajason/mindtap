@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>D · 工程文档 · V2 Liquid Glass 对比页</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #1c1c1a; color: #1a1a1a; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; min-height: 100vh; }
+  .label {
+    position: fixed; top: 12px; right: 16px; z-index: 99;
+    padding: 6px 10px; background: rgba(0,0,0,.7); border-radius: 6px;
+    font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #fff;
+  }
+  .stage { width: 100vw; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+  svg { display: block; width: min(1280px, 100%); height: auto; box-shadow: 0 30px 80px rgba(0,0,0,.4); border-radius: 8px; }
+</style>
+</head>
+<body>
+<div class="label">D · 工程文档 · 1280×800</div>
+<div class="stage">
+<svg viewBox="0 0 1280 800" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1280" height="800" fill="#fafaf9"/>
+  <rect x="0" y="0" width="260" height="800" fill="rgba(0,0,0,0.04)"/>
+  <line x1="260" y1="0" x2="260" y2="800" stroke="rgba(0,0,0,0.08)"/>
+  <g font-family="ui-sans-serif, system-ui" font-size="13" fill="#1a1a1a">
+    <text x="32" y="40" font-size="11" letter-spacing="3" fill="#a8322a">MINDTAP / DS</text>
+    <text x="32" y="78" font-size="22" font-weight="700">Components</text>
+    <text x="32" y="102" font-size="12" opacity=".55">v0.1 · 14.06.2026</text>
+    <line x1="32" y1="124" x2="228" y2="124" stroke="rgba(0,0,0,0.08)"/>
+    <text x="32" y="160" font-size="10" letter-spacing="2" fill="#a8322a">FUNDAMENTALS</text>
+    <rect x="20" y="172" width="220" height="32" rx="6" fill="rgba(0,0,0,0.06)"/>
+    <text x="36" y="192" font-weight="600">Surface</text>
+    <text x="220" y="192" font-size="11" text-anchor="end" opacity=".5">›</text>
+    <rect x="20" y="210" width="220" height="32" rx="6" fill="none"/>
+    <text x="36" y="230" opacity=".7">Toolbar</text>
+    <text x="220" y="230" font-size="11" text-anchor="end" opacity=".4">›</text>
+    <rect x="20" y="248" width="220" height="32" rx="6" fill="none"/>
+    <text x="36" y="268" opacity=".7">Sidebar</text>
+    <text x="220" y="268" font-size="11" text-anchor="end" opacity=".4">›</text>
+    <rect x="20" y="286" width="220" height="32" rx="6" fill="none"/>
+    <text x="36" y="306" opacity=".7">Sheet</text>
+    <text x="32" y="358" font-size="10" letter-spacing="2" fill="#a8322a">CONTROLS</text>
+    <rect x="20" y="370" width="220" height="32" rx="6" fill="none"/>
+    <text x="36" y="390" opacity=".7">Button</text>
+    <rect x="20" y="408" width="220" height="32" rx="6" fill="none"/>
+    <text x="36" y="428" opacity=".7">Toggle</text>
+    <rect x="20" y="446" width="220" height="32" rx="6" fill="none"/>
+    <text x="36" y="466" opacity=".7">Slider</text>
+    <rect x="20" y="484" width="220" height="32" rx="6" fill="none"/>
+    <text x="36" y="504" opacity=".7">TextField</text>
+    <text x="32" y="556" font-size="10" letter-spacing="2" fill="#a8322a">TOKENS</text>
+    <rect x="20" y="568" width="220" height="32" rx="6" fill="none"/>
+    <text x="36" y="588" opacity=".7">Color</text>
+    <rect x="20" y="606" width="220" height="32" rx="6" fill="none"/>
+    <text x="36" y="626" opacity=".7">Type</text>
+    <rect x="20" y="644" width="220" height="32" rx="6" fill="none"/>
+    <text x="36" y="664" opacity=".7">Spacing</text>
+    <rect x="20" y="682" width="220" height="32" rx="6" fill="none"/>
+    <text x="36" y="702" opacity=".7">Radius</text>
+  </g>
+  <g font-family="ui-sans-serif, system-ui">
+    <text x="300" y="60" font-size="11" letter-spacing="2" fill="#a8322a">§ 02  /  TOOLBAR</text>
+    <text x="300" y="100" font-size="36" font-weight="700" fill="#1a1a1a">Toolbar.</text>
+    <text x="300" y="128" font-size="14" fill="#1a1a1a" opacity=".7">系统自动应用 Liquid Glass；用 ToolbarSpacer 按功能分组。</text>
+    <text x="300" y="148" font-size="14" fill="#1a1a1a" opacity=".7">玻璃层只承载功能，不承载内容。</text>
+    <rect x="300" y="180" width="920" height="68" rx="14" fill="rgba(255,255,255,0.65)" stroke="rgba(0,0,0,0.1)"/>
+    <line x1="300" y1="248" x2="1220" y2="248" stroke="rgba(0,0,0,0.04)"/>
+    <g font-size="13" fill="#1a1a1a">
+      <rect x="320" y="200" width="32" height="28" rx="6" fill="rgba(0,0,0,0.05)"/>
+      <text x="336" y="220" text-anchor="middle">⟨</text>
+      <rect x="360" y="200" width="32" height="28" rx="6" fill="rgba(0,0,0,0.05)"/>
+      <text x="376" y="220" text-anchor="middle">⟩</text>
+      <line x1="404" y1="206" x2="404" y2="222" stroke="rgba(0,0,0,0.15)"/>
+      <rect x="416" y="200" width="48" height="28" rx="6" fill="rgba(0,0,0,0.05)"/>
+      <text x="440" y="220" text-anchor="middle" font-size="11">⋯  更多</text>
+      <line x1="476" y1="206" x2="476" y2="222" stroke="rgba(0,0,0,0.15)"/>
+      <rect x="488" y="200" width="60" height="28" rx="6" fill="rgba(0,0,0,0.05)"/>
+      <text x="518" y="220" text-anchor="middle" font-size="12">↗ Share</text>
+      <rect x="556" y="200" width="80" height="28" rx="6" fill="rgba(0,0,0,0.05)"/>
+      <text x="596" y="220" text-anchor="middle" font-size="12">☆ Favorite</text>
+      <rect x="644" y="200" width="100" height="28" rx="6" fill="rgba(0,0,0,0.05)"/>
+      <text x="694" y="220" text-anchor="middle" font-size="12">⊞  Add to set</text>
+      <rect x="1080" y="200" width="120" height="28" rx="14" fill="#0a84ff"/>
+      <text x="1140" y="220" text-anchor="middle" fill="#fff" font-weight="600">+ New record</text>
+    </g>
+    <line x1="300" y1="280" x2="1220" y2="280" stroke="rgba(0,0,0,0.08)"/>
+    <text x="300" y="316" font-size="11" letter-spacing="2" fill="#a8322a">§ 03  /  CARD</text>
+    <text x="300" y="356" font-size="36" font-weight="700" fill="#1a1a1a">Card.</text>
+    <text x="300" y="384" font-size="14" fill="#1a1a1a" opacity=".7">承载内容；不应用 Liquid Glass（标准材质足够）。</text>
+    <rect x="300" y="408" width="440" height="280" rx="18" fill="#fff" stroke="rgba(0,0,0,0.1)"/>
+    <rect x="320" y="428" width="80" height="20" rx="4" fill="rgba(10,132,255,0.12)"/>
+    <text x="360" y="442" font-size="11" font-weight="600" text-anchor="middle" fill="#0a84ff">INSPIRATION</text>
+    <text x="320" y="488" font-size="20" font-weight="700" fill="#1a1a1a">Record #0014</text>
+    <text x="320" y="514" font-size="13" fill="#1a1a1a" opacity=".65">脚手架就绪，玻璃层漂浮</text>
+    <text x="320" y="534" font-size="13" fill="#1a1a1a" opacity=".65">在内容之上。</text>
+    <line x1="320" y1="568" x2="720" y2="568" stroke="rgba(0,0,0,0.08)"/>
+    <text x="320" y="592" font-size="11" letter-spacing="2" fill="#a8322a">14 JUNE 2026</text>
+    <text x="320" y="612" font-size="11" letter-spacing="2" fill="#1a1a1a" opacity=".45">14:09 · tag · 灵感</text>
+    <rect x="320" y="640" width="100" height="32" rx="16" fill="#0a84ff"/>
+    <text x="370" y="660" font-size="12" font-weight="600" text-anchor="middle" fill="#fff">查看详情</text>
+    <rect x="430" y="640" width="80" height="32" rx="16" fill="none" stroke="rgba(0,0,0,0.15)"/>
+    <text x="470" y="660" font-size="12" text-anchor="middle" fill="#1a1a1a">归档</text>
+    <rect x="760" y="408" width="460" height="280" rx="18" fill="#fff" stroke="rgba(0,0,0,0.1)"/>
+    <rect x="780" y="428" width="80" height="20" rx="4" fill="rgba(40,199,154,0.14)"/>
+    <text x="820" y="442" font-size="11" font-weight="600" text-anchor="middle" fill="#0f7a5a">CHECK-IN</text>
+    <text x="780" y="488" font-size="20" font-weight="700" fill="#1a1a1a">3/5 · 连续 7 天</text>
+    <g font-size="13" fill="#1a1a1a" opacity=".75">
+      <text x="780" y="520">07:30 — 起床 + 喝水</text>
+      <text x="780" y="544">08:15 — 通勤 + 阅读</text>
+      <text x="780" y="568">12:00 — 午餐 + 散步</text>
+    </g>
+    <line x1="780" y1="600" x2="1200" y2="600" stroke="rgba(0,0,0,0.08)"/>
+    <text x="780" y="624" font-size="11" letter-spacing="2" fill="#a8322a">HEATMAP · 30 DAYS</text>
+    <g transform="translate(780, 640)">
+      <rect width="14" height="14" fill="rgba(40,199,154,0.15)" rx="2"/>
+      <rect x="18" width="14" height="14" fill="rgba(40,199,154,0.15)" rx="2"/>
+      <rect x="36" width="14" height="14" fill="rgba(40,199,154,0.5)" rx="2"/>
+      <rect x="54" width="14" height="14" fill="rgba(40,199,154,0.15)" rx="2"/>
+      <rect x="72" width="14" height="14" fill="rgba(40,199,154,0.8)" rx="2"/>
+      <rect x="90" width="14" height="14" fill="rgba(40,199,154,0.5)" rx="2"/>
+      <rect x="108" width="14" height="14" fill="rgba(40,199,154,0.15)" rx="2"/>
+      <rect x="126" width="14" height="14" fill="rgba(40,199,154,0.5)" rx="2"/>
+      <rect x="144" width="14" height="14" fill="rgba(40,199,154,0.8)" rx="2"/>
+      <rect x="162" width="14" height="14" fill="rgba(40,199,154,0.15)" rx="2"/>
+      <rect x="180" width="14" height="14" fill="rgba(40,199,154,0.5)" rx="2"/>
+      <rect x="198" width="14" height="14" fill="rgba(40,199,154,0.8)" rx="2"/>
+    </g>
+    <text x="800" y="700" font-size="10" opacity=".45" letter-spacing="2">M T W T F S S · last 12 weeks</text>
+  </g>
+  <rect x="260" y="0" width="1020" height="56" fill="rgba(255,255,255,0.6)"/>
+  <line x1="260" y1="56" x2="1280" y2="56" stroke="rgba(0,0,0,0.06)"/>
+  <g font-family="ui-sans-serif, system-ui" font-size="13" fill="#1a1a1a">
+    <text x="284" y="35" font-weight="700">Mindtap</text>
+    <text x="356" y="35" opacity=".4">/</text>
+    <text x="376" y="35" opacity=".75">Components</text>
+    <text x="500" y="35" opacity=".4">/</text>
+    <text x="520" y="35" opacity=".95">Toolbar</text>
+    <text x="1100" y="35" opacity=".45" text-anchor="end">v0.1 · 14.06.2026</text>
+    <rect x="1140" y="14" width="100" height="28" rx="14" fill="rgba(0,0,0,0.06)"/>
+    <text x="1190" y="33" text-anchor="middle" opacity=".6">⌘K  Search</text>
+  </g>
+</svg>
+</div>
+</body>
+</html>

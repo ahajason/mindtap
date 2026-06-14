@@ -1,0 +1,317 @@
+<h2>浮动窗口形态 v10 — 修正版（折叠态已定 + v8 布局骨架 + v9 逻辑）</h2>
+<p class="subtitle">修正：暂停主按钮改浅蓝底 · 折叠态暂停图标改回绿色 · 3 个布局基于 v8 骨架</p>
+
+<style>
+  .pair10{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:10px 0 0}
+  .pair10 .mockup{margin:0}
+  .pair10 .mockup-header{padding:6px 10px;font-size:11px}
+  .pair10 .mockup-body{padding:14px;min-height:220px;display:flex;align-items:center;justify-content:center}
+  .gc10{background:rgba(255,255,255,0.34);backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%);border:1px solid rgba(255,255,255,0.6);box-shadow:0 1px 0 rgba(255,255,255,0.7) inset, 0 8px 24px rgba(0,0,0,0.08)}
+  .gc10s{background:rgba(255,255,255,0.42);backdrop-filter:blur(32px) saturate(200%);-webkit-backdrop-filter:blur(32px) saturate(200%);border:1px solid rgba(255,255,255,0.65);box-shadow:0 1px 0 rgba(255,255,255,0.7) inset, 0 10px 28px rgba(0,0,0,0.1)}
+  .bg-w{background:linear-gradient(135deg,#fef9f3 0%,#f3eef9 40%,#eaf3fb 100%)}
+  .bg-c{background:linear-gradient(135deg,#f0f6ff 0%,#f5f5f7 50%,#fef9f3 100%)}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(52,199,89,0.4)}50%{box-shadow:0 0 0 6px rgba(52,199,89,0)}}
+</style>
+
+<!-- ============ 已定折叠态（最纯净版，修正图标颜色） ============ -->
+<div class="section" style="padding:14px;background:rgba(52,199,89,0.08);border-radius:12px;border:1px solid rgba(52,199,89,0.25);margin-bottom:18px">
+  <h3 style="margin:0 0 8px;font-size:14px">✅ 已定折叠态（v10 修正）</h3>
+  <p style="margin:0 0 10px;font-size:12px;color:#1d1d1f;line-height:1.6">
+    修正：⏸ 暂停图标 = <strong>绿色 #34c759</strong>（不是蓝色）。文字统一 12.5px，inline-flex 垂直居中。
+  </p>
+  <div class="mockup" style="margin:10px 0 0">
+    <div class="mockup-header" style="padding:6px 10px;font-size:11px">折叠 320×36px · Focus + 呼吸灯 + 对齐 + 暂停绿色图标</div>
+    <div class="mockup-body" style="background:linear-gradient(135deg,#fef9f3,#f3eef9 40%,#eaf3fb);padding:18px;min-height:80px;display:flex;align-items:center;justify-content:center">
+      <div style="width:320px;height:36px;border-radius:18px;cursor:pointer;display:flex;align-items:center" class="gc10">
+        <div style="display:flex;align-items:center;height:100%;padding:0 6px 0 10px;gap:8px;font:600 12.5px -apple-system;color:#1d1d1f">
+          <span style="width:8px;height:8px;background:#34c759;border-radius:50%;flex-shrink:0;align-self:center;animation:pulse 1.6s ease-in-out infinite"></span>
+          <span style="font-size:9px;background:rgba(52,199,89,0.18);color:#1f8a3f;padding:2px 7px;border-radius:8px;font-weight:700;letter-spacing:0.4px;display:inline-flex;align-items:center;height:18px">FOCUS</span>
+          <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;display:inline-flex;align-items:center;height:18px">写 Q3 计划</span>
+          <span style="color:#007AFF;font-variant-numeric:tabular-nums;font-weight:700;letter-spacing:-0.3px;display:inline-flex;align-items:center;height:18px">00:12:34</span>
+          <span style="display:inline-flex;align-items:center;justify-content:center;height:24px;width:24px;color:#34c759;font-size:15px;line-height:1">⏸</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 4 个展开态布局（基于 v8 骨架 + v9 浅蓝底逻辑） ============ -->
+<div class="options" data-multiselect>
+  <!-- A: 上下分栏 -->
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>上下分栏 · 经典结构</h3>
+      <p>360×280px。Focus 块 / 暂停主+完成次+切换 / 分隔线 / 新建区（类型 + 开始计时）。</p>
+
+      <div class="pair10">
+        <div class="mockup">
+          <div class="mockup-header">A · 上下分栏 360×280</div>
+          <div class="mockup-body bg-w">
+            <div style="width:360px;height:280px;border-radius:18px" class="gc10s">
+              <div style="padding:12px 14px;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;font:12.5px -apple-system;color:#1d1d1f">
+                <!-- Focus 块 -->
+                <div style="background:rgba(52,199,89,0.08);border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:10px;flex-shrink:0">
+                  <span style="width:8px;height:8px;background:#34c759;border-radius:50%;flex-shrink:0;animation:pulse 1.6s ease-in-out infinite"></span>
+                  <span style="font-size:9px;background:rgba(52,199,89,0.18);color:#1f8a3f;padding:2px 7px;border-radius:8px;font-weight:700;letter-spacing:0.4px">FOCUS</span>
+                  <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600">写 Q3 计划</span>
+                  <span style="color:#007AFF;font-variant-numeric:tabular-nums;font-weight:700">00:12:34</span>
+                  <span style="color:#34c759;font-size:15px">⏸</span>
+                </div>
+                <!-- 控制行：暂停主(浅蓝底) / 完成次(淡绿底) / 切换(灰) -->
+                <div style="display:flex;gap:6px;flex-shrink:0;height:28px">
+                  <span style="flex:1.4;display:flex;align-items:center;justify-content:center;background:rgba(0,122,255,0.12);color:#007AFF;border-radius:8px;font-size:11.5px;font-weight:600">⏸ 暂停</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(52,199,89,0.12);color:#1f8a3f;border-radius:8px;font-size:11.5px;font-weight:600">✓ 完成</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11.5px;font-weight:600">⇄ 切换</span>
+                </div>
+                <div style="height:1px;background:rgba(0,0,0,0.08);flex-shrink:0;margin:0 -14px"></div>
+                <span style="font-size:10px;color:#ff9500;font-weight:700;letter-spacing:0.4px;flex-shrink:0">+ 新建待办</span>
+                <textarea style="flex:1;background:rgba(255,255,255,0.45);border:1px solid rgba(0,0,0,0.06);border-radius:8px;padding:8px;font:12.5px -apple-system;color:#1d1d1f;resize:none;outline:none" placeholder="事项内容…"></textarea>
+                <div style="display:flex;gap:5px;flex-shrink:0;height:22px">
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(0,122,255,0.12);color:#007AFF;border-radius:6px;font-size:10.5px;font-weight:600">✓ 待办</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:6px;font-size:10.5px;font-weight:600">✎ 灵感</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:6px;font-size:10.5px;font-weight:600">⚡ 打卡</span>
+                </div>
+                <div style="display:flex;gap:5px;flex-shrink:0;height:28px">
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:6px;font-size:10.5px;font-weight:600">📅 今天</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:6px;font-size:10.5px;font-weight:600">📅 明天</span>
+                  <span style="flex:2;display:flex;align-items:center;justify-content:center;background:#007AFF;color:white;border-radius:8px;font-size:11.5px;font-weight:600">⏵ 开始计时</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mockup">
+          <div class="mockup-header">A · 文字说明</div>
+          <div class="mockup-body bg-c" style="display:block;padding:20px">
+            <div style="font:12px -apple-system;color:#1d1d1f;line-height:1.7">
+              <p><strong>视觉权重</strong>（高 → 低）：</p>
+              <p>1. <strong style="color:#007AFF">⏵ 开始计时</strong>（蓝实心，CTA）</p>
+              <p>2. <strong style="color:#007AFF">⏸ 暂停</strong>（浅蓝底 rgba(0,122,255,0.12)）</p>
+              <p>3. ✓ 完成（淡绿底）/ ⇄ 切换（灰底）</p>
+              <p>4. 文字图标（次要）</p>
+              <p><strong>高度</strong>：280px</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B: 紧凑 Focus + 大输入 -->
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>紧凑 Focus + 大输入</h3>
+      <p>360×300px。Focus 1 行极简 + 暂停/完成/切换合并为 3 圆按钮 + 大输入区（适合长任务）。</p>
+
+      <div class="pair10">
+        <div class="mockup">
+          <div class="mockup-header">B · 紧凑 360×300</div>
+          <div class="mockup-body bg-w">
+            <div style="width:360px;height:300px;border-radius:18px" class="gc10s">
+              <div style="padding:12px 14px;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;font:12.5px -apple-system;color:#1d1d1f">
+                <!-- 极简 Focus 1 行 -->
+                <div style="display:flex;align-items:center;gap:8px;height:32px;background:rgba(52,199,89,0.08);border-radius:10px;padding:0 10px;flex-shrink:0">
+                  <span style="width:8px;height:8px;background:#34c759;border-radius:50%;flex-shrink:0;animation:pulse 1.6s ease-in-out infinite"></span>
+                  <span style="font-size:9px;background:rgba(52,199,89,0.18);color:#1f8a3f;padding:2px 6px;border-radius:6px;font-weight:700;letter-spacing:0.4px">FOCUS</span>
+                  <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600">写 Q3 计划</span>
+                  <span style="color:#007AFF;font-variant-numeric:tabular-nums;font-weight:700">00:12:34</span>
+                </div>
+                <!-- 控制行：3 圆按钮 -->
+                <div style="display:flex;gap:6px;flex-shrink:0;height:28px">
+                  <span style="flex:1.4;display:flex;align-items:center;justify-content:center;background:rgba(0,122,255,0.12);color:#007AFF;border-radius:8px;font-size:11.5px;font-weight:600">⏸ 暂停</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(52,199,89,0.12);color:#1f8a3f;border-radius:8px;font-size:11.5px;font-weight:600">✓ 完成</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11.5px;font-weight:600">⇄ 切换</span>
+                </div>
+                <div style="height:1px;background:rgba(0,0,0,0.08);flex-shrink:0;margin:0 -14px"></div>
+                <span style="font-size:10px;color:#ff9500;font-weight:700;letter-spacing:0.4px;flex-shrink:0">+ 新建待办</span>
+                <textarea style="flex:1;background:rgba(255,255,255,0.45);border:1px solid rgba(0,0,0,0.06);border-radius:10px;padding:12px;font:14px -apple-system;color:#1d1d1f;resize:none;outline:none;line-height:1.5" placeholder="事项内容…"></textarea>
+                <div style="display:flex;gap:5px;flex-shrink:0;height:24px">
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(0,122,255,0.12);color:#007AFF;border-radius:6px;font-size:10.5px;font-weight:600">✓ 待办</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:6px;font-size:10.5px;font-weight:600">✎ 灵感</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:6px;font-size:10.5px;font-weight:600">⚡ 打卡</span>
+                </div>
+                <div style="display:flex;gap:5px;flex-shrink:0;height:28px">
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:6px;font-size:10.5px;font-weight:600">📅 今天</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:6px;font-size:10.5px;font-weight:600">📅 明天</span>
+                  <span style="flex:2;display:flex;align-items:center;justify-content:center;background:#007AFF;color:white;border-radius:8px;font-size:11.5px;font-weight:600">⏵ 开始计时</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mockup">
+          <div class="mockup-header">B · 文字说明</div>
+          <div class="mockup-body bg-c" style="display:block;padding:20px">
+            <div style="font:12px -apple-system;color:#1d1d1f;line-height:1.7">
+              <p><strong>结构</strong>：Focus 1 行（32px）+ 控制行（28px）+ 大输入（≈170px）</p>
+              <p><strong>特征</strong>：Focus 行 32px 高，任务名+计时+呼吸灯都进 1 行</p>
+              <p><strong>适用</strong>：13 寸屏幕，需要长文本编辑</p>
+              <p><strong>优势</strong>：输入区最舒适（14px 大字 1.5 行高）</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C: 左右分栏（小幅） -->
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>左右分栏 · 紧凑版</h3>
+      <p>460×240px。左侧 180px Focus（标签+任务+大计时+完成/切换按钮） + 右侧 280px 新建区。</p>
+
+      <div class="pair10">
+        <div class="mockup">
+          <div class="mockup-header">C · 左右分栏 460×240</div>
+          <div class="mockup-body bg-w">
+            <div style="width:460px;height:240px;border-radius:18px;display:flex" class="gc10s">
+              <!-- 左侧 Focus -->
+              <div style="width:180px;padding:12px;display:flex;flex-direction:column;gap:8px;border-right:1px solid rgba(0,0,0,0.06);box-sizing:border-box">
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span style="width:7px;height:7px;background:#34c759;border-radius:50%;animation:pulse 1.6s ease-in-out infinite"></span>
+                  <span style="font-size:9px;background:rgba(52,199,89,0.18);color:#1f8a3f;padding:2px 6px;border-radius:6px;font-weight:700;letter-spacing:0.4px">FOCUS</span>
+                </div>
+                <div style="font-weight:600;font-size:12px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">写 Q3 计划并同步团队</div>
+                <div style="font:700 24px -apple-system;color:#007AFF;font-variant-numeric:tabular-nums;letter-spacing:-0.5px;line-height:1;margin-top:2px">00:12:34</div>
+                <div style="font-size:9.5px;color:#86868b;margin-top:-4px">已专注 12 分 34 秒</div>
+                <div style="display:flex;gap:4px;margin-top:auto">
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;height:24px;background:rgba(0,122,255,0.12);color:#007AFF;border-radius:6px;font-size:10.5px;font-weight:600">⏸ 暂停</span>
+                </div>
+                <div style="display:flex;gap:4px">
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;height:22px;background:rgba(52,199,89,0.12);color:#1f8a3f;border-radius:6px;font-size:10px;font-weight:600">✓</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;height:22px;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:6px;font-size:10px;font-weight:600">⇄</span>
+                </div>
+              </div>
+              <!-- 右侧 新建 -->
+              <div style="flex:1;padding:12px;display:flex;flex-direction:column;gap:8px;box-sizing:border-box">
+                <span style="font-size:10px;color:#ff9500;font-weight:700;letter-spacing:0.4px">+ 新建待办</span>
+                <textarea style="flex:1;background:rgba(255,255,255,0.45);border:1px solid rgba(0,0,0,0.06);border-radius:8px;padding:8px;font:12.5px -apple-system;color:#1d1d1f;resize:none;outline:none" placeholder="事项内容…"></textarea>
+                <div style="display:flex;gap:5px;height:22px">
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(0,122,255,0.12);color:#007AFF;border-radius:6px;font-size:10.5px;font-weight:600">✓</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:6px;font-size:10.5px;font-weight:600">✎</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:6px;font-size:10.5px;font-weight:600">⚡</span>
+                </div>
+                <div style="display:flex;gap:5px;height:26px">
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:6px;font-size:10.5px;font-weight:600">📅 今天</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:6px;font-size:10.5px;font-weight:600">📅 明天</span>
+                  <span style="flex:2;display:flex;align-items:center;justify-content:center;background:#007AFF;color:white;border-radius:6px;font-size:11px;font-weight:600">⏵ 开始计时</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mockup">
+          <div class="mockup-header">C · 文字说明</div>
+          <div class="mockup-body bg-c" style="display:block;padding:20px">
+            <div style="font:12px -apple-system;color:#1d1d1f;line-height:1.7">
+              <p><strong>结构</strong>：左 180 + 右 280 = 460 总宽</p>
+              <p>左：Focus 全信息（标签+任务+大计时+已专注时长+ 暂停主+ 完成/切换次）</p>
+              <p>右：新建区紧凑</p>
+              <p><strong>适用</strong>：计时显示优先级高，13 寸+ 屏幕</p>
+              <p><strong>优势</strong>：左侧"已专注时长"反馈激励</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- D: Tab 切换（紧凑） -->
+  <div class="option" data-choice="d" onclick="toggleSelect(this)">
+    <div class="letter">D</div>
+    <div class="content">
+      <h3>三 Tab · 紧凑版</h3>
+      <p>340×300px。三 Tab：Focus / 待办 / 新建。Focus 页大计时+暂停主+完成次。待办页清单含未开始+暂停。</p>
+
+      <div class="pair10">
+        <div class="mockup">
+          <div class="mockup-header">D · Tab · Focus 页</div>
+          <div class="mockup-body bg-w">
+            <div style="width:340px;height:300px;border-radius:18px" class="gc10s">
+              <div style="padding:14px;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;font:12.5px -apple-system;color:#1d1d1f">
+                <div style="display:flex;background:rgba(255,255,255,0.4);border-radius:8px;padding:3px;flex-shrink:0">
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;height:24px;background:white;color:#1d1d1f;border-radius:6px;font-size:11px;font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,0.06)">● Focus</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;height:24px;color:#86868b;font-size:11px;font-weight:600">≡ 待办</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;height:24px;color:#86868b;font-size:11px;font-weight:600">+ 新建</span>
+                </div>
+                <div style="text-align:center;padding:6px 0">
+                  <span style="display:inline-flex;align-items:center;gap:6px;font-size:10px;color:#1f8a3f;font-weight:700;letter-spacing:0.4px;background:rgba(52,199,89,0.12);padding:4px 12px;border-radius:12px">
+                    <span style="width:7px;height:7px;background:#34c759;border-radius:50%;animation:pulse 1.6s ease-in-out infinite"></span>
+                    FOCUS · 进行中
+                  </span>
+                </div>
+                <div style="font-weight:600;font-size:15px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;text-align:center">写 Q3 计划</div>
+                <div style="font:700 40px -apple-system;color:#007AFF;font-variant-numeric:tabular-nums;letter-spacing:-1px;line-height:1;text-align:center">00:12:34</div>
+                <div style="text-align:center;font-size:10.5px;color:#86868b">已专注 12 分钟</div>
+                <div style="flex:1"></div>
+                <div style="display:flex;gap:6px;flex-shrink:0;height:32px">
+                  <span style="flex:1.4;display:flex;align-items:center;justify-content:center;background:rgba(0,122,255,0.12);color:#007AFF;border-radius:8px;font-size:12px;font-weight:600">⏸ 暂停</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(52,199,89,0.12);color:#1f8a3f;border-radius:8px;font-size:12px;font-weight:600">✓ 完成</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:12px;font-weight:600">⇄ 切换</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mockup">
+          <div class="mockup-header">D · Tab · 待办页</div>
+          <div class="mockup-body bg-c">
+            <div style="width:340px;height:300px;border-radius:18px" class="gc10s">
+              <div style="padding:14px;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:8px;font:12.5px -apple-system;color:#1d1d1f">
+                <div style="display:flex;background:rgba(255,255,255,0.4);border-radius:8px;padding:3px;flex-shrink:0">
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;height:24px;color:#86868b;font-size:11px;font-weight:600">● Focus</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;height:24px;background:white;color:#1d1d1f;border-radius:6px;font-size:11px;font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,0.06)">≡ 待办</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;height:24px;color:#86868b;font-size:11px;font-weight:600">+ 新建</span>
+                </div>
+                <span style="font-size:10px;color:#86868b;font-weight:700;letter-spacing:0.4px;flex-shrink:0">未开始 · 4</span>
+                <div style="background:rgba(255,255,255,0.5);border-radius:8px;padding:7px 10px;display:flex;align-items:center;gap:8px;flex-shrink:0;cursor:pointer">
+                  <span style="flex:1;font-weight:600">回复客户邮件</span>
+                  <span style="color:#86868b;font-size:10px">今天</span>
+                  <span style="color:#007AFF;font-size:14px">⏵</span>
+                </div>
+                <div style="background:rgba(255,255,255,0.5);border-radius:8px;padding:7px 10px;display:flex;align-items:center;gap:8px;flex-shrink:0;cursor:pointer">
+                  <span style="flex:1;font-weight:600">设计 v2 界面</span>
+                  <span style="color:#86868b;font-size:10px">明天</span>
+                  <span style="color:#007AFF;font-size:14px">⏵</span>
+                </div>
+                <div style="background:rgba(255,255,255,0.5);border-radius:8px;padding:7px 10px;display:flex;align-items:center;gap:8px;flex-shrink:0;cursor:pointer">
+                  <span style="flex:1;font-weight:600">写周报</span>
+                  <span style="color:#86868b;font-size:10px">本周</span>
+                  <span style="color:#007AFF;font-size:14px">⏵</span>
+                </div>
+                <span style="font-size:10px;color:#ff9500;font-weight:700;letter-spacing:0.4px;flex-shrink:0;margin-top:2px">已暂停 · 1</span>
+                <div style="background:rgba(255,149,0,0.08);border-radius:8px;padding:7px 10px;display:flex;align-items:center;gap:8px;flex-shrink:0;cursor:pointer">
+                  <span style="font-size:9px;background:rgba(255,149,0,0.18);color:#cc7a00;padding:1px 5px;border-radius:5px;font-weight:700">暂停</span>
+                  <span style="flex:1;font-weight:600">整理会议纪要</span>
+                  <span style="color:#ff9500;font-size:10px">00:08:12</span>
+                  <span style="color:#007AFF;font-size:14px">⏵</span>
+                </div>
+                <div style="text-align:center;font-size:11px;color:#007AFF;font-weight:600;padding:4px 0;flex-shrink:0">查看主应用完整列表 ›</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:24px;padding:16px;background:rgba(0,122,255,0.08);border-radius:12px;border:1px solid rgba(0,122,255,0.2)">
+  <h3 style="margin:0 0 8px;font-size:14px">v10 4 个布局 + 视觉权重规范</h3>
+  <p style="margin:0;font-size:12.5px;color:#1d1d1f;line-height:1.7">
+    <strong>视觉权重</strong>（从高到低）：<br/>
+    &nbsp;&nbsp;① <code style="background:rgba(0,122,255,0.1);color:#007AFF;padding:2px 6px;border-radius:4px">⏵ 开始计时</code>（蓝实心 CTA）<br/>
+    &nbsp;&nbsp;② <code style="background:rgba(0,122,255,0.1);color:#007AFF;padding:2px 6px;border-radius:4px">⏸ 暂停</code>（浅蓝底，rgba(0,122,255,0.12)）<br/>
+    &nbsp;&nbsp;③ <code style="background:rgba(52,199,89,0.1);color:#1f8a3f;padding:2px 6px;border-radius:4px">✓ 完成</code>（淡绿底，rgba(52,199,89,0.12)）<br/>
+    &nbsp;&nbsp;④ <code style="background:rgba(255,255,255,0.5);color:#1d1d1f;padding:2px 6px;border-radius:4px">⇄ 切换</code>（灰底）<br/>
+    &nbsp;&nbsp;⑤ 类型 Tab / 截止时间按钮（次要）<br/>
+    <br/>
+    <strong>4 个布局</strong>：<br/>
+    A 上下分栏 360×280 · B 紧凑 Focus 360×300 · C 左右分栏 460×240 · D 三 Tab 340×300
+  </p>
+</div>
+
+<p class="subtitle" style="margin-top:20px">4 个 v10 展开态 → 选 A / B / C / D（或多选"X 为主，Y 元素借鉴"）。</p>

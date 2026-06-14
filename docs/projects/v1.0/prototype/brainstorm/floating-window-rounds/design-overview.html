@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Mindtap V1.3 浮动窗口 · 设计可视化总览</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg: linear-gradient(135deg, #fef9f3 0%, #f3eef9 30%, #eaf3fb 70%, #f5f5f7 100%);
+    --ink: #1d1d1f;
+    --ink-2: #424245;
+    --ink-3: #86868b;
+    --blue: #007AFF;
+    --green: #34c759;
+    --green-deep: #1f8a3f;
+    --orange: #ff9500;
+    --orange-deep: #cc7a00;
+    --glass-bg: rgba(255,255,255,0.55);
+    --glass-border: rgba(255,255,255,0.65);
+    --glass-blur: blur(30px) saturate(180%);
+    --shadow-soft: 0 1px 0 rgba(255,255,255,0.7) inset, 0 8px 24px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font: 14px/1.6 -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Segoe UI", sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+  /* Layout */
+  .layout { display: grid; grid-template-columns: 240px 1fr; max-width: 1400px; margin: 0 auto; }
+  /* Sidebar */
+  aside {
+    position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    background: var(--glass-bg); backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-right: 1px solid var(--glass-border);
+    padding: 20px 14px;
+  }
+  aside .brand {
+    font-size: 13px; font-weight: 700; letter-spacing: -0.2px;
+    color: var(--ink); margin-bottom: 4px;
+  }
+  aside .brand small { display: block; font-size: 10px; color: var(--ink-3); font-weight: 500; letter-spacing: 0.4px; text-transform: uppercase; margin-top: 2px; }
+  aside nav { margin-top: 20px; }
+  aside nav a {
+    display: block; padding: 7px 10px; margin-bottom: 1px;
+    color: var(--ink-2); text-decoration: none; font-size: 12.5px;
+    border-radius: 8px; transition: all 0.15s ease;
+  }
+  aside nav a:hover { background: rgba(0,122,255,0.08); color: var(--blue); }
+  aside nav a .num { display: inline-block; width: 22px; color: var(--ink-3); font-weight: 600; }
+  aside nav a.section { font-weight: 700; color: var(--ink); margin-top: 10px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+  /* Main */
+  main { padding: 30px 50px 80px; }
+  section { margin-bottom: 56px; scroll-margin-top: 20px; }
+  h1 { font-size: 36px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 8px; }
+  h2 { font-size: 24px; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 12px; color: var(--ink); }
+  h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; color: var(--ink); }
+  h4 { font-size: 13px; font-weight: 700; margin: 12px 0 6px; color: var(--ink-2); }
+  p { color: var(--ink-2); margin-bottom: 8px; font-size: 13.5px; }
+  ul, ol { margin: 6px 0 12px 20px; color: var(--ink-2); font-size: 13.5px; }
+  ul li, ol li { margin-bottom: 4px; }
+  code { background: rgba(0,122,255,0.08); color: var(--blue); padding: 1px 5px; border-radius: 3px; font: 12px ui-monospace, "SF Mono", monospace; }
+  pre { background: rgba(0,0,0,0.04); border-radius: 8px; padding: 12px; font: 11.5px/1.6 ui-monospace, monospace; white-space: pre; overflow-x: auto; margin: 8px 0; color: var(--ink); }
+  /* Hero */
+  .hero {
+    background: var(--glass-bg); backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: 18px; padding: 36px 40px; box-shadow: var(--shadow-soft);
+    margin-bottom: 30px; position: relative; overflow: hidden;
+  }
+  .hero h1 small { display: block; font-size: 13px; color: var(--ink-3); font-weight: 500; margin-top: 6px; letter-spacing: 0.3px; }
+  .hero .meta { display: flex; gap: 16px; margin-top: 16px; flex-wrap: wrap; }
+  .hero .meta .tag { background: rgba(0,122,255,0.1); color: var(--blue); padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 600; }
+  .hero .meta .tag.green { background: rgba(52,199,89,0.15); color: var(--green-deep); }
+  .hero .meta .tag.orange { background: rgba(255,149,0,0.15); color: var(--orange-deep); }
+  .hero-fold {
+    margin-top: 24px; display: flex; align-items: center; justify-content: center;
+    padding: 30px 20px; background: linear-gradient(135deg, #fef9f3 0%, #eaf3fb 100%);
+    border-radius: 14px;
+  }
+  /* Card */
+  .card {
+    background: var(--glass-bg); backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px; padding: 20px 24px; box-shadow: var(--shadow-soft);
+    margin-bottom: 16px;
+  }
+  .card h3 { margin-top: 0; }
+  .row { display: flex; gap: 16px; }
+  .row > * { flex: 1; }
+  /* Mockup window */
+  .mockup {
+    background: var(--glass-bg); backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px; overflow: hidden; box-shadow: var(--shadow-soft);
+    margin: 10px 0;
+  }
+  .mockup-header { padding: 8px 14px; background: rgba(0,0,0,0.04); font-size: 11px; font-weight: 700; color: var(--ink-3); border-bottom: 1px solid rgba(0,0,0,0.05); }
+  .mockup-body { padding: 24px; display: flex; align-items: center; justify-content: center; min-height: 120px; background: linear-gradient(135deg, #fef9f3 0%, #eaf3fb 100%); }
+  /* Fold state demo */
+  .fold-demo {
+    width: 320px; height: 36px; border-radius: 18px;
+    background: rgba(255,255,255,0.42); backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    border: 1px solid rgba(255,255,255,0.65);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.7) inset, 0 8px 24px rgba(0,0,0,0.08);
+    display: flex; align-items: center;
+  }
+  .fold-demo .inner { display: flex; align-items: center; height: 100%; padding: 0 6px 0 10px; gap: 8px; font: 600 12.5px -apple-system; color: var(--ink); }
+  .dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; flex-shrink: 0; align-self: center; animation: pulse 1.6s ease-in-out infinite; }
+  .label-focus { font-size: 9px; background: rgba(52,199,89,0.18); color: var(--green-deep); padding: 2px 7px; border-radius: 8px; font-weight: 700; letter-spacing: 0.4px; }
+  .label-done { font-size: 9px; background: rgba(52,199,89,0.12); color: var(--green-deep); padding: 2px 7px; border-radius: 8px; font-weight: 700; letter-spacing: 0.4px; }
+  .label-empty { font-size: 9px; background: rgba(0,0,0,0.05); color: var(--ink-3); padding: 2px 7px; border-radius: 8px; font-weight: 700; letter-spacing: 0.4px; }
+  .title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+  .time { color: var(--blue); font-variant-numeric: tabular-nums; font-weight: 700; letter-spacing: -0.3px; }
+  .time-frozen { color: var(--ink-3); font-variant-numeric: tabular-nums; font-weight: 700; letter-spacing: -0.3px; }
+  .icon-pause { color: var(--green); font-size: 15px; }
+  .icon-undo { color: var(--blue); font-size: 14px; }
+  .icon-plus { color: var(--blue); font-size: 14px; }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(52,199,89,0.4); } 50% { box-shadow: 0 0 0 6px rgba(52,199,89,0); } }
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; margin: 8px 0 12px; font-size: 12.5px; }
+  th, td { padding: 7px 10px; border-bottom: 1px solid rgba(0,0,0,0.06); text-align: left; }
+  th { background: rgba(0,122,255,0.06); font-weight: 700; color: var(--ink); font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.3px; }
+  td code { font-size: 11px; }
+  /* State diagram */
+  .state-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 12px 0; }
+  .state-card { background: rgba(255,255,255,0.6); border: 1px solid var(--glass-border); border-radius: 10px; padding: 12px; }
+  .state-card .name { font-weight: 700; margin-bottom: 4px; font-size: 13px; }
+  .state-card.active .name { color: var(--green-deep); }
+  .state-card.paused .name { color: var(--orange-deep); }
+  .state-card.done .name { color: var(--green-deep); }
+  .state-card.pending .name { color: var(--ink-3); }
+  /* Mockup index */
+  .mockup-index { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin: 12px 0; }
+  .mockup-thumb {
+    background: var(--glass-bg); backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px; padding: 10px 12px; transition: all 0.2s; text-decoration: none; color: var(--ink);
+  }
+  .mockup-thumb:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(0,0,0,0.12); }
+  .mockup-thumb .ver { font-size: 10px; color: var(--ink-3); font-weight: 700; }
+  .mockup-thumb .name { font-size: 12.5px; font-weight: 600; margin-top: 2px; }
+  .mockup-thumb .desc { font-size: 11px; color: var(--ink-3); margin-top: 2px; line-height: 1.4; }
+  .mockup-thumb.deprecated { opacity: 0.5; }
+  .mockup-thumb.current { border-color: var(--blue); background: rgba(0,122,255,0.05); }
+  /* Pill */
+  .pill { display: inline-block; padding: 3px 9px; border-radius: 6px; font-size: 10.5px; font-weight: 700; letter-spacing: 0.3px; }
+  .pill-blue { background: rgba(0,122,255,0.12); color: var(--blue); }
+  .pill-green { background: rgba(52,199,89,0.18); color: var(--green-deep); }
+  .pill-orange { background: rgba(255,149,0,0.18); color: var(--orange-deep); }
+  .pill-gray { background: rgba(0,0,0,0.05); color: var(--ink-3); }
+  /* Decision list */
+  .decisions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 12px 0; }
+  .decision { background: rgba(255,255,255,0.5); border: 1px solid var(--glass-border); border-radius: 8px; padding: 10px 12px; font-size: 12px; }
+  .decision .id { display: inline-block; background: var(--blue); color: white; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; margin-right: 6px; }
+  .footer-note { text-align: center; color: var(--ink-3); font-size: 12px; padding: 30px 0; }
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    aside { position: static; height: auto; }
+    main { padding: 20px; }
+    .row { flex-direction: column; }
+    .state-grid { grid-template-columns: 1fr; }
+    .decisions { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside>
+    <div class="brand">
+      Mindtap V1.3
+      <small>浮动窗口快速记录 · 设计总览</small>
+    </div>
+    <nav>
+      <a class="section" href="#hero">概览</a>
+      <a href="#hero"><span class="num">·</span> 视觉演示</a>
+      <a href="#problem"><span class="num">·</span> 痛点与铁律</a>
+
+      <a class="section" href="#core">核心交互</a>
+      <a href="#core"><span class="num">3</span> 折叠/展开/下拉</a>
+      <a href="#states"><span class="num">·</span> Focus 3 态</a>
+
+      <a class="section" href="#data">数据模型</a>
+      <a href="#data"><span class="num">4</span> 3 表 + record</a>
+      <a href="#machine"><span class="num">5</span> 4 状态机</a>
+
+      <a class="section" href="#arch">架构</a>
+      <a href="#arch"><span class="num">6</span> Tauri 2 多窗口</a>
+
+      <a class="section" href="#journey">用户旅程</a>
+      <a href="#journey"><span class="num">7</span> 3 秒/1 秒/0 思考</a>
+
+      <a class="section" href="#visual">视觉规范</a>
+      <a href="#visual"><span class="num">8</span> Liquid Glass</a>
+
+      <a class="section" href="#decisions">决策索引</a>
+      <a href="#decisions"><span class="num">10</span> D1-D15</a>
+
+      <a class="section" href="#mockups">17 轮 mockup</a>
+      <a href="#mockups"><span class="num">·</span> 完整索引</a>
+
+      <a class="section" href="#doc">原始文档</a>
+      <a href="#doc"><span class="num">·</span> 设计文档</a>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <main>
+
+    <!-- Hero -->
+    <section id="hero" class="hero">
+      <h1>Mindtap V1.3 · 浮动窗口快速记录<small>17 轮迭代 · 15 项决策 · 跨平台 Tauri 2 多窗口</small></h1>
+      <div class="meta">
+        <span class="tag">3 表拆分（task/idea/check_in）</span>
+        <span class="tag green">4 状态 TODO 状态机</span>
+        <span class="tag orange">业务层事务双写</span>
+        <span class="tag">macOS NSPanel + Windows 工具窗</span>
+      </div>
+      <div class="hero-fold">
+        <div class="fold-demo">
+          <div class="inner">
+            <span class="dot"></span>
+            <span class="label-focus">FOCUS</span>
+            <span class="title">写 Q3 计划</span>
+            <span class="time">00:12:34</span>
+            <span class="icon-pause">⏸</span>
+          </div>
+        </div>
+      </div>
+      <p style="text-align:center;margin-top:14px;font-size:12px;color:var(--ink-3)">
+        ↑ 折叠态 320×36 · 时间 + 暂停靠右 · 呼吸灯 1.6s
+      </p>
+    </section>
+
+    <!-- Problem & Iron Rules -->
+    <section id="problem">
+      <h2>痛点与设计铁律</h2>
+      <div class="row">
+        <div class="card">
+          <h3>🎯 目标用户</h3>
+          <p><strong>ENFP 创意型</strong> — 点子爆发但极易遗忘、难以长期坚持记录</p>
+          <ul>
+            <li>同时处理 3-5 个并行任务，频繁切换</li>
+            <li>灵感瞬间即逝，必须 3 秒内记录</li>
+            <li>需要"轻推"（视觉提示）想起当前在做什么</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>📐 唯一设计准则</h3>
+          <p><strong>3 秒记录 / 1 秒查看 / 0 思考成本</strong></p>
+          <ul>
+            <li>3 秒：快捷键 ≤ 1 击 + 输入 + 保存 1 键</li>
+            <li>1 秒：折叠态 ≤ 36px 常驻任意位置</li>
+            <li>0 思考：无 Tab 切换 / 无强制类型 / 智能推断</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <h3>❌ V1.2 痛点</h3>
+        <ul>
+          <li>像"应用程序后台"而非轻量 app — 打开主窗才看记录</li>
+          <li>多维度记录操作繁琐（至少 5 步）— 灵感瞬间流失</li>
+          <li>TODO 状态机缺失 — 只有"完成/未开始"二态，无法表达"正在做"</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Core Interaction -->
+    <section id="core">
+      <h2>核心交互 · 折叠 / 展开 / 下拉</h2>
+
+      <h3>折叠态 3 种视觉态</h3>
+      <div class="row">
+        <div class="mockup">
+          <div class="mockup-header">active · 进行中</div>
+          <div class="mockup-body"><div class="fold-demo"><div class="inner"><span class="dot"></span><span class="label-focus">FOCUS</span><span class="title">写 Q3 计划</span><span class="time">00:12:34</span><span class="icon-pause">⏸</span></div></div></div>
+        </div>
+        <div class="mockup">
+          <div class="mockup-header">done · 已完成（仍占位）</div>
+          <div class="mockup-body" style="background:linear-gradient(135deg,#e8f5e9,#f5f5f7)"><div class="fold-demo" style="background:rgba(255,255,255,0.32);box-shadow:0 1px 0 rgba(255,255,255,0.6) inset,0 6px 18px rgba(0,0,0,0.05)"><div class="inner"><span class="dot" style="opacity:0.5;animation:none"></span><span class="label-done">DONE</span><span class="title" style="opacity:0.7">写 Q3 计划</span><span class="time-frozen">00:32:14</span><span class="icon-undo">↶</span></div></div></div>
+        </div>
+        <div class="mockup">
+          <div class="mockup-header">empty · 无任务</div>
+          <div class="mockup-body" style="background:linear-gradient(135deg,#f5f5f7,#eaf3fb)"><div class="fold-demo" style="background:rgba(255,255,255,0.28);border:1px dashed rgba(0,122,255,0.25)"><div class="inner" style="color:var(--ink-3)"><span style="width:8px;height:8px;background:rgba(0,0,0,0.12);border-radius:50%;flex-shrink:0"></span><span class="label-empty">EMPTY</span><span class="title" style="font-weight:500">点击记录第一个任务</span><span class="icon-plus">+</span></div></div></div>
+        </div>
+      </div>
+
+      <h3 style="margin-top:20px">展开态 · 360×280 上下分栏</h3>
+      <div class="row">
+        <div class="card">
+          <h3>上栏 · Focus 块 + 控制行</h3>
+          <ul>
+            <li><strong>Focus 块</strong>（36px）：与折叠态同构</li>
+            <li><strong>控制行</strong>（26px）：<span class="pill pill-blue">⏸ 暂停</span> <span class="pill pill-green">✓ 完成</span> <span class="pill pill-gray">⇄ ▼</span></li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>下栏 · 输入 + 类型 + 截止 + CTA</h3>
+          <ul>
+            <li><strong>textarea</strong>（flex:1）：12.5px 字体，半透明白底</li>
+            <li><strong>类型行</strong>：<span class="pill pill-blue">✓待办</span> <span class="pill pill-gray">✎灵感</span> <span class="pill pill-gray">⚡打卡</span></li>
+            <li><strong>截止 + CTA</strong>：<span class="pill pill-gray">📅 稍后</span> <span class="pill pill-gray">📅 明天</span> <span class="pill pill-blue">⏵ 开始计时</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <h3 style="margin-top:20px">切换下拉 · 顶靠右</h3>
+      <p>点 <code>⇄ ▼</code> 在主窗内顶靠右下拉，显示"未开始 + 已暂停"清单（不含 done）：</p>
+      <pre>┌──────────────────────────┐
+│ ⇄ 切换到                  │
+│ ──回复客户邮件         ⏵│  未开始（灰标）
+│ ──整理会议纪要    00:08 ⏵│  暂停（橙标 + 已计时）
+│ ──设计 v2 界面         ⏵│  未开始
+│ 查看全部 7 个 ›           │
+└──────────────────────────┘</pre>
+    </section>
+
+    <!-- States -->
+    <section id="states">
+      <h2>Focus 块 3 态视觉对照</h2>
+      <table>
+        <tr><th>维度</th><th><span class="pill pill-green">active</span></th><th><span class="pill pill-green">done</span>（仍占位）</th><th><span class="pill pill-gray">empty</span></th></tr>
+        <tr><td>绿圆点</td><td>呼吸灯 1.6s</td><td>静默 50% 透明</td><td>灰圆点</td></tr>
+        <tr><td>标签</td><td>FOCUS 绿 18%</td><td>DONE 绿 12%</td><td>EMPTY 灰 4%</td></tr>
+        <tr><td>标题</td><td>100%</td><td>70%（划掉可选）</td><td>50% 提示色</td></tr>
+        <tr><td>时间</td><td>蓝 #007AFF 在走</td><td>灰 #86868b 冻结</td><td>—</td></tr>
+        <tr><td>操作图标</td><td>⏸ 绿 #34c759</td><td>↶ 蓝 #007AFF（撤销）</td><td>+ 蓝 #007AFF（新建）</td></tr>
+        <tr><td>主容器透明度</td><td>42%</td><td>32%</td><td>28% 虚线</td></tr>
+      </table>
+    </section>
+
+    <!-- Data Model -->
+    <section id="data">
+      <h2>数据模型 · 3 源表 + 1 通用 record 表</h2>
+      <p><strong>核心决策</strong>：拆分 3 源表（task/idea/check_in）+ 1 通用 record 表（业务层事务双写），主窗统一列表展示。</p>
+
+      <h4>4.1 task 表（4 状态机）</h4>
+<pre>CREATE TABLE task (
+  id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+  content             TEXT    NOT NULL,
+  status              TEXT    NOT NULL DEFAULT 'pending',
+  duration_ms         INTEGER NOT NULL DEFAULT 0,
+  first_focused_at    INTEGER,
+  focus_started_at    INTEGER,
+  paused_at           INTEGER,
+  focused_count       INTEGER NOT NULL DEFAULT 0,
+  due_at              INTEGER,
+  created_at          INTEGER NOT NULL,
+  updated_at          INTEGER NOT NULL,
+  archived_at         INTEGER
+);</pre>
+
+      <h4>4.2 idea / check_in / record 表</h4>
+<pre>CREATE TABLE idea (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  content     TEXT    NOT NULL,
+  created_at  INTEGER NOT NULL
+);
+
+CREATE TABLE check_in (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  habit       TEXT    NOT NULL,
+  note        TEXT,
+  checked_at  INTEGER NOT NULL
+);
+
+CREATE TABLE record (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  kind        TEXT    NOT NULL,        -- 'task' | 'idea' | 'check_in'
+  source_id   INTEGER NOT NULL,
+  content     TEXT    NOT NULL,
+  status      TEXT,
+  created_at  INTEGER NOT NULL
+);</pre>
+
+      <h4>4.3 业务层事务双写（D4-B 锁定）</h4>
+      <p>源表 INSERT + record INSERT 必须同事务，全部成功或全部回滚：</p>
+<pre>pub fn create_task(conn: &mut Connection, content: &str,
+                   due_at: Option&lt;i64&gt;) -&gt; rusqlite::Result&lt;Task&gt; {
+    let now = now_ms();
+    let tx = conn.transaction()?;                    // ← 开事务
+    tx.execute("INSERT INTO task (...) VALUES (...)",
+               params![content, now, due_at])?;
+    let task_id = tx.last_insert_rowid();            // ← 取 source_id
+    tx.execute("INSERT INTO record (kind, source_id, content, status, created_at)
+                VALUES ('task', ?1, ?2, 'pending', ?3)",
+               params![task_id, content, now])?;
+    tx.commit()?;                                    // ← 提交
+    Ok(...)
+}</pre>
+
+      <h4>4.4 主窗统一列表（单表查询）</h4>
+      <pre>-- 全部记录
+SELECT * FROM record ORDER BY created_at DESC LIMIT 50;
+
+-- 隐藏归档
+SELECT * FROM record
+WHERE kind != 'task' OR source_id NOT IN
+  (SELECT id FROM task WHERE archived_at IS NOT NULL)
+ORDER BY created_at DESC;</pre>
+    </section>
+
+    <!-- State Machine -->
+    <section id="machine">
+      <h2>4 状态 TODO 状态机</h2>
+<pre>                     ┌──────────┐
+                     │ pending  │  ← 创建
+                     └────┬─────┘
+                          │ ⏵ 开始计时
+                          ▼
+                     ┌──────────┐
+                     │  active  │  ← Focus 块唯一
+                     └────┬─────┘
+                          │
+              ┌───────────┴───────────┐
+              ▼                       ▼
+         ┌────────┐              ┌────────┐
+         │ paused │              │  done  │  ← Focus 块变体
+         └───┬────┘              └───┬────┘
+             │ ⏸ 继续                │ ↶ 撤销 / 新任务覆盖归档
+             │                       │
+             ▼                       ▼
+         ┌────────┐              归档
+         │ active │
+         └────────┘</pre>
+
+      <h3>5 条不变量</h3>
+      <ul>
+        <li><strong>L1</strong>：全局唯一 <code>status='active'</code>（同时只能一个 Focus）</li>
+        <li><strong>L2</strong>：<code>paused → active</code> 时 <code>focus_started_at = now</code>，<code>duration_ms</code> 保留</li>
+        <li><strong>L3</strong>：<code>active → paused</code> 时 <code>duration_ms += now - focus_started_at</code>，<code>focus_started_at = null</code></li>
+        <li><strong>L4</strong>：<code>active → done</code> 时累加 <code>duration_ms</code>，进入 done 态</li>
+        <li><strong>L5</strong>：<code>done → *</code> 不允许终态；可"撤销"回 active</li>
+      </ul>
+    </section>
+
+    <!-- Architecture -->
+    <section id="arch">
+      <h2>架构 · Tauri 2 多窗口</h2>
+<pre>┌──────────────────────────────────────────────────────────┐
+│                Mindtap App (Tauri 2)                       │
+│                                                              │
+│  ┌────────────────┐         ┌──────────────────────────┐  │
+│  │   MainWindow   │ event   │     FloatingWindow        │  │
+│  │  (主窗)        │ ◄────►  │     (浮动窗 - 核心)        │  │
+│  │ · 设置/统计     │  bus    │  ┌────────┐  ┌──────────┐  │  │
+│  │ · 数据管理     │         │  │ 折叠态 │  │ 展开态   │  │  │
+│  │ · 完整记录     │         │  │ 320×36 │  │ 360×280  │  │  │
+│  └────────────────┘         │  └────────┘  └──────────┘  │  │
+│                             │  alwaysOnTop / focus: false │  │
+│  ┌────────────────────────┐ └──────────────────────────┘  │
+│  │  SQLite (单 DB, 共享)  │                                │
+│  │  task / idea / check_in │                              │
+│  │  record                 │                              │
+│  └────────────────────────┘                                │
+└──────────────────────────────────────────────────────────┘</pre>
+
+      <h3>跨平台浮动窗 Tauri 2 配置</h3>
+      <table>
+        <tr><th>维度</th><th>macOS</th><th>Windows</th></tr>
+        <tr><td>层级</td><td>NSPanel（不抢焦 + 浮窗）</td><td>WS_EX_TOOLWINDOW</td></tr>
+        <tr><td>全局快捷键</td><td>Cmd+Shift+Space</td><td>Ctrl+Shift+Space</td></tr>
+        <tr><td>自启动</td><td>Login Items</td><td>注册表 Run</td></tr>
+        <tr><td>模糊性能</td><td>Metal 加速</td><td>DWM 加速（Win 10/11）</td></tr>
+      </table>
+
+      <h3>关键 Tauri 命令（12 个）</h3>
+      <table>
+        <tr><th>命令</th><th>用途</th></tr>
+        <tr><td><code>task_create(content, due_at?)</code></td><td>事务双写（task + record）</td></tr>
+        <tr><td><code>task_start_timer(id)</code></td><td>pending → active</td></tr>
+        <tr><td><code>task_pause(id)</code></td><td>active → paused，累加 duration</td></tr>
+        <tr><td><code>task_resume(id)</code></td><td>paused → active</td></tr>
+        <tr><td><code>task_complete(id)</code></td><td>active → done</td></tr>
+        <tr><td><code>task_undo(id)</code></td><td>done → active（撤销继续）</td></tr>
+        <tr><td><code>task_switch(to_id)</code></td><td>切换 Focus（事务）</td></tr>
+        <tr><td><code>task_archive(id)</code></td><td>done → archived</td></tr>
+        <tr><td><code>idea_create / check_in_create</code></td><td>事务双写</td></tr>
+        <tr><td><code>floating_show / hide / toggle</code></td><td>控制浮动窗可见</td></tr>
+        <tr><td><code>evt_focus_changed</code></td><td>Focus 切换事件</td></tr>
+        <tr><td><code>evt_tick</code></td><td>每秒推送（前端不计时）</td></tr>
+      </table>
+    </section>
+
+    <!-- Journey -->
+    <section id="journey">
+      <h2>核心用户旅程</h2>
+
+      <div class="card">
+        <h3>3 秒记录 · 端到端</h3>
+        <table>
+          <tr><th>T+</th><th>动作</th><th>结果</th></tr>
+          <tr><td>0.0s</td><td>按 Cmd+Shift+Space</td><td>浮动窗 toggle</td></tr>
+          <tr><td>0.1s</td><td>折叠 → 展开（200ms 动画）</td><td>浮动窗显示</td></tr>
+          <tr><td>0.5s</td><td>用户输入文字</td><td>textarea 填充</td></tr>
+          <tr><td>1.5s</td><td>点 ⏵ 开始计时</td><td>事务双写 + 折叠</td></tr>
+          <tr><td>1.8s</td><td>主 Focus 块显示</td><td>时间从 00:00:00 走</td></tr>
+          <tr><td>2.0s</td><td>用户继续工作</td><td>总耗时 &lt; 3s ✓</td></tr>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>暂停 vs 完成（视觉权重）</h3>
+        <table>
+          <tr><th>操作</th><th>状态变化</th><th>累计</th><th>列表</th><th>视觉权重</th></tr>
+          <tr><td><span class="pill pill-blue">⏸ 暂停</span></td><td>active → paused</td><td>duration_ms 累加</td><td>出现在切换下拉</td><td><strong>突出</strong>（浅蓝）</td></tr>
+          <tr><td><span class="pill pill-green">✓ 完成</span></td><td>active → done</td><td>duration_ms 累加</td><td>从切换下拉消失</td><td>弱（淡绿）</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- Visual Spec -->
+    <section id="visual">
+      <h2>视觉规范 · Liquid Glass</h2>
+
+      <h3>颜色系统</h3>
+      <table>
+        <tr><th>用途</th><th>颜色</th><th>用例</th></tr>
+        <tr><td>主蓝</td><td><code>#007AFF</code></td><td>CTA / 时间 / 撤销</td></tr>
+        <tr><td>主绿</td><td><code>#34c759</code></td><td>FOCUS 标签底 / 暂停图标</td></tr>
+        <tr><td>绿深</td><td><code>#1f8a3f</code></td><td>FOCUS 文字</td></tr>
+        <tr><td>橙</td><td><code>#ff9500</code></td><td>暂停标签底</td></tr>
+        <tr><td>灰</td><td><code>#86868b</code></td><td>次要 / pending 标签</td></tr>
+      </table>
+
+      <h3>透明度梯度</h3>
+      <table>
+        <tr><th>层级</th><th>rgba</th><th>用途</th></tr>
+        <tr><td>折叠态主底</td><td><code>rgba(255,255,255,0.34)</code></td><td>折叠态 320×36</td></tr>
+        <tr><td>展开态主底</td><td><code>rgba(255,255,255,0.42)</code></td><td>展开态 360×280</td></tr>
+        <tr><td>done 态主底</td><td><code>rgba(255,255,255,0.32)</code></td><td>done 折叠态</td></tr>
+        <tr><td>empty 态主底</td><td><code>rgba(255,255,255,0.28)</code></td><td>empty 折叠态（虚线）</td></tr>
+        <tr><td>蓝高亮</td><td><code>rgba(0,122,255,0.12)</code></td><td>暂停按钮 / 默认类型</td></tr>
+        <tr><td>绿高亮</td><td><code>rgba(52,199,89,0.12)</code></td><td>完成按钮</td></tr>
+      </table>
+
+      <h3>动画（7 类）</h3>
+      <table>
+        <tr><th>动画</th><th>时长</th><th>曲线</th><th>触发</th></tr>
+        <tr><td>呼吸灯 (pulse)</td><td>1.6s</td><td>ease-in-out infinite</td><td>active 态常驻</td></tr>
+        <tr><td>折叠 → 展开</td><td>200ms</td><td>ease-out</td><td>点击 / 快捷键</td></tr>
+        <tr><td>展开 → 折叠</td><td>200ms</td><td>ease-in</td><td>点 ⏵ / 点外部</td></tr>
+        <tr><td>下拉打开</td><td>150ms</td><td>ease-out (opacity + translateY -4px)</td><td>点 ⇄ ▼</td></tr>
+        <tr><td>下拉关闭</td><td>100ms</td><td>ease-in</td><td>点外部 / 选中项</td></tr>
+        <tr><td>标签颜色切换</td><td>200ms</td><td>ease</td><td>状态变更</td></tr>
+        <tr><td>时间数字滚动</td><td>1s tick</td><td>—</td><td>evt_tick</td></tr>
+      </table>
+    </section>
+
+    <!-- Decisions -->
+    <section id="decisions">
+      <h2>15 项决策索引（D1-D15）</h2>
+      <div class="decisions">
+        <div class="decision"><span class="id">D1</span>浮动窗口为 V1.3 核心</div>
+        <div class="decision"><span class="id">D2</span>TODO 4 状态机：pending/active/paused/done</div>
+        <div class="decision"><span class="id">D3</span>进行中任务改称 <strong>Focus</strong>（绿标签）</div>
+        <div class="decision"><span class="id">D4</span>"保存" = "开始计时"（合并）</div>
+        <div class="decision"><span class="id">D5</span>折叠态 320×36，时间 + 暂停靠右</div>
+        <div class="decision"><span class="id">D6</span>暂停图标绿 / 暂停文字按钮浅蓝底</div>
+        <div class="decision"><span class="id">D7</span>完成按钮淡绿底（视觉 &lt; 暂停）</div>
+        <div class="decision"><span class="id">D8</span>上下分栏结构（无 Tab）</div>
+        <div class="decision"><span class="id">D9</span>切换/清单用顶靠右下拉 ⇄▼</div>
+        <div class="decision"><span class="id">D10</span>截止按钮：📅 稍后 + 📅 明天（次要）</div>
+        <div class="decision"><span class="id">D11</span>展开态 360×280</div>
+        <div class="decision"><span class="id">D12</span>3 源表拆分（task/idea/check_in）</div>
+        <div class="decision"><span class="id">D13</span>4 时间字段：first_focused_at/focus_started_at/paused_at/duration_ms</div>
+        <div class="decision"><span class="id">D14</span>done 态保留在 Focus 块 + 撤销继续</div>
+        <div class="decision"><span class="id">D15</span>业务层事务双写（record 关联）</div>
+      </div>
+    </section>
+
+    <!-- Mockup Index -->
+    <section id="mockups">
+      <h2>17 轮 mockup 完整索引</h2>
+      <p>所有 mockup 位于 <code>.superpowers/brainstorm/150600-1781431421/content/</code>，可直接点击打开预览。</p>
+
+      <div class="mockup-index">
+        <a class="mockup-thumb current" href="floating-dropdown-v13.html" target="_blank">
+          <div class="ver">v13 · 最终</div>
+          <div class="name">方案 A 定稿</div>
+          <div class="desc">360×280 上下分栏，文字按钮，顶靠右下拉</div>
+        </a>
+        <a class="mockup-thumb" href="floating-design-v14.html" target="_blank">
+          <div class="ver">v14</div>
+          <div class="name">节 2-5 整体呈现</div>
+          <div class="desc">数据/架构/流程/视觉规范</div>
+        </a>
+        <a class="mockup-thumb" href="floating-revised-v15.html" target="_blank">
+          <div class="ver">v15</div>
+          <div class="name">3 表 + first_focused_at + done 态</div>
+          <div class="desc">基于用户 3 质疑的修订</div>
+        </a>
+        <a class="mockup-thumb" href="floating-record-v16.html" target="_blank">
+          <div class="ver">v16</div>
+          <div class="name">3 表 + 1 通用 record</div>
+          <div class="desc">3 方案对比：触发器/双写/视图</div>
+        </a>
+        <a class="mockup-thumb" href="floating-record-b-v17.html" target="_blank">
+          <div class="ver">v17</div>
+          <div class="name">业务层双写 B + 3 关注点</div>
+          <div class="desc">D4-B 锁定 + 迁移/筛选/归档</div>
+        </a>
+        <a class="mockup-thumb" href="floating-lr-vs-tb-v12.html" target="_blank">
+          <div class="ver">v12</div>
+          <div class="name">下栏 2 Tab vs 右栏 2 Tab</div>
+          <div class="desc">左右 vs 上下分栏对比</div>
+        </a>
+        <a class="mockup-thumb" href="floating-tabbar-v11.html" target="_blank">
+          <div class="ver">v11</div>
+          <div class="name">上下分栏 + Tab</div>
+          <div class="desc">Tab 方案（被否）</div>
+        </a>
+        <a class="mockup-thumb" href="floating-revised-v10.html" target="_blank">
+          <div class="ver">v10</div>
+          <div class="name">修正暂停色</div>
+          <div class="desc">浅蓝非亮蓝 + 恢复绿暂停图标</div>
+        </a>
+        <a class="mockup-thumb" href="floating-switch-v9.html" target="_blank">
+          <div class="ver">v9</div>
+          <div class="name">整合 4 洞察</div>
+          <div class="desc">含切换语义</div>
+        </a>
+        <a class="mockup-thumb" href="floating-expand-v8.html" target="_blank">
+          <div class="ver">v8</div>
+          <div class="name">4 展开布局</div>
+          <div class="desc">折叠态定稿版</div>
+        </a>
+        <a class="mockup-thumb" href="floating-focus-v7.html" target="_blank">
+          <div class="ver">v7</div>
+          <div class="name">Focus 标签 + 呼吸灯</div>
+          <div class="desc">进行中 ≠ TODO</div>
+        </a>
+        <a class="mockup-thumb" href="floating-logic-v6.html" target="_blank">
+          <div class="ver">v6</div>
+          <div class="name">保存=开始计时</div>
+          <div class="desc">合并动作</div>
+        </a>
+        <a class="mockup-thumb" href="floating-form-factor-v5.html" target="_blank">
+          <div class="ver">v5</div>
+          <div class="name">3 紧凑单行</div>
+          <div class="desc">折叠态高度对</div>
+        </a>
+        <a class="mockup-thumb deprecated" href="floating-form-factor-v4.html" target="_blank">
+          <div class="ver">v4 · 弃</div>
+          <div class="name">5 轻透明变体</div>
+          <div class="desc">图标外框累赘</div>
+        </a>
+        <a class="mockup-thumb" href="floating-form-factor-v3.html" target="_blank">
+          <div class="ver">v3</div>
+          <div class="name">A/B/C 展开态</div>
+          <div class="desc">3 方案对比</div>
+        </a>
+        <a class="mockup-thumb" href="floating-form-factor-v2.html" target="_blank">
+          <div class="ver">v2</div>
+          <div class="name">修正卡高</div>
+          <div class="desc">v1 高度修正</div>
+        </a>
+        <a class="mockup-thumb" href="floating-form-factor.html" target="_blank">
+          <div class="ver">v1</div>
+          <div class="name">3 种窗体形态</div>
+          <div class="desc">药丸/极简卡/灵动岛</div>
+        </a>
+      </div>
+    </section>
+
+    <!-- Doc -->
+    <section id="doc">
+      <h2>原始设计文档</h2>
+      <p>完整 11 节设计文档（647 行）：</p>
+      <p style="text-align:center;margin:20px 0">
+        <a href="../../../docs/superpowers/specs/2026-06-14-浮动窗口快速记录-design.md" style="display:inline-block;background:var(--blue);color:white;padding:10px 24px;border-radius:10px;text-decoration:none;font-weight:600">
+          📄 打开设计文档
+        </a>
+      </p>
+    </section>
+
+    <div class="footer-note">
+      2026-06-14 · Jason · 17 轮迭代 · 15 项决策锁定
+    </div>
+
+  </main>
+</div>
+</body>
+</html>

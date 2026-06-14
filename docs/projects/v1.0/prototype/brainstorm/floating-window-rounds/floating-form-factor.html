@@ -1,0 +1,99 @@
+<h2>浮动窗口形态 — 3 个候选方案</h2>
+<p class="subtitle">基于 Q1–Q7 决策：单常驻 + 计时/输入双态切换 + 三类高频记录 + 置顶常驻</p>
+
+<div class="options" data-multiselect>
+  <!-- ============ 方案 A: 顶部胶囊条 ============ -->
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>顶部胶囊条（最紧凑）</h3>
+      <p>横向 320×40px，紧贴屏幕顶部居中。Liquid Glass 长条，左侧"当前任务" + 计时器，右侧 3 个图标按钮（待办/灵感/快打卡）。点击输入区在窗口下方向下滑出。</p>
+      <div class="mockup" style="margin-top:12px">
+        <div class="mockup-header">折叠态（默认·置顶常驻）</div>
+        <div class="mockup-body" style="background:linear-gradient(180deg,#f5f5f7 0%,#e8eaed 100%);padding:24px 0;display:flex;justify-content:center;min-height:120px">
+          <div style="width:320px;height:40px;border-radius:20px;background:rgba(255,255,255,0.55);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.6);box-shadow:0 1px 0 rgba(255,255,255,0.6) inset, 0 8px 24px rgba(0,0,0,0.08);display:flex;align-items:center;padding:0 14px;gap:10px;font:600 13px -apple-system">
+            <span style="color:#1d1d1f">▌写周报</span>
+            <span style="flex:1"></span>
+            <span style="color:#007AFF;font-variant-numeric:tabular-nums">00:12:34</span>
+            <span style="color:#86868b">●</span>
+            <span style="color:#34c759">✓</span>
+            <span style="color:#ff9500">+</span>
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Pros</h4><ul><li>最不打扰视野</li><li>Mac/Windows 一致（Web 全做）</li><li>实现最简单</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>展开输入后窗体高度变化大</li><li>顶部占位可能跟全屏 App 冲突</li><li>3 个图标入口可发现性弱</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 方案 B: 矩形极简卡 ============ -->
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>矩形极简卡（推荐·平衡）</h3>
+      <p>屏幕右上角，折叠 280×96px，展开 320×auto。Liquid Glass 圆角 18px。折叠态：当前任务 + 计时 + 3 类型 Tab。展开态：输入框 + 类型选择 + 提交。拖动可改位置。</p>
+      <div class="mockup" style="margin-top:12px">
+        <div class="mockup-header">折叠态 · 计时器</div>
+        <div class="mockup-body" style="background:linear-gradient(135deg,#fef9f3 0%,#eef3fb 50%,#eaf3ee 100%);padding:24px;display:flex;justify-content:flex-end;min-height:160px">
+          <div style="width:280px;height:96px;border-radius:18px;background:rgba(255,255,255,0.55);backdrop-filter:blur(30px);border:1px solid rgba(255,255,255,0.6);box-shadow:0 1px 0 rgba(255,255,255,0.7) inset, 0 12px 32px rgba(0,0,0,0.1);padding:14px;font:13px -apple-system;color:#1d1d1f;display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="display:inline-block;width:6px;height:6px;background:#007AFF;border-radius:50%;box-shadow:0 0 0 3px rgba(0,122,255,0.2)"></span>
+              <span style="font-weight:600">写 Q3 计划</span>
+              <span style="flex:1"></span>
+              <span style="color:#86868b;font-size:11px">⏱ 进行中</span>
+            </div>
+            <div style="font:700 28px -apple-system;color:#1d1d1f;font-variant-numeric:tabular-nums;letter-spacing:-0.5px">00:12:34</div>
+            <div style="display:flex;gap:6px">
+              <span style="flex:1;background:rgba(0,122,255,0.12);color:#007AFF;text-align:center;padding:5px 0;border-radius:8px;font-size:11px;font-weight:600">✓ 待办</span>
+              <span style="flex:1;background:rgba(255,255,255,0.5);color:#1d1d1f;text-align:center;padding:5px 0;border-radius:8px;font-size:11px;font-weight:600">✎ 灵感</span>
+              <span style="flex:1;background:rgba(255,255,255,0.5);color:#1d1d1f;text-align:center;padding:5px 0;border-radius:8px;font-size:11px;font-weight:600">⚡ 打卡</span>
+              <span style="flex:0 0 32px;background:rgba(0,0,0,0.06);color:#1d1d1f;text-align:center;padding:5px 0;border-radius:8px;font-size:11px">⤢</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Pros</h4><ul><li>折叠态一眼看完（任务+计时+类型）</li><li>展开态可输入，不挤占主应用</li><li>类型切换 Tab 符合 0 思考</li><li>Mac/Windows 一致</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>比 A 略占视野（96px 高）</li><li>拖动时需防误操作</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 方案 C: macOS 灵动岛风格 ============ -->
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>灵动岛风格 Pill（Mac 优先）</h3>
+      <p>macOS 26 灵动岛风格，360×48px 长 pill 浮在屏幕顶部（摄像头区域下）。SwiftUI 嵌入实现，依赖 macOS 26 glassEffect API。点击 pill 横向展开为 480×160 输入区。</p>
+      <div class="mockup" style="margin-top:12px">
+        <div class="mockup-header">折叠态 · 灵动岛</div>
+        <div class="mockup-body" style="background:linear-gradient(180deg,#1a1a1a 0%,#2a2a2a 100%);padding:18px;display:flex;justify-content:center;min-height:120px">
+          <div style="width:360px;height:48px;border-radius:24px;background:rgba(0,0,0,0.75);border:1px solid rgba(255,255,255,0.1);box-shadow:0 8px 24px rgba(0,0,0,0.4);display:flex;align-items:center;padding:0 18px;gap:12px;font:600 14px -apple-system;color:white">
+            <span style="font-size:11px;background:rgba(0,122,255,0.3);color:#5ac8fa;padding:2px 8px;border-radius:10px">TODO</span>
+            <span>写 Q3 计划</span>
+            <span style="flex:1"></span>
+            <span style="color:#5ac8fa;font-variant-numeric:tabular-nums">00:12:34</span>
+            <span style="color:#30d158">⏵</span>
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Pros</h4><ul><li>Mac 26 Liquid Glass 还原度最高</li><li>灵动岛原生姿态，视觉高级</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>仅 macOS 26+ 可用，Windows 必须降级为方案 B</li><li>依赖 SwiftUI 嵌入（混合架构风险 R1）</li><li>顶部居中跟全屏 App 冲突严重</li><li>需要 R1 spike 先验证</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:24px;padding:16px;background:rgba(0,122,255,0.08);border-radius:12px;border:1px solid rgba(0,122,255,0.2)">
+  <h3 style="margin:0 0 8px;font-size:15px">⭐ 我的推荐：方案 B（矩形极简卡）</h3>
+  <p style="margin:0;font-size:13px;color:#1d1d1f;line-height:1.6">
+    <strong>理由</strong>：① 折叠态信息密度刚好（任务+计时+3类型 Tab），工作中一眼看到当前任务，解决"遗忘"痛点；② 展开态不挤占主应用视野；③ Mac + Windows 实现一致（Web 全做），不依赖 R1 高风险项；④ 3 类型 Tab 比 3 个图标按钮可发现性强，更符合 0 思考成本。
+    <br/><br/>
+    <strong>风险</strong>：96px 高度对极小屏笔记本偏大 → 可加"超紧凑模式"（折叠态压缩到 64px，仅显示任务名+计时）。
+  </p>
+</div>
+
+<p class="subtitle" style="margin-top:20px">在浏览器里点选方案（可多选），或直接在终端回复 A / B / C。我会等你定下来再进入下一步。</p>

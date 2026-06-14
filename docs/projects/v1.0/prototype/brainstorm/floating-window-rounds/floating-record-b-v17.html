@@ -1,0 +1,329 @@
+<h2>浮动窗口 v17 · 业务层双写（B 方案）+ 3 关注点</h2>
+<p class="subtitle">D4-B 锁定 · 事务包裹双写 · 3 关注点推荐答案</p>
+
+<style>
+  .sec17{margin:18px 0;padding:16px;background:rgba(255,255,255,0.4);border-radius:14px;border:1px solid rgba(0,0,0,0.06)}
+  .sec17 h3{margin:0 0 10px;font-size:15px;color:#007AFF;display:flex;align-items:center;gap:8px}
+  .sec17 h3 .num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:#007AFF;color:white;border-radius:6px;font-size:12px;font-weight:700}
+  .sec17 pre,.sec17 .ascii{background:rgba(0,0,0,0.04);border-radius:8px;padding:12px;font:11.5px/1.6 ui-monospace,monospace;white-space:pre;overflow-x:auto;margin:8px 0;color:#1d1d1f}
+  .sec17 table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px}
+  .sec17 th,.sec17 td{padding:6px 8px;border-bottom:1px solid rgba(0,0,0,0.06);text-align:left;vertical-align:top}
+  .sec17 th{background:rgba(0,122,255,0.06);font-weight:700;color:#1d1d1f}
+  .sec17 td code{background:rgba(0,122,255,0.08);color:#007AFF;padding:1px 5px;border-radius:3px;font-size:11px}
+  .sec17 .hl{background:rgba(52,199,89,0.12);color:#1f8a3f;padding:2px 6px;border-radius:4px;font-weight:600}
+  .sec17 .ok{background:rgba(0,122,255,0.12);color:#007AFF;padding:2px 6px;border-radius:4px;font-weight:600}
+  .sec17 .warn{background:rgba(255,149,0,0.12);color:#cc7a00;padding:2px 6px;border-radius:4px;font-weight:600}
+  .sec17 .danger{background:rgba(255,59,48,0.12);color:#d70015;padding:2px 6px;border-radius:4px;font-weight:600}
+  .row-flex{display:flex;gap:12px;margin:8px 0}
+  .row-flex > *{flex:1}
+</style>
+
+<!-- ===== B 方案细化 ===== -->
+<div class="sec17">
+  <h3><span class="num">D4-B</span> 业务层双写 · 事务包裹</h3>
+
+  <h4 style="font-size:13px;margin:6px 0">核心原则</h4>
+  <ul style="margin:6px 0;font-size:12.5px;line-height:1.8">
+    <li><strong>原子性</strong>：源表 INSERT + record INSERT 必须同事务，<strong>全部成功或全部回滚</strong></li>
+    <li><strong>source_id 来源</strong>：源表 INSERT 后取 <code>last_insert_rowid()</code>，再写 record</li>
+    <li><strong>UPDATE 同步</strong>：task content/status 变更时，业务层同步 UPDATE record</li>
+    <li><strong>DELETE 级联</strong>：业务层先删 record，再删源表（或反过来包事务）</li>
+  </ul>
+
+  <h4 style="font-size:13px;margin:10px 0 6px">Rust 业务层示例（事务双写）</h4>
+  <pre class="ascii">// src-tauri/src/db.rs
+
+use rusqlite::{Connection, Transaction, params};
+use serde::{Serialize, Deserialize};
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Task {
+    pub id: i64,
+    pub content: String,
+    pub status: String,
+    pub duration_ms: i64,
+    pub first_focused_at: Option<i64>,
+    pub focus_started_at: Option<i64>,
+    pub paused_at: Option<i64>,
+    pub focused_count: i64,
+    pub due_at: Option<i64>,
+    pub created_at: i64,
+    pub updated_at: i64,
+    pub archived_at: Option<i64>,
+}
+
+/// 业务层：创建 task（双写 record）
+pub fn create_task(
+    conn: &mut Connection,
+    content: &str,
+    due_at: Option<i64>,
+) -> rusqlite::Result<Task> {
+    let now = now_ms();
+
+    // 1. 开事务
+    let tx = conn.transaction()?;
+
+    // 2. INSERT 源表
+    tx.execute(
+        "INSERT INTO task (content, status, created_at, updated_at, due_at)
+         VALUES (?1, 'pending', ?2, ?2, ?3)",
+        params![content, now, due_at],
+    )?;
+    let task_id = tx.last_insert_rowid();
+
+    // 3. INSERT 通用 record（双写）
+    tx.execute(
+        "INSERT INTO record (kind, source_id, content, status, created_at)
+         VALUES ('task', ?1, ?2, 'pending', ?3)",
+        params![task_id, content, now],
+    )?;
+
+    // 4. 提交
+    tx.commit()?;
+
+    // 5. 返回
+    Ok(Task { id: task_id, content: content.to_string(), status: "pending".to_string(),
+              duration_ms: 0, first_focused_at: None, focus_started_at: None,
+              paused_at: None, focused_count: 0, due_at,
+              created_at: now, updated_at: now, archived_at: None })
+}
+
+/// 业务层：更新 task status（双写 record.status）
+pub fn update_task_status(
+    conn: &mut Connection,
+    task_id: i64,
+    new_status: &str,
+) -> rusqlite::Result<()> {
+    let now = now_ms();
+    let tx = conn.transaction()?;
+
+    // 1. UPDATE 源表
+    tx.execute(
+        "UPDATE task SET status = ?1, updated_at = ?2 WHERE id = ?3",
+        params![new_status, now, task_id],
+    )?;
+
+    // 2. UPDATE 通用 record
+    tx.execute(
+        "UPDATE record SET status = ?1 WHERE kind = 'task' AND source_id = ?2",
+        params![new_status, task_id],
+    )?;
+
+    tx.commit()?;
+    Ok(())
+}
+
+/// 业务层：删除 task（双写 record 级联）
+pub fn delete_task(conn: &mut Connection, task_id: i64) -> rusqlite::Result<()> {
+    let tx = conn.transaction()?;
+    tx.execute("DELETE FROM record WHERE kind = 'task' AND source_id = ?1", params![task_id])?;
+    tx.execute("DELETE FROM task WHERE id = ?1", params![task_id])?;
+    tx.commit()?;
+    Ok(())
+}
+
+/// 业务层：创建 idea
+pub fn create_idea(conn: &mut Connection, content: &str) -> rusqlite::Result<i64> {
+    let now = now_ms();
+    let tx = conn.transaction()?;
+    tx.execute("INSERT INTO idea (content, created_at) VALUES (?1, ?2)",
+               params![content, now])?;
+    let id = tx.last_insert_rowid();
+    tx.execute("INSERT INTO record (kind, source_id, content, status, created_at)
+                VALUES ('idea', ?1, ?2, NULL, ?3)", params![id, content, now])?;
+    tx.commit()?;
+    Ok(id)
+}
+
+/// 业务层：创建 check_in
+pub fn create_check_in(
+    conn: &mut Connection,
+    habit: &str,
+    note: Option<&str>,
+) -> rusqlite::Result<i64> {
+    let now = now_ms();
+    let tx = conn.transaction()?;
+    tx.execute("INSERT INTO check_in (habit, note, checked_at) VALUES (?1, ?2, ?3)",
+               params![habit, note, now])?;
+    let id = tx.last_insert_rowid();
+    let content = match note {
+        Some(n) => format!("{} · {}", habit, n),
+        None => habit.to_string(),
+    };
+    tx.execute("INSERT INTO record (kind, source_id, content, status, created_at)
+                VALUES ('check_in', ?1, ?2, NULL, ?3)", params![id, content, now])?;
+    tx.commit()?;
+    Ok(id)
+}</pre>
+
+  <h4 style="font-size:13px;margin:10px 0 6px">主窗统一列表 SQL（直接查 record）</h4>
+  <pre class="ascii">-- 全部记录
+SELECT id, kind, content, status, created_at FROM record
+ORDER BY created_at DESC LIMIT 50;
+
+-- 按类型筛选
+SELECT * FROM record WHERE kind = 'task' ORDER BY created_at DESC;
+
+-- 仅今日
+SELECT * FROM record
+WHERE created_at >= strftime('%s', 'now', 'start of day') * 1000
+ORDER BY created_at DESC;</pre>
+
+  <h4 style="font-size:13px;margin:10px 0 6px">B 方案工程要点</h4>
+  <table>
+    <tr><th>要点</th><th>做法</th></tr>
+    <tr><td><strong>事务强制</strong></td><td>所有双写函数必须用 <code>conn.transaction()</code>，禁止裸 execute</td></tr>
+    <tr><td><strong>source_id 来源</strong></td><td><code>tx.last_insert_rowid()</code> 紧跟 INSERT</td></tr>
+    <tr><td><strong>UPDATE 同步</strong></td><td>每次改 task.content/status 都同步 record</td></tr>
+    <tr><td><strong>代码层抽象</strong></td><td>提供 <code>create_*</code> / <code>update_*</code> / <code>delete_*</code> 业务函数，业务层不直接 SQL</td></tr>
+    <tr><td><strong>测试覆盖</strong></td><td>单元测试：每个 create_*/update_*/delete_* 都要验证 record 同步</td></tr>
+    <tr><td><strong>lint 规则</strong></td><td>禁止业务层直接 <code>INSERT INTO task</code>（必须走业务函数）</td></tr>
+  </table>
+</div>
+
+<!-- ===== 3 个关注点 ===== -->
+<div class="sec17">
+  <h3><span class="num">3</span> 3 关注点 · 推荐答案</h3>
+
+  <!-- 关注点 1: 迁移 -->
+  <h4 style="font-size:13px;margin:8px 0 6px;color:#007AFF">① V1.2 → V1.3 数据迁移</h4>
+  <div class="row-flex">
+    <div>
+      <p style="font-size:12.5px;margin:4px 0"><strong>背景</strong>：V1.2 用单表 <code>record(id, type, content, payload, created_at, updated_at)</code>，type ∈ {todo, idea, check_in}</p>
+      <p style="font-size:12.5px;margin:4px 0"><strong>目标</strong>：拆 3 源表 + 新通用 record 表，旧数据无损迁移</p>
+    </div>
+  </div>
+
+  <h4 style="font-size:12.5px;margin:8px 0 4px;color:#1d1d1f">推荐迁移步骤</h4>
+  <ol style="font-size:12px;line-height:1.7;margin:6px 0">
+    <li><strong>检测</strong>：V1.3 启动时检测是否存在 <code>record</code> 旧表（schema_version &lt; 1.3）</li>
+    <li><strong>建新表</strong>：执行 1.3 完整 schema（task/idea/check_in/record 新表）</li>
+    <li><strong>迁移数据</strong>：
+      <ul style="margin:4px 0">
+        <li>旧 <code>type='todo'</code> → 拆到 <code>task</code> 表（status 默认 'pending'，duration_ms=0）→ 自动触发 record 写</li>
+        <li>旧 <code>type='idea'</code> → 拆到 <code>idea</code> 表 → 自动触发</li>
+        <li>旧 <code>type='check_in'</code> → 拆到 <code>check_in</code> 表（habit 字段从 content 提取）</li>
+      </ul>
+    </li>
+    <li><strong>回填 record</strong>：迁移期间业务层双写暂停，先 INSERT 源表，再统一回填 record</li>
+    <li><strong>校验</strong>：迁移后 count 校验（旧 record 数 = 新 3 表数 = 新 record 数）</li>
+    <li><strong>备份</strong>：迁移前 <code>record_v12</code> 备份表，30 天后自动 DROP</li>
+  </ol>
+
+  <h4 style="font-size:12px;margin:8px 0 4px;color:#1d1d1f">迁移 SQL 片段</h4>
+  <pre class="ascii">-- 检测旧表
+SELECT name FROM sqlite_master WHERE type='table' AND name='record_v12';
+
+-- 迁移 todo
+INSERT INTO task (id, content, status, created_at, updated_at)
+SELECT id, content,
+       CASE WHEN payload LIKE '%done%' THEN 'done' ELSE 'pending' END,
+       created_at, updated_at
+FROM record_v12 WHERE type = 'todo';
+
+-- 迁移 idea
+INSERT INTO idea (id, content, created_at)
+SELECT id, content, created_at FROM record_v12 WHERE type = 'idea';
+
+-- 迁移 check_in（habit 字段从 content 提取为默认 '未命名习惯'）
+INSERT INTO check_in (id, habit, note, checked_at)
+SELECT id, content, NULL, created_at FROM record_v12 WHERE type = 'check_in';
+
+-- 触发器自动写 record，但迁移时业务层双写关闭 → 手动回填
+INSERT INTO record (kind, source_id, content, status, created_at)
+SELECT 'task', id, content, status, created_at FROM task
+WHERE id NOT IN (SELECT source_id FROM record WHERE kind = 'task');
+-- 同理 idea / check_in</pre>
+
+  <hr style="border:0;border-top:1px solid rgba(0,0,0,0.06);margin:14px 0"/>
+
+  <!-- 关注点 2: 筛选 -->
+  <h4 style="font-size:13px;margin:8px 0 6px;color:#007AFF">② 主窗时间线筛选/分组</h4>
+  <div class="row-flex">
+    <div>
+      <p style="font-size:12.5px;margin:4px 0"><strong>推荐</strong>：顶部 4 个 tab · 全部/任务/灵感/打卡 · 各自独立 SQL</p>
+      <p style="font-size:12.5px;margin:4px 0"><strong>不做</strong>：多选筛选 / 复杂过滤器（0 思考成本，不增加认知负担）</p>
+      <p style="font-size:12.5px;margin:4px 0"><strong>不做</strong>：分组聚合（避免列表变重）</p>
+    </div>
+    <div>
+      <p style="font-size:12.5px;margin:4px 0"><strong>时间维度</strong>：右侧日期切换器（今天/昨天/本周/全部）</p>
+      <p style="font-size:12.5px;margin:4px 0"><strong>状态维度（仅 task）</strong>：任务 tab 内可选 active/paused/pending/done</p>
+      <p style="font-size:12.5px;margin:4px 0"><strong>搜索</strong>：列表顶部 ⌘F 搜索框（按 content LIKE）</p>
+    </div>
+  </div>
+
+  <h4 style="font-size:12px;margin:6px 0 4px;color:#1d1d1f">主窗列表布局</h4>
+  <pre class="ascii">┌────────────────────────────────────────────────┐
+│ [全部 42] 任务 18  灵感 16  打卡 8  │ 今天 ▼ │ ⌘F│
+├────────────────────────────────────────────────┤
+│ TASK  DONE    写完 Q3 计划   00:32   10 分钟前 │
+│ IDEA  ─       让 v1.3 支持小组件            15 分钟前 │
+│ 打卡  ─       🏃 晨跑 5km                今早 7:00 │
+│ TASK  DONE    回复张三邮件     00:08   1 小时前 │
+│ ...                                            │
+└────────────────────────────────────────────────┘</pre>
+
+  <hr style="border:0;border-top:1px solid rgba(0,0,0,0.06);margin:14px 0"/>
+
+  <!-- 关注点 3: 归档 -->
+  <h4 style="font-size:13px;margin:8px 0 6px;color:#007AFF">③ 归档 task 是否从 record 隐藏</h4>
+  <div class="row-flex">
+    <div>
+      <h4 style="font-size:12.5px;margin:4px 0;color:#1d1d1f">推荐 <span class="ok">A · 隐藏归档</span></h4>
+      <ul style="font-size:12.5px;line-height:1.7;margin:4px 0">
+        <li>task.archived_at ≠ null → record 中隐藏</li>
+        <li>主窗时间线默认不显示归档</li>
+        <li>主窗"归档"独立 tab 可见（统计用）</li>
+        <li>隐藏不是删除（可恢复）</li>
+      </ul>
+    </div>
+    <div>
+      <h4 style="font-size:12.5px;margin:4px 0;color:#1d1d1f">备选 B · 保留显示</h4>
+      <ul style="font-size:12.5px;line-height:1.7;margin:4px 0">
+        <li>归档也显示，标灰 + "已归档"标签</li>
+        <li>列表更长，更完整</li>
+        <li>不符合"重记录轻查看"原则</li>
+      </ul>
+    </div>
+  </div>
+
+  <p style="font-size:12px;margin:6px 0"><strong>推荐 A</strong>：符合产品哲学（重记录轻查看，避免列表冗长），归档独立 tab 仍可访问。</p>
+
+  <h4 style="font-size:12px;margin:6px 0 4px;color:#1d1d1f">归档 SQL</h4>
+  <pre class="ascii">-- 主窗时间线（隐藏归档）
+SELECT * FROM record
+WHERE kind != 'task' OR source_id NOT IN (SELECT id FROM task WHERE archived_at IS NOT NULL)
+ORDER BY created_at DESC;
+
+-- 主窗"归档" tab
+SELECT r.* FROM record r
+JOIN task t ON r.kind = 'task' AND r.source_id = t.id
+WHERE t.archived_at IS NOT NULL
+ORDER BY t.archived_at DESC;</pre>
+</div>
+
+<!-- ===== 设计文档预览 ===== -->
+<div class="sec17" style="background:rgba(52,199,89,0.06);border-color:rgba(52,199,89,0.2)">
+  <h3><span class="num" style="background:#34c759">📄</span> 即将写入的设计文档结构</h3>
+  <p style="font-size:12.5px;color:#1d1d1f;margin:4px 0 8px">所有 17 轮迭代结论 + 你 3 个质疑 + D4-B 修订确认后，写入：<br/>
+  <code>/home/jason/workspace/mindtap/docs/superpowers/specs/2026-06-14-浮动窗口快速记录-design.md</code></p>
+
+  <h4 style="font-size:13px;margin:6px 0;color:#1d1d1f">文档结构（10 节）</h4>
+  <ol style="font-size:12.5px;line-height:1.8;margin:6px 0 0 18px">
+    <li><strong>背景与目标</strong>：V1.2 痛点 + V1.3 战略转向</li>
+    <li><strong>用户画像与铁律</strong>：ENFP + 3 秒/1 秒/0 思考</li>
+    <li><strong>核心交互（折叠/展开/下拉）</strong>：v13 A 方案定稿</li>
+    <li><strong>数据模型</strong>：3 源表 + 1 通用 record + 业务层双写（D4-B）</li>
+    <li><strong>4 状态 TODO 状态机</strong>：D2 字段 + D3 done 态 Focus 块</li>
+    <li><strong>架构（Tauri 2 多窗口）</strong>：跨平台 NSPanel/WS_EX_TOOLWINDOW</li>
+    <li><strong>核心用户旅程</strong>：3 秒记录 / 1 秒查看 / 切换 / 暂停 vs 完成</li>
+    <li><strong>视觉规范（Liquid Glass）</strong>：颜色 / 透明度 / 7 类动画 / 视觉权重</li>
+    <li><strong>数据迁移</strong>：V1.2 → V1.3 单表拆 3 表 + 回填 record</li>
+    <li><strong>实施约束与未决项</strong>：跨平台差异 / 全局快捷键冲突 / DPI</li>
+  </ol>
+
+  <p style="font-size:13px;margin:14px 0 4px">
+    <strong>如果上面 3 关注点答案（推荐 A 隐藏归档 · 4 tab + 搜索 · 迁移步骤）都 OK</strong> → 我直接写文档<br/>
+    <strong>如果有要改的</strong> → 告诉我是哪个关注点 + 改什么
+  </p>
+</div>

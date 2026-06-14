@@ -1,0 +1,300 @@
+<h2>浮动窗口形态 v4 — 5 个浅色高透明方案（C 元素 + A 色彩）</h2>
+<p class="subtitle">C 的元素（TODO pill · ▶︎ 播放 · ⤓ 展开）+ A 的浅色暖白玻璃 + 高透明 clear · 灵动岛降级后续</p>
+
+<style>
+  .pair4{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:10px 0 0}
+  .pair4 .mockup{margin:0}
+  .pair4 .mockup-header{padding:6px 10px;font-size:11px}
+  .pair4 .mockup-body{padding:14px;min-height:130px;display:flex;align-items:center;justify-content:center}
+  /* 浅色高透明玻璃基础类 */
+  .g-pill{background:rgba(255,255,255,0.32);backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%);border:1px solid rgba(255,255,255,0.55);box-shadow:0 1px 0 rgba(255,255,255,0.7) inset, 0 6px 22px rgba(0,0,0,0.07)}
+  .g-card{background:rgba(255,255,255,0.36);backdrop-filter:blur(32px) saturate(180%);-webkit-backdrop-filter:blur(32px) saturate(180%);border:1px solid rgba(255,255,255,0.55);box-shadow:0 1px 0 rgba(255,255,255,0.7) inset, 0 10px 30px rgba(0,0,0,0.08)}
+  .bg-warm{background:linear-gradient(135deg,#fef9f3 0%,#f3eef9 40%,#eaf3fb 100%)}
+  .bg-cool{background:linear-gradient(135deg,#f0f6ff 0%,#f5f5f7 50%,#fef9f3 100%)}
+  .bg-app{background:linear-gradient(135deg,#3a3a3c 0%,#2c2c2e 100%)}
+</style>
+
+<div class="options" data-multiselect>
+  <!-- ============ 方案 1 ============ -->
+  <div class="option" data-choice="1" onclick="toggleSelect(this)">
+    <div class="letter">1</div>
+    <div class="content">
+      <h3>顶部居中浅色 pill · 单行</h3>
+      <p>320×48px 居中悬浮，浅色高透明。所有元素一行：TODO pill · 任务 · 计时 · ▶︎ · ⤓。紧凑不抢戏。</p>
+
+      <div class="pair4">
+        <div class="mockup">
+          <div class="mockup-header">① 折叠 · 计时</div>
+          <div class="mockup-body bg-warm">
+            <div style="width:360px;height:48px;border-radius:24px" class="g-pill">
+              <div style="display:flex;align-items:center;height:100%;padding:0 12px 0 14px;gap:10px;font:600 13px -apple-system;color:#1d1d1f">
+                <span style="font-size:10px;background:rgba(0,122,255,0.14);color:#007AFF;padding:2px 8px;border-radius:10px;font-weight:700;letter-spacing:0.3px">TODO</span>
+                <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">写 Q3 计划</span>
+                <span style="color:#007AFF;font-variant-numeric:tabular-nums;font-weight:700;letter-spacing:-0.3px">00:12:34</span>
+                <span style="display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:rgba(52,199,89,0.18);color:#34c759;font-size:12px">⏸</span>
+                <span style="display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,0.04);color:#1d1d1f;font-size:12px">⤓</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mockup">
+          <div class="mockup-header">① 展开 · 输入</div>
+          <div class="mockup-body bg-warm">
+            <div style="width:380px;height:170px;border-radius:18px" class="g-card">
+              <div style="padding:12px 14px;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;font:13px -apple-system;color:#1d1d1f">
+                <div style="display:flex;align-items:center;gap:6px;height:20px">
+                  <span style="font-size:10px;background:rgba(0,122,255,0.14);color:#007AFF;padding:2px 8px;border-radius:10px;font-weight:700">TODO</span>
+                  <span style="font-weight:600">新待办</span>
+                  <span style="flex:1"></span>
+                  <span style="color:#86868b;font-size:11px;background:rgba(0,0,0,0.04);border-radius:8px;padding:2px 8px">⤒ 收起</span>
+                </div>
+                <textarea style="flex:1;background:rgba(255,255,255,0.4);border:1px solid rgba(0,0,0,0.06);border-radius:10px;padding:10px;font:13px -apple-system;color:#1d1d1f;resize:none;outline:none" placeholder="事项内容…">写完 Q3 计划并同步给团队</textarea>
+                <div style="display:flex;gap:6px;height:26px">
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">📅 今天</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">📅 明天</span>
+                  <span style="flex:1.4;display:flex;align-items:center;justify-content:center;background:#007AFF;color:white;border-radius:8px;font-size:12px;font-weight:600">⏎ 保存</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Pros</h4><ul><li>最高紧凑（48px）</li><li>高透明，几乎不挡视野</li><li>C 元素 + A 色彩完美融合</li><li>▶︎ 显式，一眼看到状态</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>单行放 5 元素，任务名长会被截断</li><li>任务名截断时无展开方式（要 hover tooltip）</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 方案 2: 双行 ============ -->
+  <div class="option" data-choice="2" onclick="toggleSelect(this)">
+    <div class="letter">2</div>
+    <div class="content">
+      <h3>顶部居中双行 pill · 信息更全</h3>
+      <p>340×64px 双行：上行 TODO + 任务名 + 计时；下行 ▶︎ ⏸ 状态文字 + 完成 + 展开。任务名不截断。</p>
+
+      <div class="pair4">
+        <div class="mockup">
+          <div class="mockup-header">② 折叠 · 计时</div>
+          <div class="mockup-body bg-warm">
+            <div style="width:340px;height:64px;border-radius:18px" class="g-card">
+              <div style="padding:8px 12px;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:4px;font:13px -apple-system;color:#1d1d1f">
+                <div style="display:flex;align-items:center;gap:8px;height:22px">
+                  <span style="font-size:10px;background:rgba(0,122,255,0.14);color:#007AFF;padding:2px 8px;border-radius:10px;font-weight:700">TODO</span>
+                  <span style="flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">写 Q3 计划并同步团队</span>
+                  <span style="color:#007AFF;font-variant-numeric:tabular-nums;font-weight:700;letter-spacing:-0.3px">00:12:34</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;height:22px">
+                  <span style="display:flex;align-items:center;gap:4px;color:#34c759;font-size:11px;font-weight:600"><span style="display:inline-block;width:6px;height:6px;background:#34c759;border-radius:50%;box-shadow:0 0 0 3px rgba(52,199,89,0.2)"></span>进行中</span>
+                  <span style="flex:1"></span>
+                  <span style="display:flex;align-items:center;justify-content:center;width:24px;height:22px;border-radius:6px;background:rgba(52,199,89,0.14);color:#34c759;font-size:11px">⏸</span>
+                  <span style="display:flex;align-items:center;justify-content:center;width:24px;height:22px;border-radius:6px;background:rgba(0,122,255,0.12);color:#007AFF;font-size:11px">✓</span>
+                  <span style="display:flex;align-items:center;justify-content:center;width:24px;height:22px;border-radius:6px;background:rgba(0,0,0,0.04);color:#1d1d1f;font-size:11px">⤓</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mockup">
+          <div class="mockup-header">② 展开 · 输入</div>
+          <div class="mockup-body bg-warm">
+            <div style="width:380px;height:200px;border-radius:18px" class="g-card">
+              <div style="padding:12px 14px;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;font:13px -apple-system;color:#1d1d1f">
+                <div style="display:flex;align-items:center;gap:6px;height:20px">
+                  <span style="font-size:10px;background:rgba(0,122,255,0.14);color:#007AFF;padding:2px 8px;border-radius:10px;font-weight:700">TODO</span>
+                  <span style="font-weight:600">新待办</span>
+                  <span style="flex:1"></span>
+                  <span style="color:#86868b;font-size:11px">⤒ 收起</span>
+                </div>
+                <textarea style="flex:1;background:rgba(255,255,255,0.4);border:1px solid rgba(0,0,0,0.06);border-radius:10px;padding:10px;font:13px -apple-system;color:#1d1d1f;resize:none;outline:none" placeholder="事项内容…">写完 Q3 计划并同步给团队</textarea>
+                <div style="display:flex;gap:6px;height:26px">
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">📅 今天</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">📅 明天</span>
+                  <span style="flex:1.4;display:flex;align-items:center;justify-content:center;background:#007AFF;color:white;border-radius:8px;font-size:12px;font-weight:600">⏎ 保存</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Pros</h4><ul><li>任务名不截断，状态文字"进行中"明示</li><li>▶︎ / ✓ / ⤓ 三按钮明确分工</li><li>高透明 clear</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>64px 比 ① 高 16px</li><li>双行视觉更"控件感"，不如单行优雅</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 方案 3: 极简右贴边 ============ -->
+  <div class="option" data-choice="3" onclick="toggleSelect(this)">
+    <div class="letter">3</div>
+    <div class="content">
+      <h3>右贴边极简条 · 浮窗感最强</h3>
+      <p>屏幕右上角贴边，280×44px 横向条。所有按钮省略文字，纯图标。Hover 展开任务名。</p>
+
+      <div class="pair4">
+        <div class="mockup">
+          <div class="mockup-header">③ 折叠 · 计时</div>
+          <div class="mockup-body bg-cool" style="justify-content:flex-end;padding-right:24px">
+            <div style="width:280px;height:44px;border-radius:14px 0 0 14px" class="g-card">
+              <div style="display:flex;align-items:center;height:100%;padding:0 8px 0 12px;gap:8px;font:600 13px -apple-system;color:#1d1d1f">
+                <span style="font-size:10px;background:rgba(0,122,255,0.14);color:#007AFF;padding:2px 6px;border-radius:8px;font-weight:700">TODO</span>
+                <span style="color:#007AFF;font-variant-numeric:tabular-nums;font-weight:700;letter-spacing:-0.3px">00:12:34</span>
+                <span style="flex:1"></span>
+                <span style="display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:rgba(52,199,89,0.18);color:#34c759;font-size:11px">⏸</span>
+                <span style="display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,0.04);color:#1d1d1f;font-size:11px">⤓</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mockup">
+          <div class="mockup-header">③ 展开 · 输入（向左侧拉出）</div>
+          <div class="mockup-body bg-cool" style="justify-content:flex-end;padding-right:24px">
+            <div style="width:320px;height:190px;border-radius:14px 0 0 14px" class="g-card">
+              <div style="padding:12px 14px;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;font:13px -apple-system;color:#1d1d1f">
+                <div style="display:flex;align-items:center;gap:6px;height:20px">
+                  <span style="font-size:10px;background:rgba(0,122,255,0.14);color:#007AFF;padding:2px 8px;border-radius:10px;font-weight:700">TODO</span>
+                  <span style="font-weight:600">新待办</span>
+                  <span style="flex:1"></span>
+                  <span style="color:#86868b;font-size:11px">⤒ 收起</span>
+                </div>
+                <textarea style="flex:1;background:rgba(255,255,255,0.4);border:1px solid rgba(0,0,0,0.06);border-radius:10px;padding:10px;font:13px -apple-system;color:#1d1d1f;resize:none;outline:none" placeholder="事项内容…">写完 Q3 计划并同步给团队</textarea>
+                <div style="display:flex;gap:6px;height:26px">
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">📅 今天</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">📅 明天</span>
+                  <span style="flex:1.4;display:flex;align-items:center;justify-content:center;background:#007AFF;color:white;border-radius:8px;font-size:12px;font-weight:600">⏎ 保存</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Pros</h4><ul><li>最不抢顶部空间（贴右）</li><li>贴边有"系统工具感"，不打扰主应用</li><li>浮窗感最强，符合"轻量 APP"诉求</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>折叠态看不到任务名（hover 才显示）</li><li>44px 高度太矮，看不到任务名对"当前任务"不友好</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 方案 4: 顶部 + ⏵ 状态环 ============ -->
+  <div class="option" data-choice="4" onclick="toggleSelect(this)">
+    <div class="letter">4</div>
+    <div class="content">
+      <h3>顶部居中 · 播放环包任务</h3>
+      <p>380×56px。左侧 28px 圆形播放环（包住 ▶︎）+ 任务名 + 计时。视觉聚焦"播放"按钮。</p>
+
+      <div class="pair4">
+        <div class="mockup">
+          <div class="mockup-header">④ 折叠 · 计时</div>
+          <div class="mockup-body bg-warm">
+            <div style="width:380px;height:56px;border-radius:18px" class="g-card">
+              <div style="display:flex;align-items:center;height:100%;padding:0 12px 0 14px;gap:12px;font:600 13px -apple-system;color:#1d1d1f">
+                <span style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#34c759 0%,#30b350 100%);color:white;font-size:14px;flex-shrink:0;box-shadow:0 0 0 3px rgba(52,199,89,0.2), 0 4px 12px rgba(52,199,89,0.3)">⏸</span>
+                <div style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0">
+                  <span style="font-size:10px;color:#86868b;letter-spacing:0.4px;font-weight:700">TODO · 进行中</span>
+                  <span style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">写 Q3 计划</span>
+                </div>
+                <span style="color:#007AFF;font-variant-numeric:tabular-nums;font-weight:700;font-size:18px;letter-spacing:-0.5px">00:12:34</span>
+                <span style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,0.04);color:#1d1d1f;font-size:12px">⤓</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mockup">
+          <div class="mockup-header">④ 展开 · 输入</div>
+          <div class="mockup-body bg-warm">
+            <div style="width:400px;height:200px;border-radius:18px" class="g-card">
+              <div style="padding:14px;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;font:13px -apple-system;color:#1d1d1f">
+                <div style="display:flex;align-items:center;gap:10px;height:36px">
+                  <span style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#34c759 0%,#30b350 100%);color:white;font-size:14px;box-shadow:0 0 0 3px rgba(52,199,89,0.2)">⏸</span>
+                  <span style="font-weight:600">新待办</span>
+                  <span style="flex:1"></span>
+                  <span style="color:#86868b;font-size:11px">⤒ 收起</span>
+                </div>
+                <textarea style="flex:1;background:rgba(255,255,255,0.4);border:1px solid rgba(0,0,0,0.06);border-radius:10px;padding:10px;font:13px -apple-system;color:#1d1d1f;resize:none;outline:none" placeholder="事项内容…">写完 Q3 计划并同步给团队</textarea>
+                <div style="display:flex;gap:6px;height:26px">
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">📅 今天</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">📅 明天</span>
+                  <span style="flex:1.4;display:flex;align-items:center;justify-content:center;background:#007AFF;color:white;border-radius:8px;font-size:12px;font-weight:600">⏎ 保存</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Pros</h4><ul><li>播放环 ⏸ 视觉最聚焦，状态一眼看</li><li>进行中副标"TODO · 进行中"明确状态</li><li>高透明，色彩对比"绿环 + 蓝字"高级</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>36px 播放环占用宽度，任务名空间小</li><li>56px 高度比 ① 高 8px</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 方案 5: 紧凑右贴 + 任务名内嵌 ============ -->
+  <div class="option" data-choice="5" onclick="toggleSelect(this)">
+    <div class="letter">5</div>
+    <div class="content">
+      <h3>顶部居中 · 状态条分段</h3>
+      <p>360×48px。三段式：左 TODO pill · 中 任务+计时（可垂直堆叠） · 右 ▶︎⤓。背景液态流动感强。</p>
+
+      <div class="pair4">
+        <div class="mockup">
+          <div class="mockup-header">⑤ 折叠 · 计时</div>
+          <div class="mockup-body bg-cool">
+            <div style="width:360px;height:48px;border-radius:24px" class="g-pill">
+              <div style="display:flex;align-items:center;height:100%;padding:0 6px 0 6px;gap:0;font:600 13px -apple-system;color:#1d1d1f">
+                <span style="display:flex;align-items:center;justify-content:center;height:36px;padding:0 10px;font-size:10px;background:rgba(0,122,255,0.14);color:#007AFF;border-radius:18px;font-weight:700;letter-spacing:0.4px">TODO</span>
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:0;padding:0 10px">
+                  <span style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">写 Q3 计划</span>
+                  <span style="color:#007AFF;font-variant-numeric:tabular-nums;font-weight:700;font-size:10px;letter-spacing:-0.3px">00:12:34</span>
+                </div>
+                <span style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:rgba(52,199,89,0.18);color:#34c759;font-size:12px">⏸</span>
+                <span style="display:flex;align-items:center;justify-content:center;width:28px;height:32px;color:#1d1d1f;font-size:12px">⤓</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mockup">
+          <div class="mockup-header">⑤ 展开 · 输入</div>
+          <div class="mockup-body bg-cool">
+            <div style="width:380px;height:180px;border-radius:18px" class="g-card">
+              <div style="padding:12px 14px;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;font:13px -apple-system;color:#1d1d1f">
+                <div style="display:flex;align-items:center;gap:6px;height:20px">
+                  <span style="font-size:10px;background:rgba(0,122,255,0.14);color:#007AFF;padding:2px 8px;border-radius:10px;font-weight:700">TODO</span>
+                  <span style="font-weight:600">新待办</span>
+                  <span style="flex:1"></span>
+                  <span style="color:#86868b;font-size:11px">⤒ 收起</span>
+                </div>
+                <textarea style="flex:1;background:rgba(255,255,255,0.4);border:1px solid rgba(0,0,0,0.06);border-radius:10px;padding:10px;font:13px -apple-system;color:#1d1d1f;resize:none;outline:none" placeholder="事项内容…">写完 Q3 计划并同步给团队</textarea>
+                <div style="display:flex;gap:6px;height:26px">
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">📅 今天</span>
+                  <span style="flex:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);color:#1d1d1f;border-radius:8px;font-size:11px;font-weight:600">📅 明天</span>
+                  <span style="flex:1.4;display:flex;align-items:center;justify-content:center;background:#007AFF;color:white;border-radius:8px;font-size:12px;font-weight:600">⏎ 保存</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Pros</h4><ul><li>中段"任务+计时"垂直堆叠，名字+数字同时显示</li><li>32px 播放圆环聚焦明显</li><li>高透明 + 圆角 24px 最液态</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>中段上下两行，任务名比 ① 更短</li><li>三段分割视觉上略显"复杂"</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:24px;padding:16px;background:rgba(0,122,255,0.08);border-radius:12px;border:1px solid rgba(0,122,255,0.2)">
+  <h3 style="margin:0 0 8px;font-size:15px">v4 设计要素</h3>
+  <p style="margin:0;font-size:13px;color:#1d1d1f;line-height:1.7">
+    <strong>统一元素（来自 C）</strong>：TODO pill 标签 · 任务名 · ▶︎/⏸ 播放 · 计时器 · ⤓ 展开<br/>
+    <strong>统一色彩（来自 A）</strong>：浅色暖白玻璃 · 蓝 #007AFF 计时 · 绿 #34c759 播放 · 1px 镜面高光<br/>
+    <strong>统一透明</strong>：rgba(255,255,255,0.32-0.36) + blur(28-32px) saturate(180%)，clear 高透明<br/>
+    <strong>灵动岛</strong>：v1 不实现，列入 V1.x 待办（V1.0 仅做浅色高透明方案）
+  </p>
+</div>
+
+<p class="subtitle" style="margin-top:20px">5 个浅色高透明方案 → 选 1 / 2 / 3 / 4 / 5，或多选"4 为主，2 备选"。</p>

@@ -1,0 +1,257 @@
+<h2>浮动窗口 v15 · 节 2/3/4 修订（基于你的 3 个质疑）</h2>
+<p class="subtitle">D1: 3 表拆分 · D2: 首次 focus 时间字段 · D3: 完成态保留在 Focus 块</p>
+
+<style>
+  .sec15{margin:18px 0;padding:16px;background:rgba(255,255,255,0.4);border-radius:14px;border:1px solid rgba(0,0,0,0.06)}
+  .sec15 h3{margin:0 0 10px;font-size:15px;color:#007AFF;display:flex;align-items:center;gap:8px}
+  .sec15 h3 .num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:#007AFF;color:white;border-radius:6px;font-size:12px;font-weight:700}
+  .sec15 pre,.sec15 .ascii{background:rgba(0,0,0,0.04);border-radius:8px;padding:12px;font:11.5px/1.6 ui-monospace,monospace;white-space:pre;overflow-x:auto;margin:8px 0;color:#1d1d1f}
+  .sec15 table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px}
+  .sec15 th,.sec15 td{padding:6px 8px;border-bottom:1px solid rgba(0,0,0,0.06);text-align:left;vertical-align:top}
+  .sec15 th{background:rgba(0,122,255,0.06);font-weight:700;color:#1d1d1f}
+  .sec15 td code{background:rgba(0,122,255,0.08);color:#007AFF;padding:1px 5px;border-radius:3px;font-size:11px}
+  .sec15 .hl{background:rgba(52,199,89,0.12);color:#1f8a3f;padding:2px 6px;border-radius:4px;font-weight:600}
+  .sec15 .warn{background:rgba(255,149,0,0.12);color:#cc7a00;padding:2px 6px;border-radius:4px;font-weight:600}
+  .sec15 .ok{background:rgba(0,122,255,0.12);color:#007AFF;padding:2px 6px;border-radius:4px;font-weight:600}
+  .row-flex{display:flex;gap:12px;margin:8px 0}
+  .row-flex > *{flex:1}
+  .choice-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:10px 0}
+  .choice-card{padding:12px;border-radius:10px;background:rgba(255,255,255,0.5);border:2px solid rgba(0,0,0,0.08);cursor:pointer;position:relative}
+  .choice-card.recommended::before{content:"推荐";position:absolute;top:-8px;right:10px;background:#34c759;color:white;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700}
+  .choice-card h4{margin:0 0 4px;font-size:13px}
+  .choice-card p{margin:0;font-size:11.5px;color:#1d1d1f;line-height:1.5}
+  .mockup{background:rgba(255,255,255,0.5);border:1px solid rgba(0,0,0,0.08);border-radius:10px;margin:8px 0;overflow:hidden}
+  .mockup-header{padding:6px 12px;background:rgba(0,0,0,0.04);font-size:11px;font-weight:700;color:#86868b}
+  .mockup-body{padding:18px;display:flex;align-items:center;justify-content:center;min-height:80px}
+  .gc{background:rgba(255,255,255,0.42);backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%);border:1px solid rgba(255,255,255,0.65);box-shadow:0 1px 0 rgba(255,255,255,0.7) inset,0 8px 24px rgba(0,0,0,0.08)}
+  .bg-w{background:linear-gradient(135deg,#fef9f3 0%,#f3eef9 40%,#eaf3fb 100%)}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(52,199,89,0.4)}50%{box-shadow:0 0 0 6px rgba(52,199,89,0)}}
+</style>
+
+<!-- ===== D1: 3 表拆分 ===== -->
+<div class="sec15">
+  <h3><span class="num">D1</span> 数据模型 · 3 表拆分</h3>
+  <p style="font-size:12.5px;color:#1d1d1f;margin:4px 0 8px">
+    原 V1.2 用单表 <code>record</code> + <code>type</code> 字段存 todo/idea/check_in。V1.3 引入 4 状态机后，<strong>todo</strong> 需要专属字段（status / duration / focus 时间），<strong>idea</strong> 永远只有"已记录"一种状态，<strong>check_in</strong> 是频次维度。语义/查询模式/UI 都不同，应拆 3 表。
+  </p>
+
+  <h4 style="font-size:13px;margin:6px 0">3 表方案对比</h4>
+  <div class="choice-grid">
+    <div class="choice-card recommended">
+      <h4>A · 3 独立表</h4>
+      <p><code>task</code>（待办 4 状态）<br/><code>idea</code>（灵感）<br/><code>check_in</code>（打卡）</p>
+    </div>
+    <div class="choice-card">
+      <h4>B · 单表 + kind</h4>
+      <p><code>record</code> + <code>kind: 'task'|'idea'|'check_in'</code> + 状态字段 nullable</p>
+    </div>
+    <div class="choice-card">
+      <h4>C · 2 表拆分</h4>
+      <p><code>record</code>（task+idea 合并）<br/><code>check_in</code>（独立）</p>
+    </div>
+  </div>
+
+  <h4 style="font-size:13px;margin:10px 0 6px">推荐 A · 3 独立表 Schema</h4>
+<pre class="ascii">-- 待办（V1.3 核心，4 状态机）
+CREATE TABLE task (
+  id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+  content             TEXT    NOT NULL,
+  status              TEXT    NOT NULL DEFAULT 'pending',
+  -- 'pending' | 'active' | 'paused' | 'done'
+  duration_ms         INTEGER NOT NULL DEFAULT 0,   -- 累计计时（暂停/完成时累加）
+  first_focused_at    INTEGER,                       -- 首次激活时间（不变，用于"任务总跨度"）
+  focus_started_at    INTEGER,                       -- 本次激活起点（暂停清零）
+  paused_at           INTEGER,                       -- 本次暂停起点
+  focused_count       INTEGER NOT NULL DEFAULT 0,    -- 累计激活次数
+  due_at              INTEGER,                       -- 截止时间（📅稍后/明天）
+  created_at          INTEGER NOT NULL,
+  updated_at          INTEGER NOT NULL,
+  archived_at         INTEGER                        -- 归档时间（被新任务覆盖时填）
+);
+CREATE INDEX idx_task_status ON task(status);
+CREATE INDEX idx_task_due_at ON task(due_at);
+
+-- 灵感（极简）
+CREATE TABLE idea (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  content     TEXT    NOT NULL,
+  created_at  INTEGER NOT NULL
+);
+CREATE INDEX idx_idea_created_at ON idea(created_at);
+
+-- 打卡（频次统计）
+CREATE TABLE check_in (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  habit       TEXT    NOT NULL,         -- 习惯名（如"早起""跑步""冥想"）
+  note        TEXT,                     -- 可选备注
+  checked_at  INTEGER NOT NULL
+);
+CREATE INDEX idx_check_in_habit     ON check_in(habit);
+CREATE INDEX idx_check_in_checked_at ON check_in(checked_at);</pre>
+
+  <h4 style="font-size:13px;margin:10px 0 6px">3 表 vs 单表优劣</h4>
+  <table>
+    <tr><th>维度</th><th>A 3 表（推荐）</th><th>B 单表 kind</th><th>C 2 表</th></tr>
+    <tr><td>字段清晰度</td><td>✅ 各表只存相关字段</td><td>⚠️ 大量 nullable</td><td>⚠️ task+idea 仍有差异</td></tr>
+    <tr><td>查询性能</td><td>✅ 索引精准</td><td>⚠️ 需 kind 过滤</td><td>✅ 中等</td></tr>
+    <tr><td>UI 展示</td><td>✅ 各窗体独立</td><td>⚠️ 视图层要分支</td><td>⚠️ 视图层要分支</td></tr>
+    <tr><td>迁移 V1.2 数据</td><td>⚠️ 需迁移脚本</td><td>✅ 几乎不动</td><td>✅ 小改</td></tr>
+    <tr><td>扩展性</td><td>✅ task 字段独立演进</td><td>❌ 互相牵制</td><td>⚠️ 折中</td></tr>
+  </table>
+  <p style="font-size:12px;color:#1d1d1f;margin:4px 0"><strong>推荐 A</strong>：V1.2 → V1.3 已有数据迁移成本，但 task 的 4 状态机/计时字段不应让 idea/check_in 承担。A 长期更清晰。</p>
+</div>
+
+<!-- ===== D2: 首次 focus 时间 ===== -->
+<div class="sec15">
+  <h3><span class="num">D2</span> payload 扩展 · 首次 focus 时间 + 激活次数</h3>
+  <p style="font-size:12.5px;color:#1d1d1f;margin:4px 0 8px">
+    V14 payload 缺 <code>first_focused_at</code>（首次激活起点，用于"任务总跨度"）。<strong>总跨度 ≠ 累计计时</strong>：跨度 = first_focused_at → 现在（含暂停）；计时 = 累加 active 片段。
+  </p>
+
+  <div class="row-flex">
+    <div>
+      <h4 style="font-size:12.5px;margin:4px 0">4 个时间字段的语义</h4>
+      <table>
+        <tr><th>字段</th><th>语义</th><th>何时变</th></tr>
+        <tr><td><code>first_focused_at</code></td><td>首次激活起点</td><td>pending → active 时设；后续不变</td></tr>
+        <tr><td><code>focus_started_at</code></td><td>本次激活起点</td><td>每次 active 重新设；暂停时清</td></tr>
+        <tr><td><code>paused_at</code></td><td>本次暂停起点</td><td>active → paused 时设</td></tr>
+        <tr><td><code>duration_ms</code></td><td>累计计时</td><td>暂停/完成时累加（now - focus_started_at）</td></tr>
+        <tr><td><code>focused_count</code></td><td>累计激活次数</td><td>每次 pending/paused → active 时 +1</td></tr>
+      </table>
+    </div>
+    <div>
+      <h4 style="font-size:12.5px;margin:4px 0">统计指标对照</h4>
+      <table>
+        <tr><th>用户问题</th><th>用哪个字段</th></tr>
+        <tr><td>"这个任务做了多久？"</td><td><code>duration_ms</code></td></tr>
+        <tr><td>"这个任务跨度多少天？"</td><td><code>now - first_focused_at</code></td></tr>
+        <tr><td>"中间暂停了多久？"</td><td>跨度 - 计时</td></tr>
+        <tr><td>"这个任务重启过几次？"</td><td><code>focused_count - 1</code></td></tr>
+        <tr><td>"今天累计做了多少？"</td><td>按日聚合 duration_ms</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== D3: 完成态在 Focus 块 ===== -->
+<div class="sec15">
+  <h3><span class="num">D3</span> 完成态保留在 Focus 块 + 撤销继续</h3>
+  <p style="font-size:12.5px;color:#1d1d1f;margin:4px 0 8px">
+    原 V14：完成 → 立即归档 → Focus 块清空。问题：刚完成的事看不到，撤销需查历史。<br/>
+    <strong>新设计</strong>：完成 → Focus 块变体（done 态视觉）→ 仍占位 → 新任务 ⏵ 开始计时时自动归档旧 done → 允许"撤销继续"（done → active）。
+  </p>
+
+  <h4 style="font-size:13px;margin:6px 0">Focus 块 3 种态视觉对比</h4>
+
+  <div class="row-flex">
+    <!-- Active -->
+    <div class="mockup">
+      <div class="mockup-header">态 1 · active 进行中</div>
+      <div class="mockup-body" style="background:linear-gradient(135deg,#fef9f3,#eaf3fb)">
+        <div style="width:320px;height:36px;border-radius:18px" class="gc">
+          <div style="display:flex;align-items:center;height:100%;padding:0 6px 0 10px;gap:8px;font:600 12.5px -apple-system;color:#1d1d1f">
+            <span style="width:8px;height:8px;background:#34c759;border-radius:50%;flex-shrink:0;align-self:center;animation:pulse 1.6s ease-in-out infinite"></span>
+            <span style="font-size:9px;background:rgba(52,199,89,0.18);color:#1f8a3f;padding:2px 7px;border-radius:8px;font-weight:700;letter-spacing:0.4px;display:inline-flex;align-items:center;height:18px">FOCUS</span>
+            <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600">写 Q3 计划</span>
+            <span style="color:#007AFF;font-variant-numeric:tabular-nums;font-weight:700">00:12:34</span>
+            <span style="color:#34c759;font-size:15px">⏸</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Done -->
+    <div class="mockup">
+      <div class="mockup-header">态 2 · done 已完成（仍占位）</div>
+      <div class="mockup-body" style="background:linear-gradient(135deg,#e8f5e9,#f5f5f7)">
+        <div style="width:320px;height:36px;border-radius:18px;background:rgba(255,255,255,0.32);backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%);border:1px solid rgba(255,255,255,0.55);box-shadow:0 1px 0 rgba(255,255,255,0.6) inset,0 6px 18px rgba(0,0,0,0.05)">
+          <div style="display:flex;align-items:center;height:100%;padding:0 6px 0 10px;gap:8px;font:600 12.5px -apple-system;color:#1d1d1f">
+            <span style="width:8px;height:8px;background:#34c759;border-radius:50%;flex-shrink:0;align-self:center;opacity:0.5"></span>
+            <span style="font-size:9px;background:rgba(52,199,89,0.12);color:#1f8a3f;padding:2px 7px;border-radius:8px;font-weight:700;letter-spacing:0.4px;display:inline-flex;align-items:center;height:18px">DONE</span>
+            <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;opacity:0.7">写 Q3 计划</span>
+            <span style="color:#86868b;font-variant-numeric:tabular-nums;font-weight:700">00:32:14</span>
+            <span style="color:#007AFF;font-size:14px">↶</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty -->
+    <div class="mockup">
+      <div class="mockup-header">态 3 · empty 无任务</div>
+      <div class="mockup-body" style="background:linear-gradient(135deg,#f5f5f7,#eaf3fb)">
+        <div style="width:320px;height:36px;border-radius:18px;background:rgba(255,255,255,0.28);backdrop-filter:blur(28px) saturate(170%);-webkit-backdrop-filter:blur(28px) saturate(170%);border:1px dashed rgba(0,122,255,0.25);box-shadow:0 1px 0 rgba(255,255,255,0.6) inset">
+          <div style="display:flex;align-items:center;height:100%;padding:0 6px 0 10px;gap:8px;font:12.5px -apple-system;color:#86868b">
+            <span style="width:8px;height:8px;background:rgba(0,0,0,0.12);border-radius:50%;flex-shrink:0;align-self:center"></span>
+            <span style="font-size:9px;background:rgba(0,0,0,0.04);color:#86868b;padding:2px 7px;border-radius:8px;font-weight:700;letter-spacing:0.4px;display:inline-flex;align-items:center;height:18px">EMPTY</span>
+            <span style="flex:1;font-weight:500">点击记录第一个任务</span>
+            <span style="color:#007AFF;font-size:14px">+</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h4 style="font-size:13px;margin:10px 0 6px">3 态对比表</h4>
+  <table>
+    <tr><th>维度</th><th><span class="hl">active</span></th><th><span class="hl">done</span>（仍占位）</th><th>empty</th></tr>
+    <tr><td>绿圆点</td><td>呼吸灯 1.6s</td><td>静默 50% 透明</td><td>灰圆点</td></tr>
+    <tr><td>标签</td><td>FOCUS（绿 18%）</td><td>DONE（绿 12%，更淡）</td><td>EMPTY（灰 4%）</td></tr>
+    <tr><td>标题透明度</td><td>100%</td><td>70%</td><td>50%（提示色）</td></tr>
+    <tr><td>时间</td><td>蓝 #007AFF 在走</td><td>灰 #86868b 冻结</td><td>—</td></tr>
+    <tr><td>操作图标</td><td>⏸ 绿 #34c759（暂停）</td><td>↶ 蓝 #007AFF（撤销）</td><td>+ 蓝 #007AFF（新建）</td></tr>
+    <tr><td>主容器透明度</td><td>42%</td><td>32%（更沉）</td><td>28%（虚线边框）</td></tr>
+    <tr><td>底色</td><td>暖色</td><td>绿色调</td><td>冷色</td></tr>
+  </table>
+
+  <h4 style="font-size:13px;margin:10px 0 6px">新状态机（含 done 持久化）</h4>
+<pre class="ascii">                     ┌──────────┐
+                     │ pending  │  ← 创建
+                     └────┬─────┘
+                          │ ⏵ 开始计时
+                          ▼
+                     ┌──────────┐
+                     │  active  │  ← Focus 块唯一
+                     └────┬─────┘
+                          │
+              ┌───────────┴───────────┐
+              ▼                       ▼
+         ┌────────┐              ┌────────┐
+         │ paused │              │  done  │  ← Focus 块变体
+         └───┬────┘              └───┬────┘
+             │ ⏸ 继续                │ ↶ 撤销
+             │                       │  或 新任务 ⏵ 自动归档
+             ▼                       ▼
+         ┌────────┐              ┌────────┐
+         │ active │              │ active │  (撤销时)
+         └────────┘              └────────┘</pre>
+
+  <h4 style="font-size:13px;margin:10px 0 6px">关键交互流程（修订）</h4>
+  <table>
+    <tr><th>操作</th><th>结果</th><th>Focus 块变化</th></tr>
+    <tr><td>点 ✓ 完成（active → done）</td><td>归档累计 duration_ms</td><td>active 态 → done 态（同任务，时间冻结 50% 透明）</td></tr>
+    <tr><td>点 ↶ 撤销（done → active）</td><td>focus_started_at = now，duration_ms 保留</td><td>done 态 → active 态（呼吸灯亮起）</td></tr>
+    <tr><td>点 ⏵ 开始计时（新任务）</td><td>旧 done 自动 archived_at = now，新任务变 active</td><td>旧 done 被覆盖 → 新任务 active</td></tr>
+    <tr><td>点 ⇄ 切换（从清单选）</td><td>旧 active → pending/paused，新 id → active</td><td>旧 active 被覆盖 → 新任务 active</td></tr>
+  </table>
+
+  <p style="font-size:12px;color:#1d1d1f;margin:8px 0 0">
+    <strong>done 态保留多久？</strong> 直到新任务 ⏵ 主动覆盖 / 主动 ⇄ 切换。<br/>
+    <strong>done 态是否进入"未开始+暂停"清单？</strong> 不进入（避免冗余，可在主窗历史/今日完成列表看）。<br/>
+    <strong>done 态是否在折叠态占用交互？</strong> 是：整条可点击 → 展开态显示完整 + ↶ 撤销按钮
+  </p>
+</div>
+
+<!-- ===== 整合建议 ===== -->
+<div class="sec15" style="background:rgba(52,199,89,0.06);border-color:rgba(52,199,89,0.2)">
+  <h3><span class="num" style="background:#34c759">✓</span> 3 个修订汇总</h3>
+  <ul style="margin:6px 0;font-size:13px;line-height:1.9">
+    <li><strong>D1 数据</strong> · 3 表拆分：<code>task</code>（4 状态）/ <code>idea</code>（极简）/ <code>check_in</code>（频次） · A 推荐</li>
+    <li><strong>D2 字段</strong> · 新增 <code>first_focused_at</code> + <code>focused_count</code> · 区分跨度/计时/激活次数</li>
+    <li><strong>D3 Focus 块</strong> · 新增 done 态视觉（呼吸灯停止 50% 透明 ↶ 撤销） · 撤销继续 · 新任务覆盖时自动归档</li>
+  </ul>
+  <p style="font-size:13px;margin:10px 0 0">
+    <strong>请选</strong>：D1 选 <span class="ok">A 3 表</span> / <span class="warn">B 单表</span> / <span class="warn">C 2 表</span> · D2 直接 ✅ · D3 done 态视觉选 <span class="hl">绿淡标签 ↶ 蓝撤销</span> / <span class="warn">其他配色</span>
+  </p>
+</div>
