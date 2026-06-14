@@ -22,7 +22,9 @@ export type Record = {
   kind: "task" | "idea" | "check_in";
   source_id: number;
   content: string;
-  status: string | null;
+  status: "pending" | "active" | "paused" | "done" | null;
+  duration_ms: number;
+  focus_started_at: number | null;
   created_at: number;
 };
 
@@ -47,6 +49,7 @@ export const api = {
     invoke<Record[]>("record_list_by_kind", { kind, limit }),
   recordListSwitchable: () => invoke<Record[]>("record_list_switchable"),
   recordGetActive: () => invoke<Record | null>("record_get_active"),
+  recordGetActiveTask: () => invoke<Task | null>("record_get_active_task"),
 
   floatingShow: () => invoke<void>("floating_show"),
   floatingHide: () => invoke<void>("floating_hide"),

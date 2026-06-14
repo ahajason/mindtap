@@ -46,6 +46,16 @@ pub fn run() {
             commands::task_cmd::task_undo,
             commands::task_cmd::task_switch,
             commands::task_cmd::task_archive,
+            commands::idea_cmd::idea_create,
+            commands::check_in_cmd::check_in_create,
+            commands::record_cmd::record_list,
+            commands::record_cmd::record_list_by_kind,
+            commands::record_cmd::record_list_switchable,
+            commands::record_cmd::record_get_active,
+            commands::record_cmd::record_get_active_task,
+            commands::floating_cmd::floating_show,
+            commands::floating_cmd::floating_hide,
+            commands::floating_cmd::floating_toggle,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
