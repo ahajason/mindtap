@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>脚手架首页 · 8 玻璃方块 · Mindtap</title>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    /* =====================================================
+       V3 · scaffold-compare.html
+       沿用 V1 4×4 matrix 模式：8 chip + 1 stats + 8 perspective
+       8 variant = 2 强度 (Subtle / Balanced) × 4 主题 (暖纸/工程白/暖黑/冷灰)
+       每个 chip 是 4 行迷你 chrome (topbar / sidebar / main / fab)
+       ===================================================== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* 主题 token */
+    [data-theme="A1"] { --bg:#F5F4F0; --ink:#1A1A1A; --ink-soft:#4A4A4A; --ink-muted:#8A8A8A;
+      --accent:#F472B6; --glass-bg:rgba(255,255,255,0.45); --glass-bd:rgba(26,26,26,0.08);
+      --glass-blur:18px; --glass-sat:160%; }
+    [data-theme="A2"] { --bg:#FAFAF9; --ink:#1A1A1A; --ink-soft:#4A4A4A; --ink-muted:#8A8A8A;
+      --accent:#0A84FF; --glass-bg:rgba(255,255,255,0.50); --glass-bd:rgba(26,26,26,0.08);
+      --glass-blur:18px; --glass-sat:160%; }
+    [data-theme="A3"] { --bg:#1A1A1A; --ink:#F5F5F7; --ink-soft:#C7C7CC; --ink-muted:#8E8E93;
+      --accent:#F59E0B; --glass-bg:rgba(255,255,255,0.06); --glass-bd:rgba(255,255,255,0.10);
+      --glass-blur:18px; --glass-sat:160%; }
+    [data-theme="A4"] { --bg:#ECEFF1; --ink:#263238; --ink-soft:#455A64; --ink-muted:#607D8B;
+      --accent:#38BDF8; --glass-bg:rgba(255,255,255,0.55); --glass-bd:rgba(38,50,56,0.10);
+      --glass-blur:18px; --glass-sat:160%; }
+    [data-theme="B1"] { --bg:#F5F4F0; --ink:#1A1A1A; --ink-soft:#4A4A4A; --ink-muted:#8A8A8A;
+      --accent:#F472B6; --glass-bg:rgba(255,255,255,0.62); --glass-bd:rgba(26,26,26,0.10);
+      --glass-blur:24px; --glass-sat:180%; }
+    [data-theme="B2"] { --bg:#FAFAF9; --ink:#1A1A1A; --ink-soft:#4A4A4A; --ink-muted:#8A8A8A;
+      --accent:#0A84FF; --glass-bg:rgba(255,255,255,0.65); --glass-bd:rgba(26,26,26,0.10);
+      --glass-blur:24px; --glass-sat:180%; }
+    [data-theme="B3"] { --bg:#1A1A1A; --ink:#F5F5F7; --ink-soft:#C7C7CC; --ink-muted:#8E8E93;
+      --accent:#F59E0B; --glass-bg:rgba(255,255,255,0.10); --glass-bd:rgba(255,255,255,0.14);
+      --glass-blur:24px; --glass-sat:180%; }
+    [data-theme="B4"] { --bg:#ECEFF1; --ink:#263238; --ink-soft:#455A64; --ink-muted:#607D8B;
+      --accent:#38BDF8; --glass-bg:rgba(255,255,255,0.70); --glass-bd:rgba(38,50,56,0.12);
+      --glass-blur:24px; --glass-sat:180%; }
+
+    html, body {
+      font-family: "Manrope", -apple-system, system-ui, sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+      transition: background-color 320ms ease, color 320ms ease;
+      min-height: 100vh;
+    }
+    body {
+      background-image:
+        radial-gradient(circle at 15% 10%, rgba(244,114,182,.10), transparent 40%),
+        radial-gradient(circle at 85% 20%, rgba(251,146,60,.08), transparent 40%),
+        radial-gradient(circle at 30% 85%, rgba(139,92,246,.06), transparent 40%),
+        radial-gradient(circle at 75% 90%, rgba(56,189,248,.08), transparent 40%);
+      background-attachment: fixed;
+      padding: 64px 48px 96px;
+    }
+
+    /* === glass mixin === */
+    .glass {
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+      border: 1px solid var(--glass-bd);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.04),
+        0 8px 32px -8px rgba(0, 0, 0, 0.08);
+    }
+
+    .theme-toggle {
+      position: fixed; top: 24px; right: 24px; z-index: 100;
+      width: 44px; height: 44px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 18px;
+      transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .theme-toggle:hover { transform: scale(1.06); }
+
+    main { max-width: 1280px; margin: 0 auto; }
+
+    .header { margin-bottom: 64px; }
+    .header__eyebrow {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--ink-muted); margin-bottom: 16px;
+    }
+    .header__title {
+      font-family: "Fraunces", serif;
+      font-size: 64px; font-weight: 600; letter-spacing: -0.03em;
+      line-height: 0.95; margin-bottom: 16px;
+    }
+    .header__title em { font-style: italic; color: var(--accent); }
+    .header__lead {
+      font-size: 17px; color: var(--ink-soft);
+      max-width: 720px; line-height: 1.6;
+    }
+    .header__lead strong { color: var(--ink); font-weight: 700; }
+    .header__badges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 24px; }
+    .header__badge {
+      padding: 6px 14px;
+      background: rgba(0, 0, 0, 0.04);
+      border-radius: 999px;
+      font-size: 12px; font-weight: 600;
+      color: var(--ink-soft);
+    }
+    .header__badge--ok { background: rgba(16, 185, 129, 0.12); color: #047857; }
+    .header__badge--accent { background: var(--accent); color: #fff; }
+
+    /* === Hero · 8 quick-jump chips === */
+    .hero {
+      padding: 32px; border-radius: 32px;
+      margin-bottom: 64px; position: relative; overflow: hidden;
+    }
+    .hero__intro { margin-bottom: 28px; }
+    .hero__title {
+      font-family: "Fraunces", serif;
+      font-size: 36px; font-weight: 600; letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+    .hero__sub { font-size: 14px; color: var(--ink-soft); line-height: 1.6; }
+
+    .hero__grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+    }
+    .chip {
+      display: block; text-decoration: none; color: var(--ink);
+      padding: 14px; border-radius: 18px;
+      position: relative;
+      transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .chip:hover { transform: translateY(-2px); }
+
+    /* chip 内的迷你 chrome demo（4 行） */
+    .chip__demo {
+      aspect-ratio: 4/3; border-radius: 12px; overflow: hidden;
+      position: relative; border: 1px solid var(--glass-bd);
+      background: var(--bg);
+    }
+    /* chrome 各区域 */
+    .cd-topbar {
+      position: absolute; top: 0; left: 0; right: 0; height: 14%;
+      background: var(--glass-bg);
+      backdrop-filter: blur(calc(var(--glass-blur) * 0.4)) saturate(var(--glass-sat));
+      -webkit-backdrop-filter: blur(calc(var(--glass-blur) * 0.4)) saturate(var(--glass-sat));
+      border-bottom: 1px solid var(--glass-bd);
+    }
+    .cd-rail {
+      position: absolute; top: 14%; left: 0; bottom: 0; width: 22%;
+      background: var(--glass-bg);
+      backdrop-filter: blur(calc(var(--glass-blur) * 0.4)) saturate(var(--glass-sat));
+      -webkit-backdrop-filter: blur(calc(var(--glass-blur) * 0.4)) saturate(var(--glass-sat));
+      border-right: 1px solid var(--glass-bd);
+    }
+    .cd-rail::before {
+      content: ""; position: absolute; left: 18%; top: 18%; width: 60%; height: 4px;
+      background: var(--ink); opacity: 0.65; border-radius: 1px;
+      box-shadow: 0 12px 0 rgba(0,0,0,.45), 0 24px 0 rgba(0,0,0,.35), 0 36px 0 rgba(0,0,0,.25);
+    }
+    .cd-main {
+      position: absolute; top: 22%; left: 26%; right: 8%; bottom: 18%;
+      display: flex; flex-direction: column; gap: 6px; padding-top: 4px;
+    }
+    .cd-main::before {
+      content: ""; display: block; height: 8px; width: 60%;
+      background: var(--ink); opacity: 0.7; border-radius: 1px; margin-bottom: 4px;
+    }
+    .cd-line { height: 3px; background: var(--ink); opacity: 0.18; border-radius: 1px; }
+    .cd-line.s { width: 90%; }
+    .cd-line.m { width: 70%; }
+    .cd-fab {
+      position: absolute; right: 8%; bottom: 8%;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--accent); box-shadow: 0 2px 6px rgba(0,0,0,.18);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 12px; font-weight: 700; line-height: 1;
+    }
+
+    /* chip meta 行 */
+    .chip__meta {
+      display: flex; align-items: center; gap: 8px;
+      margin-top: 10px; font-size: 12px; color: var(--ink-soft);
+    }
+    .chip__letter {
+      width: 22px; height: 22px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 11px; color: #fff;
+      background: var(--accent);
+    }
+    .chip__name { font-weight: 700; font-size: 13px; }
+    .chip__sub { font-size: 11px; color: var(--ink-muted); margin-top: 2px; font-family: "JetBrains Mono", monospace; }
+
+    /* === Section title === */
+    .section-title {
+      font-family: "Fraunces", serif;
+      font-size: 36px; font-weight: 600; letter-spacing: -0.02em;
+      margin: 80px 0 24px;
+    }
+    .section-title em { font-style: italic; color: var(--accent); }
+    .section-sub {
+      font-size: 14px; color: var(--ink-soft);
+      line-height: 1.6; margin-bottom: 32px; max-width: 720px;
+    }
+
+    /* === Stats table === */
+    .stats-table { border-radius: 24px; overflow: hidden; }
+    .stats-table table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .stats-table th, .stats-table td {
+      padding: 14px 16px; text-align: right;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    .stats-table th {
+      font-weight: 700; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--ink-soft); background: rgba(0,0,0,0.02);
+    }
+    .stats-table th:first-child, .stats-table td:first-child { text-align: left; }
+    .stats-table td:first-child { font-weight: 700; }
+    .stats-table td .id-pill {
+      display: inline-block; font-family: "JetBrains Mono", monospace; font-size: 11px;
+      padding: 1px 6px; border-radius: 4px; background: var(--accent); color: #fff; margin-right: 8px;
+    }
+    .stats-table tfoot td {
+      font-weight: 800; color: var(--accent);
+      border-top: 2px solid var(--accent); border-bottom: none;
+    }
+
+    /* === 8 perspective cards (4-dim each) === */
+    .perspective {
+      padding: 32px; border-radius: 28px;
+      margin-bottom: 28px; position: relative;
+    }
+    .perspective__head {
+      display: flex; align-items: center; gap: 16px; margin-bottom: 20px;
+    }
+    .perspective__letter {
+      width: 48px; height: 48px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 20px; color: #fff;
+      background: var(--accent);
+    }
+    .perspective__name {
+      font-family: "Fraunces", serif;
+      font-size: 28px; font-weight: 600; letter-spacing: -0.01em;
+    }
+    .perspective__name em { font-style: italic; }
+    .perspective__tag {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 12px; color: var(--ink-muted); margin-top: 4px;
+    }
+
+    .p4-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;
+    }
+    .p4 {
+      padding: 18px 20px; border-radius: 16px;
+      background: rgba(0, 0, 0, 0.02);
+    }
+    .p4__label {
+      font-size: 10px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 8px;
+    }
+    .p4__title { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+    .p4__body { font-size: 12px; color: var(--ink-soft); line-height: 1.65; }
+    .p4__list { list-style: none; padding: 0; }
+    .p4__list li {
+      font-size: 12px; color: var(--ink-soft);
+      padding: 3px 0 3px 14px; position: relative; line-height: 1.5;
+    }
+    .p4__list li::before {
+      content: "·"; position: absolute; left: 4px; color: var(--accent); font-weight: 800;
+    }
+    .star { color: #F59E0B; letter-spacing: 1px; }
+
+    @media (max-width: 880px) {
+      .hero__grid { grid-template-columns: repeat(2, 1fr); }
+      .p4-grid { grid-template-columns: 1fr; }
+      .header__title { font-size: 40px; }
+      body { padding: 32px 20px 60px; }
+    }
+  </style>
+</head>
+<body data-theme="A1">
+
+  <button class="theme-toggle glass" id="themeToggle" aria-label="切换主题">☾</button>
+
+  <main>
+    <div class="header">
+      <div class="header__eyebrow">Mindtap V1.0 · 脚手架首页 · 8 玻璃方块</div>
+      <h1 class="header__title">Scaffold <em>Chrome</em> · 2×4</h1>
+      <p class="header__lead">
+        不是 4 张产品页，是 <strong>8 个玻璃方块</strong>。
+        2 强度（<code>Subtle</code> 18-20px / <code>Balanced</code> 24-28px） × 4 主题（暖纸 / 工程白 / 暖黑 / 冷灰） = 8 variant。
+        每 chip 是 4 行迷你 chrome（topbar / sidebar / main / fab），展示玻璃本身在那种强度和主题下的样子。
+      </p>
+      <div class="header__badges">
+        <span class="header__badge header__badge--ok">✅ 8/8 variant 完成</span>
+        <span class="header__badge header__badge--accent">2 strength × 4 theme</span>
+        <span class="header__badge">8 chip · 1 stats · 8 perspective</span>
+        <span class="header__badge">不锁 1280×800</span>
+      </div>
+    </div>
+
+    <!-- ============== HERO · 8 quick-jump chips ============== -->
+    <div class="hero glass">
+      <div class="hero__intro">
+        <h2 class="hero__title">8 玻璃方块 · 快速对照</h2>
+        <p class="hero__sub">每 chip 是 4 行迷你 chrome：topbar + sidebar + main (3 行文本) + fab。点击可看下方对应 perspective card 详解。</p>
+      </div>
+
+      <div class="hero__grid">
+
+        <a class="chip glass" href="#A1" data-jump="A1">
+          <div class="chip__demo">
+            <div class="cd-topbar"></div>
+            <div class="cd-rail"></div>
+            <div class="cd-main">
+              <div class="cd-line s"></div>
+              <div class="cd-line m"></div>
+              <div class="cd-line s"></div>
+            </div>
+            <div class="cd-fab">+</div>
+          </div>
+          <div class="chip__meta">
+            <span class="chip__letter" style="background:#F472B6">A1</span>
+            <div>
+              <div class="chip__name">Subtle 暖纸</div>
+              <div class="chip__sub">18px · #F5F4F0</div>
+            </div>
+          </div>
+        </a>
+
+        <a class="chip glass" href="#A2" data-jump="A2">
+          <div class="chip__demo">
+            <div class="cd-topbar"></div>
+            <div class="cd-rail"></div>
+            <div class="cd-main">
+              <div class="cd-line s"></div>
+              <div class="cd-line m"></div>
+              <div class="cd-line s"></div>
+            </div>
+            <div class="cd-fab">+</div>
+          </div>
+          <div class="chip__meta">
+            <span class="chip__letter" style="background:#0A84FF">A2</span>
+            <div>
+              <div class="chip__name">Subtle 工程白</div>
+              <div class="chip__sub">18px · #FAFAF9</div>
+            </div>
+          </div>
+        </a>
+
+        <a class="chip glass" href="#A3" data-jump="A3">
+          <div class="chip__demo">
+            <div class="cd-topbar"></div>
+            <div class="cd-rail"></div>
+            <div class="cd-main">
+              <div class="cd-line s"></div>
+              <div class="cd-line m"></div>
+              <div class="cd-line s"></div>
+            </div>
+            <div class="cd-fab">+</div>
+          </div>
+          <div class="chip__meta">
+            <span class="chip__letter" style="background:#F59E0B">A3</span>
+            <div>
+              <div class="chip__name">Subtle 暖黑</div>
+              <div class="chip__sub">18px · #1A1A1A</div>
+            </div>
+          </div>
+        </a>
+
+        <a class="chip glass" href="#A4" data-jump="A4">
+          <div class="chip__demo">
+            <div class="cd-topbar"></div>
+            <div class="cd-rail"></div>
+            <div class="cd-main">
+              <div class="cd-line s"></div>
+              <div class="cd-line m"></div>
+              <div class="cd-line s"></div>
+            </div>
+            <div class="cd-fab">+</div>
+          </div>
+          <div class="chip__meta">
+            <span class="chip__letter" style="background:#38BDF8">A4</span>
+            <div>
+              <div class="chip__name">Subtle 冷灰</div>
+              <div class="chip__sub">18px · #ECEFF1</div>
+            </div>
+          </div>
+        </a>
+
+        <a class="chip glass" href="#B1" data-jump="B1">
+          <div class="chip__demo">
+            <div class="cd-topbar"></div>
+            <div class="cd-rail"></div>
+            <div class="cd-main">
+              <div class="cd-line s"></div>
+              <div class="cd-line m"></div>
+              <div class="cd-line s"></div>
+            </div>
+            <div class="cd-fab">+</div>
+          </div>
+          <div class="chip__meta">
+            <span class="chip__letter" style="background:#F472B6">B1</span>
+            <div>
+              <div class="chip__name">Balanced 暖纸</div>
+              <div class="chip__sub">24px · #F5F4F0</div>
+            </div>
+          </div>
+        </a>
+
+        <a class="chip glass" href="#B2" data-jump="B2">
+          <div class="chip__demo">
+            <div class="cd-topbar"></div>
+            <div class="cd-rail"></div>
+            <div class="cd-main">
+              <div class="cd-line s"></div>
+              <div class="cd-line m"></div>
+              <div class="cd-line s"></div>
+            </div>
+            <div class="cd-fab">+</div>
+          </div>
+          <div class="chip__meta">
+            <span class="chip__letter" style="background:#0A84FF">B2</span>
+            <div>
+              <div class="chip__name">Balanced 工程白</div>
+              <div class="chip__sub">24px · #FAFAF9</div>
+            </div>
+          </div>
+        </a>
+
+        <a class="chip glass" href="#B3" data-jump="B3">
+          <div class="chip__demo">
+            <div class="cd-topbar"></div>
+            <div class="cd-rail"></div>
+            <div class="cd-main">
+              <div class="cd-line s"></div>
+              <div class="cd-line m"></div>
+              <div class="cd-line s"></div>
+            </div>
+            <div class="cd-fab">+</div>
+          </div>
+          <div class="chip__meta">
+            <span class="chip__letter" style="background:#F59E0B">B3</span>
+            <div>
+              <div class="chip__name">Balanced 暖黑</div>
+              <div class="chip__sub">24px · #1A1A1A</div>
+            </div>
+          </div>
+        </a>
+
+        <a class="chip glass" href="#B4" data-jump="B4">
+          <div class="chip__demo">
+            <div class="cd-topbar"></div>
+            <div class="cd-rail"></div>
+            <div class="cd-main">
+              <div class="cd-line s"></div>
+              <div class="cd-line m"></div>
+              <div class="cd-line s"></div>
+            </div>
+            <div class="cd-fab">+</div>
+          </div>
+          <div class="chip__meta">
+            <span class="chip__letter" style="background:#38BDF8">B4</span>
+            <div>
+              <div class="chip__name">Balanced 冷灰</div>
+              <div class="chip__sub">24px · #ECEFF1</div>
+            </div>
+          </div>
+        </a>
+
+      </div>
+    </div>
+
+    <!-- ============== 数据统计表 ============== -->
+    <h2 class="section-title">数据 <em>统计</em></h2>
+    <p class="section-sub">8 variant 的核心参数对比。一行 = 一个 variant。强度用对应 HIG Material 档位。</p>
+    <div class="stats-table glass">
+      <table>
+        <thead>
+          <tr>
+            <th>variant</th>
+            <th>强度</th>
+            <th>blur (px)</th>
+            <th>玻璃透明度</th>
+            <th>主题 bg / accent</th>
+            <th>适用场景</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="id-pill" style="background:#F472B6">A1</span>Subtle 暖纸</td><td>Subtle</td><td>18</td><td>0.45</td><td>#F5F4F0 / #F472B6</td><td>个人 / 阅读</td></tr>
+          <tr><td><span class="id-pill" style="background:#0A84FF">A2</span>Subtle 工程白</td><td>Subtle</td><td>18</td><td>0.50</td><td>#FAFAF9 / #0A84FF</td><td>个人 dev</td></tr>
+          <tr><td><span class="id-pill" style="background:#F59E0B">A3</span>Subtle 暖黑</td><td>Subtle</td><td>18</td><td>0.06</td><td>#1A1A1A / #F59E0B</td><td>夜间 / 演示</td></tr>
+          <tr><td><span class="id-pill" style="background:#38BDF8">A4</span>Subtle 冷灰</td><td>Subtle</td><td>18</td><td>0.55</td><td>#ECEFF1 / #38BDF8</td><td>协作 / 工具</td></tr>
+          <tr><td><span class="id-pill" style="background:#F472B6">B1</span>Balanced 暖纸</td><td>Balanced</td><td>24</td><td>0.62</td><td>#F5F4F0 / #F472B6</td><td>个人 / 阅读</td></tr>
+          <tr><td><span class="id-pill" style="background:#0A84FF">B2</span>Balanced 工程白</td><td>Balanced</td><td>24</td><td>0.65</td><td>#FAFAF9 / #0A84FF</td><td>个人 dev</td></tr>
+          <tr><td><span class="id-pill" style="background:#F59E0B">B3</span>Balanced 暖黑</td><td>Balanced</td><td>24</td><td>0.10</td><td>#1A1A1A / #F59E0B</td><td>夜间 / 演示</td></tr>
+          <tr><td><span class="id-pill" style="background:#38BDF8">B4</span>Balanced 冷灰</td><td>Balanced</td><td>24</td><td>0.70</td><td>#ECEFF1 / #38BDF8</td><td>协作 / 工具</td></tr>
+        </tbody>
+        <tfoot>
+          <tr><td>合计</td><td>2 强度</td><td>18 / 24</td><td>0.06–0.70</td><td>4 主题</td><td>4 场景</td></tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <!-- ============== 8 视角拆解 ============== -->
+    <h2 class="section-title">8 玻璃方块 <em>特色</em> 拆解</h2>
+    <p class="section-sub">每 variant 独立 perspective card，4 段结构化：核心定位 / 原则体现 / 特色属性 / 独特价值。</p>
+
+    <!-- A1 -->
+    <div class="perspective glass" id="A1" data-perspective="A1">
+      <div class="perspective__head">
+        <div class="perspective__letter" style="background:#F472B6">A1</div>
+        <div>
+          <div class="perspective__name">Subtle <em>暖纸</em></div>
+          <div class="perspective__tag">18px blur · #F5F4F0 bg · pink accent #F472B6 · 单 light</div>
+        </div>
+      </div>
+      <div class="p4-grid">
+        <div class="p4">
+          <div class="p4__label">核心定位</div>
+          <div class="p4__title">最克制的暖纸组合，让 chrome 几乎透明</div>
+          <div class="p4__body">18px blur + 0.45 玻璃透明度，topbar / sidebar 几乎只比 main 亮一档。适合长时间阅读，chrome 不抢内容风头。</div>
+        </div>
+        <div class="p4">
+          <div class="p4__label">原则体现</div>
+          <ul class="p4__list">
+            <li>Content First <span class="star">★★★★★</span></li>
+            <li>Readability <span class="star">★★★★★</span></li>
+            <li>Adaptive Material <span class="star">★★★</span></li>
+            <li>Functional Design <span class="star">★★★</span></li>
+          </ul>
+        </div>
+        <div class="p4">
+          <div class="p4__label">特色属性</div>
+          <ul class="p4__list">
+            <li>Subtle (HIG Material.ultraThin 档)</li>
+            <li>暖纸 #F5F4F0 + 粉橙 accent</li>
+            <li>玻璃透明度 0.45（最低）</li>
+            <li>中低密度 · 单 light</li>
+          </ul>
+        </div>
+        <div class="p4">
+          <div class="p4__label">独特价值</div>
+          <div class="p4__body">8 variant 中<strong>玻璃存在感最弱</strong>的暖纸组合。如果用户觉得 chrome 碍事但又想保留 Liquid Glass 形式，A1 是最干净的退路。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- A2 -->
+    <div class="perspective glass" id="A2" data-perspective="A2">
+      <div class="perspective__head">
+        <div class="perspective__letter" style="background:#0A84FF">A2</div>
+        <div>
+          <div class="perspective__name">Subtle <em>工程白</em></div>
+          <div class="perspective__tag">18px blur · #FAFAF9 bg · blue accent #0A84FF · 单 light</div>
+        </div>
+      </div>
+      <div class="p4-grid">
+        <div class="p4">
+          <div class="p4__label">核心定位</div>
+          <div class="p4__title">工程白 + 冷蓝 accent 的清爽 dev 风</div>
+          <div class="p4__body">比 A1 冷一档（#FAFAF9 vs #F5F4F0），accent 改用 macOS 风的 #0A84FF。玻璃透明度稍高（0.50），chrome 边缘更清晰。</div>
+        </div>
+        <div class="p4">
+          <div class="p4__label">原则体现</div>
+          <ul class="p4__list">
+            <li>Content First <span class="star">★★★★★</span></li>
+            <li>Functional Design <span class="star">★★★★</span></li>
+            <li>Adaptive Material <span class="star">★★★</span></li>
+            <li>Readability <span class="star">★★★★</span></li>
+          </ul>
+        </div>
+        <div class="p4">
+          <div class="p4__label">特色属性</div>
+          <ul class="p4__list">
+            <li>Subtle (HIG Material.ultraThin 档)</li>
+            <li>工程白 #FAFAF9 + 冷蓝 #0A84FF</li>
+            <li>玻璃透明度 0.50</li>
+            <li>中密度 · 单 light · dev 感最强</li>
+          </ul>
+        </div>
+        <div class="p4">
+          <div class="p4__label">独特价值</div>
+          <div class="p4__body">唯一走 macOS 系统色板（蓝/灰）的 subtle variant。给"我不是要美感，是要工作"的 dev 用户的最对路选择。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- A3 -->
+    <div class="perspective glass" id="A3" data-perspective="A3">
+      <div class="perspective__head">
+        <div class="perspective__letter" style="background:#F59E0B">A3</div>
+        <div>
+          <div class="perspective__name">Subtle <em>暖黑</em></div>
+          <div class="perspective__tag">18px blur · #1A1A1A bg · amber accent #F59E0B · 单 dark</div>
+        </div>
+      </div>
+      <div class="p4-grid">
+        <div class="p4">
+          <div class="p4__label">核心定位</div>
+          <div class="p4__title">夜间 / 演示场景的暖黑 subtle</div>
+          <div class="p4__body">8 variant 中唯一的 dark 主题。背景 #1A1A1A + amber accent，玻璃用 0.06 透明度（几乎不可见），靠 1px hairline border 分层。</div>
+        </div>
+        <div class="p4">
+          <div class="p4__label">原则体现</div>
+          <ul class="p4__list">
+            <li>Readability <span class="star">★★★★</span></li>
+            <li>Content First <span class="star">★★★★</span></li>
+            <li>Adaptive Material <span class="star">★★★</span></li>
+            <li>Functional Design <span class="star">★★★</span></li>
+          </ul>
+        </div>
+        <div class="p4">
+          <div class="p4__label">特色属性</div>
+          <ul class="p4__list">
+            <li>Subtle + dark（#1A1A1A）</li>
+            <li>玻璃透明度 0.06（暗主题下必须极低）</li>
+            <li>amber #F59E0B accent</li>
+            <li>hairline border 分层（不用阴影）</li>
+          </ul>
+        </div>
+        <div class="p4">
+          <div class="p4__label">独特价值</div>
+          <div class="p4__body">唯一 dark variant。如果产品要做"夜间专注"模式（不是单纯反色），A3 给出了 dark 下不靠玻璃靠 hairline 的克制做法。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- A4 -->
+    <div class="perspective glass" id="A4" data-perspective="A4">
+      <div class="perspective__head">
+        <div class="perspective__letter" style="background:#38BDF8">A4</div>
+        <div>
+          <div class="perspective__name">Subtle <em>冷灰</em></div>
+          <div class="perspective__tag">18px blur · #ECEFF1 bg · sky accent #38BDF8 · 单 light</div>
+        </div>
+      </div>
+      <div class="p4-grid">
+        <div class="p4">
+          <div class="p4__label">核心定位</div>
+          <div class="p4__title">冷灰 + 天蓝 accent 的协作 / 工具感</div>
+          <div class="p4__body">#ECEFF1 偏 Material You 冷调，配合 #38BDF8 天蓝 accent。玻璃透明度 0.55（subtle 中最高），chrome 边线最清晰。</div>
+        </div>
+        <div class="p4">
+          <div class="p4__label">原则体现</div>
+          <ul class="p4__list">
+            <li>Functional Design <span class="star">★★★★</span></li>
+            <li>Readability <span class="star">★★★★</span></li>
+            <li>Content First <span class="star">★★★★</span></li>
+            <li>Adaptive Material <span class="star">★★★</span></li>
+          </ul>
+        </div>
+        <div class="p4">
+          <div class="p4__label">特色属性</div>
+          <ul class="p4__list">
+            <li>Subtle (HIG Material.ultraThin 档)</li>
+            <li>冷灰 #ECEFF1 + 天蓝 #38BDF8</li>
+            <li>玻璃透明度 0.55（subtle 最高）</li>
+            <li>中密度 · 协作 / 工具导向</li>
+          </ul>
+        </div>
+        <div class="p4">
+          <div class="p4__label">独特价值</div>
+          <div class="p4__body">8 variant 中<strong>chrome 边线最清晰</strong>的 subtle。如果产品要"工具感强 / 不太创意"（Notion / Linear 那种），A4 是最接近参考的方向。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- B1 -->
+    <div class="perspective glass" id="B1" data-perspective="B1">
+      <div class="perspective__head">
+        <div class="perspective__letter" style="background:#F472B6">B1</div>
+        <div>
+          <div class="perspective__name">Balanced <em>暖纸</em></div>
+          <div class="perspective__tag">24px blur · #F5F4F0 bg · pink accent #F472B6 · 单 light</div>
+        </div>
+      </div>
+      <div class="p4-grid">
+        <div class="p4">
+          <div class="p4__label">核心定位</div>
+          <div class="p4__title">暖纸 + Liquid Glass 标准档（24px）的平衡</div>
+          <div class="p4__body">A1 的"升级版"——同样的暖纸 + 粉橙 accent，但 blur 从 18 拉到 24，玻璃透明度从 0.45 提到 0.62。Liquid Glass 该有的样子。</div>
+        </div>
+        <div class="p4">
+          <div class="p4__label">原则体现</div>
+          <ul class="p4__list">
+            <li>Adaptive Material <span class="star">★★★★★</span></li>
+            <li>Content First <span class="star">★★★★</span></li>
+            <li>Readability <span class="star">★★★★</span></li>
+            <li>Functional Design <span class="star">★★★★</span></li>
+          </ul>
+        </div>
+        <div class="p4">
+          <div class="p4__label">特色属性</div>
+          <ul class="p4__list">
+            <li>Balanced (HIG Material.regular 档)</li>
+            <li>暖纸 #F5F4F0 + 粉橙 accent</li>
+            <li>玻璃透明度 0.62</li>
+            <li>中密度 · 单 light · 推荐默认</li>
+          </ul>
+        </div>
+        <div class="p4">
+          <div class="p4__label">独特价值</div>
+          <div class="p4__body">8 variant 中<strong>最像 Apple HIG 默认</strong>的暖纸组合。Liquid Glass 官方样例几乎都用 Balanced 档 + 暖纸背景，B1 是最不冒险的"安全选项"。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- B2 -->
+    <div class="perspective glass" id="B2" data-perspective="B2">
+      <div class="perspective__head">
+        <div class="perspective__letter" style="background:#0A84FF">B2</div>
+        <div>
+          <div class="perspective__name">Balanced <em>工程白</em></div>
+          <div class="perspective__tag">24px blur · #FAFAF9 bg · blue accent #0A84FF · 单 light</div>
+        </div>
+      </div>
+      <div class="p4-grid">
+        <div class="p4">
+          <div class="p4__label">核心定位</div>
+          <div class="p4__title">工程白 + Balanced 玻璃的"专业 dev"风</div>
+          <div class="p4__body">A2 的"升级版"——同样的工程白 + 冷蓝 accent，blur 24 + 玻璃透明度 0.65。比 A2 玻璃感明显，但仍是 dev 友好色调。</div>
+        </div>
+        <div class="p4">
+          <div class="p4__label">原则体现</div>
+          <ul class="p4__list">
+            <li>Adaptive Material <span class="star">★★★★★</span></li>
+            <li>Functional Design <span class="star">★★★★★</span></li>
+            <li>Content First <span class="star">★★★★</span></li>
+            <li>Readability <span class="star">★★★★</span></li>
+          </ul>
+        </div>
+        <div class="p4">
+          <div class="p4__label">特色属性</div>
+          <ul class="p4__list">
+            <li>Balanced (HIG Material.regular 档)</li>
+            <li>工程白 #FAFAF9 + 冷蓝 #0A84FF</li>
+            <li>玻璃透明度 0.65</li>
+            <li>中密度 · dev / 工具推荐</li>
+          </ul>
+        </div>
+        <div class="p4">
+          <div class="p4__label">独特价值</div>
+          <div class="p4__body">8 variant 中<strong>最像 Xcode / Linear / Vercel</strong>的"专业 dev 工具"风。如果产品是 dev-tool / API / SDK 性质，B2 是最对路的。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- B3 -->
+    <div class="perspective glass" id="B3" data-perspective="B3">
+      <div class="perspective__head">
+        <div class="perspective__letter" style="background:#F59E0B">B3</div>
+        <div>
+          <div class="perspective__name">Balanced <em>暖黑</em></div>
+          <div class="perspective__tag">24px blur · #1A1A1A bg · amber accent #F59E0B · 单 dark</div>
+        </div>
+      </div>
+      <div class="p4-grid">
+        <div class="p4">
+          <div class="p4__label">核心定位</div>
+          <div class="p4__title">dark 主题下的 Balanced 玻璃（夜间 / 演示）</div>
+          <div class="p4__body">A3 的"升级版"——同样 dark + amber，但玻璃透明度从 0.06 提到 0.10，blur 18→24。dark 下玻璃不能太抢戏，但仍要能看见。</div>
+        </div>
+        <div class="p4">
+          <div class="p4__label">原则体现</div>
+          <ul class="p4__list">
+            <li>Adaptive Material <span class="star">★★★★</span></li>
+            <li>Readability <span class="star">★★★★</span></li>
+            <li>Content First <span class="star">★★★★</span></li>
+            <li>Functional Design <span class="star">★★★</span></li>
+          </ul>
+        </div>
+        <div class="p4">
+          <div class="p4__label">特色属性</div>
+          <ul class="p4__list">
+            <li>Balanced + dark</li>
+            <li>玻璃透明度 0.10（dark 专属）</li>
+            <li>amber #F59E0B + hairline border</li>
+            <li>中等密度 · 演示 / 夜间</li>
+          </ul>
+        </div>
+        <div class="p4">
+          <div class="p4__label">独特价值</div>
+          <div class="p4__body">唯一 dark + Balanced 组合。如果产品要做 demo 视频 / 截图 / 屏幕分享，B3 是 dark 下"玻璃仍在但不抢眼"的最对平衡。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- B4 -->
+    <div class="perspective glass" id="B4" data-perspective="B4">
+      <div class="perspective__head">
+        <div class="perspective__letter" style="background:#38BDF8">B4</div>
+        <div>
+          <div class="perspective__name">Balanced <em>冷灰</em></div>
+          <div class="perspective__tag">24px blur · #ECEFF1 bg · sky accent #38BDF8 · 单 light</div>
+        </div>
+      </div>
+      <div class="p4-grid">
+        <div class="p4">
+          <div class="p4__label">核心定位</div>
+          <div class="p4__title">冷灰 + Balanced 玻璃的协作 / 工具强导向</div>
+          <div class="p4__body">A4 的"升级版"——同样冷灰 + 天蓝，玻璃透明度 0.70（8 variant 最高），blur 24。chrome 在 B4 里"看得到但轻盈"。</div>
+        </div>
+        <div class="p4">
+          <div class="p4__label">原则体现</div>
+          <ul class="p4__list">
+            <li>Adaptive Material <span class="star">★★★★★</span></li>
+            <li>Functional Design <span class="star">★★★★★</span></li>
+            <li>Readability <span class="star">★★★★</span></li>
+            <li>Content First <span class="star">★★★★</span></li>
+          </ul>
+        </div>
+        <div class="p4">
+          <div class="p4__label">特色属性</div>
+          <ul class="p4__list">
+            <li>Balanced (HIG Material.regular 档)</li>
+            <li>冷灰 #ECEFF1 + 天蓝 #38BDF8</li>
+            <li>玻璃透明度 0.70（8 variant 最高）</li>
+            <li>中密度 · 协作 / 团队导向</li>
+          </ul>
+        </div>
+        <div class="p4">
+          <div class="p4__label">独特价值</div>
+          <div class="p4__body">8 variant 中<strong>玻璃感最强且仍可读</strong>的冷色组合。如果产品是 Notion / Figma / Linear 那种"多人协作 + 工具感"，B4 是最对路的。</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    // theme toggle 切 data-theme 演示
+    const t = document.getElementById('themeToggle');
+    const themes = ['A1','A2','A3','A4','B1','B2','B3','B4'];
+    let i = 0;
+    t.addEventListener('click', () => {
+      i = (i + 1) % themes.length;
+      document.body.dataset.theme = themes[i];
+      t.textContent = themes[i];
+    });
+
+    // 8 chip 点击 → 切到对应主题 + 平滑滚到 perspective
+    document.querySelectorAll('[data-jump]').forEach(el => {
+      el.addEventListener('click', (e) => {
+        const theme = el.dataset.jump;
+        document.body.dataset.theme = theme;
+        i = themes.indexOf(theme);
+        t.textContent = theme;
+      });
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,2111 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Mindtap · 轻念 — H. Expressive Brand 视角，ENFP 创意型人格的温暖记录伙伴。">
+  <meta name="color-scheme" content="light">
+  <title>Mindtap · 轻念 — Expressive Brand</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@500;700;800&family=Manrope:wght@300;400;500;600;700;800&family=Fraunces:opsz,wght,SOFT@9..144,300..700,0..100&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================================
+       H. Expressive Brand — Design Validation Prototype
+       —— 玻璃强度：Rich (blur 40px / saturate 220% / 4 层阴影)
+       —— 品牌温度：ENFP 创意（4 色渐变 hero / 拟人化 Logo / 鼓励文案）
+       —— 季节性主题：同色相家族 + 统一饱和度（春粉/夏橙/秋棕/冬蓝紫）
+       ============================================================ */
+
+    :root {
+      /* —— 季节主题：默认夏（淡橙锚点 - 借鉴 D5 Immersive）—— */
+      --season-primary: #FED7AA;
+      --season-primary-deep: #FB923C;
+      --season-secondary: #FECACA;
+      --season-tertiary: #FEF3C7;
+      --season-accent: #FEF3C7;
+
+      --accent: var(--season-primary);
+      --accent-deep: var(--season-primary-deep);
+      --accent-soft: rgba(251, 146, 60, 0.16);
+      --accent-glow: rgba(251, 146, 60, 0.40);
+
+      /* —— 字体 —— */
+      --font-display: "Cabinet Grotesk", "Fraunces", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-body: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-serif: "Fraunces", "Cabinet Grotesk", Georgia, serif;
+
+      /* —— 圆角 —— */
+      --r-xs: 8px;
+      --r-sm: 12px;
+      --r-md: 18px;
+      --r-lg: 24px;
+      --r-xl: 32px;
+      --r-pill: 999px;
+
+      /* —— 间距 —— */
+      --sp-1: 4px;
+      --sp-2: 8px;
+      --sp-3: 12px;
+      --sp-4: 16px;
+      --sp-5: 24px;
+      --sp-6: 32px;
+      --sp-7: 48px;
+      --sp-8: 64px;
+
+      /* —— 动效 —— */
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --dur-fast: 180ms;
+      --dur-mid: 320ms;
+      --dur-slow: 600ms;
+
+      /* —— 鼠标坐标（mousemove 实时更新）—— */
+      --mx: 50vw;
+      --my: 50vh;
+    }
+
+    /* —— 季节性主题：同色相家族 + 统一饱和度 65-75% —— */
+    /* Spring 春（生发·轻盈）: 淡樱粉 - 借鉴 D6 Subtle Glass */
+    body.theme-spring {
+      --season-primary: #FBCFE8;        /* 淡樱粉 (TW 200) */
+      --season-primary-deep: #F472B6;   /* TW 500 */
+      --season-secondary: #D1FAE5;      /* 淡薄荷 (TW 100) */
+      --season-tertiary: #FEF3C7;       /* 暖白 */
+      --season-accent: #94A3B8;         /* 灰蓝 */
+    }
+    /* Summer 夏（茂盛·浓郁）: 淡橙 - 借鉴 D5 Immersive */
+    body.theme-summer {
+      --season-primary: #FED7AA;        /* 淡橙 (TW 200) */
+      --season-primary-deep: #FB923C;   /* TW 500 */
+      --season-secondary: #FECACA;      /* 淡桃红 (TW 200) */
+      --season-tertiary: #FEF3C7;       /* 暖白 */
+      --season-accent: #FEF3C7;         /* 暖白 */
+    }
+    /* Autumn 秋（沉郁·凋零）: 米色 - 借鉴 Q4 Spatial */
+    body.theme-autumn {
+      --season-primary: #E7D2B7;        /* 米色 */
+      --season-primary-deep: #B45309;   /* TW 700 深棕 */
+      --season-secondary: #FED7AA;      /* 淡米橙 (TW 200) */
+      --season-tertiary: #FAF5EB;       /* 米白 */
+      --season-accent: #A8A29E;         /* 米灰 */
+    }
+    /* Winter 冬（冷峻·静谧）: 淡靛 - 借鉴 D7 Adaptive */
+    body.theme-winter {
+      --season-primary: #C7D2FE;        /* 淡靛 (TW 200) */
+      --season-primary-deep: #6366F1;   /* TW 500 */
+      --season-secondary: #BAE6FD;      /* 冰蓝 (TW 200) */
+      --season-tertiary: #E2E8F0;       /* 灰白 */
+      --season-accent: #475569;         /* 深灰 */
+    }
+
+    body.theme-summer,
+    body.theme-spring,
+    body.theme-autumn,
+    body.theme-winter {
+      --accent: var(--season-primary);
+      --accent-deep: var(--season-primary-deep);
+      --accent-soft: color-mix(in srgb, var(--season-primary) 16%, transparent);
+      --accent-glow: color-mix(in srgb, var(--season-primary) 40%, transparent);
+    }
+
+    [data-theme="light"] {
+      --bg: #FAF8F5;
+      --bg-deep: #EFEAE2;
+      --surface: #FFFFFF;
+      --text: #1A1A1A;
+      --text-soft: #4A4A4A;
+      --text-muted: #8A8A8A;
+      --border: rgba(0, 0, 0, 0.06);
+      --border-strong: rgba(0, 0, 0, 0.10);
+    }
+
+    /* ============================================================
+       Reset & 基础
+       ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; }
+    * { margin: 0; padding: 0; }
+
+    html {
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      color: var(--text);
+      background: var(--bg);
+      background-image:
+        radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--season-primary) 36%, transparent), transparent 45%),
+        radial-gradient(circle at 88% 18%, color-mix(in srgb, var(--season-secondary) 30%, transparent), transparent 50%),
+        radial-gradient(circle at 28% 88%, color-mix(in srgb, var(--season-tertiary) 28%, transparent), transparent 55%),
+        radial-gradient(circle at 78% 92%, color-mix(in srgb, var(--season-accent) 26%, transparent), transparent 50%);
+      background-attachment: fixed;
+      overflow-x: hidden;
+      transition: background 600ms var(--ease-out);
+    }
+
+    button {
+      font: inherit;
+      color: inherit;
+      background: none;
+      border: none;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    input, textarea {
+      font: inherit;
+      color: inherit;
+      background: none;
+      border: none;
+      outline: none;
+    }
+
+    ::selection { background: var(--accent); color: white; }
+
+    /* ============================================================
+       L1 · Rich Glass Base Material
+       —— 白色 0.30-0.45 透明叠加 + 高对比边 0.25
+       ============================================================ */
+    .glass {
+      position: relative;
+      isolation: isolate;
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.45) 0%,
+        rgba(255, 255, 255, 0.30) 100%
+      );
+      border: 1px solid rgba(255, 255, 255, 0.55);
+    }
+
+    .glass-thin {
+      position: relative;
+      isolation: isolate;
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.35) 0%,
+        rgba(255, 255, 255, 0.22) 100%
+      );
+      border: 1px solid rgba(255, 255, 255, 0.45);
+    }
+
+    .glass-thick {
+      position: relative;
+      isolation: isolate;
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.60) 0%,
+        rgba(255, 255, 255, 0.42) 100%
+      );
+      border: 1px solid rgba(255, 255, 255, 0.65);
+    }
+
+    /* ============================================================
+       L2 · Refraction — Rich 强玻璃
+       —— blur(40px) saturate(220%) brightness(110%) contrast(108%)
+       ============================================================ */
+    .glass {
+      backdrop-filter: blur(40px) saturate(220%) brightness(110%) contrast(108%);
+      -webkit-backdrop-filter: blur(40px) saturate(220%) brightness(110%) contrast(108%);
+    }
+    .glass-thin {
+      backdrop-filter: blur(28px) saturate(200%) brightness(108%) contrast(106%);
+      -webkit-backdrop-filter: blur(28px) saturate(200%) brightness(108%) contrast(106%);
+    }
+    .glass-thick {
+      backdrop-filter: blur(48px) saturate(240%) brightness(112%) contrast(110%);
+      -webkit-backdrop-filter: blur(48px) saturate(240%) brightness(112%) contrast(110%);
+    }
+
+    /* ============================================================
+       L3 · Specular Highlight — 4 边 inset
+       —— top: 1px white 0.7
+       —— bottom: 1px black 0.08
+       —— left/right: 0.5px white 0.4
+       ============================================================ */
+    .glass::before,
+    .glass-thin::before,
+    .glass-thick::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      box-shadow:
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.70),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.08),
+        inset 1px 0 0 0 rgba(255, 255, 255, 0.40),
+        inset -1px 0 0 0 rgba(255, 255, 255, 0.40);
+      z-index: 1;
+    }
+
+    .glass > *, .glass-thin > *, .glass-thick > * {
+      position: relative;
+      z-index: 2;
+    }
+
+    /* ============================================================
+       L4 · Dynamic Tint — mouse-following accent tint
+       —— 用 CSS vars --mx --my 跟随光标
+       ============================================================ */
+    .glass::after,
+    .glass-thin::after,
+    .glass-thick::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      background: radial-gradient(
+        300px circle at var(--mx) var(--my),
+        color-mix(in srgb, var(--accent) 18%, transparent),
+        transparent 60%
+      );
+      opacity: 0;
+      transition: opacity var(--dur-mid) var(--ease-out);
+      z-index: 1;
+    }
+
+    /* —— 玻璃内容层级 —— */
+    .glass > *, .glass-thin > *, .glass-thick > * {
+      position: relative;
+      z-index: 3;
+    }
+
+    /* ============================================================
+       L5 · Shadow System — 4 层外阴影
+       —— 1px micro / 8px mid / 32px macro / 64px ambient
+       ============================================================ */
+    .glass {
+      box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.04),
+        0 8px 20px rgba(0, 0, 0, 0.08),
+        0 32px 64px rgba(0, 0, 0, 0.10),
+        0 64px 128px rgba(0, 0, 0, 0.06);
+    }
+    .glass-thin {
+      box-shadow:
+        0 1px 1px rgba(0, 0, 0, 0.03),
+        0 6px 16px rgba(0, 0, 0, 0.06),
+        0 24px 48px rgba(0, 0, 0, 0.08),
+        0 48px 96px rgba(0, 0, 0, 0.05);
+    }
+    .glass-thick {
+      box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.05),
+        0 10px 24px rgba(0, 0, 0, 0.10),
+        0 40px 80px rgba(0, 0, 0, 0.12),
+        0 80px 160px rgba(0, 0, 0, 0.08);
+    }
+
+    /* ============================================================
+       L6 · Motion Response — entry stagger + idle + FAB pulse
+       ============================================================ */
+
+    /* —— Entry stagger —— */
+    @keyframes entry-fade-up {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes entry-fade-down {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes entry-scale {
+      from { opacity: 0; transform: scale(0.92); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    .stagger { animation: entry-fade-up 720ms var(--ease-out) both; }
+    .stagger-1 { animation-delay: 60ms; }
+    .stagger-2 { animation-delay: 140ms; }
+    .stagger-3 { animation-delay: 220ms; }
+    .stagger-4 { animation-delay: 300ms; }
+    .stagger-5 { animation-delay: 380ms; }
+    .stagger-6 { animation-delay: 460ms; }
+    .stagger-7 { animation-delay: 540ms; }
+    .stagger-8 { animation-delay: 620ms; }
+
+    /* —— Idle float (FAB & 装饰元素) —— */
+    @keyframes pulse-glow {
+      0%, 100% {
+        box-shadow:
+          0 1px 2px rgba(0, 0, 0, 0.06),
+          0 10px 28px color-mix(in srgb, var(--accent) 36%, transparent),
+          0 32px 80px color-mix(in srgb, var(--accent) 28%, transparent),
+          0 64px 140px color-mix(in srgb, var(--accent) 22%, transparent);
+        transform: scale(1) translateY(0);
+      }
+      50% {
+        box-shadow:
+          0 1px 2px rgba(0, 0, 0, 0.08),
+          0 14px 36px color-mix(in srgb, var(--accent) 50%, transparent),
+          0 40px 100px color-mix(in srgb, var(--accent) 36%, transparent),
+          0 80px 160px color-mix(in srgb, var(--accent) 28%, transparent);
+        transform: scale(1.04) translateY(-2px);
+      }
+    }
+
+    @keyframes idle-float {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-6px); }
+    }
+
+    @keyframes idle-float-slow {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50%      { transform: translateY(-10px) rotate(2deg); }
+    }
+
+    @keyframes logo-spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
+    @keyframes hero-mesh-shift {
+      0%, 100% {
+        background-position: 0% 0%, 100% 0%, 50% 100%, 0% 50%;
+      }
+      50% {
+        background-position: 10% 20%, 90% 10%, 60% 90%, 10% 60%;
+      }
+    }
+
+    /* ============================================================
+       4.0 App 布局
+       ============================================================ */
+    .app {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      grid-template-rows: 44px 1fr;
+      min-height: 100vh;
+      min-height: 100dvh;
+    }
+
+    /* ============================================================
+       4.1 顶部菜单栏（Rich 玻璃 + 彩条）
+       ============================================================ */
+    .menubar {
+      grid-column: 1 / -1;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      padding: 0 var(--sp-5);
+      gap: var(--sp-4);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-soft);
+
+      backdrop-filter: blur(32px) saturate(200%) brightness(108%);
+      -webkit-backdrop-filter: blur(32px) saturate(200%) brightness(108%);
+      background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.50) 0%,
+        rgba(255, 255, 255, 0.32) 100%
+      );
+      border-bottom: 1px solid rgba(255, 255, 255, 0.55);
+      box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.04),
+        0 8px 20px rgba(0, 0, 0, 0.06);
+
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      user-select: none;
+      isolation: isolate;
+    }
+
+    .menubar::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      box-shadow:
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.70),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.06);
+      z-index: 1;
+    }
+
+    .menubar::after {
+      content: "";
+      position: absolute;
+      left: 0; right: 0; bottom: -1px;
+      height: 3px;
+      background: linear-gradient(
+        90deg,
+        var(--season-primary) 0%,
+        var(--season-secondary) 33%,
+        var(--season-tertiary) 66%,
+        var(--season-accent) 100%
+      );
+      opacity: 0.75;
+      pointer-events: none;
+      z-index: 2;
+      transition: background 600ms var(--ease-out);
+    }
+
+    .menubar > * { position: relative; z-index: 3; }
+
+    .menubar__app-name {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 14px;
+      letter-spacing: 0.02em;
+      color: var(--text);
+    }
+
+    .menubar__dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 10px var(--accent-glow);
+      animation: idle-float 4s ease-in-out infinite;
+    }
+
+    .menubar__menu { display: flex; gap: var(--sp-4); }
+    .menubar__menu span { cursor: default; transition: color var(--dur-fast); }
+    .menubar__menu span:hover { color: var(--accent-deep); }
+
+    .menubar__spacer { flex: 1; }
+
+    .menubar__traffic {
+      display: flex;
+      gap: 8px;
+    }
+    .menubar__traffic span {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .menubar__traffic span:nth-child(1) { background: #FF5F57; }
+    .menubar__traffic span:nth-child(2) { background: #FEBC2E; }
+    .menubar__traffic span:nth-child(3) { background: #28C840; }
+
+    /* ============================================================
+       4.2 侧栏（Rich 玻璃 + 品牌色 logo）
+       ============================================================ */
+    .sidebar {
+      grid-column: 1;
+      grid-row: 2;
+      width: 260px;
+      padding: var(--sp-5) var(--sp-4);
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-2);
+      position: sticky;
+      top: 44px;
+      align-self: start;
+      height: calc(100vh - 44px);
+      height: calc(100dvh - 44px);
+      overflow-y: auto;
+      overflow-x: hidden;
+
+      backdrop-filter: blur(40px) saturate(220%) brightness(110%) contrast(108%);
+      -webkit-backdrop-filter: blur(40px) saturate(220%) brightness(110%) contrast(108%);
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.45) 0%,
+        rgba(255, 255, 255, 0.30) 100%
+      );
+      border-right: 1px solid rgba(255, 255, 255, 0.55);
+      box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.04),
+        0 8px 20px rgba(0, 0, 0, 0.08),
+        0 32px 64px rgba(0, 0, 0, 0.06);
+      isolation: isolate;
+    }
+
+    .sidebar__brand {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+      padding: var(--sp-3);
+      margin-bottom: var(--sp-4);
+      border-radius: var(--r-md);
+    }
+
+    .sidebar__logo {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--r-md);
+      background: linear-gradient(
+        135deg,
+        var(--season-secondary) 0%,
+        var(--season-primary) 50%,
+        var(--season-tertiary) 100%
+      );
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 22px;
+      letter-spacing: -0.02em;
+      box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.08),
+        0 6px 16px color-mix(in srgb, var(--season-primary) 40%, transparent),
+        0 16px 32px color-mix(in srgb, var(--season-tertiary) 32%, transparent);
+      cursor: pointer;
+      transition: transform 360ms var(--ease-spring);
+      animation: idle-float-slow 6s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
+    .sidebar__logo:hover {
+      transform: scale(1.06) rotate(-4deg);
+    }
+
+    .sidebar__name {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing: -0.01em;
+      background: linear-gradient(
+        135deg,
+        var(--season-primary) 0%,
+        var(--season-tertiary) 100%
+      );
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .sidebar__subname {
+      font-size: 12px;
+      color: var(--text-muted);
+      letter-spacing: 0.02em;
+    }
+
+    .sidebar__group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .sidebar__label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: var(--sp-4) var(--sp-3) var(--sp-2);
+    }
+
+    .sidebar__item {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+      padding: var(--sp-3);
+      border-radius: var(--r-sm);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-soft);
+      cursor: pointer;
+      transition: all var(--dur-fast) var(--ease-out);
+      position: relative;
+    }
+
+    .sidebar__item:hover {
+      background: var(--accent-soft);
+      color: var(--text);
+      transform: translateX(3px);
+    }
+
+    .sidebar__item--active {
+      background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+      color: white;
+      font-weight: 600;
+      box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.06),
+        0 6px 16px var(--accent-glow),
+        0 16px 32px color-mix(in srgb, var(--accent) 24%, transparent);
+    }
+
+    .sidebar__icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .sidebar__divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0,0,0,0.08), transparent);
+      margin: var(--sp-3) 0;
+    }
+
+    .sidebar__footer {
+      margin-top: auto;
+      padding: var(--sp-3);
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: var(--sp-2);
+    }
+
+    .sidebar__footer-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--season-accent);
+      box-shadow: 0 0 8px color-mix(in srgb, var(--season-accent) 60%, transparent);
+      animation: idle-float 3s ease-in-out infinite;
+    }
+
+    /* ============================================================
+       4.3 主内容区
+       ============================================================ */
+    .main {
+      grid-column: 2;
+      grid-row: 2;
+      padding: var(--sp-6) var(--sp-7) var(--sp-8);
+      max-width: 1280px;
+      width: 100%;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* ============================================================
+       4.4 Hero 区 — 品牌表达核心
+       —— 4 色 mesh 渐变 + 大字 + 日期 + 鼓励
+       ============================================================ */
+    .hero {
+      position: relative;
+      padding: var(--sp-7) var(--sp-6) var(--sp-7);
+      border-radius: var(--r-xl);
+      overflow: hidden;
+      isolation: isolate;
+      margin-bottom: var(--sp-7);
+
+      background:
+        linear-gradient(135deg,
+          color-mix(in srgb, var(--season-primary) 25%, white) 0%,
+          color-mix(in srgb, var(--season-secondary) 20%, white) 50%,
+          color-mix(in srgb, var(--season-tertiary) 22%, white) 100%
+        );
+
+      box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.04),
+        0 8px 24px color-mix(in srgb, var(--season-primary) 24%, transparent),
+        0 32px 80px color-mix(in srgb, var(--season-tertiary) 20%, transparent);
+
+      transition: background 600ms var(--ease-out);
+    }
+
+    /* —— Hero mesh 浮动层 —— */
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 20% 30%, color-mix(in srgb, var(--season-primary) 60%, transparent), transparent 50%),
+        radial-gradient(circle at 80% 20%, color-mix(in srgb, var(--season-secondary) 55%, transparent), transparent 55%),
+        radial-gradient(circle at 60% 80%, color-mix(in srgb, var(--season-tertiary) 55%, transparent), transparent 55%),
+        radial-gradient(circle at 30% 90%, color-mix(in srgb, var(--season-accent) 50%, transparent), transparent 50%);
+      animation: hero-mesh-shift 12s ease-in-out infinite;
+      z-index: 0;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      box-shadow:
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.50),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.04);
+      z-index: 1;
+    }
+
+    .hero > * { position: relative; z-index: 2; }
+
+    .hero__date {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sp-2);
+      padding: 6px 14px;
+      border-radius: var(--r-pill);
+      background: rgba(255, 255, 255, 0.55);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-soft);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      margin-bottom: var(--sp-4);
+    }
+
+    .hero__title {
+      font-family: var(--font-serif);
+      font-size: clamp(32px, 5.5vw, 52px);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.08;
+      margin-bottom: var(--sp-3);
+      color: var(--text);
+    }
+
+    .hero__title em {
+      font-style: italic;
+      font-weight: 500;
+      background: linear-gradient(
+        135deg,
+        var(--season-primary) 0%,
+        var(--season-secondary) 50%,
+        var(--season-tertiary) 100%
+      );
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero__sub {
+      font-size: 16px;
+      color: var(--text-soft);
+      max-width: 540px;
+      line-height: 1.6;
+      margin-bottom: var(--sp-5);
+    }
+
+    .hero__actions {
+      display: flex;
+      gap: var(--sp-3);
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sp-2);
+      padding: 12px 22px;
+      border-radius: var(--r-pill);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--dur-fast) var(--ease-out);
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    .btn--primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+      color: white;
+      box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.08),
+        0 8px 20px var(--accent-glow);
+    }
+
+    .btn--primary:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.10),
+        0 12px 28px var(--accent-glow);
+    }
+
+    .btn--ghost {
+      background: rgba(255, 255, 255, 0.50);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.55);
+    }
+
+    .btn--ghost:hover {
+      background: rgba(255, 255, 255, 0.75);
+      transform: translateY(-2px);
+    }
+
+    /* ============================================================
+       4.5 Stats 卡片（4 列玻璃）
+       ============================================================ */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--sp-4);
+      margin-bottom: var(--sp-7);
+    }
+
+    .stat {
+      padding: var(--sp-5);
+      border-radius: var(--r-lg);
+      position: relative;
+      transition: transform var(--dur-fast) var(--ease-out);
+
+      backdrop-filter: blur(40px) saturate(220%) brightness(110%) contrast(108%);
+      -webkit-backdrop-filter: blur(40px) saturate(220%) brightness(110%) contrast(108%);
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.45) 0%,
+        rgba(255, 255, 255, 0.30) 100%
+      );
+      border: 1px solid rgba(255, 255, 255, 0.55);
+
+      box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.04),
+        0 8px 20px rgba(0, 0, 0, 0.08),
+        0 32px 64px rgba(0, 0, 0, 0.06);
+    }
+
+    .stat::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      box-shadow:
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.70),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.08),
+        inset 1px 0 0 0 rgba(255, 255, 255, 0.40),
+        inset -1px 0 0 0 rgba(255, 255, 255, 0.40);
+    }
+
+    .stat > * { position: relative; z-index: 2; }
+
+    .stat:hover {
+      transform: translateY(-4px) scale(1.02);
+    }
+
+    .stat__label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.02em;
+      margin-bottom: var(--sp-3);
+    }
+
+    .stat__value {
+      font-family: var(--font-display);
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      margin-bottom: var(--sp-2);
+      background: linear-gradient(
+        135deg,
+        var(--season-primary) 0%,
+        var(--season-tertiary) 100%
+      );
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .stat__delta {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .stat__delta--up { color: #047857; font-weight: 600; letter-spacing: 0.01em; }  /* 数据语义：上升 = 绿（HIG 07-color 避免颜色冲突） */
+    .stat__delta--down { color: #B91C1C; font-weight: 600; letter-spacing: 0.01em; }  /* 数据语义：下降 = 红 */
+
+    .stat__icon {
+      position: absolute;
+      top: var(--sp-3);
+      right: var(--sp-3);
+      width: 32px;
+      height: 32px;
+      border-radius: var(--r-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .stat--orange .stat__icon {
+      background: linear-gradient(135deg, color-mix(in srgb, var(--season-primary) 22%, white), white);
+      color: var(--season-primary-deep);
+    }
+    .stat--pink .stat__icon {
+      background: linear-gradient(135deg, color-mix(in srgb, var(--season-secondary) 22%, white), white);
+      color: var(--season-secondary);
+    }
+    .stat--violet .stat__icon {
+      background: linear-gradient(135deg, color-mix(in srgb, var(--season-tertiary) 22%, white), white);
+      color: var(--season-tertiary);
+    }
+    .stat--mint .stat__icon {
+      background: linear-gradient(135deg, color-mix(in srgb, var(--season-accent) 22%, white), white);
+      color: var(--season-accent);
+    }
+
+    /* ============================================================
+       4.6 Section title + tabs
+       ============================================================ */
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      margin-bottom: var(--sp-5);
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+    }
+
+    .section-title__count {
+      font-family: var(--font-body);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      padding: 4px 12px;
+      border-radius: var(--r-pill);
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.40);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .tabs {
+      display: inline-flex;
+      gap: 4px;
+      padding: 4px;
+      border-radius: var(--r-pill);
+      background: rgba(255, 255, 255, 0.40);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      margin-bottom: var(--sp-5);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
+    .tab {
+      padding: 8px 18px;
+      border-radius: var(--r-pill);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-soft);
+      cursor: pointer;
+      transition: all var(--dur-fast) var(--ease-out);
+    }
+
+    .tab:hover { color: var(--text); }
+
+    .tab.active {
+      background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+      color: white;
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+
+    .tab-pane {
+      display: none;
+      animation: entry-fade-up 360ms var(--ease-out);
+    }
+    .tab-pane.active { display: block; }
+
+    /* ============================================================
+       4.7 Records / Timeline
+       ============================================================ */
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-3);
+    }
+
+    .record {
+      padding: var(--sp-4) var(--sp-5);
+      border-radius: var(--r-md);
+      display: grid;
+      grid-template-columns: 64px 1fr auto;
+      gap: var(--sp-5);
+      align-items: center;
+      cursor: default;
+      transition: all var(--dur-fast) var(--ease-out);
+      position: relative;
+
+      backdrop-filter: blur(32px) saturate(200%);
+      -webkit-backdrop-filter: blur(32px) saturate(200%);
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.40) 0%,
+        rgba(255, 255, 255, 0.25) 100%
+      );
+      border: 1px solid rgba(255, 255, 255, 0.45);
+
+      box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.03),
+        0 6px 16px rgba(0, 0, 0, 0.05),
+        0 16px 32px rgba(0, 0, 0, 0.04);
+    }
+
+    .record::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      box-shadow:
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.65),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.05);
+    }
+
+    .record > * { position: relative; z-index: 2; }
+
+    .record:hover {
+      transform: translateX(4px);
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.55) 0%,
+        color-mix(in srgb, var(--accent) 8%, rgba(255, 255, 255, 0.30)) 100%
+      );
+    }
+
+    .record__time {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-soft);
+      letter-spacing: 0.02em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .record__body {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+    }
+
+    .record__icon {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--r-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .record--mood .record__icon {
+      background: linear-gradient(135deg, #FCE7F3, #FBCFE8);
+      color: #BE185D;
+    }
+    .record--idea .record__icon {
+      background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+      color: #B45309;
+    }
+    .record--note .record__icon {
+      background: linear-gradient(135deg, #DBEAFE, #BFDBFE);
+      color: #1D4ED8;
+    }
+    .record--task .record__icon {
+      background: linear-gradient(135deg, #D1FAE5, #A7F3D0);
+      color: #047857;
+    }
+
+    .record__text {
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.5;
+      font-weight: 500;
+    }
+
+    .record__tag {
+      font-size: 12px;
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border-radius: var(--r-pill);
+      background: rgba(255, 255, 255, 0.50);
+      border: 1px solid var(--border);
+      font-weight: 500;
+    }
+
+    /* ============================================================
+       4.8 Daily Quote / Inspiration
+       ============================================================ */
+    .quote-card {
+      padding: var(--sp-6) var(--sp-6);
+      border-radius: var(--r-lg);
+      margin-bottom: var(--sp-7);
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+
+      background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--season-secondary) 18%, white) 0%,
+        color-mix(in srgb, var(--season-tertiary) 16%, white) 100%
+      );
+      backdrop-filter: blur(40px) saturate(220%);
+      -webkit-backdrop-filter: blur(40px) saturate(220%);
+      border: 1px solid rgba(255, 255, 255, 0.55);
+
+      box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.04),
+        0 8px 20px color-mix(in srgb, var(--season-secondary) 20%, transparent),
+        0 32px 64px color-mix(in srgb, var(--season-tertiary) 18%, transparent);
+
+      cursor: pointer;
+      transition: transform var(--dur-fast) var(--ease-out);
+    }
+
+    .quote-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      box-shadow:
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.70),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.06);
+      z-index: 1;
+    }
+
+    .quote-card:hover { transform: translateY(-2px); }
+
+    .quote-card > * { position: relative; z-index: 2; }
+
+    .quote-card__label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--season-primary-deep);
+      margin-bottom: var(--sp-3);
+    }
+
+    .quote-card__text {
+      font-family: var(--font-serif);
+      font-size: clamp(20px, 3vw, 28px);
+      font-weight: 400;
+      font-style: italic;
+      line-height: 1.4;
+      color: var(--text);
+      margin-bottom: var(--sp-3);
+      letter-spacing: -0.01em;
+      transition: opacity 240ms var(--ease-out);
+    }
+
+    .quote-card__hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ============================================================
+       4.9 Theme switcher（季节性主题）
+       ============================================================ */
+    .theme-switcher {
+      display: flex;
+      gap: 8px;
+      padding: 6px;
+      border-radius: var(--r-pill);
+      background: rgba(255, 255, 255, 0.40);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.50);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
+    .theme-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all var(--dur-fast) var(--ease-out);
+      position: relative;
+    }
+
+    .theme-btn[data-theme-btn="summer"] { background: linear-gradient(135deg, #FED7AA, #FB923C); }
+    .theme-btn[data-theme-btn="spring"] { background: linear-gradient(135deg, #FBCFE8, #F472B6); }
+    .theme-btn[data-theme-btn="autumn"] { background: linear-gradient(135deg, #E7D2B7, #B45309); }
+    .theme-btn[data-theme-btn="winter"] { background: linear-gradient(135deg, #C7D2FE, #6366F1); }
+
+    .theme-btn:hover {
+      transform: scale(1.12);
+    }
+
+    .theme-btn.active {
+      border-color: white;
+      box-shadow:
+        0 0 0 2px var(--text),
+        0 4px 12px rgba(0, 0, 0, 0.20);
+    }
+
+    /* ============================================================
+       4.10 FAB（持续呼吸 pulse-glow）
+       ============================================================ */
+    .fab {
+      position: fixed;
+      bottom: var(--sp-6);
+      right: var(--sp-6);
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+      color: white;
+      font-size: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 100;
+
+      animation: pulse-glow 4s ease-in-out infinite;
+
+      transition: transform 240ms var(--ease-spring);
+    }
+
+    .fab:hover { transform: scale(1.10) rotate(90deg); }
+
+    /* ============================================================
+       4.11 Modal（创建笔记）
+       ============================================================ */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity var(--dur-mid) var(--ease-out), visibility var(--dur-mid);
+      padding: var(--sp-5);
+    }
+
+    .modal-overlay.modal-overlay--open {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 520px;
+      padding: var(--sp-7);
+      border-radius: var(--r-xl);
+      transform: scale(0.92) translateY(20px);
+      transition: transform var(--dur-mid) var(--ease-spring);
+
+      backdrop-filter: blur(48px) saturate(240%) brightness(112%) contrast(110%);
+      -webkit-backdrop-filter: blur(48px) saturate(240%) brightness(112%) contrast(110%);
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.70) 0%,
+        rgba(255, 255, 255, 0.50) 100%
+      );
+      border: 1px solid rgba(255, 255, 255, 0.65);
+
+      box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.06),
+        0 16px 40px rgba(0, 0, 0, 0.16),
+        0 40px 96px rgba(0, 0, 0, 0.20);
+    }
+
+    .modal-overlay--open .modal {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal__head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--sp-5);
+    }
+
+    .modal__title {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .modal__close {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.50);
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all var(--dur-fast) var(--ease-out);
+      font-size: 18px;
+      color: var(--text-soft);
+    }
+
+    .modal__close:hover {
+      background: rgba(255, 255, 255, 0.85);
+      transform: rotate(90deg);
+    }
+
+    .modal__input {
+      width: 100%;
+      min-height: 120px;
+      padding: var(--sp-4);
+      border-radius: var(--r-md);
+      background: rgba(255, 255, 255, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      font-size: 15px;
+      line-height: 1.6;
+      resize: vertical;
+      margin-bottom: var(--sp-5);
+      transition: all var(--dur-fast) var(--ease-out);
+    }
+
+    .modal__input:focus {
+      background: rgba(255, 255, 255, 0.85);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    .modal__actions {
+      display: flex;
+      gap: var(--sp-3);
+      justify-content: flex-end;
+    }
+
+    .modal__success {
+      margin-top: var(--sp-4);
+      padding: var(--sp-3) var(--sp-4);
+      border-radius: var(--r-md);
+      background: linear-gradient(135deg, color-mix(in srgb, var(--season-accent) 20%, white), white);
+      color: var(--season-primary-deep);
+      font-size: 13px;
+      font-weight: 600;
+      display: none;
+      animation: entry-fade-up 320ms var(--ease-out);
+    }
+
+    .modal__success.show { display: block; }
+
+    /* ============================================================
+       4.12 Welcome 弹窗（首次访问）
+       ============================================================ */
+    .welcome {
+      position: fixed;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-40px);
+      padding: var(--sp-4) var(--sp-5);
+      border-radius: var(--r-lg);
+      z-index: 150;
+
+      backdrop-filter: blur(40px) saturate(220%);
+      -webkit-backdrop-filter: blur(40px) saturate(220%);
+      background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--season-primary) 30%, rgba(255, 255, 255, 0.7)) 0%,
+        color-mix(in srgb, var(--season-secondary) 28%, rgba(255, 255, 255, 0.7)) 100%
+      );
+      border: 1px solid rgba(255, 255, 255, 0.60);
+
+      box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.06),
+        0 12px 32px color-mix(in srgb, var(--season-primary) 30%, transparent),
+        0 32px 80px color-mix(in srgb, var(--season-secondary) 24%, transparent);
+
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 400ms var(--ease-out), transform 400ms var(--ease-spring), visibility 400ms;
+
+      max-width: 480px;
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+    }
+
+    .welcome.welcome--show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .welcome__icon {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--r-md);
+      background: linear-gradient(135deg, var(--season-secondary), var(--season-tertiary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+      color: white;
+    }
+
+    .welcome__text { font-size: 14px; line-height: 1.5; }
+    .welcome__text strong { display: block; font-weight: 700; margin-bottom: 2px; }
+
+    /* ============================================================
+       5. 响应式（mobile fallback）
+       ============================================================ */
+    @media (max-width: 900px) {
+      .app {
+        grid-template-columns: 1fr;
+        grid-template-rows: 44px 1fr 64px;
+      }
+
+      .sidebar {
+        display: none;
+      }
+
+      .main {
+        grid-column: 1;
+        padding: var(--sp-5) var(--sp-4) 80px;
+      }
+
+      .stats { grid-template-columns: repeat(2, 1fr); }
+
+      .menubar__menu { display: none; }
+
+      .mobile-tabbar {
+        grid-column: 1;
+        grid-row: 3;
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        height: 64px;
+        backdrop-filter: blur(40px) saturate(220%);
+        -webkit-backdrop-filter: blur(40px) saturate(220%);
+        background: rgba(255, 255, 255, 0.55);
+        border-top: 1px solid rgba(255, 255, 255, 0.55);
+        box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.06);
+        z-index: 40;
+      }
+    }
+
+    @media (min-width: 901px) {
+      .mobile-tabbar { display: none; }
+    }
+
+    .mobile-tab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 8px 12px;
+      border-radius: var(--r-sm);
+      font-size: 11px;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .mobile-tab__icon { font-size: 20px; }
+
+    /* ============================================================
+       6. 滚动条 & 细节
+       ============================================================ */
+    .sidebar::-webkit-scrollbar { width: 6px; }
+    .sidebar::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.10);
+      border-radius: 3px;
+    }
+    .sidebar::-webkit-scrollbar-thumb:hover {
+      background: rgba(0, 0, 0, 0.18);
+    }
+
+    /* —— hover 流光（glass 元素 hover 时显示彩色光晕）—— */
+    .glass:hover::after,
+    .glass-thin:hover::after,
+    .glass-thick:hover::after,
+    .stat:hover::after,
+    .record:hover::after,
+    .quote-card:hover::after {
+      opacity: 1;
+    }
+
+    /* —— 7. Reduce Motion / Reduce Transparency（HIG 08-accessibility）—— */
+    @media (prefers-reduced-motion: reduce) {
+      .stagger, .stagger-1, .stagger-2, .stagger-3, .stagger-4,
+      .stagger-5, .stagger-6, .stagger-7, .stagger-8,
+      .tab-pane, .modal__success, .welcome {
+        animation: none !important; opacity: 1 !important; transform: none !important;
+      }
+      .menubar__dot, .sidebar__logo, .sidebar__footer-dot, .fab, .hero::before {
+        animation: none !important; transform: none !important;
+      }
+      .fab:hover, .sidebar__logo:hover, .modal__close:hover {
+        transform: scale(1.05) !important;
+      }
+    }
+    @media (prefers-reduced-transparency: reduce) {
+      .glass, .glass-thin, .glass-thick, .stat, .record, .quote-card,
+      .modal, .welcome, .menubar, .sidebar, .mobile-tabbar {
+        background: rgba(255, 255, 255, 0.85) !important;
+        backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+      }
+      .modal-overlay {
+        background: rgba(0, 0, 0, 0.50) !important;
+        backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="theme-summer">
+  <!-- ============================================================
+       App Shell
+       ============================================================ -->
+  <div class="app">
+
+    <!-- 4.1 顶部菜单栏 -->
+    <header class="menubar">
+      <span class="menubar__dot"></span>
+      <span class="menubar__app-name">Mindtap · 轻念</span>
+      <nav class="menubar__menu">
+        <span>文件</span>
+        <span>编辑</span>
+        <span>视图</span>
+        <span>窗口</span>
+        <span>帮助</span>
+      </nav>
+      <span class="menubar__spacer"></span>
+      <!-- 主题切换器 -->
+      <div class="theme-switcher" role="radiogroup" aria-label="季节主题">
+        <button class="theme-btn active" data-theme-btn="summer" aria-label="夏日主题" title="夏日"></button>
+        <button class="theme-btn" data-theme-btn="spring" aria-label="春日主题" title="春日"></button>
+        <button class="theme-btn" data-theme-btn="autumn" aria-label="秋日主题" title="秋日"></button>
+        <button class="theme-btn" data-theme-btn="winter" aria-label="冬日主题" title="冬日"></button>
+      </div>
+      <div class="menubar__traffic">
+        <span></span><span></span><span></span>
+      </div>
+    </header>
+
+    <!-- 4.2 侧栏 -->
+    <aside class="sidebar">
+      <div class="sidebar__brand">
+        <div class="sidebar__logo" id="brandLogo" title="点击我转一下">M</div>
+        <div>
+          <div class="sidebar__name">Mindtap</div>
+          <div class="sidebar__subname">轻念 · Expressive</div>
+        </div>
+      </div>
+
+      <div class="sidebar__group">
+        <div class="sidebar__label">主导航</div>
+        <div class="sidebar__item sidebar__item--active" data-tab="all">
+          <span class="sidebar__icon">●</span>
+          <span>全部记录</span>
+        </div>
+        <div class="sidebar__item" data-tab="mood">
+          <span class="sidebar__icon">♥</span>
+          <span>心情</span>
+        </div>
+        <div class="sidebar__item" data-tab="idea">
+          <span class="sidebar__icon">★</span>
+          <span>灵感</span>
+        </div>
+        <div class="sidebar__item" data-tab="task">
+          <span class="sidebar__icon">✓</span>
+          <span>待办</span>
+        </div>
+      </div>
+
+      <div class="sidebar__divider"></div>
+
+      <div class="sidebar__group">
+        <div class="sidebar__label">收藏</div>
+        <div class="sidebar__item">
+          <span class="sidebar__icon">◆</span>
+          <span>今日精选</span>
+        </div>
+        <div class="sidebar__item">
+          <span class="sidebar__icon">◇</span>
+          <span>闪念集</span>
+        </div>
+      </div>
+
+      <div class="sidebar__divider"></div>
+
+      <div class="sidebar__group">
+        <div class="sidebar__label">视图</div>
+        <div class="sidebar__item">
+          <span class="sidebar__icon">▦</span>
+          <span>网格</span>
+        </div>
+        <div class="sidebar__item">
+          <span class="sidebar__icon">≡</span>
+          <span>时间线</span>
+        </div>
+      </div>
+
+      <div class="sidebar__footer">
+        <span class="sidebar__footer-dot"></span>
+        <span>已同步 · 刚刚</span>
+      </div>
+    </aside>
+
+    <!-- 4.3 主内容区 -->
+    <main class="main">
+
+      <!-- 4.4 Hero — 品牌表达核心 -->
+      <section class="hero stagger stagger-1">
+        <span class="hero__date">
+          <span>●</span>
+          <span id="heroDate">2026 年 6 月 14 日 · 周日</span>
+        </span>
+        <h1 class="hero__title">
+          今天，<em>Mindtap</em> 与你一起<br>
+          写下第一个字。
+        </h1>
+        <p class="hero__sub">
+          不必完美，不必长久。一个念头、一段心情、一闪而过的画面 —<br>
+          3 秒就好，让此刻被记住。
+        </p>
+        <div class="hero__actions">
+          <button class="btn btn--primary" id="fabInline">+ 记录这一刻</button>
+          <button class="btn btn--ghost">浏览全部</button>
+        </div>
+      </section>
+
+      <!-- 4.5 Stats -->
+      <section class="stats">
+        <div class="stat stagger stagger-2 stat--orange">
+          <div class="stat__icon">✦</div>
+          <div class="stat__label">总记录</div>
+          <div class="stat__value">128</div>
+          <div class="stat__delta stat__delta--up">▲ 本周 +12</div>
+        </div>
+        <div class="stat stagger stagger-3 stat--pink">
+          <div class="stat__icon">♥</div>
+          <div class="stat__label">心情笔记</div>
+          <div class="stat__value">42</div>
+          <div class="stat__delta stat__delta--up">▲ 连续 7 天</div>
+        </div>
+        <div class="stat stagger stagger-4 stat--violet">
+          <div class="stat__icon">★</div>
+          <div class="stat__label">灵感闪念</div>
+          <div class="stat__value">37</div>
+          <div class="stat__delta stat__delta--up">▲ 今天 3 条</div>
+        </div>
+        <div class="stat stagger stagger-5 stat--mint">
+          <div class="stat__icon">✓</div>
+          <div class="stat__label">已完成</div>
+          <div class="stat__value">28 / 35</div>
+          <div class="stat__delta">本周 80%</div>
+        </div>
+      </section>
+
+      <!-- 4.8 Daily Quote -->
+      <section class="quote-card stagger stagger-6" id="quoteCard">
+        <div class="quote-card__label">
+          <span>✦</span>
+          <span>今日金句</span>
+        </div>
+        <div class="quote-card__text" id="dailyQuote" data-idx="0">
+          灵感不是等来的，是走过来的 — 毕加索
+        </div>
+        <div class="quote-card__hint">
+          <span>↻</span>
+          <span id="quoteNext">点击切换下一条</span>
+        </div>
+      </section>
+
+      <!-- 4.6 Section: Records with tabs -->
+      <h2 class="section-title stagger stagger-7">
+        最近的念
+        <span class="section-title__count" id="recordCount">5 条</span>
+      </h2>
+
+      <div class="tabs stagger stagger-8">
+        <div class="tab active" data-tab="all">全部</div>
+        <div class="tab" data-tab="mood">心情</div>
+        <div class="tab" data-tab="idea">灵感</div>
+        <div class="tab" data-tab="note">随手记</div>
+        <div class="tab" data-tab="task">待办</div>
+      </div>
+
+      <div class="tab-pane active" data-tab-pane="all">
+        <div class="timeline">
+          <div class="record stagger stagger-2 record--mood">
+            <div class="record__time">14:32</div>
+            <div class="record__body">
+              <div class="record__icon">♥</div>
+              <div class="record__text">窗外的云慢慢移动，像有人在偷偷画画。</div>
+            </div>
+            <span class="record__tag">心情</span>
+          </div>
+          <div class="record stagger stagger-3 record--idea">
+            <div class="record__time">13:18</div>
+            <div class="record__body">
+              <div class="record__icon">★</div>
+              <div class="record__text">一个想法：如果每条记录都能"长出花"会怎样？</div>
+            </div>
+            <span class="record__tag">灵感</span>
+          </div>
+          <div class="record stagger stagger-4 record--task">
+            <div class="record__time">11:05</div>
+            <div class="record__body">
+              <div class="record__icon">✓</div>
+              <div class="record__text">下午 3 点和 Lily 视频 — 讲讲新项目。</div>
+            </div>
+            <span class="record__tag">待办</span>
+          </div>
+          <div class="record stagger stagger-5 record--note">
+            <div class="record__time">09:47</div>
+            <div class="record__body">
+              <div class="record__icon">≡</div>
+              <div class="record__text">今天读到一段很喜欢的话 — "慢就是快"。</div>
+            </div>
+            <span class="record__tag">随手记</span>
+          </div>
+          <div class="record stagger stagger-6 record--mood">
+            <div class="record__time">08:20</div>
+            <div class="record__body">
+              <div class="record__icon">♥</div>
+              <div class="record__text">起床。一杯温水。今天可以是轻盈的一天。</div>
+            </div>
+            <span class="record__tag">心情</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane" data-tab-pane="mood">
+        <div class="timeline">
+          <div class="record record--mood">
+            <div class="record__time">14:32</div>
+            <div class="record__body">
+              <div class="record__icon">♥</div>
+              <div class="record__text">窗外的云慢慢移动，像有人在偷偷画画。</div>
+            </div>
+            <span class="record__tag">心情</span>
+          </div>
+          <div class="record record--mood">
+            <div class="record__time">08:20</div>
+            <div class="record__body">
+              <div class="record__icon">♥</div>
+              <div class="record__text">起床。一杯温水。今天可以是轻盈的一天。</div>
+            </div>
+            <span class="record__tag">心情</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane" data-tab-pane="idea">
+        <div class="timeline">
+          <div class="record record--idea">
+            <div class="record__time">13:18</div>
+            <div class="record__body">
+              <div class="record__icon">★</div>
+              <div class="record__text">一个想法：如果每条记录都能"长出花"会怎样？</div>
+            </div>
+            <span class="record__tag">灵感</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane" data-tab-pane="note">
+        <div class="timeline">
+          <div class="record record--note">
+            <div class="record__time">09:47</div>
+            <div class="record__body">
+              <div class="record__icon">≡</div>
+              <div class="record__text">今天读到一段很喜欢的话 — "慢就是快"。</div>
+            </div>
+            <span class="record__tag">随手记</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane" data-tab-pane="task">
+        <div class="timeline">
+          <div class="record record--task">
+            <div class="record__time">11:05</div>
+            <div class="record__body">
+              <div class="record__icon">✓</div>
+              <div class="record__text">下午 3 点和 Lily 视频 — 讲讲新项目。</div>
+            </div>
+            <span class="record__tag">待办</span>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- Mobile tabbar (hidden on desktop) -->
+    <nav class="mobile-tabbar">
+      <div class="mobile-tab"><span class="mobile-tab__icon">●</span><span>全部</span></div>
+      <div class="mobile-tab"><span class="mobile-tab__icon">♥</span><span>心情</span></div>
+      <div class="mobile-tab"><span class="mobile-tab__icon">★</span><span>灵感</span></div>
+      <div class="mobile-tab"><span class="mobile-tab__icon">≡</span><span>随手记</span></div>
+      <div class="mobile-tab"><span class="mobile-tab__icon">✓</span><span>待办</span></div>
+    </nav>
+  </div>
+
+  <!-- ============================================================
+       4.10 FAB
+       ============================================================ -->
+  <button class="fab" id="fab" aria-label="记录新念头">+</button>
+
+  <!-- ============================================================
+       4.11 Modal
+       ============================================================ -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal" role="dialog" aria-labelledby="modalTitle">
+      <div class="modal__head">
+        <h2 class="modal__title" id="modalTitle">3 秒记录</h2>
+        <button class="modal__close" id="modalClose" aria-label="关闭">×</button>
+      </div>
+      <textarea class="modal__input" id="modalInput" placeholder="这一刻，你想到了什么？"></textarea>
+      <div class="modal__actions">
+        <button class="btn btn--ghost" id="modalCancel">取消</button>
+        <button class="btn btn--primary" id="modalSave">保存</button>
+      </div>
+      <div class="modal__success" id="modalSuccess">✓ 已记住这一刻</div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       4.12 Welcome
+       ============================================================ -->
+  <div class="welcome" id="welcome" role="status" aria-live="polite">
+    <div class="welcome__icon">✦</div>
+    <div class="welcome__text">
+      <strong>欢迎回来</strong>
+      今天 Mindtap 与你一起 — 慢一点也没关系。
+    </div>
+  </div>
+
+  <!-- ============================================================
+       JS — 真实事件绑定
+       ============================================================ -->
+  <script>
+    (function () {
+      'use strict';
+
+      // ——— 当前日期 ———
+      const dateEl = document.getElementById('heroDate');
+      if (dateEl) {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = now.getMonth() + 1;
+        const d = now.getDate();
+        const wkMap = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+        const wk = wkMap[now.getDay()];
+        dateEl.textContent = `${y} 年 ${m} 月 ${d} 日 · ${wk}`;
+      }
+
+      // ——— 1. Modal 开关 ———
+      const modal = document.getElementById('modal');
+      const fab = document.getElementById('fab');
+      const fabInline = document.getElementById('fabInline');
+      const modalClose = document.getElementById('modalClose');
+      const modalCancel = document.getElementById('modalCancel');
+      const modalInput = document.getElementById('modalInput');
+      const modalSave = document.getElementById('modalSave');
+      const modalSuccess = document.getElementById('modalSuccess');
+
+      function openModal() {
+        if (!modal) return;
+        modal.classList.add('modal-overlay--open');
+        document.body.style.overflow = 'hidden';
+        if (modalSuccess) modalSuccess.classList.remove('show');
+        setTimeout(() => { if (modalInput) modalInput.focus(); }, 200);
+      }
+      function closeModal() {
+        if (!modal) return;
+        modal.classList.remove('modal-overlay--open');
+        document.body.style.overflow = '';
+      }
+      if (fab) fab.addEventListener('click', openModal);
+      if (fabInline) fabInline.addEventListener('click', openModal);
+      if (modalClose) modalClose.addEventListener('click', closeModal);
+      if (modalCancel) modalCancel.addEventListener('click', closeModal);
+      if (modal) {
+        modal.addEventListener('click', function (e) {
+          if (e.target === modal) closeModal();
+        });
+      }
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeModal();
+      });
+
+      // ——— Modal 保存（本地持久化 + 反馈）———
+      if (modalSave) {
+        modalSave.addEventListener('click', function () {
+          const text = modalInput ? modalInput.value.trim() : '';
+          if (!text) {
+            if (modalInput) {
+              modalInput.style.borderColor = 'var(--season-secondary)';
+              modalInput.placeholder = '至少写一个字吧 :)';
+            }
+            return;
+          }
+          try {
+            const list = JSON.parse(localStorage.getItem('mindtap-records') || '[]');
+            list.unshift({ text: text, t: Date.now() });
+            localStorage.setItem('mindtap-records', JSON.stringify(list.slice(0, 200)));
+          } catch (err) { /* localStorage 不可用时静默 */ }
+          if (modalSuccess) {
+            modalSuccess.classList.add('show');
+          }
+          if (modalInput) modalInput.value = '';
+          setTimeout(closeModal, 1100);
+        });
+      }
+
+      // ——— 2. Daily Quote 切换 ———
+      const quotes = [
+        '灵感不是等来的，是走过来的 — 毕加索',
+        '写下第一个字，思路就有了 — 伍尔夫',
+        '慢就是快 — 谚语',
+        '让子弹飞一会儿 — 让子弹飞',
+        '最好的想法往往在洗澡时 — 无数人',
+        '创造力是把无聊变成奇迹 — 佚名',
+        '你不必看到整个楼梯，只需迈出第一步 — 马丁·路德·金'
+      ];
+      const quoteEl = document.getElementById('dailyQuote');
+      const quoteCard = document.getElementById('quoteCard');
+      if (quoteEl && quoteCard) {
+        quoteCard.addEventListener('click', function () {
+          const cur = quoteEl.dataset.idx ? parseInt(quoteEl.dataset.idx, 10) : 0;
+          const next = (cur + 1) % quotes.length;
+          quoteEl.style.opacity = '0';
+          quoteEl.style.transform = 'translateY(6px)';
+          setTimeout(function () {
+            quoteEl.textContent = quotes[next];
+            quoteEl.dataset.idx = next;
+            quoteEl.style.opacity = '1';
+            quoteEl.style.transform = 'translateY(0)';
+          }, 220);
+        });
+      }
+
+      // ——— 3. Brand Logo 点击旋转（toggle 0 / 360）———
+      const logo = document.getElementById('brandLogo');
+      if (logo) {
+        logo.dataset.spin = '0';
+        logo.addEventListener('click', function () {
+          const target = logo.dataset.spin === '0' ? '360' : '0';
+          logo.style.transition = 'transform 720ms cubic-bezier(0.16, 1, 0.3, 1)';
+          logo.style.transform = 'rotate(' + target + 'deg)';
+          logo.dataset.spin = target;
+        });
+      }
+
+      // ——— 4. 季节性主题切换（4 主题）———
+      const themeBtns = document.querySelectorAll('[data-theme-btn]');
+      themeBtns.forEach(function (b) {
+        b.addEventListener('click', function () {
+          const theme = b.dataset.themeBtn;
+          document.body.classList.remove('theme-summer', 'theme-spring', 'theme-autumn', 'theme-winter');
+          document.body.classList.add('theme-' + theme);
+          themeBtns.forEach(function (x) {
+            x.classList.toggle('active', x === b);
+          });
+          try { localStorage.setItem('mindtap-theme', theme); } catch (e) {}
+        });
+      });
+
+      // 还原上次主题
+      try {
+        const saved = localStorage.getItem('mindtap-theme');
+        if (saved) {
+          const btn = document.querySelector('[data-theme-btn="' + saved + '"]');
+          if (btn) btn.click();
+        }
+      } catch (e) {}
+
+      // ——— 5. Welcome 弹窗（首次访问 800ms 后显示，3s 自动关闭）———
+      const welcome = document.getElementById('welcome');
+      try {
+        if (!localStorage.getItem('mindtap-welcomed')) {
+          setTimeout(function () {
+            if (welcome) welcome.classList.add('welcome--show');
+            setTimeout(function () {
+              if (welcome) welcome.classList.remove('welcome--show');
+            }, 3000);
+            localStorage.setItem('mindtap-welcomed', '1');
+          }, 800);
+        }
+      } catch (e) {}
+
+      // ——— 6. Mouse-following 玻璃高光（仅桌面）———
+      if (window.matchMedia('(hover: hover)').matches) {
+        document.addEventListener('mousemove', function (e) {
+          document.documentElement.style.setProperty('--mx', e.clientX + 'px');
+          document.documentElement.style.setProperty('--my', e.clientY + 'px');
+        });
+      }
+
+      // ——— 7. Tab 切换（sidebar + section tabs 同步）———
+      const tabs = document.querySelectorAll('[data-tab]');
+      tabs.forEach(function (t) {
+        t.addEventListener('click', function () {
+          const target = t.dataset.tab;
+          if (!target) return;
+          tabs.forEach(function (x) {
+            x.classList.toggle('active', x === t);
+          });
+          document.querySelectorAll('[data-tab-pane]').forEach(function (p) {
+            p.classList.toggle('active', p.dataset.tabPane === target);
+          });
+          // 更新 record count
+          const countEl = document.getElementById('recordCount');
+          if (countEl) {
+            const pane = document.querySelector('[data-tab-pane="' + target + '"]');
+            const n = pane ? pane.querySelectorAll('.record').length : 0;
+            countEl.textContent = n + ' 条';
+          }
+        });
+      });
+
+      // ——— 8. Sidebar item 切换 active ———
+      const sidebarItems = document.querySelectorAll('.sidebar__item[data-tab]');
+      sidebarItems.forEach(function (item) {
+        item.addEventListener('click', function () {
+          sidebarItems.forEach(function (x) { x.classList.remove('sidebar__item--active'); });
+          item.classList.add('sidebar__item--active');
+          // 同步 section tabs
+          const target = item.dataset.tab;
+          const sectionTab = document.querySelector('.tabs [data-tab="' + target + '"]');
+          if (sectionTab) sectionTab.click();
+        });
+      });
+
+      // ——— 9. Mobile tab fallback ———
+      const mobileTabs = document.querySelectorAll('.mobile-tab');
+      mobileTabs.forEach(function (t, i) {
+        const map = ['all', 'mood', 'idea', 'note', 'task'];
+        t.addEventListener('click', function () {
+          const target = map[i] || 'all';
+          const sectionTab = document.querySelector('.tabs [data-tab="' + target + '"]');
+          if (sectionTab) sectionTab.click();
+        });
+      });
+
+      // ——— 10. 卡片 tilt（轻微鼠标倾斜 — 仅桌面）———
+      if (window.matchMedia('(hover: hover)').matches) {
+        document.querySelectorAll('.stat').forEach(function (card) {
+          card.addEventListener('mousemove', function (e) {
+            const r = card.getBoundingClientRect();
+            const x = (e.clientX - r.left) / r.width - 0.5;
+            const y = (e.clientY - r.top) / r.height - 0.5;
+            card.style.transform = 'translateY(-4px) scale(1.02) rotateX(' + (-y * 6) + 'deg) rotateY(' + (x * 6) + 'deg)';
+          });
+          card.addEventListener('mouseleave', function () {
+            card.style.transform = '';
+          });
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

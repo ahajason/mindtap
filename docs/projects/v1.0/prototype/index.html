@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mindtap / Prototype · 目录页</title>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,800&display=swap" rel="stylesheet">
+  <style>
+    /* === Liquid Glass 基础：backdrop-filter + 半透明 + 镜面高光 === */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #F5F4F0;
+      --ink: #1A1A1A;
+      --ink-2: #4A4A4A;
+      --ink-3: #8A8A8A;
+      --accent: #F472B6;
+      --glass-bg: rgba(255, 255, 255, 0.55);
+      --glass-border: rgba(255, 255, 255, 0.7);
+      --glass-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.08);
+    }
+    body.dark {
+      --bg: #0F1115;
+      --ink: #F5F5F7;
+      --ink-2: #C7C7CC;
+      --ink-3: #8E8E93;
+      --glass-bg: rgba(28, 28, 30, 0.55);
+      --glass-border: rgba(255, 255, 255, 0.10);
+      --glass-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.4);
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Manrope", -apple-system, system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      transition: background-color 320ms ease, color 320ms ease;
+    }
+
+    body {
+      background-image:
+        radial-gradient(circle at 15% 10%, rgba(244,114,182,.10), transparent 40%),
+        radial-gradient(circle at 85% 20%, rgba(251,146,60,.08), transparent 40%),
+        radial-gradient(circle at 30% 85%, rgba(139,92,246,.06), transparent 40%),
+        radial-gradient(circle at 75% 90%, rgba(56,189,248,.08), transparent 40%),
+        var(--bg);
+      background-attachment: fixed;
+      padding: 64px 48px 96px;
+    }
+
+    .glass {
+      background: var(--glass-bg);
+      backdrop-filter: blur(28px) saturate(180%);
+      -webkit-backdrop-filter: blur(28px) saturate(180%);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.04),
+        var(--glass-shadow);
+    }
+
+    .theme-toggle {
+      position: fixed; top: 24px; right: 24px; z-index: 100;
+      width: 44px; height: 44px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 18px;
+      transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .theme-toggle:hover { transform: scale(1.06); }
+
+    main { max-width: 1280px; margin: 0 auto; }
+
+    .intro { margin-bottom: 64px; max-width: 760px; }
+    .intro .eyebrow {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--ink-3); margin-bottom: 16px;
+    }
+    .intro h1 {
+      font-family: "Fraunces", serif;
+      font-size: 64px; font-weight: 600; letter-spacing: -0.03em;
+      line-height: 0.95; margin-bottom: 16px;
+    }
+    .intro h1 em { font-style: italic; color: var(--accent); }
+    .intro p { font-size: 17px; color: var(--ink-2); max-width: 720px; line-height: 1.6; }
+    .intro p strong { color: var(--ink); font-weight: 700; }
+
+    .badges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 24px; }
+    .badge {
+      padding: 6px 14px;
+      background: rgba(0, 0, 0, 0.04);
+      border-radius: 999px;
+      font-size: 12px; font-weight: 600;
+      color: var(--ink-2);
+    }
+    body.dark .badge { background: rgba(255, 255, 255, 0.06); }
+    .badge--ok { background: rgba(16, 185, 129, 0.12); color: #047857; }
+
+    /* 2 个入口卡片 */
+    .entries {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+      margin-bottom: 48px;
+    }
+    .entry {
+      display: block; padding: 32px; text-decoration: none; color: var(--ink);
+      transition: transform .15s ease, box-shadow .2s ease;
+      position: relative;
+    }
+    .entry:hover { transform: translateY(-2px); }
+    .entry .label {
+      font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--accent); font-weight: 700; margin-bottom: 12px;
+    }
+    .entry h2 {
+      font-family: "Fraunces", serif;
+      font-size: 28px; font-weight: 600; letter-spacing: -0.02em;
+      margin-bottom: 10px;
+    }
+    .entry .desc { color: var(--ink-2); font-size: 14px; line-height: 1.6; margin-bottom: 20px; }
+
+    /* chip-row 缩略图：8 个小玻璃方块 */
+    .chips { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 18px; }
+    .chip-mini {
+      aspect-ratio: 4/5; border-radius: 10px; position: relative; overflow: hidden;
+      border: 1px solid rgba(0,0,0,0.08); display: flex; align-items: flex-end; justify-content: flex-start;
+      padding: 8px 10px;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+    }
+    body.dark .chip-mini { border-color: rgba(255,255,255,0.1); }
+    /* 8 chip 配色 */
+    .cm-Q1 { background: linear-gradient(135deg,#F472B6,#FB923C 60%,#FBBF24); color: #fff; }
+    .cm-Q2 { background: linear-gradient(135deg,#3B82F6,#8B5CF6); color: #fff; }
+    .cm-Q3 { background: linear-gradient(135deg,#0F1115,#1A1A1A); color: rgba(255,255,255,.7); }
+    .cm-Q4 { background: linear-gradient(135deg,#10B981,#06B6D4); color: #fff; }
+    .cm-D5 { background: linear-gradient(135deg,#6366F1,#8B5CF6 50%,#EC4899); color: #fff; }
+    .cm-D6 { background: linear-gradient(135deg,#6B7280,#374151); color: #fff; }
+    .cm-D7 { background: linear-gradient(135deg,#0EA5E9,#38BDF8 50%,#A5B4FC); color: #fff; }
+    .cm-D8 { background: linear-gradient(135deg,#EC4899,#F472B6 50%,#FB923C); color: #fff; }
+    .chip-mini::after {
+      content: ""; position: absolute; inset: 4px; border-radius: 8px;
+      background: rgba(255,255,255,0.18);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    .cm-Q3::after, .cm-D6::after { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); }
+    .chip-mini span { position: relative; z-index: 1; }
+
+    /* V3 chip preview (脚手架首页矩阵) */
+    .chips-v3 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 18px; }
+    .cv3 { aspect-ratio: 4/5; border-radius: 10px; position: relative; overflow: hidden;
+      border: 1px solid rgba(0,0,0,0.08); display: flex; align-items: flex-end; justify-content: flex-start;
+      padding: 8px 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; }
+    body.dark .cv3 { border-color: rgba(255,255,255,0.1); }
+    .cv3::after {
+      content: ""; position: absolute; inset: 4px; border-radius: 8px;
+      background: rgba(255,255,255,0.22);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    .cv3.A1 { background: #F5F4F0; color: #1A1A1A; }
+    .cv3.A2 { background: #FAFAF9; color: #1A1A1A; }
+    .cv3.A3 { background: #1A1A1A; color: #F5F5F7; }
+    .cv3.A3::after { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); }
+    .cv3.A4 { background: #ECEFF1; color: #263238; }
+    .cv3.B1, .cv3.B2, .cv3.B3, .cv3.B4 { /* balanced 沿用 A1-A4 配色 */ }
+    .cv3.B1 { background: #F5F4F0; color: #1A1A1A; }
+    .cv3.B2 { background: #FAFAF9; color: #1A1A1A; }
+    .cv3.B3 { background: #1A1A1A; color: #F5F5F7; }
+    .cv3.B3::after { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); }
+    .cv3.B4 { background: #ECEFF1; color: #263238; }
+    .cv3 span { position: relative; z-index: 1; }
+
+    .entry .meta-row {
+      display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--ink-3);
+    }
+    .entry .arrow { display: inline-block; transition: transform .15s ease; color: var(--ink); }
+    .entry:hover .arrow { transform: translateX(4px); }
+
+    /* docs-link */
+    .docs-link {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 22px 28px;
+      text-decoration: none; color: var(--ink);
+    }
+    .docs-link .left { display: flex; flex-direction: column; gap: 4px; }
+    .docs-link .label-sm {
+      font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--accent); font-weight: 700;
+    }
+    .docs-link .title { font-size: 17px; font-weight: 600; }
+    .docs-link .path { font-family: ui-monospace, "SF Mono", monospace; font-size: 12px; color: var(--ink-3); }
+    .docs-link .arrow { color: var(--ink); font-size: 20px; }
+
+    @media (max-width: 760px) {
+      .entries { grid-template-columns: 1fr; }
+      .intro h1 { font-size: 40px; }
+      body { padding: 32px 20px 60px; }
+    }
+  </style>
+</head>
+<body>
+
+  <button class="theme-toggle glass" id="themeToggle" aria-label="切换主题">☾</button>
+
+  <main>
+    <section class="intro">
+      <div class="eyebrow">Mindtap V1.0 · Liquid Glass 跨平台设计探索</div>
+      <h1>两轮 <em>对照</em> · 一处沉淀</h1>
+      <p>
+        V1.0 视觉决策的<strong>两轮对照</strong>，都用 4×4 matrix 形态（8 chip + 1 stats + 8 perspective）。
+        <strong>第一轮</strong>是 8 个 Liquid Glass 视角的对照（Q1-Q4 + D5-D8，独立文件可点开）。
+        <strong>第二轮</strong>是 8 个脚手架首页玻璃方块的对照（2 强度 × 4 主题，A1-A4 + B1-B4）。
+        方法论沉淀在 <code>compare-method.md</code>。
+      </p>
+      <div class="badges">
+        <span class="badge badge--ok">✅ V1 4×4 matrix 唯一风格</span>
+        <span class="badge">8 chip · 1 stats · 8 perspective</span>
+        <span class="badge">不锁 1280×800</span>
+        <span class="badge">小玻璃方块（非产品页）</span>
+      </div>
+    </section>
+
+    <section class="entries">
+
+      <a class="entry glass" href="compare.html">
+        <div class="label">V1 · 4×4 MATRIX · 8 视角</div>
+        <h2>8 个 Liquid Glass 视角</h2>
+        <p class="desc">Q1-Q4 (light/heavy × creative/strict) + D5-D8 (immersive/productive/adaptive/expressive)。每视角独立 HTML，1,200-2,200 行。</p>
+
+        <div class="chips">
+          <div class="chip-mini cm-Q1"><span>A · Q1</span></div>
+          <div class="chip-mini cm-Q2"><span>B · Q2</span></div>
+          <div class="chip-mini cm-Q4"><span>C · Q4</span></div>
+          <div class="chip-mini cm-D5"><span>D · D5</span></div>
+          <div class="chip-mini cm-D6"><span>E · D6</span></div>
+          <div class="chip-mini cm-Q3"><span>F · Q3</span></div>
+          <div class="chip-mini cm-D7"><span>G · D7</span></div>
+          <div class="chip-mini cm-D8"><span>H · D8</span></div>
+        </div>
+
+        <div class="meta-row">
+          <span>compare.html</span>
+          <span>·</span>
+          <span>8 视角 + 1 stats + 8 perspective</span>
+          <span style="flex:1"></span>
+          <span class="arrow">→</span>
+        </div>
+      </a>
+
+      <a class="entry glass" href="scaffold-compare.html">
+        <div class="label">V3 · 4×4 MATRIX · 8 脚手架首页</div>
+        <h2>8 个脚手架首页玻璃方块</h2>
+        <p class="desc">2 强度 (Subtle / Balanced) × 4 主题 (暖纸 / 工程白 / 暖黑 / 冷灰) = 8 个 chrome 变体。每个 chip 是 4 行迷你 chrome (topbar / sidebar / main / fab) 的玻璃本身可视化。</p>
+
+        <div class="chips-v3">
+          <div class="cv3 A1"><span>A1</span></div>
+          <div class="cv3 A2"><span>A2</span></div>
+          <div class="cv3 A3"><span>A3</span></div>
+          <div class="cv3 A4"><span>A4</span></div>
+          <div class="cv3 B1"><span>B1</span></div>
+          <div class="cv3 B2"><span>B2</span></div>
+          <div class="cv3 B3"><span>B3</span></div>
+          <div class="cv3 B4"><span>B4</span></div>
+        </div>
+
+        <div class="meta-row">
+          <span>scaffold-compare.html</span>
+          <span>·</span>
+          <span>8 chip + 1 stats + 8 perspective</span>
+          <span style="flex:1"></span>
+          <span class="arrow">→</span>
+        </div>
+      </a>
+
+    </section>
+
+    <a class="docs-link glass" href="../../compare-method.md">
+      <div class="left">
+        <span class="label-sm">docs 沉淀 · 对比方法论</span>
+        <span class="title">V1 视觉对比方法</span>
+        <span class="path">docs/projects/v1.0/compare-method.md</span>
+      </div>
+      <span class="arrow">→</span>
+    </a>
+
+  </main>
+
+  <script>
+    const t = document.getElementById('themeToggle');
+    t.addEventListener('click', () => {
+      document.body.classList.toggle('dark');
+      t.textContent = document.body.classList.contains('dark') ? '☀' : '☾';
+    });
+  </script>
+
+</body>
+</html>

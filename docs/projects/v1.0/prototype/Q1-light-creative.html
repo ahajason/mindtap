@@ -1,0 +1,1604 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Mindtap · 轻念 — 为创意人群的极简记录工具，Liquid Glass 设计语言。">
+  <meta name="color-scheme" content="light">
+  <title>Mindtap · 轻念 — 极简记录</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@500;700;800&family=Manrope:wght@300;400;500;600;700&family=Fraunces:opsz,wght,SOFT@9..144,300..700,0..100&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================================
+       Q1 Light Creative · 2x2 矩阵象限
+       —— 玻璃强度：轻（blur 16px / 单层阴影 / 无噪点）
+       —— 严格度：创意（records / stats 也允许玻璃 / 卡片倾斜 / 反色 / 抽屉式侧栏）
+       ============================================================ */
+
+    :root {
+      /* —— 暖粉（ENFP 友好）—— */
+      --accent: #F472B6;
+      --accent-deep: #DB2777;
+      --accent-soft: rgba(244, 114, 182, 0.12);
+      --accent-glow: rgba(244, 114, 182, 0.35);
+
+      /* —— 第二强调色（暖橙）—— */
+      --amber: #FB923C;
+      --amber-soft: rgba(251, 146, 60, 0.12);
+
+      /* —— 反色与第三色（创意加强对比）—— */
+      --mint: #34D399;
+      --violet-deep: #7C3AED;
+      --ink: #18181B;
+
+      /* —— 字体 —— */
+      --font-display: "Cabinet Grotesk", "Fraunces", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-body: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-serif: "Fraunces", "Cabinet Grotesk", Georgia, serif;
+
+      /* —— 圆角 —— */
+      --r-xs: 8px;
+      --r-sm: 12px;
+      --r-md: 18px;
+      --r-lg: 24px;
+      --r-xl: 32px;
+      --r-pill: 999px;
+
+      /* —— 间距 —— */
+      --sp-1: 4px;
+      --sp-2: 8px;
+      --sp-3: 12px;
+      --sp-4: 16px;
+      --sp-5: 24px;
+      --sp-6: 32px;
+      --sp-7: 48px;
+      --sp-8: 64px;
+
+      /* —— 动效 —— */
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --dur-fast: 180ms;
+      --dur-mid: 320ms;
+      --dur-slow: 600ms;
+    }
+
+    [data-theme="light"] {
+      --bg: #F5F4F0;
+      --bg-deep: #EAE8E0;
+      --surface: #FFFFFF;
+      --text: #1A1A1A;
+      --text-soft: #4A4A4A;
+      --text-muted: #8A8A8A;
+      --border: rgba(0, 0, 0, 0.06);
+      --border-strong: rgba(0, 0, 0, 0.10);
+    }
+
+    /* ============================================================
+       Reset & 基础
+       ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; }
+    * { margin: 0; padding: 0; }
+
+    html {
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      color: var(--text);
+      background: var(--bg);
+      /* 强化 mesh（让轻玻璃有"东西可折射"） */
+      background-image:
+        radial-gradient(circle at 15% 10%, rgba(244, 114, 182, 0.28), transparent 40%),
+        radial-gradient(circle at 85% 20%, rgba(251, 146, 60, 0.24), transparent 45%),
+        radial-gradient(circle at 30% 85%, rgba(139, 92, 246, 0.20), transparent 50%),
+        radial-gradient(circle at 75% 90%, rgba(56, 189, 248, 0.22), transparent 45%);
+      background-attachment: fixed;
+      overflow-x: hidden;
+    }
+
+    button {
+      font: inherit;
+      color: inherit;
+      background: none;
+      border: none;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    input, textarea {
+      font: inherit;
+      color: inherit;
+      background: none;
+      border: none;
+      outline: none;
+    }
+
+    ::selection { background: var(--accent); color: white; }
+
+    /* ============================================================
+       Q1 配方：轻玻璃（共享基底行为）
+       —— backdrop-filter: blur(16px) saturate(160%)
+       —— 白色叠加：0.25-0.35
+       —— 单层阴影：0 8px 24px rgba(0,0,0,0.06)
+       —— 去掉噪点 / 鼠标 specular / 多层阴影
+
+       HIG 4-tier 映射（HIG Materials 章节）：
+         .glass-ultrathin → Material.ultraThin (blur 10px)  留作瞬时交互元素
+         .glass-thin      → Material.thin      (blur 14px)
+         .glass           → Material.regular   (blur 16px)  默认
+         .glass-thick     → Material.thick     (blur 18px)
+       ============================================================ */
+    .glass, .glass-thin, .glass-thick {
+      position: relative;
+      isolation: isolate;
+    }
+
+    /* —— Q1 L1-L4 主层：基底 + 单层 blur + 单层阴影 + 1px 边框 —— */
+    .glass {
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.35) 0%,
+        rgba(255, 255, 255, 0.25) 100%
+      );
+      backdrop-filter: blur(16px) saturate(160%);
+      -webkit-backdrop-filter: blur(16px) saturate(160%);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.45);
+    }
+
+    .glass-thin {
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.30) 0%,
+        rgba(255, 255, 255, 0.22) 100%
+      );
+      backdrop-filter: blur(14px) saturate(150%);
+      -webkit-backdrop-filter: blur(14px) saturate(150%);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.40);
+    }
+
+    /* —— Q1 ultraThin（HIG 4-tier 第 4 档，对应 .glass-ultrathin）——
+       仅用于瞬时交互元素（HIG Materials 规则 1：thin/ultraThin 留给轻量装饰） */
+    .glass-ultrathin {
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.20) 0%,
+        rgba(255, 255, 255, 0.14) 100%
+      );
+      backdrop-filter: blur(10px) saturate(140%);
+      -webkit-backdrop-filter: blur(10px) saturate(140%);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.30);
+    }
+
+    .glass-thick {
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.55) 0%,
+        rgba(255, 255, 255, 0.42) 100%
+      );
+      backdrop-filter: blur(18px) saturate(170%);
+      -webkit-backdrop-filter: blur(18px) saturate(170%);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.55);
+    }
+
+    /* —— 玻璃内容层级 —— */
+    .glass > *, .glass-thin > *, .glass-thick > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ============================================================
+       创意布局：grid-break（侧栏与内容重叠 8-16px）/ 不对称 grid
+       —— 桌面 grid: 240px 1fr，重叠区 12px
+       —— 卡片倾斜 1 度 / -1 度交错
+       ============================================================ */
+    .app {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      grid-template-rows: 40px 1fr;
+      min-height: 100vh;
+      min-height: 100dvh;
+    }
+
+    /* ============================================================
+       4.1 顶部菜单栏（轻玻璃 · 创意：渐变彩条）
+       ============================================================ */
+    .menubar {
+      grid-column: 1 / -1;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      padding: 0 var(--sp-5);
+      gap: var(--sp-4);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-soft);
+      background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.35) 0%,
+        rgba(255, 255, 255, 0.22) 100%
+      );
+      backdrop-filter: blur(16px) saturate(160%);
+      -webkit-backdrop-filter: blur(16px) saturate(160%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.40);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      user-select: none;
+      isolation: isolate;
+    }
+
+    /* 创意：底部细彩条（粉 → 橙 → 紫 → 青 · HIG 7-color 规则 2 微调：彩条保留但降低饱和以让 FAB 主色更突出） */
+    .menubar::after {
+      content: "";
+      position: absolute;
+      left: 0; right: 0; bottom: -1px;
+      height: 1px;
+      background: linear-gradient(90deg, var(--accent) 0%, var(--amber) 33%, var(--violet-deep) 66%, #38BDF8 100%);
+      opacity: 0.30;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .menubar > * { position: relative; z-index: 2; }
+
+    .menubar__app-name {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 14px;
+      letter-spacing: 0.02em;
+      color: var(--text);
+    }
+
+    .menubar__dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent-glow);
+    }
+
+    .menubar__menu { display: flex; gap: var(--sp-4); }
+    .menubar__menu span { cursor: default; transition: color var(--dur-fast); }
+    .menubar__menu span:hover { color: var(--accent-deep); }
+
+    .menubar__spacer { flex: 1; }
+
+    .menubar__traffic {
+      display: flex;
+      gap: 8px;
+    }
+    .menubar__traffic span {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .menubar__traffic span:nth-child(1) { background: #FF5F57; }
+    .menubar__traffic span:nth-child(2) { background: #FEBC2E; }
+    .menubar__traffic span:nth-child(3) { background: #28C840; }
+
+    /* ============================================================
+       4.2 创意偏离：侧栏改为底部抽屉（position fixed bottom）
+       —— 玻璃轻、单层阴影
+       —— 与底部 tab 合并为统一抽屉
+       ============================================================ */
+    .sidebar {
+      grid-column: 1;
+      grid-row: 2;
+      width: 240px;
+      padding: var(--sp-5) var(--sp-4);
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-2);
+      position: sticky;
+      top: 40px;
+      align-self: start;
+      height: calc(100vh - 40px);
+      height: calc(100dvh - 40px);
+      overflow: hidden;
+
+      /* Q1 轻玻璃配方 */
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.35) 0%,
+        rgba(255, 255, 255, 0.25) 100%
+      );
+      backdrop-filter: blur(16px) saturate(160%);
+      -webkit-backdrop-filter: blur(16px) saturate(160%);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+      border-right: 1px solid rgba(255, 255, 255, 0.45);
+    }
+
+    .sidebar__brand {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+      padding: var(--sp-3) var(--sp-3);
+      margin-bottom: var(--sp-4);
+    }
+
+    .sidebar__logo {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--r-md);
+      background: linear-gradient(135deg, var(--accent), var(--amber));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 18px;
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+
+    .sidebar__name {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 17px;
+      letter-spacing: -0.01em;
+    }
+
+    .sidebar__subname {
+      font-size: 12px;
+      color: var(--text-muted);
+      letter-spacing: -0.005em;
+    }
+
+    .sidebar__group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .sidebar__label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: -0.005em;
+      padding: var(--sp-4) var(--sp-3) var(--sp-2);
+    }
+
+    .sidebar__item {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+      padding: var(--sp-3);
+      border-radius: var(--r-sm);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-soft);
+      cursor: pointer;
+      transition: all var(--dur-fast) var(--ease-out);
+      position: relative;
+    }
+
+    .sidebar__item:hover {
+      background: var(--accent-soft);
+      color: var(--text);
+      transform: translateX(2px);
+    }
+
+    .sidebar__item--active {
+      background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+      color: white;
+      font-weight: 600;
+      box-shadow: 0 6px 16px var(--accent-glow);
+    }
+
+    .sidebar__item--active::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 25%;
+      bottom: 25%;
+      width: 3px;
+      border-radius: 0 3px 3px 0;
+      background: white;
+    }
+
+    .sidebar__icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .sidebar__divider {
+      height: 1px;
+      background: var(--border);
+      margin: var(--sp-3) 0;
+    }
+
+    .sidebar__footer {
+      margin-top: auto;
+      padding: var(--sp-3);
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: var(--sp-2);
+    }
+
+    .sidebar__footer-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--mint);
+      box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
+    }
+
+    /* ============================================================
+       5. 主内容区（创意：grid-break 让 main 与 sidebar 重叠 12px）
+       ============================================================ */
+    .main {
+      grid-column: 2;
+      grid-row: 2;
+      padding: var(--sp-7) var(--sp-7) var(--sp-8);
+      max-width: 1200px;
+      width: 100%;
+      margin-left: -12px;              /* grid-break：与侧栏重叠 12px */
+      position: relative;
+      z-index: 2;
+    }
+
+    .header {
+      margin-bottom: var(--sp-6);
+    }
+
+    .greeting {
+      font-family: var(--font-serif);
+      font-size: clamp(32px, 5vw, 48px);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      margin-bottom: var(--sp-2);
+    }
+
+    .greeting__em {
+      font-style: italic;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .header__sub {
+      color: var(--text-muted);
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: var(--sp-2);
+    }
+
+    .header__sub-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--text-muted);
+    }
+
+    /* ============================================================
+       创意偏离：stats 卡片也允许玻璃 + 卡片倾斜 1-2 度
+       ============================================================ */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--sp-4);
+      margin-bottom: var(--sp-7);
+      /* 创意：不对称 grid（4 列不等宽） */
+    }
+
+    .stat {
+      padding: var(--sp-5);
+      border-radius: var(--r-lg);
+      position: relative;
+      transition: transform var(--dur-fast) var(--ease-out);
+
+      /* Q1 创意偏离：内容层也允许轻玻璃 */
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.32) 0%,
+        rgba(255, 255, 255, 0.22) 100%
+      );
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.45);
+
+      /* 创意：倾斜 1 度交错 */
+      transform: rotate(-1deg);
+    }
+
+    /* 创意：交错倾斜角度 */
+    .stat:nth-child(2) { transform: rotate(0.8deg); }
+    .stat:nth-child(3) { transform: rotate(-0.6deg); }
+    .stat:nth-child(4) { transform: rotate(1deg); }
+
+    .stat:hover {
+      transform: rotate(0deg) translateY(-4px) scale(1.02);
+    }
+
+    /* 创意：彩色顶边条 */
+    .stat::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 12px; right: 12px;
+      height: 3px;
+      border-radius: 0 0 3px 3px;
+      background: var(--accent);
+      opacity: 0.7;
+    }
+    .stat--amber::before { background: var(--amber); }
+    .stat--green::before { background: var(--mint); }
+    .stat--violet::before { background: var(--violet-deep); }
+
+    .stat__label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: -0.005em;
+      margin-bottom: var(--sp-3);
+    }
+
+    .stat__value {
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      margin-bottom: var(--sp-1);
+    }
+
+    .stat__delta {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .stat__icon {
+      position: absolute;
+      top: var(--sp-3);
+      right: var(--sp-3);
+      width: 28px;
+      height: 28px;
+      border-radius: var(--r-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .stat--pink .stat__icon { background: #FCE7F3; color: #BE185D; }
+    .stat--amber .stat__icon { background: #FEF3C7; color: #B45309; }
+    .stat--green .stat__icon { background: #D1FAE5; color: #047857; }
+    .stat--violet .stat__icon { background: #EDE9FE; color: #6D28D9; }
+
+    /* ============================================================
+       创意偏离：records 卡片也允许轻玻璃 + 微弱倾斜
+       ============================================================ */
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: var(--sp-5);
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+    }
+
+    .section-title__count {
+      font-family: var(--font-body);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      padding: 2px 10px;
+      border-radius: var(--r-pill);
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.30);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-3);             /* 创意：稍大间距配合玻璃 */
+    }
+
+    .record {
+      padding: var(--sp-5) var(--sp-5);
+      border-radius: var(--r-md);
+      display: grid;
+      grid-template-columns: 56px 1fr auto;
+      gap: var(--sp-5);
+      align-items: center;
+      cursor: default;
+      transition: transform var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+      position: relative;
+
+      /* Q1 创意偏离：records 也用轻玻璃 */
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.30) 0%,
+        rgba(255, 255, 255, 0.20) 100%
+      );
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.40);
+    }
+
+    /* 创意：奇偶交错倾斜 */
+    .record:nth-child(odd) { transform: rotate(-0.4deg); }
+    .record:nth-child(even) { transform: rotate(0.4deg); }
+
+    .record:hover {
+      background: var(--accent-soft);
+      transform: rotate(0deg) translateY(-2px);
+    }
+
+    .record__time {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-soft);
+      letter-spacing: 0.02em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .record__body {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+    }
+
+    .record__icon {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--r-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .record__icon--mood    { background: linear-gradient(135deg, #FED7AA, #FBCFE8); }
+    .record__icon--sleep   { background: linear-gradient(135deg, #C7D2FE, #A5B4FC); }
+    .record__icon--water   { background: linear-gradient(135deg, #BAE6FD, #7DD3FC); }
+    .record__icon--med     { background: linear-gradient(135deg, #A7F3D0, #6EE7B7); }
+    .record__icon--idea    { background: linear-gradient(135deg, #FEF3C7, #FDE68A); }
+    .record__icon--todo    { background: linear-gradient(135deg, #FCE7F3, #FBCFE8); }
+    .record__icon--habit   { background: linear-gradient(135deg, #EDE9FE, #DDD6FE); }
+    .record__icon--expense { background: linear-gradient(135deg, #FFEDD5, #FED7AA); }
+    .record__icon--review  { background: linear-gradient(135deg, #FCE7F3, #FED7AA); }
+
+    .record__text {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .record__title {
+      font-size: 15px;
+      font-weight: 500;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    .record__meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .record__tag {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border-radius: var(--r-pill);
+      border: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .record__tag--done { color: #059669; background: rgba(16, 185, 129, 0.10); border-color: rgba(16, 185, 129, 0.20); }
+    .record__tag--pending { color: var(--amber); background: var(--amber-soft); border-color: rgba(251, 146, 60, 0.20); }
+
+    /* ============================================================
+       每日复盘（创意：轻玻璃 + 大色块反色）
+       ============================================================ */
+    .review {
+      margin-top: var(--sp-6);
+      padding: var(--sp-6);
+      border-radius: var(--r-xl);
+      display: flex;
+      align-items: center;
+      gap: var(--sp-5);
+      transform: rotate(-0.5deg);
+
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.35) 0%,
+        rgba(255, 255, 255, 0.25) 100%
+      );
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.45);
+    }
+
+    .review__icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--r-md);
+      background: linear-gradient(135deg, var(--accent), var(--amber));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      color: white;
+      flex-shrink: 0;
+      box-shadow: 0 6px 16px var(--accent-glow);
+    }
+
+    .review__body { flex: 1; min-width: 0; }
+
+    .review__title {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .review__words {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      font-style: italic;
+      color: var(--accent);
+      letter-spacing: 0.02em;
+    }
+
+    .review__words span { margin-right: var(--sp-3); }
+
+    .review__input {
+      width: 100%;
+      padding: var(--sp-3) var(--sp-4);
+      background: rgba(255, 255, 255, 0.40);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-radius: var(--r-sm);
+      border: 1px solid var(--border);
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 16px;
+      color: var(--text);
+      margin-top: var(--sp-2);
+      transition: border-color var(--dur-fast);
+    }
+
+    .review__input:focus {
+      border-color: var(--accent);
+      background: rgba(255, 255, 255, 0.60);
+    }
+
+    .review__input::placeholder {
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* ============================================================
+       6. FAB（创意：彩色反色玻璃 + 偏移定位）
+       —— HIG Buttons 章节：Role = Primary · Style = .glassProminent
+       —— 命中区 64x64 (≥ visionOS 60pt) · 拖拽扩展触达区
+       ============================================================ */
+    .fab {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      color: white;
+      font-size: 32px;
+      font-weight: 200;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+      z-index: 100;
+      touch-action: none;
+      user-select: none;
+      isolation: isolate;
+      transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
+
+      /* 创意反色：玻璃基底 + 彩色内芯 */
+      background:
+        radial-gradient(
+          ellipse 80% 50% at 30% 18%,
+          rgba(255, 255, 255, 0.55) 0%,
+          rgba(255, 255, 255, 0.15) 40%,
+          transparent 70%
+        ),
+        linear-gradient(
+          135deg,
+          #F472B6 0%,
+          #EC4899 50%,
+          #DB2777 100%
+        );
+      backdrop-filter: blur(16px) saturate(160%);
+      -webkit-backdrop-filter: blur(16px) saturate(160%);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.20);
+    }
+
+    .fab > * { position: relative; z-index: 1; }
+
+    .fab:hover {
+      transform: scale(1.08) rotate(8deg);
+    }
+
+    .fab:active, .fab--dragging {
+      cursor: grabbing;
+      transform: scale(0.96) rotate(0deg);
+    }
+
+    .fab--hidden {
+      opacity: 0;
+      transform: scale(0.5);
+      pointer-events: none;
+    }
+
+    .fab__hint {
+      position: absolute;
+      bottom: -32px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.45);
+      backdrop-filter: blur(14px) saturate(150%);
+      -webkit-backdrop-filter: blur(14px) saturate(150%);
+      padding: 5px 12px;
+      border-radius: var(--r-pill);
+      border: 1px solid rgba(255, 255, 255, 0.40);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity var(--dur-mid);
+      pointer-events: none;
+    }
+
+    .fab:hover .fab__hint { opacity: 1; }
+
+    /* ============================================================
+       7. 弹窗（创意：偏移位置 + 倾斜 + 轻玻璃）
+       ============================================================ */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.12);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--sp-5);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--dur-mid) var(--ease-out);
+    }
+
+    .modal-overlay--open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 540px;
+      max-height: 80vh;
+      border-radius: var(--r-xl);
+      padding: var(--sp-6);
+      transform: scale(0.92) rotate(-1deg);
+      transition: transform 380ms var(--ease-spring), opacity 280ms var(--ease-out);
+      overflow: hidden;
+      opacity: 0;
+
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.55) 0%,
+        rgba(255, 255, 255, 0.42) 100%
+      );
+      backdrop-filter: blur(18px) saturate(170%);
+      -webkit-backdrop-filter: blur(18px) saturate(170%);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.10);
+      border: 1px solid rgba(255, 255, 255, 0.55);
+    }
+
+    .modal-overlay--open .modal {
+      transform: scale(1) rotate(0deg);
+      opacity: 1;
+    }
+
+    .modal__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--sp-5);
+    }
+
+    .modal__title {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .modal__close {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      transition: all var(--dur-fast);
+    }
+
+    .modal__close:hover {
+      background: rgba(255, 255, 255, 0.45);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      color: var(--text);
+    }
+
+    .modal__grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--sp-3);
+    }
+
+    .category {
+      padding: var(--sp-4);
+      border-radius: var(--r-md);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--sp-2);
+      cursor: pointer;
+      transition: background-color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+      background: rgba(255, 255, 255, 0.30);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+    }
+
+    /* 创意：类别卡片交错倾斜 */
+    .category:nth-child(odd) { transform: rotate(-1deg); }
+    .category:nth-child(even) { transform: rotate(1deg); }
+
+    .category:hover {
+      background: var(--accent-soft);
+      border-color: rgba(244, 114, 182, 0.25);
+      transform: rotate(0deg) scale(1.04);
+    }
+
+    .category__icon {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--r-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      color: white;
+    }
+
+    .category__icon--mood    { background: linear-gradient(135deg, #FED7AA, #FBCFE8); }
+    .category__icon--sleep   { background: linear-gradient(135deg, #C7D2FE, #A5B4FC); }
+    .category__icon--water   { background: linear-gradient(135deg, #BAE6FD, #7DD3FC); }
+    .category__icon--med     { background: linear-gradient(135deg, #A7F3D0, #6EE7B7); }
+    .category__icon--idea    { background: linear-gradient(135deg, #FEF3C7, #FDE68A); }
+    .category__icon--todo    { background: linear-gradient(135deg, #FCE7F3, #FBCFE8); }
+    .category__icon--habit   { background: linear-gradient(135deg, #EDE9FE, #DDD6FE); }
+    .category__icon--expense { background: linear-gradient(135deg, #FFEDD5, #FED7AA); }
+    .category__icon--review  { background: linear-gradient(135deg, #FCE7F3, #FED7AA); }
+
+    .category__name {
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .modal__footer {
+      margin-top: var(--sp-5);
+      padding-top: var(--sp-4);
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--sp-2);
+    }
+
+    .modal__kbd {
+      font-family: var(--font-display);
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: var(--r-xs);
+      background: transparent;
+      border: 1px solid var(--border);
+    }
+
+    /* ============================================================
+       8. 移动端底部 tab（轻玻璃 · 创意：彩色顶边）
+       ============================================================ */
+    .bottom-tab {
+      position: fixed;
+      bottom: 16px;
+      left: 16px;
+      right: 16px;
+      height: 60px;
+      border-radius: var(--r-pill);
+      display: none;
+      align-items: center;
+      justify-content: space-around;
+      padding: 0 var(--sp-4);
+      z-index: 90;
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.35) 0%,
+        rgba(255, 255, 255, 0.25) 100%
+      );
+      backdrop-filter: blur(16px) saturate(160%);
+      -webkit-backdrop-filter: blur(16px) saturate(160%);
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+    }
+
+    .bottom-tab__item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: var(--sp-2) var(--sp-4);
+      border-radius: var(--r-pill);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 500;
+      transition: all var(--dur-fast);
+    }
+
+    .bottom-tab__item--active {
+      background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+      color: white;
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+
+    .bottom-tab__icon { font-size: 18px; }
+
+    /* ============================================================
+       9. 主题切换按钮（创意：反色玻璃 pill）
+       ============================================================ */
+    .theme-toggle {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-soft);
+      transition: all var(--dur-fast);
+    }
+
+    .theme-toggle:hover {
+      background: rgba(255, 255, 255, 0.45);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      color: var(--accent);
+      transform: rotate(15deg);
+    }
+
+    .theme-toggle__icon--light { display: none; }
+    .theme-toggle__icon--dark { display: inline; }
+
+    /* ============================================================
+       12. 焦点样式（键盘可达性）
+       ============================================================ */
+    *:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .fab:focus-visible {
+      outline-offset: 4px;
+    }
+
+    /* ============================================================
+       13. Motion Response · 6 层材质系统的 Motion 补齐
+       —— Q1 性格：极简微妙
+       —— @keyframes 数量：1 个（fade-up）
+       —— 用量：弱（stagger 0.04s、hover 浅 shift）
+       ============================================================ */
+
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* —— 入场 stagger：仅内容层 record / stat（最多 12 个）—— */
+    .record, .stat {
+      animation: fade-up 480ms var(--ease-out) both;
+    }
+    .record:nth-child(1)  { animation-delay: 0ms;   }
+    .record:nth-child(2)  { animation-delay: 40ms;  }
+    .record:nth-child(3)  { animation-delay: 80ms;  }
+    .record:nth-child(4)  { animation-delay: 120ms; }
+    .record:nth-child(5)  { animation-delay: 160ms; }
+    .record:nth-child(6)  { animation-delay: 200ms; }
+    .record:nth-child(7)  { animation-delay: 240ms; }
+    .record:nth-child(8)  { animation-delay: 280ms; }
+    .record:nth-child(9)  { animation-delay: 320ms; }
+    .record:nth-child(10) { animation-delay: 360ms; }
+    .record:nth-child(11) { animation-delay: 400ms; }
+    .record:nth-child(12) { animation-delay: 440ms; }
+
+    .stat:nth-child(1) { animation-delay: 60ms; }
+    .stat:nth-child(2) { animation-delay: 120ms; }
+    .stat:nth-child(3) { animation-delay: 180ms; }
+    .stat:nth-child(4) { animation-delay: 240ms; }
+
+    /* —— 玻璃元素 hover 浅 shift —— */
+    .glass, .glass-thin, .glass-thick {
+      transition:
+        background-color 320ms var(--ease-out),
+        border-color 320ms var(--ease-out),
+        box-shadow 320ms var(--ease-out);
+    }
+    .glass:hover, .glass-thin:hover, .glass-thick:hover {
+      background-color: rgba(255, 255, 255, 0.08);
+    }
+
+    /* —— FAB hover 增强（已存在 scale 1.08 rotate 8deg，加深阴影 + 延长 transition）—— */
+    .fab {
+      transition:
+        transform 320ms cubic-bezier(0.16, 1, 0.3, 1),
+        box-shadow 320ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .fab:hover {
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+    }
+
+    /* —— Scroll edge effect：.main 顶部 sticky 渐变（mask-image 实现）—— */
+    .main::before {
+      content: "";
+      position: sticky;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: block;
+      height: 32px;
+      margin-top: -32px;
+      margin-bottom: 32px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), transparent);
+      -webkit-mask-image: linear-gradient(180deg, black 0%, transparent 100%);
+              mask-image: linear-gradient(180deg, black 0%, transparent 100%);
+      pointer-events: none;
+      z-index: 5;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+
+    <!-- 顶部原生菜单栏（轻玻璃 · 创意彩条） -->
+    <div class="menubar" role="banner">
+      <span class="menubar__app-name">Mindtap</span>
+      <span class="menubar__dot" aria-hidden="true"></span>
+      <nav class="menubar__menu" aria-label="应用菜单">
+        <span>文件</span>
+        <span>编辑</span>
+        <span>视图</span>
+        <span>窗口</span>
+        <span>帮助</span>
+      </nav>
+      <span class="menubar__spacer"></span>
+      <div class="menubar__traffic" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+
+    <!-- 浮动侧栏（轻玻璃 · 创意反色活动项） -->
+    <aside class="sidebar" role="navigation" aria-label="主导航">
+      <div class="sidebar__brand">
+        <div class="sidebar__logo" aria-hidden="true">M</div>
+        <div>
+          <div class="sidebar__name">Mindtap</div>
+          <div class="sidebar__subname">轻念 · V1.0</div>
+        </div>
+        <div class="mobile-top-actions">
+          <button class="theme-toggle icon-btn" id="themeToggle" aria-label="切换主题">
+            <svg class="theme-toggle__icon--dark" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+            <svg class="theme-toggle__icon--light" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="5"/>
+              <line x1="12" y1="1" x2="12" y2="3"/>
+              <line x1="12" y1="21" x2="12" y2="23"/>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+              <line x1="1" y1="12" x2="3" y2="12"/>
+              <line x1="21" y1="12" x2="23" y2="12"/>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="sidebar__group">
+        <div class="sidebar__label">导航</div>
+        <a class="sidebar__item sidebar__item--active" href="#" aria-current="page">
+          <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+          记录
+        </a>
+        <a class="sidebar__item" href="#">
+          <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="20" x2="18" y2="10"/>
+            <line x1="12" y1="20" x2="12" y2="4"/>
+            <line x1="6" y1="20" x2="6" y2="14"/>
+          </svg>
+          概览
+        </a>
+        <a class="sidebar__item" href="#">
+          <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+          设置
+        </a>
+      </div>
+
+      <div class="sidebar__divider"></div>
+
+      <div class="sidebar__group">
+        <div class="sidebar__label">视图</div>
+        <a class="sidebar__item" href="#">
+          <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+          主题
+        </a>
+        <a class="sidebar__item" href="#">
+          <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          数据导出
+        </a>
+      </div>
+
+      <div class="sidebar__footer">
+        <span class="sidebar__footer-dot" aria-hidden="true"></span>
+        <span>本地存储 · 已同步</span>
+      </div>
+    </aside>
+
+    <!-- 主内容区（创意：与侧栏重叠 12px） -->
+    <main class="main" role="main">
+      <header class="header">
+        <h1 class="greeting">晚安，今天有 <span class="greeting__em">9 个</span> 灵感被记录。</h1>
+        <p class="header__sub">
+          <span>2026 年 6 月 14 日 · 星期日</span>
+          <span class="header__sub-dot"></span>
+          <span>Light · 1.0</span>
+        </p>
+      </header>
+
+      <!-- 4 个统计卡（创意：轻玻璃 + 倾斜交错 + 彩色顶边） -->
+      <section class="stats" aria-label="今日统计">
+        <div class="stat stat--pink">
+          <div class="stat__icon" aria-hidden="true">💡</div>
+          <div class="stat__label">灵感捕捉</div>
+          <div class="stat__value">3</div>
+          <div class="stat__delta">+1 vs 昨日</div>
+        </div>
+        <div class="stat stat--amber">
+          <div class="stat__icon" aria-hidden="true">💧</div>
+          <div class="stat__label">饮水</div>
+          <div class="stat__value">5 <span style="font-size:14px;color:var(--text-muted);">/ 8</span></div>
+          <div class="stat__delta">1000 ml</div>
+        </div>
+        <div class="stat stat--green">
+          <div class="stat__icon" aria-hidden="true">✓</div>
+          <div class="stat__label">待办完成</div>
+          <div class="stat__value">2 / 3</div>
+          <div class="stat__delta">67%</div>
+        </div>
+        <div class="stat stat--violet">
+          <div class="stat__icon" aria-hidden="true">🌱</div>
+          <div class="stat__label">习惯打卡</div>
+          <div class="stat__value">1 / 3</div>
+          <div class="stat__delta">阅读 ✅</div>
+        </div>
+      </section>
+
+      <!-- 今日记录时间线 -->
+      <h2 class="section-title">
+        今日记录
+        <span class="section-title__count">9 条</span>
+      </h2>
+
+      <div class="timeline" role="list">
+        <article class="record" role="listitem">
+          <div class="record__time">07:30</div>
+          <div class="record__body">
+            <div class="record__icon record__icon--sleep" aria-hidden="true">🌅</div>
+            <div class="record__text">
+              <div class="record__title">起床 · 系统时间</div>
+              <div class="record__meta">睡眠时长 7h 45m</div>
+            </div>
+          </div>
+          <span class="record__tag record__tag--done">已记录</span>
+        </article>
+
+        <article class="record" role="listitem">
+          <div class="record__time">08:15</div>
+          <div class="record__body">
+            <div class="record__icon record__icon--mood" aria-hidden="true">🌡</div>
+            <div class="record__text">
+              <div class="record__title">情绪 / 能量 <strong style="color:var(--accent-deep);">7</strong> / 10</div>
+              <div class="record__meta">清醒、专注，略有兴奋</div>
+            </div>
+          </div>
+          <span class="record__tag">能量</span>
+        </article>
+
+        <article class="record" role="listitem">
+          <div class="record__time">08:20</div>
+          <div class="record__body">
+            <div class="record__icon record__icon--water" aria-hidden="true">💧</div>
+            <div class="record__text">
+              <div class="record__title">饮水 +1 杯</div>
+              <div class="record__meta">200 ml · 今日 1 / 8</div>
+            </div>
+          </div>
+          <span class="record__tag">饮水</span>
+        </article>
+
+        <article class="record" role="listitem">
+          <div class="record__time">10:42</div>
+          <div class="record__body">
+            <div class="record__icon record__icon--idea" aria-hidden="true">💡</div>
+            <div class="record__text">
+              <div class="record__title">"如果人脑有 API，每个人都能把灵感打包成可调用的函数。"</div>
+              <div class="record__meta">语音转文字 · 8.2 秒</div>
+            </div>
+          </div>
+          <span class="record__tag">灵感</span>
+        </article>
+
+        <article class="record" role="listitem">
+          <div class="record__time">12:30</div>
+          <div class="record__body">
+            <div class="record__icon record__icon--expense" aria-hidden="true">💰</div>
+            <div class="record__text">
+              <div class="record__title">消费 · <strong>¥ 35</strong></div>
+              <div class="record__meta">午餐 · 必要</div>
+            </div>
+          </div>
+          <span class="record__tag">必要</span>
+        </article>
+
+        <article class="record" role="listitem">
+          <div class="record__time">15:08</div>
+          <div class="record__body">
+            <div class="record__icon record__icon--idea" aria-hidden="true">💡</div>
+            <div class="record__text">
+              <div class="record__title">"梦里的海浪声 — 像有什么东西在试图告诉我，但我听不清。"</div>
+              <div class="record__meta">关键词速记</div>
+            </div>
+          </div>
+          <span class="record__tag">灵感</span>
+        </article>
+
+        <article class="record" role="listitem">
+          <div class="record__time">17:00</div>
+          <div class="record__body">
+            <div class="record__icon record__icon--habit" aria-hidden="true">🌱</div>
+            <div class="record__text">
+              <div class="record__title">习惯 · 阅读 30 分钟</div>
+              <div class="record__meta">已读《原子习惯》第 4 章</div>
+            </div>
+          </div>
+          <span class="record__tag record__tag--done">已完成</span>
+        </article>
+
+        <article class="record" role="listitem">
+          <div class="record__time">20:15</div>
+          <div class="record__body">
+            <div class="record__icon record__icon--todo" aria-hidden="true">✓</div>
+            <div class="record__text">
+              <div class="record__title">待办 · 买牛奶</div>
+              <div class="record__meta">截止：明天</div>
+            </div>
+          </div>
+          <span class="record__tag record__tag--pending">进行中</span>
+        </article>
+
+        <article class="record" role="listitem">
+          <div class="record__time">22:30</div>
+          <div class="record__body">
+            <div class="record__icon record__icon--med" aria-hidden="true">💊</div>
+            <div class="record__text">
+              <div class="record__title">服药 · 维生素 D</div>
+              <div class="record__meta">已服用</div>
+            </div>
+          </div>
+          <span class="record__tag record__tag--done">已服用</span>
+        </article>
+      </div>
+
+      <!-- 每日复盘（创意：轻玻璃 + 倾斜） -->
+      <article class="review">
+        <div class="review__icon" aria-hidden="true">✦</div>
+        <div class="review__body">
+          <div class="review__title">今日 3 词复盘</div>
+          <div class="review__words">
+            <span>灵光</span>
+            <span>探索</span>
+            <span>温暖</span>
+          </div>
+          <input class="review__input" type="text" placeholder="用 3 个词总结今天，逗号分隔…" aria-label="今日复盘输入">
+        </div>
+      </article>
+    </main>
+  </div>
+
+  <!-- 浮动 [+] 按钮 -->
+  <button class="fab" id="fab" aria-label="快速记录 — 点击或拖动">
+    <span aria-hidden="true">+</span>
+    <span class="fab__hint">拖动我 · 位置自动记忆</span>
+  </button>
+
+  <!-- 移动端底部 tab -->
+  <nav class="bottom-tab glass-thick glass-thick--interactive" aria-label="移动端主导航">
+    <a class="bottom-tab__item bottom-tab__item--active" href="#">
+      <span class="bottom-tab__icon" aria-hidden="true">📝</span>
+      <span>记录</span>
+    </a>
+    <a class="bottom-tab__item" href="#">
+      <span class="bottom-tab__icon" aria-hidden="true">📊</span>
+      <span>概览</span>
+    </a>
+    <a class="bottom-tab__item" href="#">
+      <span class="bottom-tab__icon" aria-hidden="true">⚙</span>
+      <span>设置</span>
+    </a>
+  </nav>
+
+  <!-- 快速记录弹窗 -->
+  <div class="modal-overlay" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal glass-thick glass-thick--interactive">
+      <header class="modal__header">
+        <h2 class="modal__title" id="modalTitle">快速记录</h2>
+        <button class="modal__close" id="modalClose" aria-label="关闭">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </header>
+
+      <div class="modal__grid" role="list">
+        <button class="category" role="listitem">
+          <div class="category__icon category__icon--mood" aria-hidden="true">🌡</div>
+          <div class="category__name">情绪 / 能量</div>
+        </button>
+        <button class="category" role="listitem">
+          <div class="category__icon category__icon--sleep" aria-hidden="true">🌅</div>
+          <div class="category__name">作息</div>
+        </button>
+        <button class="category" role="listitem">
+          <div class="category__icon category__icon--water" aria-hidden="true">💧</div>
+          <div class="category__name">饮水</div>
+        </button>
+        <button class="category" role="listitem">
+          <div class="category__icon category__icon--med" aria-hidden="true">💊</div>
+          <div class="category__name">服药</div>
+        </button>
+        <button class="category" role="listitem">
+          <div class="category__icon category__icon--idea" aria-hidden="true">💡</div>
+          <div class="category__name">灵感</div>
+        </button>
+        <button class="category" role="listitem">
+          <div class="category__icon category__icon--todo" aria-hidden="true">✓</div>
+          <div class="category__name">待办</div>
+        </button>
+        <button class="category" role="listitem">
+          <div class="category__icon category__icon--habit" aria-hidden="true">🌱</div>
+          <div class="category__name">习惯</div>
+        </button>
+        <button class="category" role="listitem">
+          <div class="category__icon category__icon--expense" aria-hidden="true">💰</div>
+          <div class="category__name">消费</div>
+        </button>
+        <button class="category" role="listitem">
+          <div class="category__icon category__icon--review" aria-hidden="true">✦</div>
+          <div class="category__name">复盘</div>
+        </button>
+      </div>
+
+      <footer class="modal__footer">
+        <span>按 <span class="modal__kbd">Esc</span> 关闭</span>
+        <span>·</span>
+        <span>按 <span class="modal__kbd">N</span> 快速记录</span>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    /* ============================================================
+       Mindtap · 轻念 · 统一交互工具集（Q1 Light Creative）
+       —— IIFE 包裹避免全局污染
+       —— 触发器：FAB 开 / × 关 / 背景关 / Esc 关 / N 开
+       —— Scroll edge：main 滚动 > 16px 触发 sticky 渐显
+       ============================================================ */
+    (function () {
+      'use strict';
+
+      // 模态框开关（通过 .modal-overlay--open 触发 CSS 显示）
+      function openModal() {
+        var m = document.getElementById('modal');
+        if (!m) return;
+        m.classList.add('modal-overlay--open');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeModal() {
+        var m = document.getElementById('modal');
+        if (!m) return;
+        m.classList.remove('modal-overlay--open');
+        document.body.style.overflow = '';
+      }
+
+      // FAB 点击 → 开模态框
+      var fab = document.getElementById('fab');
+      if (fab) fab.addEventListener('click', openModal);
+
+      // × 关闭按钮
+      var mc = document.getElementById('modalClose');
+      if (mc) mc.addEventListener('click', closeModal);
+
+      // 点击背景遮罩关闭（仅 target === overlay 时触发）
+      var overlay = document.getElementById('modal');
+      if (overlay) overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) closeModal();
+      });
+
+      // Esc 关闭 / N 打开（键盘可达性）
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeModal();
+        if (e.key === 'n' || e.key === 'N') openModal();
+      });
+
+      // Scroll edge effect：主滚动区顶部 sticky 渐显
+      var main = document.querySelector('.main');
+      if (main) {
+        main.addEventListener('scroll', function () {
+          if (main.scrollTop > 16) main.classList.add('main--scrolled');
+          else main.classList.remove('main--scrolled');
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

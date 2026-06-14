@@ -1,0 +1,2269 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Mindtap · 轻念 — Adaptive Platform · 跨平台自适应设计验证原型（Mobile / Windows / macOS 三态切换）。">
+  <meta name="color-scheme" content="light dark">
+  <title>Mindtap · 轻念 — Adaptive Platform (G)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Fraunces:opsz,wght,SOFT@9..144,300..700,0..100&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================================
+       G. ADAPTIVE PLATFORM — 同一份代码、3 种平台体验
+       8 模块共享 + 3 平台差异化（mobile / windows / macOS）
+       6 层材质系统（每平台有不同强度）
+       ============================================================ */
+    :root {
+      /* —— 4 色品牌调色板（3 平台共享：粉 / 橙 / 紫 / 蓝） —— */
+      --brand-pink: #F472B6;
+      --brand-orange: #FB923C;
+      --brand-purple: #8B5CF6;
+      --brand-sky: #38BDF8;
+      --brand-gradient: linear-gradient(135deg, var(--brand-pink), var(--brand-purple) 55%, var(--brand-sky));
+
+      /* —— 强调色（统一：跨平台一致） —— */
+      --accent: #8B5CF6;            /* brand-purple 主色，跨平台一致 */
+      --accent-deep: #6D28D9;
+      --accent-soft: rgba(139, 92, 246, 0.10);
+      --accent-tint: rgba(139, 92, 246, 0.04);
+      --accent-warm: var(--brand-pink);   /* 跨平台一致的暖辅色 */
+
+      /* —— 字体 —— */
+      --font-display: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-body: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-serif: "Fraunces", Georgia, serif;
+
+      /* —— 圆角 —— */
+      --r-xs: 4px;
+      --r-sm: 6px;
+      --r-md: 10px;
+      --r-lg: 14px;
+      --r-xl: 20px;
+      --r-2xl: 28px;
+      --r-pill: 999px;
+
+      /* —— 间距 —— */
+      --sp-1: 4px;
+      --sp-2: 8px;
+      --sp-3: 12px;
+      --sp-4: 16px;
+      --sp-5: 20px;
+      --sp-6: 24px;
+      --sp-7: 32px;
+      --sp-8: 40px;
+
+      /* —— 动效 —— */
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --dur-fast: 180ms;
+      --dur-mid: 280ms;
+      --dur-slow: 480ms;
+
+      /* —— 平台特定：默认值（mobile） —— */
+      --density: 1;          /* 整体缩放因子 */
+      --type-scale: 1;       /* 字号缩放 */
+      --glass-opacity: 0.62;
+      --glass-blur: 20px;
+      --glass-blur-deep: 28px;
+      --touch-target: 44px;
+      --nav-width: 0px;      /* 侧栏宽度 */
+      --inspector-width: 0px;/* 检视器宽度 */
+
+      /* —— 季节主题：默认夏（暖橙锚点） —— */
+      --season-primary: #FB923C;
+      --season-primary-deep: #EA580C;
+      --season-secondary: #FB7185;
+      --season-tertiary: #84CC16;
+      --season-accent: #FEF3C7;
+    }
+    /* —— 4 季节性主题：春樱花粉 / 夏暖橙 / 秋焦糖棕 / 冬雪青 —— */
+    body.theme-spring { --season-primary: #F9A8D4; --season-primary-deep: #EC4899; --season-secondary: #86EFAC; --season-tertiary: #FEF3C7; --season-accent: #94A3B8; }
+    body.theme-summer { --season-primary: #FB923C; --season-primary-deep: #EA580C; --season-secondary: #FB7185; --season-tertiary: #84CC16; --season-accent: #FEF3C7; }
+    body.theme-autumn { --season-primary: #D97706; --season-primary-deep: #92400E; --season-secondary: #DC2626; --season-tertiary: #65A30D; --season-accent: #A8A29E; }
+    body.theme-winter { --season-primary: #A5B4FC; --season-primary-deep: #4F46E5; --season-secondary: #7DD3FC; --season-tertiary: #E2E8F0; --season-accent: #475569; }
+    /* —— 双轨 accent：4 季节覆盖品牌紫；默认（无 theme-*）保持品牌紫 —— */
+    body.theme-spring, body.theme-summer, body.theme-autumn, body.theme-winter {
+      --accent: var(--season-primary);
+      --accent-deep: var(--season-primary-deep);
+      --accent-soft: color-mix(in srgb, var(--season-primary) 16%, transparent);
+      --accent-glow: color-mix(in srgb, var(--season-primary) 40%, transparent);
+      transition: background 600ms var(--ease-out), color 600ms var(--ease-out), border-color 600ms var(--ease-out), box-shadow 600ms var(--ease-out);
+    }
+
+    /* —— 平台特定：Windows —— */
+    body.platform-windows {
+      --density: 1;
+      --type-scale: 1;
+      --glass-opacity: 0.45;
+      --glass-blur: 26px;
+      --glass-blur-deep: 36px;
+      --touch-target: 32px;
+      --nav-width: 248px;
+      --inspector-width: 0px;
+    }
+
+    /* —— 平台特定：macOS —— */
+    body.platform-macos {
+      --density: 0.95;
+      --type-scale: 0.96;
+      --glass-opacity: 0.36;
+      --glass-blur: 36px;
+      --glass-blur-deep: 48px;
+      --touch-target: 32px;
+      --nav-width: 232px;
+      --inspector-width: 304px;
+    }
+
+    [data-theme="light"] {
+      --bg: #F4F1EC;
+      --bg-deep: #E8E3DA;
+      --surface: #FFFFFF;
+      --text: #16161E;
+      --text-soft: #4A4A55;
+      --text-muted: #8A8A95;
+      --border: rgba(0, 0, 0, 0.07);
+      --border-strong: rgba(0, 0, 0, 0.12);
+      --row-hover: rgba(139, 92, 246, 0.06);
+      --row-alt: rgba(0, 0, 0, 0.02);
+
+      --glass-bg: rgba(255, 255, 255, var(--glass-opacity));
+      --glass-bg-strong: rgba(255, 255, 255, calc(var(--glass-opacity) + 0.15));
+      --glass-border: rgba(255, 255, 255, 0.6);
+      --glass-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.7) inset,
+        0 -1px 0 rgba(0, 0, 0, 0.04) inset,
+        0 1px 3px rgba(0, 0, 0, 0.04),
+        0 8px 24px rgba(20, 20, 50, 0.06),
+        0 24px 60px rgba(20, 20, 50, 0.08);
+    }
+
+    /* ============================================================
+       Reset & 基础
+       ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; }
+    * { margin: 0; padding: 0; }
+
+    html {
+      font-family: var(--font-body);
+      font-size: calc(15px * var(--type-scale));
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      color: var(--text);
+      background: var(--bg);
+      overflow-x: hidden;
+      transition: background var(--dur-slow) var(--ease-out);
+      /* L2 背景 mesh — 3 平台共享 */
+      background-image:
+        radial-gradient(circle at 18% 12%, rgba(139, 92, 246, 0.10), transparent 38%),
+        radial-gradient(circle at 82% 22%, rgba(244, 114, 182, 0.07), transparent 42%),
+        radial-gradient(circle at 92% 88%, rgba(16, 185, 129, 0.08), transparent 45%),
+        radial-gradient(circle at 12% 92%, rgba(251, 191, 36, 0.06), transparent 38%);
+      background-attachment: fixed;
+    }
+
+    button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+    input, textarea { font: inherit; color: inherit; background: none; border: none; outline: none; }
+
+    ::selection { background: var(--accent); color: white; }
+
+    /* ============================================================
+       6 层 Liquid Glass 共享基底
+       ============================================================ */
+    .glass {
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
+      transition: background var(--dur-mid) var(--ease-out), box-shadow var(--dur-mid) var(--ease-out);
+    }
+
+    .glass--strong {
+      background: var(--glass-bg-strong);
+      backdrop-filter: blur(var(--glass-blur-deep)) saturate(180%);
+      -webkit-backdrop-filter: blur(var(--glass-blur-deep)) saturate(180%);
+    }
+
+    .glass--tinted {
+      background:
+        linear-gradient(135deg, rgba(139, 92, 246, 0.06), transparent 40%),
+        var(--glass-bg);
+    }
+
+    /* 鼠标移动时的 Dynamic Tint（仅桌面平台） */
+    body.platform-windows .glass,
+    body.platform-macos .glass {
+      position: relative;
+    }
+    body.platform-windows .glass::before,
+    body.platform-macos .glass::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%),
+        rgba(139, 92, 246, 0.10), transparent 50%);
+      opacity: 0;
+      transition: opacity var(--dur-mid) var(--ease-out);
+      pointer-events: none;
+    }
+    body.platform-windows .glass:hover::before,
+    body.platform-macos .glass:hover::before { opacity: 1; }
+
+    /* ============================================================
+       Layout — Adaptive Shell（共享 DOM）
+       ============================================================ */
+    .shell {
+      display: grid;
+      min-height: 100vh;
+      min-height: 100dvh;
+      gap: var(--sp-3);
+      padding: var(--sp-3);
+      transition: grid-template-columns var(--dur-slow) var(--ease-out),
+                  padding var(--dur-slow) var(--ease-out),
+                  gap var(--dur-slow) var(--ease-out);
+    }
+
+    /* Mobile：单列全宽 */
+    body.platform-mobile .shell {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1fr auto;
+      grid-template-areas:
+        "header"
+        "main"
+        "bottom-tab";
+      padding-bottom: calc(64px + var(--sp-3) + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* Windows：左侧 sidebar + 主区 */
+    body.platform-windows .shell {
+      grid-template-columns: var(--nav-width) 1fr;
+      grid-template-rows: 64px 1fr;
+      grid-template-areas:
+        "sidebar header"
+        "sidebar main";
+    }
+
+    /* macOS：sidebar + main + inspector 三列 */
+    body.platform-macos .shell {
+      grid-template-columns: var(--nav-width) 1fr var(--inspector-width);
+      grid-template-rows: 38px 1fr;
+      grid-template-areas:
+        "menubar menubar menubar"
+        "sidebar main inspector";
+      gap: 0;
+      padding: 0;
+    }
+
+    /* ============================================================
+       1. MENUBAR（仅 macOS 显示 — vibrancy 风格）
+       ============================================================ */
+    .menubar {
+      grid-area: menubar;
+      display: none;
+      align-items: center;
+      height: 38px;
+      padding: 0 var(--sp-4);
+      gap: var(--sp-4);
+      background: rgba(255, 255, 255, 0.55);
+      backdrop-filter: blur(40px) saturate(180%);
+      -webkit-backdrop-filter: blur(40px) saturate(180%);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+      position: relative;
+      z-index: 50;
+    }
+    body.platform-macos .menubar { display: flex; }
+
+    .menubar__brand {
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: -0.01em;
+      font-family: var(--font-display);
+      background: var(--brand-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .menubar__menu {
+      display: flex;
+      gap: 2px;
+      list-style: none;
+    }
+    .menubar__menu li button {
+      padding: 4px 10px;
+      font-size: 13px;
+      border-radius: 4px;
+      color: var(--text-soft);
+      transition: background var(--dur-fast) var(--ease-out);
+    }
+    .menubar__menu li button:hover { background: rgba(0, 0, 0, 0.06); }
+
+    .menubar__right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .menubar__status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .menubar__dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10B981;
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.20);
+    }
+
+    /* ============================================================
+       2. HEADER（顶部）
+       ============================================================ */
+    .header {
+      grid-area: header;
+      display: none;
+      align-items: center;
+      gap: var(--sp-3);
+      padding: 0 var(--sp-5);
+      border-radius: var(--r-lg);
+      transition: padding var(--dur-slow) var(--ease-out);
+    }
+    body.platform-windows .header,
+    body.platform-macos .header { display: flex; }
+    /* Windows header：左右内边距对齐 .main 的 sp-6 padding (4px 差异消除)。
+       上间距：header 与 sidebar 共享 grid 第一行 — 两者容器外顶边都已对齐到
+       .shell padding-top (sp-3=12px)。header align-items: center 让内容垂直
+       居中于 64px 行高；sidebar 内部 padding-top: sp-4 让其内容顶边距 28px。
+       二者容器外顶边一致 — 整体视觉与 sidebar 顶端对齐 */
+    body.platform-windows .header {
+      padding: 0 var(--sp-6);
+    }
+    body.platform-macos .header {
+      grid-area: header;
+      grid-column: 2 / 3;
+      border-radius: 0;
+      border-top: 0;
+      border-left: 0;
+      border-right: 0;
+      background: rgba(255, 255, 255, 0.45);
+      backdrop-filter: blur(40px) saturate(180%);
+      -webkit-backdrop-filter: blur(40px) saturate(180%);
+    }
+
+    .header__title {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      line-height: 1.1;
+    }
+    .header__sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .header__tools {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: var(--sp-2);
+    }
+
+    /* ============================================================
+       3. SIDEBAR（左侧 — Windows/macOS）
+       ============================================================ */
+    .sidebar {
+      grid-area: sidebar;
+      display: none;
+      flex-direction: column;
+      padding: var(--sp-4);
+      gap: var(--sp-3);
+      border-radius: var(--r-lg);
+      transition: border-radius var(--dur-slow) var(--ease-out),
+                  padding var(--dur-slow) var(--ease-out);
+      position: sticky;
+      top: var(--sp-3);
+      max-height: calc(100vh - var(--sp-6));
+      overflow-y: auto;
+    }
+    body.platform-windows .sidebar,
+    body.platform-macos .sidebar {
+      display: flex;
+    }
+    /* HIG 04-sidebars §背景延伸：macOS sidebar 使用 0.40 透明 + 40px blur，
+       允许 body 的 mesh 渐变 (radial-gradient × 4) 从 sidebar 下方透出，
+       等效 SwiftUI `.backgroundExtensionEffect()`。Windows sidebar 用
+       .glass 类（0.45 + 26px blur）也已满足「sidebars float above content
+       in the Liquid Glass layer」要求。 */
+    body.platform-macos .sidebar {
+      border-radius: 0;
+      border-top: 0;
+      border-left: 0;
+      border-bottom: 0;
+      background: rgba(255, 255, 255, 0.40);
+      backdrop-filter: blur(40px) saturate(180%);
+      -webkit-backdrop-filter: blur(40px) saturate(180%);
+      padding: var(--sp-5) var(--sp-3);
+    }
+
+    .sidebar__brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 6px 12px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: var(--sp-2);
+    }
+    .sidebar__logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: var(--brand-gradient);
+      display: grid;
+      place-items: center;
+      color: white;
+      font-weight: 700;
+      font-size: 14px;
+      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.30);
+    }
+    .sidebar__brand-name {
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: -0.01em;
+      background: var(--brand-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .sidebar__brand-sub {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-family: var(--font-display);
+    }
+
+    .sidebar__section-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 6px 8px;
+      margin-top: var(--sp-2);
+    }
+
+    .sidebar__item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      color: var(--text-soft);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background var(--dur-fast) var(--ease-out),
+                  color var(--dur-fast) var(--ease-out);
+      text-align: left;
+      width: 100%;
+      min-height: var(--touch-target);
+    }
+    .sidebar__item:hover {
+      background: var(--row-hover);
+      color: var(--text);
+    }
+    .sidebar__item.active {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+    .sidebar__item.active::before {
+      content: "";
+      position: absolute;
+      left: -8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 18px;
+      border-radius: 0 2px 2px 0;
+      background: var(--accent);
+    }
+    .sidebar__item { position: relative; }
+    .sidebar__icon {
+      width: 16px;
+      height: 16px;
+      display: grid;
+      place-items: center;
+      font-size: 14px;
+    }
+    .sidebar__count {
+      margin-left: auto;
+      font-size: 11px;
+      background: rgba(0, 0, 0, 0.05);
+      padding: 2px 7px;
+      border-radius: 10px;
+      color: var(--text-muted);
+    }
+    .sidebar__item.active .sidebar__count {
+      background: rgba(139, 92, 246, 0.15);
+      color: var(--accent);
+    }
+
+    /* —— HIG 07-color §规则 4 避免颜色冲突 —— */
+    /* —— 4 色品牌调色板（pink/orange/purple/sky）专用于品牌识别层 —— */
+    /* —— （logo / brand text gradient / mobile-brand__avatar）。季节主题 —— */
+    /* —— 通过 --accent 覆盖「主操作」色（filter-chip.active / FAB /   —— */
+    /* —— active 指示器）；两者职责不交叉 —— */
+    /* —— 原则：品牌色 = 身份 / 季节色 = 心境 —— */
+
+    /* ============================================================
+       4. MAIN（主内容）
+       ============================================================ */
+    .main {
+      grid-area: main;
+      border-radius: var(--r-lg);
+      overflow-y: auto;
+      padding: var(--sp-5);
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      transition: padding var(--dur-slow) var(--ease-out),
+                  border-radius var(--dur-slow) var(--ease-out);
+    }
+    body.platform-mobile .main {
+      padding: var(--sp-4);
+      border-radius: var(--r-lg);
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      max-width: 100%;
+      margin: 0;
+    }
+    body.platform-windows .main {
+      padding: var(--sp-6) var(--sp-7);
+      max-width: 1400px;
+    }
+    body.platform-macos .main {
+      border-radius: 0;
+      border-top: 0;
+      border-right: 0;
+      border-bottom: 0;
+      padding: var(--sp-7) var(--sp-8);
+      background: transparent;
+      max-width: 1200px;
+    }
+
+    /* ============================================================
+       STATS（统计卡片）
+       ============================================================ */
+    .stats {
+      display: grid;
+      gap: var(--sp-3);
+      margin-bottom: var(--sp-5);
+      transition: grid-template-columns var(--dur-slow) var(--ease-out);
+    }
+    body.platform-mobile .stats {
+      grid-template-columns: 1fr 1fr;
+    }
+    body.platform-windows .stats {
+      grid-template-columns: repeat(4, 1fr);
+    }
+    body.platform-macos .stats {
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--sp-2);
+    }
+
+    .stat-card {
+      padding: var(--sp-4);
+      border-radius: var(--r-md);
+      min-height: var(--touch-target);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      cursor: default;
+      transition: transform var(--dur-fast) var(--ease-out);
+    }
+    .stat-card:hover {
+      transform: translateY(-1px);
+    }
+    .stat-card__label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .stat-card__value {
+      font-family: var(--font-serif);
+      font-size: 26px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      margin-top: var(--sp-2);
+    }
+    .stat-card__delta {
+      font-size: 11px;
+      color: var(--accent);
+      font-weight: 600;
+      margin-top: 4px;
+    }
+    .stat-card__delta--down { color: #DC2626; }
+    .stat-card__spark {
+      height: 18px;
+      margin-top: var(--sp-2);
+      opacity: 0.6;
+    }
+
+    /* ============================================================
+       RECORDS（记录列表）
+       ============================================================ */
+    .records-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: var(--sp-3);
+    }
+    .records-title {
+      font-family: var(--font-serif);
+      font-size: 20px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+    }
+    .records-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .records-filter {
+      display: flex;
+      gap: 6px;
+      margin-bottom: var(--sp-3);
+      flex-wrap: wrap;
+    }
+    .filter-chip {
+      padding: 6px 12px;
+      border-radius: var(--r-pill);
+      font-size: 12px;
+      color: var(--text-soft);
+      background: rgba(0, 0, 0, 0.04);
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all var(--dur-fast) var(--ease-out);
+      min-height: 32px;
+    }
+    .filter-chip:hover { background: rgba(0, 0, 0, 0.07); }
+    .filter-chip.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .records {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-2);
+    }
+    .record {
+      display: grid;
+      align-items: center;
+      gap: var(--sp-3);
+      padding: var(--sp-3) var(--sp-4);
+      border-radius: var(--r-md);
+      cursor: pointer;
+      transition: background var(--dur-fast) var(--ease-out),
+                  transform var(--dur-fast) var(--ease-out);
+      min-height: var(--touch-target);
+    }
+    body.platform-mobile .record {
+      grid-template-columns: auto 1fr auto;
+    }
+    body.platform-windows .record,
+    body.platform-macos .record {
+      grid-template-columns: auto 1fr auto auto auto;
+    }
+    .record:hover { background: var(--row-hover); }
+
+    .record__dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .record__text {
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.4;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    body.platform-windows .record__text,
+    body.platform-macos .record__text {
+      white-space: normal;
+    }
+    .record__tag {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: var(--r-pill);
+      background: rgba(139, 92, 246, 0.08);
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .record__time {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+    }
+    .record__mood {
+      font-size: 14px;
+    }
+
+    /* ============================================================
+       REVIEW（回顾区 — macOS Inspector 内同步显示）
+       ============================================================ */
+    .review-card {
+      padding: var(--sp-4);
+      border-radius: var(--r-md);
+      margin-top: var(--sp-4);
+    }
+    .review-card__title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: var(--sp-2);
+    }
+    .review-quote {
+      font-family: var(--font-serif);
+      font-size: 16px;
+      line-height: 1.4;
+      color: var(--text);
+      margin-bottom: var(--sp-2);
+      font-style: italic;
+    }
+    .review-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* ============================================================
+       5. BOTTOM TAB BAR（仅 mobile — Q2 HIG pill 风格迁移）
+       —— HIG 03-tab-bars §Liquid Glass 集成：
+       "items rest on a Liquid Glass background that allows content
+        beneath to peek through"。本设计使用 24px blur + 透明渐变实现
+        「漂浮在内容之上」的语义；浮动定位 (position: fixed bottom:16px)
+        强化 liquid glass 漂浮感而非锚定屏幕边缘。
+       —— HIG 03 §最佳实践 #6 "Include tab labels"：每项均图标+文字双标签
+       —— HIG 03 §最佳实践 #3 ≤5 tabs：当前 4 项（记录/概览/回顾/设置）
+       ============================================================ */
+    .bottom-tab {
+      grid-area: bottom-tab;
+      display: none;
+      position: fixed;
+      bottom: 16px;
+      left: 16px;
+      right: 16px;
+      height: 60px;
+      border-radius: var(--r-pill);
+      align-items: center;
+      justify-content: space-around;
+      padding: 0 var(--sp-4);
+      z-index: 90;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.40) 0%, rgba(255, 255, 255, 0.30) 100%);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.06),
+        0 12px 32px -8px rgba(0, 0, 0, 0.10);
+    }
+    body.platform-mobile .bottom-tab { display: flex; }
+
+    .bottom-tab__item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      padding: var(--sp-2) var(--sp-3);
+      border-radius: var(--r-pill);
+      color: var(--text-muted);
+      cursor: pointer;
+      min-height: var(--touch-target);
+      font-size: 11px;
+      font-weight: 600;
+      transition: all 180ms;
+      background: none;
+      border: none;
+    }
+    .bottom-tab__item.active,
+    .bottom-tab__item--active {
+      background: var(--accent);
+      color: white;
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+    .bottom-tab__item:hover { color: var(--text); }
+    .bottom-tab__icon { font-size: 18px; line-height: 1; }
+    .bottom-tab__label { font-size: 10px; font-weight: 600; }
+
+    /* ============================================================
+       6. FAB（浮动记录按钮 — mobile 永远显示 / 桌面可选）
+       ============================================================ */
+    .fab {
+      position: fixed;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--brand-gradient);
+      color: white;
+      display: grid;
+      place-items: center;
+      font-size: 26px;
+      font-weight: 300;
+      cursor: pointer;
+      box-shadow:
+        0 8px 24px rgba(139, 92, 246, 0.40),
+        0 2px 6px rgba(139, 92, 246, 0.20),
+        0 0 0 1px rgba(255, 255, 255, 0.15) inset;
+      z-index: 25;
+      transition: transform var(--dur-fast) var(--ease-spring),
+                  box-shadow var(--dur-fast) var(--ease-out);
+    }
+    body.platform-mobile .fab {
+      bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+      right: var(--sp-4);
+    }
+    body.platform-windows .fab,
+    body.platform-macos .fab {
+      bottom: var(--sp-6);
+      right: var(--sp-6);
+      width: 52px;
+      height: 52px;
+      font-size: 22px;
+    }
+    .fab:hover {
+      transform: scale(1.06) rotate(8deg);
+    }
+    .fab:active {
+      transform: scale(0.96);
+    }
+
+    /* ============================================================
+       7. INSPECTOR（右侧 — 仅 macOS）
+       ============================================================ */
+    .inspector {
+      grid-area: inspector;
+      display: none;
+      flex-direction: column;
+      padding: var(--sp-5) var(--sp-4);
+      gap: var(--sp-4);
+      border-left: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.35);
+      backdrop-filter: blur(40px) saturate(180%);
+      -webkit-backdrop-filter: blur(40px) saturate(180%);
+      overflow-y: auto;
+      position: sticky;
+      top: 38px;
+      max-height: calc(100vh - 38px);
+    }
+    body.platform-macos .inspector { display: flex; }
+
+    .inspector__title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .inspector__hero {
+      padding: var(--sp-4);
+      border-radius: var(--r-md);
+      background: var(--glass-bg-strong);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+    .inspector__hero-title {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: var(--sp-2);
+      line-height: 1.3;
+    }
+    .inspector__hero-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: var(--sp-3);
+    }
+    .inspector__mood-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin-top: var(--sp-3);
+    }
+    .inspector__mood-cell {
+      aspect-ratio: 1;
+      border-radius: 8px;
+      background: rgba(139, 92, 246, 0.08);
+      display: grid;
+      place-items: center;
+      font-size: 14px;
+      transition: all var(--dur-fast) var(--ease-out);
+      cursor: pointer;
+    }
+    .inspector__mood-cell.active {
+      background: var(--accent);
+      color: white;
+      transform: scale(1.05);
+    }
+    .inspector__stat {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .inspector__stat:last-child { border-bottom: 0; }
+    .inspector__stat-label { color: var(--text-muted); }
+    .inspector__stat-value { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+    /* ============================================================
+       8. MODAL / BOTTOM SHEET
+       ============================================================ */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(20, 20, 40, 0.40);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      transition: opacity var(--dur-mid) var(--ease-out);
+    }
+    .modal-overlay.modal-overlay--open {
+      display: flex;
+      opacity: 1;
+    }
+    body.platform-mobile .modal-overlay.modal-overlay--open {
+      align-items: flex-end;
+    }
+
+    .modal {
+      width: 480px;
+      max-width: calc(100vw - 32px);
+      padding: var(--sp-6);
+      border-radius: var(--r-xl);
+      background: var(--glass-bg-strong);
+      backdrop-filter: blur(var(--glass-blur-deep)) saturate(180%);
+      -webkit-backdrop-filter: blur(var(--glass-blur-deep)) saturate(180%);
+      box-shadow:
+        0 24px 60px rgba(20, 20, 50, 0.20),
+        0 2px 8px rgba(20, 20, 50, 0.08);
+      border: 1px solid var(--glass-border);
+      transform: translateY(8px) scale(0.98);
+      opacity: 0;
+      transition: transform var(--dur-mid) var(--ease-out),
+                  opacity var(--dur-mid) var(--ease-out),
+                  border-radius var(--dur-slow) var(--ease-out);
+    }
+    body.platform-mobile .modal {
+      width: 100%;
+      max-width: 100vw;
+      padding: var(--sp-5);
+      border-radius: var(--r-2xl) var(--r-2xl) 0 0;
+      max-height: 80vh;
+      overflow-y: auto;
+      transform: translateY(100%);
+    }
+    .modal-overlay.modal-overlay--open .modal {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+    body.platform-mobile .modal-overlay.modal-overlay--open .modal {
+      transform: translateY(0);
+    }
+
+    .modal__head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--sp-4);
+    }
+    .modal__title {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+    }
+    .modal__close {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.05);
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      color: var(--text-soft);
+      cursor: pointer;
+      transition: background var(--dur-fast) var(--ease-out);
+    }
+    .modal__close:hover { background: rgba(0, 0, 0, 0.10); }
+    .modal__body {
+      margin-bottom: var(--sp-5);
+    }
+    .modal__input {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: var(--r-md);
+      background: rgba(255, 255, 255, 0.6);
+      border: 1px solid var(--border);
+      font-size: 15px;
+      resize: none;
+      min-height: 100px;
+      transition: border-color var(--dur-fast) var(--ease-out),
+                  background var(--dur-fast) var(--ease-out);
+    }
+    .modal__input:focus {
+      border-color: var(--accent);
+      background: white;
+    }
+    .modal__hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: var(--sp-2);
+    }
+    .modal__chips {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: var(--sp-3);
+    }
+    .modal__chip {
+      padding: 6px 12px;
+      border-radius: var(--r-pill);
+      background: rgba(0, 0, 0, 0.04);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all var(--dur-fast) var(--ease-out);
+    }
+    .modal__chip.active {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+    .modal__foot {
+      display: flex;
+      gap: var(--sp-2);
+      justify-content: flex-end;
+    }
+    .modal__btn {
+      padding: 10px 20px;
+      border-radius: var(--r-pill);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--dur-fast) var(--ease-out);
+    }
+    .modal__btn--ghost {
+      background: rgba(0, 0, 0, 0.05);
+      color: var(--text-soft);
+    }
+    .modal__btn--ghost:hover { background: rgba(0, 0, 0, 0.10); }
+    .modal__btn--primary {
+      background: var(--accent);
+      color: white;
+    }
+    .modal__btn--primary:hover { background: var(--accent-deep); }
+
+    /* ============================================================
+       PLATFORM SWITCHER（右上角切换按钮 — 永久可见）
+       ============================================================ */
+    .platform-switcher {
+      position: fixed;
+      top: var(--sp-3);
+      right: var(--sp-3);
+      display: flex;
+      gap: 4px;
+      padding: 4px;
+      border-radius: var(--r-pill);
+      background: var(--glass-bg-strong);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
+      z-index: 200;
+      transition: top var(--dur-slow) var(--ease-out),
+                  right var(--dur-slow) var(--ease-out);
+    }
+    body.platform-mobile .platform-switcher {
+      top: var(--sp-3);
+      right: var(--sp-3);
+    }
+    body.platform-macos .platform-switcher {
+      top: calc(38px + var(--sp-2));
+      right: var(--sp-4);
+    }
+    .switcher-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all var(--dur-fast) var(--ease-out);
+      color: var(--text-soft);
+    }
+    .switcher-btn:hover {
+      background: rgba(0, 0, 0, 0.06);
+    }
+    .switcher-btn.active {
+      background: var(--accent);
+      color: white;
+      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.40);
+    }
+    .switcher-btn__label {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 6px;
+      font-size: 10px;
+      color: var(--text-muted);
+      background: var(--glass-bg-strong);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 2px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--dur-fast) var(--ease-out);
+    }
+    .switcher-btn:hover .switcher-btn__label { opacity: 1; }
+    .switcher-btn { position: relative; }
+
+    /* ============================================================
+       THEME SWITCHER（4 季节切换按钮 — 与平台切换并存）
+       —— macOS: top menubar 右侧
+       —— Windows: sidebar 顶部
+       —— Mobile: 平台切换器下方（紧凑，固定）
+       ============================================================ */
+    .theme-switcher {
+      display: none;
+      align-items: center;
+      gap: 4px;
+      padding: 3px;
+      border-radius: var(--r-pill);
+      background: var(--glass-bg-strong);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
+      transition: all 600ms var(--ease-out);
+    }
+    /* macOS: 仅显示 menubar 内那个 */
+    body.platform-macos .menubar__right .theme-switcher {
+      display: inline-flex;
+      margin-left: var(--sp-3);
+    }
+    /* Windows: 仅显示 sidebar 内那个 */
+    body.platform-windows .sidebar > .theme-switcher {
+      display: inline-flex;
+      align-self: flex-start;
+      margin: var(--sp-3) var(--sp-3) 0;
+    }
+    /* Mobile: 仅显示 body 直属那个（固定） */
+    body.platform-mobile > .theme-switcher {
+      display: inline-flex;
+      position: fixed;
+      top: calc(var(--sp-3) + 50px);
+      right: var(--sp-3);
+      padding: 2px;
+      gap: 2px;
+      z-index: 200;
+    }
+    .theme-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 14px;
+      cursor: pointer;
+      color: var(--text-soft);
+      transition: all var(--dur-fast) var(--ease-out);
+      position: relative;
+    }
+    body.platform-mobile .theme-btn {
+      width: 24px;
+      height: 24px;
+      font-size: 12px;
+    }
+    .theme-btn:hover {
+      background: rgba(0, 0, 0, 0.06);
+    }
+    .theme-btn.active {
+      background: var(--accent);
+      color: white;
+      box-shadow: 0 2px 8px var(--accent-glow);
+      transition: all 600ms var(--ease-out);
+    }
+    .theme-btn__label {
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-top: 6px;
+      font-size: 10px;
+      color: var(--text-muted);
+      background: var(--glass-bg-strong);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 2px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--dur-fast) var(--ease-out);
+    }
+    .theme-btn:hover .theme-btn__label { opacity: 1; }
+
+    /* ============================================================
+       TAB PANES（内容区切换）
+       ============================================================ */
+    .tab-pane { display: none; animation: pane-fade-in 320ms var(--ease-out); }
+    .tab-pane.active { display: block; }
+    @keyframes pane-fade-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .mobile-tabs {
+      display: none;
+      gap: 4px;
+      padding: 4px;
+      border-radius: var(--r-pill);
+      margin-bottom: var(--sp-4);
+      background: rgba(0, 0, 0, 0.05);
+    }
+    body.platform-mobile .mobile-tabs { display: inline-flex; }
+    .mobile-tab {
+      padding: 8px 16px;
+      border-radius: var(--r-pill);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-soft);
+      cursor: pointer;
+      min-height: var(--touch-target);
+      transition: all var(--dur-fast) var(--ease-out);
+    }
+    .mobile-tab.active {
+      background: white;
+      color: var(--accent);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+
+    /* ============================================================
+       MOTION — entry stagger
+       ============================================================ */
+    @keyframes glass-entry {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .shell > * {
+      animation: glass-entry 480ms var(--ease-out) both;
+    }
+    .shell > *:nth-child(1) { animation-delay: 0ms; }
+    .shell > *:nth-child(2) { animation-delay: 80ms; }
+    .shell > *:nth-child(3) { animation-delay: 160ms; }
+    .shell > *:nth-child(4) { animation-delay: 240ms; }
+
+    @keyframes fab-pulse {
+      0%, 100% { box-shadow: 0 8px 24px rgba(139, 92, 246, 0.40), 0 0 0 0 rgba(139, 92, 246, 0.30); }
+      50% { box-shadow: 0 8px 24px rgba(139, 92, 246, 0.40), 0 0 0 12px rgba(139, 92, 246, 0); }
+    }
+    .fab { animation: fab-pulse 2.4s var(--ease-out) infinite; }
+
+    /* ============================================================
+       TOAST（操作反馈）
+       ============================================================ */
+    .toast {
+      position: fixed;
+      bottom: var(--sp-6);
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      padding: 10px 18px;
+      border-radius: var(--r-pill);
+      background: rgba(20, 20, 30, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      color: white;
+      font-size: 12px;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--dur-mid) var(--ease-out),
+                  transform var(--dur-mid) var(--ease-spring);
+      z-index: 300;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.30);
+    }
+    .toast.toast--show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    body.platform-mobile .toast {
+      bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* ============================================================
+       CONTENT VISIBILITY BY PLATFORM
+       ============================================================ */
+    .mobile-only { display: none; }
+    .windows-only { display: none; }
+    .macos-only { display: none; }
+    .desktop-only { display: none; }
+
+    body.platform-mobile .mobile-only { display: block; }
+    body.platform-windows .windows-only,
+    body.platform-macos .windows-only,
+    body.platform-windows .desktop-only,
+    body.platform-macos .desktop-only,
+    body.platform-macos .macos-only { display: block; }
+
+    /* ============================================================
+       MOBILE BRAND BAR (top of mobile)
+       ============================================================ */
+    .mobile-brand {
+      grid-area: header;
+      display: none;
+      align-items: center;
+      gap: var(--sp-4);
+      padding: var(--sp-3) var(--sp-4);
+      margin-bottom: var(--sp-4);
+      border-radius: var(--r-lg);
+      background: linear-gradient(135deg,
+        rgba(255, 255, 255, 0.45) 0%,
+        rgba(255, 255, 255, 0.30) 100%);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.04),
+        0 8px 24px -4px rgba(0, 0, 0, 0.08);
+    }
+    body.platform-mobile .mobile-brand { display: flex; }
+    .mobile-brand__logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--brand-gradient);
+      display: grid;
+      place-items: center;
+      color: white;
+      font-weight: 700;
+      font-size: 16px;
+      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.30);
+    }
+    .mobile-brand__title {
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: -0.01em;
+      background: var(--brand-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .mobile-brand__sub {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-family: var(--font-display);
+    }
+    .mobile-brand__right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: var(--sp-2);
+    }
+    .mobile-brand__avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--brand-orange), var(--brand-pink));
+      color: white;
+      display: grid;
+      place-items: center;
+      font-weight: 600;
+      font-size: 12px;
+    }
+
+    /* —— 移动端调整 shell 把 brand bar 包含进去 —— */
+    body.platform-mobile .shell {
+      grid-template-rows: auto 1fr auto;
+      grid-template-areas:
+        "header"
+        "main"
+        "bottom-tab";
+    }
+    body.platform-mobile .mobile-brand { grid-area: header; }
+    body.platform-mobile .header { display: none; }
+    body.platform-mobile .sidebar { display: none; }
+
+    /* ============================================================
+       RESPONSIVE — mobile portrait adjustments
+       ============================================================ */
+    @media (max-width: 380px) {
+      body.platform-mobile .stat-card__value { font-size: 22px; }
+    }
+
+    /* ============================================================
+       SCROLLBAR
+       ============================================================ */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.15);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.25); }
+
+    /* —— focus visible —— */
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body class="platform-mobile">
+
+  <!-- ============================================================
+       PLATFORM SWITCHER（右上角固定）
+       ============================================================ -->
+  <div class="platform-switcher" role="toolbar" aria-label="平台切换">
+    <button class="switcher-btn active" data-platform-btn="mobile" aria-label="移动端">
+      <span aria-hidden="true">▢</span>
+      <span class="switcher-btn__label">Mobile · 触屏</span>
+    </button>
+    <button class="switcher-btn" data-platform-btn="windows" aria-label="Windows">
+      <span aria-hidden="true">▣</span>
+      <span class="switcher-btn__label">Windows · 桌面</span>
+    </button>
+    <button class="switcher-btn" data-platform-btn="macos" aria-label="macOS">
+      <span aria-hidden="true">◫</span>
+      <span class="switcher-btn__label">macOS · 工作站</span>
+    </button>
+  </div>
+
+  <!-- ============================================================
+       THEME SWITCHER（Mobile 专用 — 固定在平台切换下方）
+       ============================================================ -->
+  <div class="theme-switcher" role="toolbar" aria-label="季节主题切换">
+    <button class="theme-btn" data-theme-btn="spring" aria-label="春">❀</button>
+    <button class="theme-btn active" data-theme-btn="summer" aria-label="夏">☀</button>
+    <button class="theme-btn" data-theme-btn="autumn" aria-label="秋">❄</button>
+    <button class="theme-btn" data-theme-btn="winter" aria-label="冬">❄</button>
+  </div>
+
+  <!-- ============================================================
+       SHELL — 3 平台共享 DOM
+       ============================================================ -->
+  <div class="shell">
+
+    <!-- 1. MENUBAR（仅 macOS） -->
+    <div class="menubar">
+      <div class="menubar__brand">Mindtap · 轻念</div>
+      <ul class="menubar__menu">
+        <li><button type="button" data-menu="app">轻念</button></li>
+        <li><button type="button" data-menu="file">文件</button></li>
+        <li><button type="button" data-menu="edit">编辑</button></li>
+        <li><button type="button" data-menu="view">显示</button></li>
+        <li><button type="button" data-menu="window">窗口</button></li>
+        <li><button type="button" data-menu="help">帮助</button></li>
+      </ul>
+      <div class="menubar__right">
+        <div class="theme-switcher" role="toolbar" aria-label="季节主题切换">
+          <button class="theme-btn" data-theme-btn="spring" aria-label="春">❀</button>
+          <button class="theme-btn active" data-theme-btn="summer" aria-label="夏">☀</button>
+          <button class="theme-btn" data-theme-btn="autumn" aria-label="秋">❄</button>
+          <button class="theme-btn" data-theme-btn="winter" aria-label="冬">❄</button>
+        </div>
+        <div class="menubar__status">
+          <span class="menubar__dot"></span>
+          <span>已同步 · 3 秒前</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile 顶部品牌条（仅 mobile） -->
+    <div class="mobile-brand glass">
+      <div class="mobile-brand__logo">轻</div>
+      <div>
+        <div class="mobile-brand__title">Mindtap · 轻念</div>
+        <div class="mobile-brand__sub">今天 · 已记录 5</div>
+      </div>
+      <div class="mobile-brand__right">
+        <div class="mobile-brand__avatar">JY</div>
+      </div>
+    </div>
+
+    <!-- 2. SIDEBAR（Windows/macOS） -->
+    <aside class="sidebar glass">
+      <div class="theme-switcher" role="toolbar" aria-label="季节主题切换">
+        <button class="theme-btn" data-theme-btn="spring" aria-label="春">❀</button>
+        <button class="theme-btn active" data-theme-btn="summer" aria-label="夏">☀</button>
+        <button class="theme-btn" data-theme-btn="autumn" aria-label="秋">❄</button>
+        <button class="theme-btn" data-theme-btn="winter" aria-label="冬">❄</button>
+      </div>
+      <div class="sidebar__brand">
+        <div class="sidebar__logo">轻</div>
+        <div>
+          <div class="sidebar__brand-name">Mindtap · 轻念</div>
+          <div class="sidebar__brand-sub">workspace</div>
+        </div>
+      </div>
+
+      <div class="sidebar__section-title">导航</div>
+      <button type="button" class="sidebar__item active" data-nav="records" data-platform-target="desktop">
+        <span class="sidebar__icon">≡</span>
+        <span>记录</span>
+        <span class="sidebar__count">128</span>
+      </button>
+      <button type="button" class="sidebar__item" data-nav="overview" data-platform-target="desktop">
+        <span class="sidebar__icon">◐</span>
+        <span>概览</span>
+      </button>
+      <button type="button" class="sidebar__item" data-nav="review" data-platform-target="desktop">
+        <span class="sidebar__icon">✦</span>
+        <span>回顾</span>
+        <span class="sidebar__count">12</span>
+      </button>
+      <button type="button" class="sidebar__item" data-nav="tags" data-platform-target="desktop">
+        <span class="sidebar__icon">#</span>
+        <span>标签</span>
+        <span class="sidebar__count">23</span>
+      </button>
+
+      <div class="sidebar__section-title">智能</div>
+      <button type="button" class="sidebar__item" data-nav="trends" data-platform-target="desktop">
+        <span class="sidebar__icon">∿</span>
+        <span>趋势</span>
+      </button>
+      <button type="button" class="sidebar__item" data-nav="export" data-platform-target="desktop">
+        <span class="sidebar__icon">↗</span>
+        <span>导出</span>
+      </button>
+
+      <div class="sidebar__section-title">账户</div>
+      <button type="button" class="sidebar__item" data-nav="settings" data-platform-target="desktop">
+        <span class="sidebar__icon">⚙</span>
+        <span>设置</span>
+      </button>
+    </aside>
+
+    <!-- 3. HEADER（桌面顶部） -->
+    <header class="header glass">
+      <div>
+        <div class="header__title">轻念 · 今日</div>
+        <div class="header__sub">2026/06/14 周日 · 14:28 · 今日已记录 5 条</div>
+      </div>
+      <div class="header__tools">
+        <button type="button" class="filter-chip" data-action="search">搜索 ⌘K</button>
+        <button type="button" class="filter-chip" data-action="sync">同步</button>
+      </div>
+    </header>
+
+    <!-- 4. MAIN -->
+    <main class="main">
+
+      <!-- 移动端 tab 切换 -->
+      <div class="mobile-tabs">
+        <button type="button" class="mobile-tab active" data-tab="records">记录</button>
+        <button type="button" class="mobile-tab" data-tab="overview">概览</button>
+        <button type="button" class="mobile-tab" data-tab="review">回顾</button>
+      </div>
+
+      <!-- 桌面端 tab 切换（隐藏在 mobile） -->
+      <div class="windows-only" style="margin-bottom: 20px;">
+        <button type="button" class="filter-chip active" data-desktop-tab="records">记录</button>
+        <button type="button" class="filter-chip" data-desktop-tab="overview">概览</button>
+        <button type="button" class="filter-chip" data-desktop-tab="review">回顾</button>
+      </div>
+
+      <!-- ============================ -->
+      <!-- TAB: RECORDS -->
+      <!-- ============================ -->
+      <section class="tab-pane active" data-tab-pane="records">
+        <div class="stats">
+          <div class="stat-card glass">
+            <div class="stat-card__label">今日记录</div>
+            <div class="stat-card__value">5</div>
+            <div class="stat-card__delta">+2 较昨日</div>
+          </div>
+          <div class="stat-card glass">
+            <div class="stat-card__label">连续天数</div>
+            <div class="stat-card__value">28</div>
+            <div class="stat-card__delta">+1 增长</div>
+          </div>
+          <div class="stat-card glass">
+            <div class="stat-card__label">本周字数</div>
+            <div class="stat-card__value">1.4k</div>
+            <div class="stat-card__delta">+18%</div>
+          </div>
+          <div class="stat-card glass">
+            <div class="stat-card__label">平均心情</div>
+            <div class="stat-card__value">7.6</div>
+            <div class="stat-card__delta">↑ 0.3</div>
+          </div>
+        </div>
+
+        <div class="records-head">
+          <div class="records-title">今日记录</div>
+          <div class="records-meta">5 条 · 最近 14:22</div>
+        </div>
+
+        <div class="records-filter">
+          <button type="button" class="filter-chip active" data-filter="all">全部</button>
+          <button type="button" class="filter-chip" data-filter="work">工作</button>
+          <button type="button" class="filter-chip" data-filter="life">生活</button>
+          <button type="button" class="filter-chip" data-filter="idea">灵感</button>
+          <button type="button" class="filter-chip" data-filter="feel">感受</button>
+        </div>
+
+        <div class="records" id="recordsList">
+          <div class="record" data-record="1">
+            <span class="record__dot" style="background:#8B5CF6;"></span>
+            <span class="record__text">完成了 prototype D7 的核心布局；切到 macOS 视图看 Inspector 是不是更顺眼一些。</span>
+            <span class="record__tag">工作</span>
+            <span class="record__mood">:)</span>
+            <span class="record__time">14:22</span>
+          </div>
+          <div class="record" data-record="2">
+            <span class="record__dot" style="background:#38BDF8;"></span>
+            <span class="record__text">下午散步时听到楼下老人在拉二胡，胡同里的生活气息真好。</span>
+            <span class="record__tag">生活</span>
+            <span class="record__mood">♥</span>
+            <span class="record__time">13:48</span>
+          </div>
+          <div class="record" data-record="3">
+            <span class="record__dot" style="background:#F472B6;"></span>
+            <span class="record__text">灵感：把每日记录的"心情曲线"做成一条会随时间流动的河流图。</span>
+            <span class="record__tag">灵感</span>
+            <span class="record__mood">!</span>
+            <span class="record__time">11:30</span>
+          </div>
+          <div class="record" data-record="4">
+            <span class="record__dot" style="background:#FB923C;"></span>
+            <span class="record__text">晨会讨论 Q2 OKR 时，忽然意识到 —— 真正卡住团队的从来不是工具。</span>
+            <span class="record__tag">感受</span>
+            <span class="record__mood">:)</span>
+            <span class="record__time">10:12</span>
+          </div>
+          <div class="record" data-record="5">
+            <span class="record__dot" style="background:#8B5CF6;"></span>
+            <span class="record__text">尝试把 Windows 视图的 sidebar 拆成可拖拽宽度 —— 但用户的操作成本反而上升了。</span>
+            <span class="record__tag">工作</span>
+            <span class="record__mood">.</span>
+            <span class="record__time">09:05</span>
+          </div>
+        </div>
+
+        <div class="review-card glass">
+          <div class="review-card__title">上周高光</div>
+          <div class="review-quote">"轻念的价值，是让记录的成本消失 —— 让思考不被流程打扰。"</div>
+          <div class="review-meta">2026/06/09 · 周二 · 工作反思</div>
+        </div>
+      </section>
+
+      <!-- ============================ -->
+      <!-- TAB: OVERVIEW -->
+      <!-- ============================ -->
+      <section class="tab-pane" data-tab-pane="overview">
+        <div class="records-head">
+          <div class="records-title">本月概览</div>
+          <div class="records-meta">June 2026 · 第 24 周</div>
+        </div>
+
+        <div class="stats">
+          <div class="stat-card glass">
+            <div class="stat-card__label">本月记录</div>
+            <div class="stat-card__value">142</div>
+            <div class="stat-card__delta">+12% MoM</div>
+          </div>
+          <div class="stat-card glass">
+            <div class="stat-card__label">连续记录</div>
+            <div class="stat-card__value">28天</div>
+            <div class="stat-card__delta">↑ 持续</div>
+          </div>
+          <div class="stat-card glass">
+            <div class="stat-card__label">总字数</div>
+            <div class="stat-card__value">8.2k</div>
+            <div class="stat-card__delta">+1.1k</div>
+          </div>
+          <div class="stat-card glass">
+            <div class="stat-card__label">标签使用</div>
+            <div class="stat-card__value">23</div>
+            <div class="stat-card__delta">+3 新</div>
+          </div>
+        </div>
+
+        <div class="review-card glass" style="margin-top: 20px;">
+          <div class="review-card__title">心情曲线</div>
+          <div class="review-quote">本周平均 7.6（较上周 7.2 ↑）—— 周三与周五为高点，周一略有低落。</div>
+          <div class="review-meta">自动生成 · 基于 18 条记录</div>
+        </div>
+
+        <div class="review-card glass" style="margin-top: 12px;">
+          <div class="review-card__title">本周关键字</div>
+          <div class="review-quote">prototype · 对话 · 卡片 · 拖拽 · 节奏 · 安静</div>
+          <div class="review-meta">NLP 提取 · 置信度 0.84</div>
+        </div>
+      </section>
+
+      <!-- ============================ -->
+      <!-- TAB: REVIEW -->
+      <!-- ============================ -->
+      <section class="tab-pane" data-tab-pane="review">
+        <div class="records-head">
+          <div class="records-title">每周回顾</div>
+          <div class="records-meta">W24 · 06/08 - 06/14</div>
+        </div>
+
+        <div class="review-card glass">
+          <div class="review-card__title">高光</div>
+          <div class="review-quote">"周二上午忽然明白：D5 沉浸式的核心是'仪式感'，D6 生产力的核心是'克制'。这两者不是对立而是互补。"</div>
+          <div class="review-meta">06/10 · 周二 · 09:15</div>
+        </div>
+
+        <div class="review-card glass" style="margin-top: 12px;">
+          <div class="review-card__title">挑战</div>
+          <div class="review-quote">"周三的设计评审被驳回 —— 当时很不舒服，但周五回头看，他们是对的。下次更早暴露问题。"</div>
+          <div class="review-meta">06/11 · 周三 · 16:42</div>
+        </div>
+
+        <div class="review-card glass" style="margin-top: 12px;">
+          <div class="review-card__title">感谢</div>
+          <div class="review-quote">"感谢 ZZ 周四帮我 debug 了那个诡异的 CSS 嵌套问题，省了一晚上。"</div>
+          <div class="review-meta">06/12 · 周四 · 22:18</div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- 5. INSPECTOR（仅 macOS） -->
+    <aside class="inspector">
+      <div>
+        <div class="inspector__title">详情检视</div>
+      </div>
+
+      <div class="inspector__hero glass">
+        <div class="inspector__hero-title">当前选中：prototype D7</div>
+        <div class="inspector__hero-meta">2026/06/14 · 14:22 · 工作 · 23 字</div>
+        <div style="font-size: 13px; line-height: 1.5; margin-top: 8px;">
+          完成了 prototype D7 的核心布局；切到 macOS 视图看 Inspector 是不是更顺眼一些。
+        </div>
+      </div>
+
+      <div>
+        <div class="inspector__title" style="margin-bottom: 8px;">心情评分</div>
+        <div class="inspector__mood-grid" id="moodGrid">
+          <button type="button" class="inspector__mood-cell" data-mood="1">😞</button>
+          <button type="button" class="inspector__mood-cell" data-mood="2">😕</button>
+          <button type="button" class="inspector__mood-cell" data-mood="3">😐</button>
+          <button type="button" class="inspector__mood-cell active" data-mood="4">🙂</button>
+          <button type="button" class="inspector__mood-cell" data-mood="5">😄</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="inspector__title" style="margin-bottom: 8px;">元信息</div>
+        <div class="inspector__stat">
+          <span class="inspector__stat-label">字数</span>
+          <span class="inspector__stat-value">23</span>
+        </div>
+        <div class="inspector__stat">
+          <span class="inspector__stat-label">标签</span>
+          <span class="inspector__stat-value">工作</span>
+        </div>
+        <div class="inspector__stat">
+          <span class="inspector__stat-label">位置</span>
+          <span class="inspector__stat-value">北京市</span>
+        </div>
+        <div class="inspector__stat">
+          <span class="inspector__stat-label">天气</span>
+          <span class="inspector__stat-value">晴 · 26°</span>
+        </div>
+        <div class="inspector__stat">
+          <span class="inspector__stat-label">同步</span>
+          <span class="inspector__stat-value">已上传</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="inspector__title" style="margin-bottom: 8px;">操作</div>
+        <button type="button" class="filter-chip" style="width: 100%; margin-bottom: 6px;" data-action="edit">编辑</button>
+        <button type="button" class="filter-chip" style="width: 100%; margin-bottom: 6px;" data-action="share">分享</button>
+        <button type="button" class="filter-chip" style="width: 100%;" data-action="delete">删除</button>
+      </div>
+    </aside>
+
+    <!-- 6. BOTTOM TAB BAR（仅 mobile — Q2 HIG pill 风格迁移） -->
+    <nav class="bottom-tab glass--strong" aria-label="移动端主导航">
+      <a href="#" class="bottom-tab__item bottom-tab__item--active" data-bottom-tab="records" data-bottom-tab-key="records">
+        <span class="bottom-tab__icon" aria-hidden="true">📝</span>
+        <span class="bottom-tab__label">记录</span>
+      </a>
+      <a href="#" class="bottom-tab__item" data-bottom-tab="overview" data-bottom-tab-key="overview">
+        <span class="bottom-tab__icon" aria-hidden="true">📊</span>
+        <span class="bottom-tab__label">概览</span>
+      </a>
+      <a href="#" class="bottom-tab__item" data-bottom-tab="review" data-bottom-tab-key="review">
+        <span class="bottom-tab__icon" aria-hidden="true">✦</span>
+        <span class="bottom-tab__label">回顾</span>
+      </a>
+      <a href="#" class="bottom-tab__item" data-bottom-tab="settings" data-bottom-tab-key="settings">
+        <span class="bottom-tab__icon" aria-hidden="true">⚙</span>
+        <span class="bottom-tab__label">设置</span>
+      </a>
+    </nav>
+
+  </div>
+
+  <!-- ============================================================
+       7. FAB（浮动记录按钮）
+       ============================================================ -->
+  <button type="button" class="fab" id="fab" aria-label="新建记录">+</button>
+
+  <!-- ============================================================
+       8. MODAL — 3 秒记录 / 移动端为 Bottom Sheet
+       ============================================================ -->
+  <div class="modal-overlay" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal" role="document">
+      <div class="modal__head">
+        <div class="modal__title" id="modalTitle">新建记录 · 3 秒</div>
+        <button type="button" class="modal__close" id="modalClose" aria-label="关闭">×</button>
+      </div>
+      <div class="modal__body">
+        <textarea class="modal__input" id="modalInput" placeholder="此刻想到什么？3 秒即可..." maxlength="500"></textarea>
+        <div class="modal__hint" id="charCount">0 / 500</div>
+        <div class="modal__chips">
+          <button type="button" class="modal__chip" data-modal-tag="工作">工作</button>
+          <button type="button" class="modal__chip" data-modal-tag="生活">生活</button>
+          <button type="button" class="modal__chip" data-modal-tag="灵感">灵感</button>
+          <button type="button" class="modal__chip" data-modal-tag="感受">感受</button>
+          <button type="button" class="modal__chip" data-modal-tag="学习">学习</button>
+        </div>
+      </div>
+      <div class="modal__foot">
+        <button type="button" class="modal__btn modal__btn--ghost" id="modalCancel">取消</button>
+        <button type="button" class="modal__btn modal__btn--primary" id="modalSave">保存 · 3 秒</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">已保存</div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* ========================================================
+         1. 平台检测 & 切换
+         ======================================================== */
+      var body = document.body;
+      var buttons = document.querySelectorAll('[data-platform-btn]');
+
+      function setPlatform(platform) {
+        body.classList.remove('platform-mobile', 'platform-windows', 'platform-macos');
+        body.classList.add('platform-' + platform);
+        try {
+          localStorage.setItem('mindtap-platform', platform);
+        } catch (e) { /* localStorage 不可用 */ }
+        // 更新按钮 active 状态
+        buttons.forEach(function (b) {
+          b.classList.toggle('active', b.dataset.platformBtn === platform);
+        });
+        // 切换时 toast 反馈
+        var name = platform === 'mobile' ? 'Mobile 移动端' :
+                   platform === 'windows' ? 'Windows 桌面' : 'macOS 工作站';
+        showToast('已切换到 ' + name);
+      }
+
+      function autoDetect() {
+        var w = window.innerWidth;
+        if (w < 768) return 'mobile';
+        if (w < 1280) return 'windows';
+        return 'macos';
+      }
+
+      // 初始：localStorage 优先
+      var saved = null;
+      try { saved = localStorage.getItem('mindtap-platform'); } catch (e) {}
+      if (!saved || !['mobile','windows','macos'].includes(saved)) saved = autoDetect();
+      setPlatform(saved);
+
+      // 用户手动切换
+      buttons.forEach(function (b) {
+        b.addEventListener('click', function () {
+          setPlatform(b.dataset.platformBtn);
+        });
+      });
+
+      // 自动检测（仅当用户从未手动切换时）
+      var resizeTimer = null;
+      window.addEventListener('resize', function () {
+        if (resizeTimer) clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function () {
+          var userPicked = null;
+          try { userPicked = localStorage.getItem('mindtap-platform'); } catch (e) {}
+          // 仅在用户未手动选择时跟随
+          if (!userPicked) setPlatform(autoDetect());
+        }, 200);
+      });
+
+      /* ========================================================
+         1b. 季节主题切换（春/夏/秋/冬 — 4 主题 × 3 平台）
+         ======================================================== */
+      var themeButtons = document.querySelectorAll('[data-theme-btn]');
+      var themeNameMap = { spring: '春', summer: '夏', autumn: '秋', winter: '冬' };
+
+      function setTheme(theme) {
+        themeButtons.forEach(function (b) {
+          b.classList.toggle('active', b.dataset.themeBtn === theme);
+        });
+        body.classList.remove('theme-spring', 'theme-summer', 'theme-autumn', 'theme-winter');
+        body.classList.add('theme-' + theme);
+        try {
+          localStorage.setItem('mindtap-theme', theme);
+        } catch (e) { /* localStorage 不可用 */ }
+        showToast('主题已切换 · ' + themeNameMap[theme] + '季');
+      }
+
+      // 初始：localStorage 优先，否则默认 summer
+      var savedTheme = null;
+      try { savedTheme = localStorage.getItem('mindtap-theme'); } catch (e) {}
+      if (!savedTheme || !['spring','summer','autumn','winter'].includes(savedTheme)) {
+        savedTheme = 'summer';
+      }
+      setTheme(savedTheme);
+
+      // 4 主题按钮点击 — 独立于平台切换（4 个独立监听）
+      var btnSpring = document.querySelector('[data-theme-btn="spring"]');
+      var btnSummer = document.querySelector('[data-theme-btn="summer"]');
+      var btnAutumn = document.querySelector('[data-theme-btn="autumn"]');
+      var btnWinter = document.querySelector('[data-theme-btn="winter"]');
+      if (btnSpring) btnSpring.addEventListener('click', function () { setTheme('spring'); });
+      if (btnSummer) btnSummer.addEventListener('click', function () { setTheme('summer'); });
+      if (btnAutumn) btnAutumn.addEventListener('click', function () { setTheme('autumn'); });
+      if (btnWinter) btnWinter.addEventListener('click', function () { setTheme('winter'); });
+
+      /* ========================================================
+         2. Tab 切换（顶部 / 桌面 / 移动 — 3 套 tab）
+         ======================================================== */
+      function activateTab(target) {
+        document.querySelectorAll('[data-tab-pane]').forEach(function (p) {
+          p.classList.toggle('active', p.dataset.tabPane === target);
+        });
+        document.querySelectorAll('[data-tab]').forEach(function (t) {
+          t.classList.toggle('active', t.dataset.tab === target);
+        });
+        document.querySelectorAll('[data-bottom-tab]').forEach(function (b) {
+          b.classList.toggle('active', b.dataset.bottomTab === target);
+        });
+        document.querySelectorAll('[data-desktop-tab]').forEach(function (d) {
+          d.classList.toggle('active', d.dataset.desktopTab === target);
+        });
+      }
+
+      // 顶部 tab（mobile）
+      document.querySelectorAll('[data-tab]').forEach(function (t) {
+        t.addEventListener('click', function () { activateTab(t.dataset.tab); });
+      });
+
+      // 桌面 tab
+      document.querySelectorAll('[data-desktop-tab]').forEach(function (d) {
+        d.addEventListener('click', function () { activateTab(d.dataset.desktopTab); });
+      });
+
+      /* ========================================================
+         3. Sidebar 导航（同步所有 tab 状态）
+         ======================================================== */
+      document.querySelectorAll('[data-nav]').forEach(function (n) {
+        n.addEventListener('click', function () {
+          document.querySelectorAll('[data-nav]').forEach(function (x) {
+            x.classList.toggle('active', x === n);
+          });
+          var navMap = {
+            'records': 'records',
+            'overview': 'overview',
+            'review': 'review',
+            'tags': 'records',
+            'trends': 'overview',
+            'export': 'records',
+            'settings': 'records'
+          };
+          var target = navMap[n.dataset.nav] || 'records';
+          activateTab(target);
+        });
+      });
+
+      /* ========================================================
+         4. Bottom-tab 切换（仅 mobile 显示）
+         ======================================================== */
+      document.querySelectorAll('[data-bottom-tab]').forEach(function (t) {
+        t.addEventListener('click', function (e) {
+          if (t.tagName === 'A') e.preventDefault();
+          activateTab(t.dataset.bottomTab);
+        });
+      });
+
+      // Q2 迁移：3 个显式 tab 监听（records / overview / settings）
+      // — 用 toast 反馈，符合 HIG 风格（每次切换都有触觉提示）
+      var btnMobileRecords = document.querySelector('[data-bottom-tab-key="records"]');
+      var btnMobileOverview = document.querySelector('[data-bottom-tab-key="overview"]');
+      var btnMobileSettings = document.querySelector('[data-bottom-tab-key="settings"]');
+      if (btnMobileRecords) btnMobileRecords.addEventListener('click', function () { showToast('记录'); });
+      if (btnMobileOverview) btnMobileOverview.addEventListener('click', function () { showToast('概览'); });
+      if (btnMobileSettings) btnMobileSettings.addEventListener('click', function () { showToast('设置'); });
+
+      /* ========================================================
+         5. Filter chips（记录过滤）
+         ======================================================== */
+      document.querySelectorAll('[data-filter]').forEach(function (f) {
+        f.addEventListener('click', function () {
+          var filter = f.dataset.filter;
+          // active 状态切换
+          document.querySelectorAll('[data-filter]').forEach(function (x) {
+            x.classList.toggle('active', x === f);
+          });
+          // 过滤记录
+          document.querySelectorAll('.record').forEach(function (r) {
+            var tag = (r.querySelector('.record__tag') || {}).textContent || '';
+            if (filter === 'all') {
+              r.style.display = '';
+            } else {
+              var tagMap = { 'work': '工作', 'life': '生活', 'idea': '灵感', 'feel': '感受' };
+              r.style.display = (tag === tagMap[filter]) ? '' : 'none';
+            }
+          });
+        });
+      });
+
+      /* ========================================================
+         6. Modal / Bottom Sheet
+         ======================================================== */
+      var modal = document.getElementById('modal');
+      var fab = document.getElementById('fab');
+      var modalClose = document.getElementById('modalClose');
+      var modalCancel = document.getElementById('modalCancel');
+      var modalSave = document.getElementById('modalSave');
+      var modalInput = document.getElementById('modalInput');
+      var charCount = document.getElementById('charCount');
+      var activeTag = null;
+
+      function openModal() {
+        if (!modal) return;
+        modal.classList.add('modal-overlay--open');
+        document.body.style.overflow = 'hidden';
+        if (modalInput) {
+          setTimeout(function () { modalInput.focus(); }, 100);
+        }
+      }
+      function closeModal() {
+        if (!modal) return;
+        modal.classList.remove('modal-overlay--open');
+        document.body.style.overflow = '';
+        if (modalInput) modalInput.value = '';
+        if (charCount) charCount.textContent = '0 / 500';
+        activeTag = null;
+        document.querySelectorAll('[data-modal-tag]').forEach(function (c) {
+          c.classList.remove('active');
+        });
+      }
+
+      if (fab) fab.addEventListener('click', openModal);
+      if (modalClose) modalClose.addEventListener('click', closeModal);
+      if (modalCancel) modalCancel.addEventListener('click', closeModal);
+      if (modalSave) modalSave.addEventListener('click', function () {
+        var text = modalInput ? modalInput.value.trim() : '';
+        if (text.length === 0) {
+          showToast('内容不能为空');
+          return;
+        }
+        closeModal();
+        showToast('已保存 · ' + text.length + ' 字');
+      });
+      if (modal) {
+        modal.addEventListener('click', function (e) {
+          if (e.target === modal) closeModal();
+        });
+      }
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeModal();
+      });
+
+      // 字数统计
+      if (modalInput) {
+        modalInput.addEventListener('input', function () {
+          if (charCount) charCount.textContent = modalInput.value.length + ' / 500';
+        });
+      }
+
+      // Modal tag 切换
+      document.querySelectorAll('[data-modal-tag]').forEach(function (c) {
+        c.addEventListener('click', function () {
+          activeTag = c.dataset.modalTag;
+          document.querySelectorAll('[data-modal-tag]').forEach(function (x) {
+            x.classList.toggle('active', x === c);
+          });
+        });
+      });
+
+      /* ========================================================
+         7. Menubar 菜单（仅 macOS）
+         ======================================================== */
+      document.querySelectorAll('[data-menu]').forEach(function (m) {
+        m.addEventListener('click', function () {
+          var names = { app:'轻念', file:'文件', edit:'编辑', view:'显示', window:'窗口', help:'帮助' };
+          showToast('菜单 · ' + (names[m.dataset.menu] || m.dataset.menu));
+        });
+      });
+
+      /* ========================================================
+         8. Inspector mood 评分
+         ======================================================== */
+      document.querySelectorAll('[data-mood]').forEach(function (m) {
+        m.addEventListener('click', function () {
+          document.querySelectorAll('[data-mood]').forEach(function (x) {
+            x.classList.toggle('active', x === m);
+          });
+          var labels = ['', '低落', '稍差', '平稳', '不错', '很好'];
+          showToast('心情：' + labels[parseInt(m.dataset.mood, 10)]);
+        });
+      });
+
+      /* ========================================================
+         9. Header tools / Inspector actions
+         ======================================================== */
+      document.querySelectorAll('[data-action]').forEach(function (a) {
+        a.addEventListener('click', function () {
+          var names = {
+            'search': '打开搜索',
+            'sync': '同步中...',
+            'edit': '进入编辑',
+            'share': '生成分享链接',
+            'delete': '已删除'
+          };
+          showToast(names[a.dataset.action] || a.dataset.action);
+        });
+      });
+
+      /* ========================================================
+         10. Record 点击 — HIG 05-split-views §最佳实践 #1
+         "Persistently highlight the current selection in each pane
+          that leads to the detail view"
+         macOS 平台：同步更新 Inspector hero（trailing pane）；
+         其他平台：仅 toast 反馈（无 inspector 容器）。
+         ======================================================== */
+      var inspectorHero = document.querySelector('.inspector__hero');
+      var inspectorHeroTitle = inspectorHero && inspectorHero.querySelector('.inspector__hero-title');
+      var inspectorHeroMeta = inspectorHero && inspectorHero.querySelector('.inspector__hero-meta');
+      var inspectorHeroBody = inspectorHero && inspectorHero.querySelector('div[style*="font-size: 13px"]');
+
+      document.querySelectorAll('[data-record]').forEach(function (r) {
+        r.addEventListener('click', function () {
+          var idx = r.dataset.record;
+          var textEl = r.querySelector('.record__text');
+          var tagEl = r.querySelector('.record__tag');
+          var timeEl = r.querySelector('.record__time');
+          var text = (textEl || {}).textContent || '';
+          var tag = (tagEl || {}).textContent || '';
+          var time = (timeEl || {}).textContent || '';
+          showToast('选中记录 #' + idx);
+          // macOS only — 更新 Inspector 持久显示当前选择
+          if (body.classList.contains('platform-macos') && inspectorHeroTitle) {
+            var preview = text.length > 18 ? text.slice(0, 18) + '...' : text;
+            inspectorHeroTitle.textContent = '当前选中：' + preview;
+            if (inspectorHeroMeta) {
+              inspectorHeroMeta.textContent = time + ' · ' + tag + ' · ' + text.length + ' 字';
+            }
+            if (inspectorHeroBody) {
+              inspectorHeroBody.textContent = text;
+            }
+          }
+        });
+      });
+
+      /* ========================================================
+         11. Toast
+         ======================================================== */
+      var toastEl = document.getElementById('toast');
+      var toastTimer = null;
+      function showToast(msg) {
+        if (!toastEl) return;
+        toastEl.textContent = msg;
+        toastEl.classList.add('toast--show');
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () {
+          toastEl.classList.remove('toast--show');
+        }, 1800);
+      }
+
+      /* ========================================================
+         12. Dynamic Tint（鼠标移动 — 仅桌面平台）
+         ======================================================== */
+      body.addEventListener('mousemove', function (e) {
+        if (!body.classList.contains('platform-windows') &&
+            !body.classList.contains('platform-macos')) return;
+        var els = document.querySelectorAll('.glass');
+        var x = e.clientX, y = e.clientY;
+        els.forEach(function (el) {
+          var r = el.getBoundingClientRect();
+          if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+            var px = ((x - r.left) / r.width) * 100;
+            var py = ((y - r.top) / r.height) * 100;
+            el.style.setProperty('--mx', px + '%');
+            el.style.setProperty('--my', py + '%');
+          }
+        });
+      });
+
+      /* ========================================================
+         13. 滚动检测（主区）
+         ======================================================== */
+      var main = document.querySelector('.main');
+      if (main) {
+        main.addEventListener('scroll', function () {
+          main.classList.toggle('main--scrolled', main.scrollTop > 16);
+        });
+      }
+
+      /* ========================================================
+         14. 键盘快捷键（桌面端 ⌘K 打开 modal）
+         ======================================================== */
+      document.addEventListener('keydown', function (e) {
+        // ⌘K / Ctrl+K
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+          e.preventDefault();
+          openModal();
+        }
+      });
+
+    })();
+  </script>
+</body>
+</html>

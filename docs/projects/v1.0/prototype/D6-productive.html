@@ -1,0 +1,1714 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Mindtap · 轻念 — Productive Workspace · 高密度工作区视角。">
+  <meta name="color-scheme" light>
+  <title>Mindtap · 轻念 — Productive Workspace (E)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Fraunces:opsz,wght,SOFT@9..144,300..700,0..100&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================================
+       E. PRODUCTIVE WORKSPACE — 紧凑高密度
+       6 层材质系统（克制版）
+       ============================================================ */
+    :root {
+      /* —— 单色主导（低饱和） —— */
+      --accent: #F472B6;          /* pink，主强调色 */
+      --accent-deep: #DB2777;
+      --accent-soft: rgba(244, 114, 182, 0.10);
+      --accent-tint: rgba(244, 114, 182, 0.04);
+
+      /* —— 字体 —— */
+      --font-display: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-body: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-serif: "Fraunces", Georgia, serif;
+
+      /* —— 圆角（更小） —— */
+      --r-xs: 4px;
+      --r-sm: 6px;
+      --r-md: 8px;
+      --r-lg: 10px;
+      --r-xl: 12px;
+      --r-pill: 999px;
+
+      /* —— 间距（紧凑） —— */
+      --sp-1: 3px;
+      --sp-2: 6px;
+      --sp-3: 8px;
+      --sp-4: 10px;
+      --sp-5: 12px;
+      --sp-6: 16px;
+      --sp-7: 20px;
+
+      /* —— 动效（克制） —— */
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --dur-fast: 160ms;
+      --dur-mid: 220ms;
+    }
+
+    [data-theme="light"] {
+      --bg: #F5F4F0;             /* 单一暖灰 */
+      --bg-deep: #EBEAE4;
+      --surface: #FFFFFF;
+      --text: #1A1A1A;
+      --text-soft: #4A4A4A;
+      --text-muted: #8A8A8A;
+      --border: rgba(0, 0, 0, 0.07);
+      --border-strong: rgba(0, 0, 0, 0.10);
+      --row-hover: rgba(244, 114, 182, 0.05);
+      --row-alt: rgba(0, 0, 0, 0.015);
+    }
+
+    /* ============================================================
+       Reset & 基础
+       ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; }
+    * { margin: 0; padding: 0; }
+
+    html {
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.45;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      color: var(--text);
+      background: var(--bg);
+      /* L4 Dynamic Tint 背景 — 4 色 accent mesh（5 点）— 给玻璃"折射对象" */
+      background-image:
+        radial-gradient(circle at 15% 0%, rgba(244, 114, 182, 0.18), transparent 40%),
+        radial-gradient(circle at 85% 10%, rgba(251, 146, 60, 0.16), transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(245, 244, 240, 0.6), transparent 60%),
+        radial-gradient(circle at 100% 100%, rgba(56, 189, 248, 0.15), transparent 45%),
+        radial-gradient(circle at 0% 100%, rgba(139, 92, 246, 0.14), transparent 50%);
+      background-attachment: fixed;
+    }
+
+    button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+    input, textarea { font: inherit; color: inherit; background: none; border: none; outline: none; }
+
+    ::selection { background: var(--accent); color: white; }
+
+    /* ============================================================
+       6 层 Liquid Glass — 紧凑克制版（functional layer only）
+       ============================================================ */
+
+    /* 共享基底：所有玻璃层都用此基底 — 更实（0.65-0.72），让玻璃可"承载"信息 */
+    .glass, .glass-thin, .glass-thick {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+    }
+
+    /* L5 Dynamic Tint：静态极淡 accent 微染（不是 mouse-following） */
+    .glass::before, .glass-thin::before, .glass-thick::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--accent-tint) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* L1-L4 主层 — Subtle 强度（玻璃需透出背景色） */
+    .glass {
+      background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.45) 0%,
+        rgba(255, 255, 255, 0.35) 100%
+      );
+      backdrop-filter: blur(20px) saturate(160%);
+      -webkit-backdrop-filter: blur(20px) saturate(160%);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.6),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.04),
+        0 1px 2px rgba(0, 0, 0, 0.04),
+        0 4px 16px rgba(0, 0, 0, 0.06);
+    }
+
+    .glass-thin {
+      background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.40) 0%,
+        rgba(255, 255, 255, 0.28) 100%
+      );
+      backdrop-filter: blur(18px) saturate(150%);
+      -webkit-backdrop-filter: blur(18px) saturate(150%);
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.03),
+        0 1px 2px rgba(0, 0, 0, 0.03),
+        0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .glass-thick {
+      background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.55) 0%,
+        rgba(255, 255, 255, 0.42) 100%
+      );
+      backdrop-filter: blur(24px) saturate(180%) brightness(102%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%) brightness(102%);
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.7),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.05),
+        0 1px 3px rgba(0, 0, 0, 0.05),
+        0 6px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .glass > *, .glass-thin > *, .glass-thick > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ============================================================
+       1. 顶部菜单栏 — 36px（base 56px），紧凑文字
+       ============================================================ */
+    .menubar {
+      height: 36px;
+      display: flex;
+      align-items: center;
+      padding: 0 var(--sp-4);
+      gap: var(--sp-4);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-soft);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.50) 0%, rgba(255, 255, 255, 0.38) 100%);
+      backdrop-filter: blur(20px) saturate(160%);
+      -webkit-backdrop-filter: blur(20px) saturate(160%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.6),
+        0 1px 3px rgba(0, 0, 0, 0.04);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      user-select: none;
+    }
+
+    .menubar__app-name {
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--text);
+      letter-spacing: -0.005em;
+    }
+
+    .menubar__dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .menubar__menu {
+      display: flex;
+      gap: var(--sp-4);
+      font-size: 12px;
+    }
+
+    .menubar__menu span {
+      cursor: default;
+      padding: 2px 4px;
+      border-radius: var(--r-xs);
+      transition: background-color var(--dur-fast);
+    }
+
+    .menubar__menu span:hover {
+      background: var(--row-hover);
+      color: var(--text);
+    }
+
+    .menubar__spacer { flex: 1; }
+
+    .menubar__traffic {
+      display: flex;
+      gap: 6px;
+    }
+
+    .menubar__traffic span {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .menubar__traffic span:nth-child(1) { background: #FF5F57; }
+    .menubar__traffic span:nth-child(2) { background: #FEBC2E; }
+    .menubar__traffic span:nth-child(3) { background: #28C840; }
+
+    .menubar__meta {
+      display: flex;
+      gap: var(--sp-3);
+      font-size: 11px;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .menubar__meta b {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    /* ============================================================
+       2. 侧栏 — 220px（base 280px），紧凑
+       ============================================================ */
+    .app {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      min-height: calc(100vh - 36px);
+      min-height: calc(100dvh - 36px);
+    }
+
+    .sidebar {
+      width: 220px;
+      padding: var(--sp-3) var(--sp-3);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      position: sticky;
+      top: 36px;
+      height: calc(100vh - 36px);
+      height: calc(100dvh - 36px);
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.30) 100%);
+      backdrop-filter: blur(20px) saturate(160%);
+      -webkit-backdrop-filter: blur(20px) saturate(160%);
+      border-right: 1px solid rgba(255, 255, 255, 0.5);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.6),
+        inset 1px 0 0 rgba(255, 255, 255, 0.4);
+    }
+
+    .sidebar::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--accent-tint) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .sidebar > * { position: relative; z-index: 1; }
+
+    .sidebar__brand {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-2);
+      padding: var(--sp-2);
+      margin-bottom: var(--sp-3);
+    }
+
+    .sidebar__logo {
+      width: 24px;
+      height: 24px;
+      border-radius: var(--r-sm);
+      background: linear-gradient(135deg, var(--accent), #EC4899);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .sidebar__name {
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: -0.005em;
+    }
+
+    .sidebar__subname {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .sidebar__label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: var(--sp-3) var(--sp-2) var(--sp-1);
+    }
+
+    .sidebar__group {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .sidebar__item {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-2);
+      padding: 5px 8px;
+      border-radius: var(--r-sm);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-soft);
+      cursor: pointer;
+      transition: background-color var(--dur-fast), color var(--dur-fast);
+      line-height: 1.2;
+    }
+
+    .sidebar__item:hover {
+      background: var(--row-hover);
+      color: var(--text);
+    }
+
+    .sidebar__item--active {
+      background: var(--accent-soft);
+      color: var(--accent-deep);
+      font-weight: 600;
+    }
+
+    .sidebar__icon {
+      width: 13px;
+      height: 13px;
+      flex-shrink: 0;
+      stroke-width: 2;
+    }
+
+    .sidebar__count {
+      margin-left: auto;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .sidebar__divider {
+      height: 1px;
+      background: var(--border);
+      margin: var(--sp-2) 0;
+    }
+
+    .sidebar__footer {
+      margin-top: auto;
+      padding: var(--sp-2);
+      font-size: 10px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sidebar__footer-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #6EE7B7;
+    }
+
+    /* ============================================================
+       3. 主内容 — 高密度
+       ============================================================ */
+    .main {
+      padding: var(--sp-4) var(--sp-5) var(--sp-7);
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-4);
+    }
+
+    /* —— 顶部工具条（HIG 3 区：leading / center / trailing）—— */
+    .toolbar {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: var(--sp-3);
+      padding-bottom: var(--sp-3);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .toolbar__title {
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: -0.005em;
+    }
+
+    .toolbar__sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .toolbar__center {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-2);
+      justify-content: center;
+    }
+
+    .toolbar__search {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      border-radius: var(--r-sm);
+      background: rgba(255, 255, 255, 0.55);
+      border: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--text-muted);
+      width: 200px;
+    }
+
+    .toolbar__filter {
+      padding: 4px 8px;
+      border-radius: var(--r-sm);
+      font-size: 11px;
+      color: var(--text-soft);
+      border: 1px solid var(--border);
+      transition: background-color var(--dur-fast);
+    }
+
+    .toolbar__filter:hover {
+      background: var(--row-hover);
+    }
+
+    .toolbar__filter--active {
+      background: var(--accent-soft);
+      color: var(--accent-deep);
+      border-color: rgba(244, 114, 182, 0.25);
+    }
+
+    /* HIG trailing primary action (.prominent): 加色到背景，不加到文字 (07-color 规则 3) */
+    .toolbar__primary {
+      padding: 4px 12px; border-radius: var(--r-sm);
+      font-size: 11px; font-weight: 600; color: white;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-deep) 100%);
+      box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.45),
+                  0 1px 3px rgba(244, 114, 182, 0.25);
+      transition: filter var(--dur-fast);
+    }
+    .toolbar__primary:hover { filter: brightness(1.05); }
+
+    /* ============================================================
+       4. Stats — 6 卡片网格（2×3）— 数据明确
+       ============================================================ */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: var(--sp-3);
+    }
+
+    .stat {
+      padding: var(--sp-3) var(--sp-4);
+      border-radius: var(--r-md);
+      background: rgba(255, 255, 255, 0.42);
+      backdrop-filter: blur(18px) saturate(150%);
+      -webkit-backdrop-filter: blur(18px) saturate(150%);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.55),
+        0 1px 2px rgba(0, 0, 0, 0.03),
+        0 2px 8px rgba(0, 0, 0, 0.04);
+      transition: background-color var(--dur-fast);
+    }
+
+    .stat:hover {
+      background: rgba(255, 255, 255, 0.55);
+    }
+
+    .stat__head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .stat__label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .stat__trend {
+      font-size: 10px;
+      font-weight: 600;
+      color: #FB923C;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stat__trend--down {
+      color: #DC2626;
+    }
+
+    .stat__value {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      margin-bottom: 2px;
+    }
+
+    .stat__unit {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .stat__bar {
+      margin-top: 6px;
+      height: 3px;
+      background: rgba(0, 0, 0, 0.06);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .stat__bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 999px;
+    }
+
+    /* —— 2×3 在小屏上变 3×2（保持紧凑） —— */
+    @media (max-width: 1100px) {
+      .stats { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    /* ============================================================
+       5. Records — 表格式高密度（10+ 条）
+       ============================================================ */
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      padding-bottom: var(--sp-2);
+      border-bottom: 1px solid var(--border-strong);
+      margin-bottom: 0;
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: -0.005em;
+    }
+
+    .section-meta {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .records-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .records-table thead th {
+      text-align: left;
+      font-weight: 600;
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: var(--sp-2) var(--sp-3);
+      border-bottom: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.015);
+      position: sticky;
+      top: 0;
+    }
+
+    .records-table thead th:nth-child(1) { width: 80px; }   /* time */
+    .records-table thead th:nth-child(2) { width: 90px; }   /* category */
+    .records-table thead th:nth-child(3) { }                 /* content */
+    .records-table thead th:nth-child(4) { width: 100px; }  /* value */
+    .records-table thead th:nth-child(5) { width: 80px; }   /* status */
+
+    .records-table tbody tr {
+      transition: background-color var(--dur-fast);
+    }
+
+    .records-table tbody tr:nth-child(even) {
+      background: var(--row-alt);
+    }
+
+    .records-table tbody tr:hover {
+      background: var(--row-hover);
+    }
+
+    .records-table tbody td {
+      padding: 6px var(--sp-3);
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+      line-height: 1.3;
+    }
+
+    .cell-time {
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: var(--text);
+      letter-spacing: 0.01em;
+    }
+
+    .cell-cat {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-soft);
+    }
+
+    .cell-cat-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .cell-cat-dot--mood    { background: #FB923C; }
+    .cell-cat-dot--sleep   { background: #8B5CF6; }
+    .cell-cat-dot--water   { background: #38BDF8; }
+    .cell-cat-dot--med     { background: #F472B6; }
+    .cell-cat-dot--idea    { background: #FB923C; }
+    .cell-cat-dot--todo    { background: #F472B6; }
+    .cell-cat-dot--habit   { background: #38BDF8; }
+    .cell-cat-dot--expense { background: #FB923C; }
+    .cell-cat-dot--review  { background: #8B5CF6; }
+
+    .cell-content {
+      font-size: 12px;
+      color: var(--text);
+    }
+
+    .cell-content em {
+      color: var(--text-muted);
+      font-style: normal;
+      margin-left: 4px;
+    }
+
+    .cell-value {
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .cell-status {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: var(--r-pill);
+      display: inline-block;
+      letter-spacing: 0.02em;
+    }
+
+    .cell-status--done    { background: rgba(251, 146, 60, 0.18); color: #C2410C; }
+    .cell-status--pending { background: rgba(56, 189, 248, 0.15); color: #0284C7; }
+    .cell-status--info    { background: rgba(244, 114, 182, 0.10);  color: var(--accent-deep); }
+
+    /* ============================================================
+       6. Review — 表格形式（3 关键词行 + 时间列）
+       ============================================================ */
+    .review-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--sp-4);
+    }
+
+    .review-block {
+      padding: var(--sp-3) var(--sp-4);
+      border-radius: var(--r-md);
+      background: rgba(255, 255, 255, 0.42);
+      backdrop-filter: blur(18px) saturate(150%);
+      -webkit-backdrop-filter: blur(18px) saturate(150%);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.55),
+        0 1px 2px rgba(0, 0, 0, 0.03),
+        0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .review-block__title {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: var(--sp-2);
+    }
+
+    .review-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .review-table th,
+    .review-table td {
+      text-align: left;
+      padding: 4px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .review-table th {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .review-table td {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .review-table tr:last-child th,
+    .review-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* HIG 07-color 规则 3：颜色加到背景，不加到文字 */
+    .review-word {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 14px;
+      color: var(--accent-deep);
+      background: var(--accent-soft);
+      padding: 1px 8px;
+      border-radius: var(--r-pill);
+      display: inline-block;
+      line-height: 1.4;
+    }
+
+    /* ============================================================
+       7. Timeline table — 当日时间线（密度展示）
+       HIG 09-sliders 规则：清晰的当前值指示（slider thumb 等价）
+       ============================================================ */
+    .timeline-strip {
+      display: grid;
+      grid-template-columns: repeat(24, 1fr);
+      gap: 1px;
+      height: 24px;
+      margin-top: var(--sp-2);
+      background: var(--border);
+      border-radius: var(--r-xs);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .timeline-cell {
+      background: rgba(255, 255, 255, 0.5);
+      position: relative;
+      cursor: pointer;
+      transition: background-color var(--dur-fast);
+    }
+
+    .timeline-cell:hover {
+      background: var(--row-hover);
+    }
+
+    .timeline-cell--has {
+      background: var(--accent);
+    }
+
+    .timeline-cell--peak {
+      background: var(--accent-deep);
+    }
+
+    /* 当前时间指示（仿 slider thumb）：22:30 落在 22/24 ≈ 91.66% */
+    .timeline-now {
+      position: absolute;
+      top: -3px;
+      bottom: -3px;
+      width: 2px;
+      left: calc(22.5 / 24 * 100%);
+      background: var(--text);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.85);
+      pointer-events: none;
+      z-index: 2;
+    }
+    .timeline-now::before {
+      content: "";
+      position: absolute;
+      top: -4px; left: 50%;
+      transform: translateX(-50%);
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--text);
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+    }
+
+    .timeline-axis {
+      display: grid;
+      grid-template-columns: repeat(24, 1fr);
+      gap: 1px;
+      font-size: 9px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .timeline-axis span {
+      text-align: left;
+    }
+
+    /* ============================================================
+       8. FAB — 小而克制（base 64px → 48px）
+       ============================================================ */
+    .fab {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      color: white;
+      font-size: 22px;
+      font-weight: 300;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 100;
+      user-select: none;
+
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-deep) 100%);
+      box-shadow:
+        inset 0 0.5px 0 rgba(255, 255, 255, 0.5),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.10),
+        0 2px 6px rgba(244, 114, 182, 0.35),
+        0 4px 16px rgba(0, 0, 0, 0.18);
+      border: none;
+      transition: transform var(--dur-fast), box-shadow var(--dur-fast), background-color var(--dur-fast);
+    }
+
+    .fab:hover {
+      transform: translateY(-1px);
+      background: linear-gradient(135deg, #EC4899 0%, #BE185D 100%);
+      box-shadow:
+        inset 0 0.5px 0 rgba(255, 255, 255, 0.6),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.10),
+        0 4px 10px rgba(244, 114, 182, 0.45),
+        0 6px 20px rgba(0, 0, 0, 0.22);
+    }
+
+    .fab:active {
+      transform: scale(0.96);
+    }
+
+    .fab__kbd {
+      position: absolute;
+      bottom: -16px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 9px;
+      font-weight: 600;
+      color: var(--text-muted);
+      padding: 2px 6px;
+      border-radius: var(--r-xs);
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    /* ============================================================
+       9. Modal — 紧凑（基础结构保留）
+       ============================================================ */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.15);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--sp-5);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--dur-mid);
+    }
+
+    .modal-overlay--open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 480px;
+      max-height: 80vh;
+      border-radius: var(--r-lg);
+      padding: var(--sp-5);
+      transform: scale(0.95) translateY(4px);
+      transition: transform var(--dur-mid), opacity var(--dur-mid);
+      overflow: hidden;
+      opacity: 0;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.60) 0%, rgba(255, 255, 255, 0.45) 100%);
+      backdrop-filter: blur(24px) saturate(180%) brightness(102%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%) brightness(102%);
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.7),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.05),
+        0 2px 8px rgba(0, 0, 0, 0.06),
+        0 12px 32px rgba(0, 0, 0, 0.14);
+    }
+
+    .modal-overlay--open .modal {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+
+    .modal__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--sp-3);
+      padding-bottom: var(--sp-3);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal__title {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.005em;
+    }
+
+    .modal__close {
+      width: 22px;
+      height: 22px;
+      border-radius: var(--r-xs);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      transition: background-color var(--dur-fast), color var(--dur-fast);
+    }
+
+    .modal__close:hover {
+      background: var(--row-hover);
+      color: var(--text);
+    }
+
+    .modal__grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--sp-2);
+    }
+
+    .category {
+      padding: var(--sp-2) var(--sp-3);
+      border-radius: var(--r-sm);
+      display: flex;
+      align-items: center;
+      gap: var(--sp-2);
+      cursor: pointer;
+      transition: background-color var(--dur-fast);
+      border: 1px solid transparent;
+    }
+
+    .category:hover {
+      background: var(--row-hover);
+      border-color: var(--border);
+    }
+
+    .category__icon {
+      width: 18px;
+      height: 18px;
+      border-radius: var(--r-xs);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+
+    .category__name {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    /* —— Modal 内分类图标配色 —— */
+    .category__icon--mood    { background: rgba(251, 146, 60, 0.18); color: #C2410C; }
+    .category__icon--sleep   { background: rgba(139, 92, 246, 0.18); color: #7C3AED; }
+    .category__icon--water   { background: rgba(56, 189, 248, 0.18); color: #0284C7; }
+    .category__icon--med     { background: rgba(244, 114, 182, 0.18); color: #DB2777; }
+    .category__icon--idea    { background: rgba(251, 146, 60, 0.18); color: #C2410C; }
+    .category__icon--todo    { background: rgba(244, 114, 182, 0.18); color: #DB2777; }
+    .category__icon--habit   { background: rgba(139, 92, 246, 0.18); color: #7C3AED; }
+    .category__icon--expense { background: rgba(251, 146, 60, 0.18); color: #C2410C; }
+    .category__icon--review  { background: rgba(244, 114, 182, 0.18); color: #DB2777; }
+
+    .modal__footer {
+      margin-top: var(--sp-3);
+      padding-top: var(--sp-2);
+      border-top: 1px solid var(--border);
+      font-size: 10px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: center;
+      gap: var(--sp-2);
+    }
+
+    .modal__kbd {
+      font-weight: 600;
+      padding: 1px 5px;
+      border-radius: var(--r-xs);
+      border: 1px solid var(--border);
+    }
+
+    /* ============================================================
+       10. Bottom tab (mobile) — 紧凑 50px
+       ============================================================ */
+    .bottom-tab {
+      display: none;
+      position: fixed;
+      bottom: 12px;
+      left: 12px;
+      right: 12px;
+      height: 50px;
+      border-radius: var(--r-pill);
+      align-items: center;
+      justify-content: space-around;
+      padding: 0 var(--sp-3);
+      z-index: 90;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.52) 0%, rgba(255, 255, 255, 0.40) 100%);
+      backdrop-filter: blur(20px) saturate(160%);
+      -webkit-backdrop-filter: blur(20px) saturate(160%);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.6),
+        0 2px 8px rgba(0, 0, 0, 0.10),
+        0 8px 24px rgba(0, 0, 0, 0.10);
+    }
+
+    .bottom-tab__item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px var(--sp-3);
+      border-radius: var(--r-pill);
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 500;
+      transition: background-color var(--dur-fast), color var(--dur-fast);
+    }
+
+    .bottom-tab__item--active {
+      background: var(--accent);
+      color: white;
+    }
+
+    @media (max-width: 768px) {
+      .app { grid-template-columns: 1fr; padding-bottom: 80px; }
+      .menubar { display: none; }
+      .sidebar { display: none; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .bottom-tab { display: flex; }
+      .review-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ============================================================
+       11. 入场动效 — 仅 1 个（克制）
+       ============================================================ */
+    @keyframes fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .main {
+      animation: fade-in 200ms var(--ease-out);
+    }
+
+    /* ============================================================
+       12. 可访问性 — 焦点 + 减少动效
+       ============================================================ */
+    *:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- ============================================================
+       顶部菜单栏 36px
+       ============================================================ -->
+  <div class="menubar" role="banner">
+    <span class="menubar__app-name">Mindtap</span>
+    <span class="menubar__dot" aria-hidden="true"></span>
+    <nav class="menubar__menu" aria-label="应用菜单">
+      <span>文件</span>
+      <span>编辑</span>
+      <span>视图</span>
+      <span>窗口</span>
+      <span>帮助</span>
+    </nav>
+    <span class="menubar__spacer"></span>
+    <div class="menubar__meta" aria-hidden="true">
+      <span>共 <b>1,284</b> 条</span>
+      <span>·</span>
+      <span>本周 <b>+47</b></span>
+      <span>·</span>
+      <span>本地</span>
+    </div>
+    <div class="menubar__traffic" aria-hidden="true">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+
+  <div class="app">
+
+    <!-- ============================================================
+         侧栏 220px
+         ============================================================ -->
+    <aside class="sidebar" role="navigation" aria-label="主导航">
+      <div class="sidebar__brand">
+        <div class="sidebar__logo" aria-hidden="true">M</div>
+        <div>
+          <div class="sidebar__name">Mindtap</div>
+          <div class="sidebar__subname">轻念 · E</div>
+        </div>
+      </div>
+
+      <div class="sidebar__group">
+        <a class="sidebar__item sidebar__item--active" href="#" aria-current="page">
+          <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          全部记录
+          <span class="sidebar__count">1,284</span>
+        </a>
+        <a class="sidebar__item" href="#">
+          <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          今日
+          <span class="sidebar__count">14</span>
+        </a>
+        <a class="sidebar__item" href="#">
+          <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+          灵感
+          <span class="sidebar__count">287</span>
+        </a>
+        <a class="sidebar__item" href="#">
+          <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 11 12 14 22 4"/>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+          </svg>
+          待办
+          <span class="sidebar__count">42</span>
+        </a>
+        <a class="sidebar__item" href="#">
+          <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          习惯
+          <span class="sidebar__count">183</span>
+        </a>
+      </div>
+
+      <div class="sidebar__divider"></div>
+
+      <div class="sidebar__label">分类</div>
+      <div class="sidebar__group">
+        <a class="sidebar__item" href="#">
+          <span class="cell-cat-dot cell-cat-dot--mood"></span>
+          情绪 / 能量
+          <span class="sidebar__count">96</span>
+        </a>
+        <a class="sidebar__item" href="#">
+          <span class="cell-cat-dot cell-cat-dot--sleep"></span>
+          作息
+          <span class="sidebar__count">58</span>
+        </a>
+        <a class="sidebar__item" href="#">
+          <span class="cell-cat-dot cell-cat-dot--water"></span>
+          饮水
+          <span class="sidebar__count">412</span>
+        </a>
+        <a class="sidebar__item" href="#">
+          <span class="cell-cat-dot cell-cat-dot--med"></span>
+          服药
+          <span class="sidebar__count">29</span>
+        </a>
+        <a class="sidebar__item" href="#">
+          <span class="cell-cat-dot cell-cat-dot--expense"></span>
+          消费
+          <span class="sidebar__count">94</span>
+        </a>
+        <a class="sidebar__item" href="#">
+          <span class="cell-cat-dot cell-cat-dot--review"></span>
+          复盘
+          <span class="sidebar__count">187</span>
+        </a>
+      </div>
+
+      <div class="sidebar__divider"></div>
+
+      <div class="sidebar__group">
+        <a class="sidebar__item" href="#">
+          <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="20" x2="18" y2="10"/>
+            <line x1="12" y1="20" x2="12" y2="4"/>
+            <line x1="6" y1="20" x2="6" y2="14"/>
+          </svg>
+          概览
+        </a>
+        <a class="sidebar__item" href="#">
+          <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+          设置
+        </a>
+      </div>
+
+      <div class="sidebar__footer">
+        <span class="sidebar__footer-dot" aria-hidden="true"></span>
+        <span>本地存储 · 已同步</span>
+      </div>
+    </aside>
+
+    <!-- ============================================================
+         主内容
+         ============================================================ -->
+    <main class="main" role="main">
+
+      <!-- 顶部工具条（HIG 3 区：leading 标题 / center 搜索+过滤 / trailing 主操作） -->
+      <div class="toolbar">
+        <div class="toolbar__leading">
+          <span class="toolbar__title">工作区</span>
+          <span class="toolbar__sub">2026 / 06 / 14 · 周日 · 共 14 条</span>
+        </div>
+        <div class="toolbar__center">
+          <div class="toolbar__search">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <span>搜索 1,284 条记录…</span>
+          </div>
+          <button class="toolbar__filter toolbar__filter--active">全部</button>
+          <button class="toolbar__filter">已完成</button>
+          <button class="toolbar__filter">未完成</button>
+        </div>
+        <div class="toolbar__trailing">
+          <button class="toolbar__primary">导出</button>
+        </div>
+      </div>
+
+      <!-- 6 卡片 Stats -->
+      <section class="stats" aria-label="今日数据">
+        <div class="stat">
+          <div class="stat__head">
+            <span class="stat__label">步数</span>
+            <span class="stat__trend">+12%</span>
+          </div>
+          <div class="stat__value">8,432</div>
+          <div class="stat__bar"><div class="stat__bar-fill" style="width:84%"></div></div>
+          <div class="stat__unit">目标 10,000</div>
+        </div>
+        <div class="stat">
+          <div class="stat__head">
+            <span class="stat__label">距离</span>
+            <span class="stat__trend">+5%</span>
+          </div>
+          <div class="stat__value">6.2<span class="stat__unit"> km</span></div>
+          <div class="stat__bar"><div class="stat__bar-fill" style="width:62%"></div></div>
+          <div class="stat__unit">较昨日 0.3km</div>
+        </div>
+        <div class="stat">
+          <div class="stat__head">
+            <span class="stat__label">专注</span>
+            <span class="stat__trend">+22%</span>
+          </div>
+          <div class="stat__value">3h 45m</div>
+          <div class="stat__bar"><div class="stat__bar-fill" style="width:75%"></div></div>
+          <div class="stat__unit">4 段番茄钟</div>
+        </div>
+        <div class="stat">
+          <div class="stat__head">
+            <span class="stat__label">记录</span>
+            <span class="stat__trend">+3</span>
+          </div>
+          <div class="stat__value">14</div>
+          <div class="stat__bar"><div class="stat__bar-fill" style="width:100%"></div></div>
+          <div class="stat__unit">较昨日 +3 条</div>
+        </div>
+        <div class="stat">
+          <div class="stat__head">
+            <span class="stat__label">能量</span>
+            <span class="stat__trend stat__trend--down">-8%</span>
+          </div>
+          <div class="stat__value">6.4<span class="stat__unit"> /10</span></div>
+          <div class="stat__bar"><div class="stat__bar-fill" style="width:64%"></div></div>
+          <div class="stat__unit">午后略下降</div>
+        </div>
+        <div class="stat">
+          <div class="stat__head">
+            <span class="stat__label">消费</span>
+            <span class="stat__trend">¥ 96</span>
+          </div>
+          <div class="stat__value">¥ 87</div>
+          <div class="stat__bar"><div class="stat__bar-fill" style="width:58%"></div></div>
+          <div class="stat__unit">日预算 ¥ 150</div>
+        </div>
+      </section>
+
+      <!-- 当日时间线 strip -->
+      <section aria-label="今日时间线">
+        <div class="section-header">
+          <span class="section-title">当日时间线</span>
+          <span class="section-meta">24h · 14 个事件 · 高峰 10:00 / 15:00</span>
+        </div>
+        <div class="timeline-strip" aria-hidden="true">
+          <div class="timeline-now" aria-label="现在 22:30"></div>
+          <div class="timeline-cell"></div>
+          <div class="timeline-cell"></div>
+          <div class="timeline-cell"></div>
+          <div class="timeline-cell"></div>
+          <div class="timeline-cell"></div>
+          <div class="timeline-cell"></div>
+          <div class="timeline-cell"></div>
+          <div class="timeline-cell timeline-cell--has"></div>
+          <div class="timeline-cell timeline-cell--has"></div>
+          <div class="timeline-cell timeline-cell--peak"></div>
+          <div class="timeline-cell timeline-cell--has"></div>
+          <div class="timeline-cell timeline-cell--has"></div>
+          <div class="timeline-cell timeline-cell--has"></div>
+          <div class="timeline-cell"></div>
+          <div class="timeline-cell timeline-cell--peak"></div>
+          <div class="timeline-cell timeline-cell--has"></div>
+          <div class="timeline-cell timeline-cell--has"></div>
+          <div class="timeline-cell timeline-cell--has"></div>
+          <div class="timeline-cell"></div>
+          <div class="timeline-cell timeline-cell--has"></div>
+          <div class="timeline-cell timeline-cell--has"></div>
+          <div class="timeline-cell timeline-cell--has"></div>
+          <div class="timeline-cell timeline-cell--has"></div>
+          <div class="timeline-cell timeline-cell--has"></div>
+        </div>
+        <div class="timeline-axis" aria-hidden="true">
+          <span>00</span>
+          <span>03</span>
+          <span>06</span>
+          <span>09</span>
+          <span>12</span>
+          <span>15</span>
+          <span>18</span>
+          <span>21</span>
+        </div>
+      </section>
+
+      <!-- 今日记录 — 表格 -->
+      <section aria-label="今日记录">
+        <div class="section-header">
+          <span class="section-title">今日记录</span>
+          <span class="section-meta">14 条 · 最近 22:30</span>
+        </div>
+        <table class="records-table">
+          <thead>
+            <tr>
+              <th>时间</th>
+              <th>类别</th>
+              <th>内容</th>
+              <th>数值</th>
+              <th>状态</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="cell-time">22:30</td>
+              <td><span class="cell-cat"><span class="cell-cat-dot cell-cat-dot--med"></span>服药</span></td>
+              <td class="cell-content">维生素 D 2000 IU <em>· 每日</em></td>
+              <td class="cell-value">1 粒</td>
+              <td><span class="cell-status cell-status--done">已服用</span></td>
+            </tr>
+            <tr>
+              <td class="cell-time">21:15</td>
+              <td><span class="cell-cat"><span class="cell-cat-dot cell-cat-dot--review"></span>复盘</span></td>
+              <td class="cell-content">"灵光 / 探索 / 温暖" <em>· 3 词</em></td>
+              <td class="cell-value">3 / 3</td>
+              <td><span class="cell-status cell-status--done">已完成</span></td>
+            </tr>
+            <tr>
+              <td class="cell-time">20:15</td>
+              <td><span class="cell-cat"><span class="cell-cat-dot cell-cat-dot--todo"></span>待办</span></td>
+              <td class="cell-content">买牛奶（全脂，2 盒） <em>· 截止：明天</em></td>
+              <td class="cell-value">—</td>
+              <td><span class="cell-status cell-status--pending">进行中</span></td>
+            </tr>
+            <tr>
+              <td class="cell-time">19:00</td>
+              <td><span class="cell-cat"><span class="cell-cat-dot cell-cat-dot--habit"></span>习惯</span></td>
+              <td class="cell-content">冥想 15 分钟 <em>· 连续 12 天</em></td>
+              <td class="cell-value">15 min</td>
+              <td><span class="cell-status cell-status--done">已完成</span></td>
+            </tr>
+            <tr>
+              <td class="cell-time">18:30</td>
+              <td><span class="cell-cat"><span class="cell-cat-dot cell-cat-dot--expense"></span>消费</span></td>
+              <td class="cell-content">晚餐 · 自己做饭 <em>· 非必要</em></td>
+              <td class="cell-value">¥ 18</td>
+              <td><span class="cell-status cell-status--info">已记账</span></td>
+            </tr>
+            <tr>
+              <td class="cell-time">17:00</td>
+              <td><span class="cell-cat"><span class="cell-cat-dot cell-cat-dot--habit"></span>习惯</span></td>
+              <td class="cell-content">阅读 · 《原子习惯》第 4 章 <em>· 30 min</em></td>
+              <td class="cell-value">30 min</td>
+              <td><span class="cell-status cell-status--done">已完成</span></td>
+            </tr>
+            <tr>
+              <td class="cell-time">15:42</td>
+              <td><span class="cell-cat"><span class="cell-cat-dot cell-cat-dot--water"></span>饮水</span></td>
+              <td class="cell-content">柠檬水 1 杯 <em>· 下午第 3 杯</em></td>
+              <td class="cell-value">250 ml</td>
+              <td><span class="cell-status cell-status--info">已记录</span></td>
+            </tr>
+            <tr>
+              <td class="cell-time">15:08</td>
+              <td><span class="cell-cat"><span class="cell-cat-dot cell-cat-dot--idea"></span>灵感</span></td>
+              <td class="cell-content">"梦里的海浪声 — 像有什么东西在试图告诉我，但我听不清。" <em>· 关键词</em></td>
+              <td class="cell-value">—</td>
+              <td><span class="cell-status cell-status--info">已保存</span></td>
+            </tr>
+            <tr>
+              <td class="cell-time">12:30</td>
+              <td><span class="cell-cat"><span class="cell-cat-dot cell-cat-dot--expense"></span>消费</span></td>
+              <td class="cell-content">午餐 · 公司食堂 <em>· 必要</em></td>
+              <td class="cell-value">¥ 35</td>
+              <td><span class="cell-status cell-status--info">已记账</span></td>
+            </tr>
+            <tr>
+              <td class="cell-time">10:42</td>
+              <td><span class="cell-cat"><span class="cell-cat-dot cell-cat-dot--idea"></span>灵感</span></td>
+              <td class="cell-content">"如果人脑有 API，每个人都能把灵感打包成可调用的函数。" <em>· 语音 8.2s</em></td>
+              <td class="cell-value">—</td>
+              <td><span class="cell-status cell-status--info">已保存</span></td>
+            </tr>
+            <tr>
+              <td class="cell-time">10:15</td>
+              <td><span class="cell-cat"><span class="cell-cat-dot cell-cat-dot--water"></span>饮水</span></td>
+              <td class="cell-content">黑咖啡 1 杯 <em>· 第 2 杯</em></td>
+              <td class="cell-value">200 ml</td>
+              <td><span class="cell-status cell-status--info">已记录</span></td>
+            </tr>
+            <tr>
+              <td class="cell-time">09:30</td>
+              <td><span class="cell-cat"><span class="cell-cat-dot cell-cat-dot--habit"></span>习惯</span></td>
+              <td class="cell-content">晨跑 30 分钟 <em>· 配速 5'42"/km</em></td>
+              <td class="cell-value">5.3 km</td>
+              <td><span class="cell-status cell-status--done">已完成</span></td>
+            </tr>
+            <tr>
+              <td class="cell-time">08:20</td>
+              <td><span class="cell-cat"><span class="cell-cat-dot cell-cat-dot--water"></span>饮水</span></td>
+              <td class="cell-content">温水 1 杯 <em>· 起床后</em></td>
+              <td class="cell-value">200 ml</td>
+              <td><span class="cell-status cell-status--info">已记录</span></td>
+            </tr>
+            <tr>
+              <td class="cell-time">08:15</td>
+              <td><span class="cell-cat"><span class="cell-cat-dot cell-cat-dot--mood"></span>情绪</span></td>
+              <td class="cell-content">清醒 / 专注 / 略有兴奋 <em>· 晨间自评</em></td>
+              <td class="cell-value">7 / 10</td>
+              <td><span class="cell-status cell-status--info">已记录</span></td>
+            </tr>
+            <tr>
+              <td class="cell-time">07:30</td>
+              <td><span class="cell-cat"><span class="cell-cat-dot cell-cat-dot--sleep"></span>作息</span></td>
+              <td class="cell-content">起床 <em>· 睡眠 7h 45m</em></td>
+              <td class="cell-value">7:45</td>
+              <td><span class="cell-status cell-status--info">已记录</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- 每日复盘 — 表格形式 -->
+      <section aria-label="今日复盘">
+        <div class="section-header">
+          <span class="section-title">每日复盘</span>
+          <span class="section-meta">3 词 · 21:15</span>
+        </div>
+        <div class="review-grid">
+          <div class="review-block">
+            <div class="review-block__title">今日 3 词</div>
+            <table class="review-table">
+              <tbody>
+                <tr><td class="review-word">灵光</td><td style="text-align:right;color:var(--text-muted);">灵感 4 条</td></tr>
+                <tr><td class="review-word">探索</td><td style="text-align:right;color:var(--text-muted);">晨跑 5.3km</td></tr>
+                <tr><td class="review-word">温暖</td><td style="text-align:right;color:var(--text-muted);">晚餐 · 自炊</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="review-block">
+            <div class="review-block__title">近 7 日</div>
+            <table class="review-table">
+              <thead>
+                <tr><th>日期</th><th>关键词</th><th style="text-align:right;">记录数</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>06 / 14 · 周日</td><td class="review-word">灵光 / 探索 / 温暖</td><td style="text-align:right;font-variant-numeric:tabular-nums;">14</td></tr>
+                <tr><td>06 / 13 · 周六</td><td class="review-word">独处 / 雨声 / 重启</td><td style="text-align:right;font-variant-numeric:tabular-nums;">11</td></tr>
+                <tr><td>06 / 12 · 周五</td><td class="review-word">交付 / 疲惫 / 欣慰</td><td style="text-align:right;font-variant-numeric:tabular-nums;">18</td></tr>
+                <tr><td>06 / 11 · 周四</td><td class="review-word">春困 / 咖啡 / 突破</td><td style="text-align:right;font-variant-numeric:tabular-nums;">16</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- FAB -->
+  <button class="fab" id="fab" aria-label="快速记录">
+    <span aria-hidden="true">+</span>
+    <span class="fab__kbd">N</span>
+  </button>
+
+  <!-- 移动端底部 tab -->
+  <nav class="bottom-tab" aria-label="移动端主导航">
+    <a class="bottom-tab__item bottom-tab__item--active" href="#">
+      <span>记录</span>
+    </a>
+    <a class="bottom-tab__item" href="#">
+      <span>概览</span>
+    </a>
+    <a class="bottom-tab__item" href="#">
+      <span>设置</span>
+    </a>
+  </nav>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modal" role="dialog" aria-modal="true">
+    <div class="modal">
+      <header class="modal__header">
+        <h2 class="modal__title">快速记录</h2>
+        <button class="modal__close" id="modalClose" aria-label="关闭">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </header>
+
+      <div class="modal__grid">
+        <button class="category">
+          <div class="category__icon category__icon--mood">N</div>
+          <div class="category__name">情绪 / 能量</div>
+        </button>
+        <button class="category">
+          <div class="category__icon category__icon--sleep">Z</div>
+          <div class="category__name">作息</div>
+        </button>
+        <button class="category">
+          <div class="category__icon category__icon--water">W</div>
+          <div class="category__name">饮水</div>
+        </button>
+        <button class="category">
+          <div class="category__icon category__icon--med">M</div>
+          <div class="category__name">服药</div>
+        </button>
+        <button class="category">
+          <div class="category__icon category__icon--idea">I</div>
+          <div class="category__name">灵感</div>
+        </button>
+        <button class="category">
+          <div class="category__icon category__icon--todo">T</div>
+          <div class="category__name">待办</div>
+        </button>
+        <button class="category">
+          <div class="category__icon category__icon--habit">H</div>
+          <div class="category__name">习惯</div>
+        </button>
+        <button class="category">
+          <div class="category__icon category__icon--expense">$</div>
+          <div class="category__name">消费</div>
+        </button>
+        <button class="category">
+          <div class="category__icon category__icon--review">R</div>
+          <div class="category__name">复盘</div>
+        </button>
+      </div>
+
+      <footer class="modal__footer">
+        <span><span class="modal__kbd">Esc</span> 关闭</span>
+        <span>·</span>
+        <span><span class="modal__kbd">N</span> 打开</span>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    /* Theme + Modal + FAB — 精简脚本 */
+    (function() {
+      const html = document.documentElement;
+      const stored = localStorage.getItem('mindtap-theme');
+      if (stored) html.setAttribute('data-theme', stored);
+
+      const fab = document.getElementById('fab');
+      const modal = document.getElementById('modal');
+      const close = document.getElementById('modalClose');
+
+      function open() { modal.classList.add('modal-overlay--open'); }
+      function closeModal() { modal.classList.remove('modal-overlay--open'); }
+
+      fab.addEventListener('click', open);
+      close.addEventListener('click', closeModal);
+      modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeModal();
+        if (e.key === 'n' && !e.metaKey && !e.ctrlKey && !e.target.matches('input, textarea')) {
+          e.preventDefault();
+          open();
+        }
+      });
+
+      /* Sidebar nav toggle */
+      document.querySelectorAll('.sidebar__item').forEach(item => {
+        item.addEventListener('click', (e) => {
+          e.preventDefault();
+          document.querySelectorAll('.sidebar__item').forEach(i => i.classList.remove('sidebar__item--active'));
+          item.classList.add('sidebar__item--active');
+        });
+      });
+
+      /* Filter toggle */
+      document.querySelectorAll('.toolbar__filter').forEach(f => {
+        f.addEventListener('click', () => {
+          document.querySelectorAll('.toolbar__filter').forEach(x => x.classList.remove('toolbar__filter--active'));
+          f.classList.add('toolbar__filter--active');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

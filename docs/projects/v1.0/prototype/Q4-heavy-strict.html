@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Mindtap · 轻念 — 极简记录工具，Liquid Glass 设计语言。">
+  <meta name="color-scheme" content="light">
+  <title>Mindtap · 轻念 — 极简记录</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@500;700;800&family=Manrope:wght@300;400;500;600;700&family=Fraunces:opsz,wght,SOFT@9..144,300..700,0..100&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================================
+       1. 设计令牌
+       ============================================================ */
+    :root {
+      --accent: #F472B6;
+      --accent-deep: #DB2777;
+      --accent-soft: rgba(244, 114, 182, 0.12);
+      --accent-glow: rgba(244, 114, 182, 0.35);
+      --amber: #FB923C;
+      --amber-soft: rgba(251, 146, 60, 0.12);
+
+      --font-display: "Cabinet Grotesk", "Fraunces", -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-body: "Manrope", -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-serif: "Fraunces", "Cabinet Grotesk", Georgia, serif;
+
+      --r-xs: 8px; --r-sm: 12px; --r-md: 18px; --r-lg: 24px; --r-xl: 32px; --r-pill: 999px;
+      --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 24px; --sp-6: 32px; --sp-7: 48px; --sp-8: 64px;
+
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --dur-fast: 180ms; --dur-mid: 320ms; --dur-slow: 600ms;
+
+      --bg: #F5F4F0;
+      --bg-deep: #EAE8E0;
+      --surface: #FFFFFF;
+      --text: #1A1A1A;
+      --text-soft: #4A4A4A;
+      --text-muted: #8A8A8A;
+      --border: rgba(0, 0, 0, 0.06);
+      --border-strong: rgba(0, 0, 0, 0.10);
+    }
+
+    /* ============================================================
+       2. Reset & 基础
+       ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; }
+    * { margin: 0; padding: 0; }
+    html {
+      font-family: var(--font-body); font-size: 16px; line-height: 1.55;
+      -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+    body {
+      min-height: 100vh; min-height: 100dvh;
+      color: var(--text); background: var(--bg);
+      background-image:
+        radial-gradient(circle at 15% 10%, rgba(244, 114, 182, 0.22), transparent 40%),
+        radial-gradient(circle at 85% 20%, rgba(251, 146, 60, 0.18), transparent 45%),
+        radial-gradient(circle at 30% 85%, rgba(139, 92, 246, 0.15), transparent 50%),
+        radial-gradient(circle at 75% 90%, rgba(56, 189, 248, 0.18), transparent 45%);
+      background-attachment: fixed; overflow-x: hidden;
+    }
+    button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    input, textarea { font: inherit; color: inherit; background: none; border: none; outline: none; }
+    ::selection { background: var(--accent); color: white; }
+
+    /* ============================================================
+       3. Liquid Glass — HIG 材质映射（重强度 + 严格遵守原则）
+       ============================================================
+       Q4 配方（对应 HIG `Material.thick` 档，ref: 03-hig-materials.md）：
+       - blur(40px) saturate(220%) brightness(110%) contrast(108%)
+         → HIG 4 档：ultraThin < thin < regular < thick；本视角走 thick
+         （厚材质 → 文字/细线元素对比更好，符合桌面端"沉稳"诉求）
+       - 白色叠加 0.55-0.65
+       - 5 层阴影 stack（3 inset + 2 outer）→ HIG refraction 折射核心
+       - noise opacity 0.07（baseFrequency 0.85）→ 模拟玻璃表面细微颗粒
+       - mouse-move specular via --mx/--my → HIG 4 大光学特性之 specular
+       严格（HIG）：
+       - 玻璃仅用于功能层（menubar/sidebar/FAB/modal/bottom-tab）
+       - 内容（records/stats/review）保持纯净，无玻璃
+         ↳ ref: 03-hig-materials.md "不要在内容层使用 Liquid Glass"
+       - 单档材质（thick）保证视觉一致性 ↔ "Consistency" 原则
+       - title-style 排版
+       - 4 角同心圆角（容器 --r-xl / 子元素 --r-md）
+       ============================================================ */
+    .glass-functional {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0.45) 100%);
+      backdrop-filter: blur(40px) saturate(220%) brightness(110%) contrast(108%);
+      -webkit-backdrop-filter: blur(40px) saturate(220%) brightness(110%) contrast(108%);
+      /* 完整 5 层阴影：inset top 白 + inset left 白 + inset bottom 暗 + 外 0 2px 8px + 外 0 16px 40px */
+      box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.75),
+        inset 1px 0 0 rgba(255, 255, 255, 0.22),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.05),
+        0 2px 8px rgba(0, 0, 0, 0.05),
+        0 16px 40px -8px rgba(0, 0, 0, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.55);
+    }
+    /* L5 颗粒感（noise opacity 0.07） */
+    .glass-functional::before {
+      content: "";
+      position: absolute; inset: 0; border-radius: inherit;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+      background-size: 200px 200px;
+      opacity: 0.07; mix-blend-mode: overlay;
+      pointer-events: none; z-index: 1;
+    }
+    /* Mouse-following specular（用 --mx/--my） */
+    .glass-functional::after {
+      content: "";
+      position: absolute; inset: 0; border-radius: inherit;
+      background: radial-gradient(500px circle at var(--mx, 50%) var(--my, 50%),
+        rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.10) 30%, transparent 55%);
+      pointer-events: none; opacity: 0;
+      transition: opacity 320ms var(--ease-out);
+      z-index: 2;
+    }
+    .glass-functional:hover::after { opacity: 1; }
+    .glass-functional > * { position: relative; z-index: 3; }
+
+    /* ============================================================
+       4. 桌面端布局
+       ============================================================ */
+    .app {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      min-height: 100vh; min-height: 100dvh;
+    }
+
+    /* —— 顶部原生菜单栏（HIG .regular — 重强度玻璃） —— */
+    .menubar {
+      grid-column: 1 / -1;
+      height: 32px;
+      display: flex; align-items: center;
+      padding: 0 var(--sp-4); gap: var(--sp-4);
+      font-size: 13px; font-weight: 500; color: var(--text-soft);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.60) 0%, rgba(255, 255, 255, 0.40) 100%);
+      backdrop-filter: blur(40px) saturate(220%) brightness(110%) contrast(108%);
+      -webkit-backdrop-filter: blur(40px) saturate(220%) brightness(110%) contrast(108%);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.55),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.05),
+        0 2px 8px rgba(0, 0, 0, 0.05),
+        0 16px 40px -8px rgba(0, 0, 0, 0.14);
+      position: sticky; top: 0; z-index: 50;
+      user-select: none; isolation: isolate;
+    }
+    .menubar::after {
+      content: ""; position: absolute; inset: 0;
+      background: radial-gradient(600px circle at var(--mx, 50%) var(--my, 50%),
+        rgba(255, 255, 255, 0.20) 0%, transparent 50%);
+      pointer-events: none; z-index: 1;
+    }
+    .menubar > * { position: relative; z-index: 2; }
+    .menubar__app-name {
+      font-family: var(--font-display); font-weight: 700; font-size: 13px;
+      letter-spacing: 0.02em; color: var(--text);
+    }
+    .menubar__dot {
+      /* HIG 07-color：颜色只给主操作（FAB/Done/Submit）。
+         menubar 是功能性顶栏（非主操作），用中性灰避免分散注意力。 */
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--text-muted);
+      box-shadow: 0 0 6px rgba(0, 0, 0, 0.08);
+    }
+    .menubar__menu { display: flex; gap: var(--sp-4); }
+    .menubar__menu span { cursor: default; transition: color var(--dur-fast); }
+    .menubar__menu span:hover { color: var(--text); }
+    .menubar__spacer { flex: 1; }
+    .menubar__traffic { display: flex; gap: 8px; }
+    .menubar__traffic span {
+      width: 12px; height: 12px; border-radius: 50%; display: inline-block;
+    }
+    .menubar__traffic span:nth-child(1) { background: #FF5F57; }
+    .menubar__traffic span:nth-child(2) { background: #FEBC2E; }
+    .menubar__traffic span:nth-child(3) { background: #28C840; }
+
+    /* —— 浮动侧栏（重强度玻璃） —— */
+    .sidebar {
+      width: 240px;
+      padding: var(--sp-5) var(--sp-4);
+      display: flex; flex-direction: column; gap: var(--sp-2);
+      position: sticky;
+      top: 32px;
+      height: calc(100vh - 32px); height: calc(100dvh - 32px);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0.45) 100%);
+      backdrop-filter: blur(40px) saturate(220%) brightness(110%) contrast(108%);
+      -webkit-backdrop-filter: blur(40px) saturate(220%) brightness(110%) contrast(108%);
+      box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.75),
+        inset 1px 0 0 rgba(255, 255, 255, 0.22),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.05),
+        0 2px 8px rgba(0, 0, 0, 0.05),
+        0 12px 28px -10px rgba(0, 0, 0, 0.10);
+      border-right: 1px solid rgba(255, 255, 255, 0.55);
+      isolation: isolate; overflow: hidden;
+    }
+    /* HIG 04-sidebars 最佳实践 1："extend content beneath the sidebar"，
+       通过降低外阴影 + 右缘柔光，让 content 视觉上"穿过"侧栏更自然。 */
+    .sidebar::before {
+      content: ""; position: absolute; inset: 0;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+      background-size: 200px 200px;
+      opacity: 0.07; mix-blend-mode: overlay;
+      pointer-events: none; z-index: 1;
+    }
+    .sidebar::after {
+      content: ""; position: absolute; inset: 0;
+      background: radial-gradient(500px circle at var(--mx, 50%) var(--my, 50%),
+        rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.10) 30%, transparent 55%);
+      pointer-events: none; opacity: 0;
+      transition: opacity 320ms var(--ease-out);
+      z-index: 2;
+    }
+    .sidebar:hover::after { opacity: 1; }
+    .sidebar > * { position: relative; z-index: 3; }
+
+    .sidebar__brand {
+      display: flex; align-items: center; gap: var(--sp-3);
+      padding: var(--sp-3) var(--sp-3); margin-bottom: var(--sp-4);
+    }
+    .sidebar__logo {
+      width: 36px; height: 36px; border-radius: var(--r-md);
+      background: linear-gradient(135deg, var(--accent), var(--amber));
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-family: var(--font-display); font-weight: 800; font-size: 18px;
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+    .sidebar__name {
+      font-family: var(--font-display); font-weight: 700; font-size: 17px;
+      letter-spacing: -0.01em;
+    }
+    .sidebar__subname {
+      font-size: 12px; color: var(--text-muted);
+      letter-spacing: -0.005em; text-transform: none;
+    }
+    .sidebar__group { display: flex; flex-direction: column; gap: 2px; }
+    .sidebar__label {
+      font-size: 13px; font-weight: 500; color: var(--text-muted);
+      text-transform: none; letter-spacing: -0.005em;
+      padding: var(--sp-4) var(--sp-3) var(--sp-2);
+    }
+    .sidebar__item {
+      display: flex; align-items: center; gap: var(--sp-3);
+      padding: var(--sp-3); border-radius: var(--r-sm);
+      font-size: 14px; font-weight: 500; color: var(--text-soft);
+      cursor: pointer; transition: all var(--dur-fast) var(--ease-out);
+      position: relative;
+    }
+    .sidebar__item:hover { background: var(--accent-soft); color: var(--text); }
+    .sidebar__item--active {
+      background: var(--accent-soft); color: var(--accent-deep); font-weight: 600;
+    }
+    .sidebar__item--active::before {
+      content: ""; position: absolute;
+      left: 0; top: 25%; bottom: 25%;
+      width: 3px; border-radius: 0 3px 3px 0;
+      background: var(--accent);
+    }
+    .sidebar__icon { width: 18px; height: 18px; flex-shrink: 0; }
+    .sidebar__divider { height: 1px; background: var(--border); margin: var(--sp-3) 0; }
+    .sidebar__footer {
+      margin-top: auto; padding: var(--sp-3);
+      font-size: 12px; color: var(--text-muted);
+      display: flex; align-items: center; gap: var(--sp-2);
+    }
+    .sidebar__footer-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #10B981; box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
+    }
+
+    /* ============================================================
+       5. 主内容区（Apple scroll edge effect）
+       ============================================================ */
+    .main {
+      padding: var(--sp-7) var(--sp-7) var(--sp-8);
+      max-width: 1200px; width: 100%; margin: 0 auto; position: relative;
+    }
+    .main::before {
+      content: ""; position: sticky;
+      top: 0; left: 0; right: 0;
+      height: 80px; margin-top: -80px;
+      background: linear-gradient(180deg, var(--bg) 0%, var(--bg) 30%, transparent 100%);
+      pointer-events: none; z-index: 1;
+      opacity: 0; transition: opacity var(--dur-fast);
+    }
+    .main--scrolled::before { opacity: 1; }
+
+    .header { margin-bottom: var(--sp-6); }
+    .greeting {
+      font-family: var(--font-serif);
+      font-size: clamp(32px, 5vw, 48px);
+      font-weight: 400; letter-spacing: -0.02em; line-height: 1.1;
+      margin-bottom: var(--sp-2);
+    }
+    .greeting__em { font-style: italic; color: var(--accent); font-weight: 500; }
+    .header__sub {
+      color: var(--text-muted); font-size: 14px;
+      display: flex; align-items: center; gap: var(--sp-2);
+    }
+    .header__sub-dot {
+      width: 4px; height: 4px; border-radius: 50%;
+      background: var(--text-muted);
+    }
+
+    /* —— 今日统计卡（HIG 严格：无玻璃背景） —— */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--sp-4);
+      margin-bottom: var(--sp-7);
+    }
+    .stat {
+      padding: var(--sp-5);
+      border-radius: var(--r-lg);
+      position: relative;
+      transition: transform var(--dur-fast) var(--ease-out);
+    }
+    .stat:hover { transform: translateY(-2px); }
+    .stat__label {
+      font-size: 13px; font-weight: 500; color: var(--text-muted);
+      letter-spacing: -0.005em; margin-bottom: var(--sp-3);
+    }
+    .stat__value {
+      font-family: var(--font-display); font-size: 28px;
+      font-weight: 700; letter-spacing: -0.02em; line-height: 1;
+      margin-bottom: var(--sp-1);
+    }
+    .stat__delta { font-size: 12px; color: var(--text-muted); }
+    .stat__icon {
+      position: absolute; top: var(--sp-3); right: var(--sp-3);
+      width: 28px; height: 28px; border-radius: var(--r-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+    }
+    .stat--pink .stat__icon { background: #FCE7F3; color: #BE185D; }
+    .stat--amber .stat__icon { background: #FEF3C7; color: #B45309; }
+    .stat--green .stat__icon { background: #D1FAE5; color: #047857; }
+    .stat--violet .stat__icon { background: #EDE9FE; color: #6D28D9; }
+
+    /* —— 记录卡片列表（HIG 严格：无玻璃） —— */
+    .section-title {
+      font-family: var(--font-display); font-size: 18px; font-weight: 700;
+      letter-spacing: -0.01em; margin-bottom: var(--sp-5);
+      display: flex; align-items: center; gap: var(--sp-3);
+    }
+    .section-title__count {
+      font-family: var(--font-body); font-size: 12px; font-weight: 500;
+      color: var(--text-muted); background: transparent;
+      padding: 2px 10px; border-radius: var(--r-pill);
+      border: 1px solid var(--border);
+    }
+    .timeline { display: flex; flex-direction: column; gap: var(--sp-2); }
+    .record {
+      padding: var(--sp-5) var(--sp-5);
+      border-radius: var(--r-md);
+      display: grid;
+      grid-template-columns: 56px 1fr auto;
+      gap: var(--sp-5); align-items: center;
+      cursor: default;
+      transition: background-color var(--dur-fast) var(--ease-out);
+      position: relative;
+    }
+    .record:hover { background-color: var(--accent-soft); }
+    .record__time {
+      font-family: var(--font-display); font-size: 15px; font-weight: 600;
+      color: var(--text-soft); letter-spacing: 0.02em;
+      font-variant-numeric: tabular-nums;
+    }
+    .record__body { display: flex; align-items: center; gap: var(--sp-3); }
+    .record__icon {
+      width: 36px; height: 36px; border-radius: var(--r-md);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .record__icon--mood    { background: linear-gradient(135deg, #FED7AA, #FBCFE8); }
+    .record__icon--sleep   { background: linear-gradient(135deg, #C7D2FE, #A5B4FC); }
+    .record__icon--water   { background: linear-gradient(135deg, #BAE6FD, #7DD3FC); }
+    .record__icon--med     { background: linear-gradient(135deg, #A7F3D0, #6EE7B7); }
+    .record__icon--idea    { background: linear-gradient(135deg, #FEF3C7, #FDE68A); }
+    .record__icon--todo    { background: linear-gradient(135deg, #FCE7F3, #FBCFE8); }
+    .record__icon--habit   { background: linear-gradient(135deg, #EDE9FE, #DDD6FE); }
+    .record__icon--expense { background: linear-gradient(135deg, #FFEDD5, #FED7AA); }
+    .record__icon--review  { background: linear-gradient(135deg, #FCE7F3, #FED7AA); }
+    .record__text { flex: 1; min-width: 0; }
+    .record__title { font-size: 15px; font-weight: 500; line-height: 1.4; word-break: break-word; }
+    .record__meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .record__tag {
+      font-size: 12px; font-weight: 500; color: var(--text-muted);
+      background: transparent; padding: 4px 10px;
+      border-radius: var(--r-pill); border: 1px solid var(--border);
+      white-space: nowrap; text-transform: none;
+    }
+    .record__tag--done { color: #059669; background: rgba(16, 185, 129, 0.10); border-color: rgba(16, 185, 129, 0.20); }
+    .record__tag--pending { color: var(--amber); background: var(--amber-soft); border-color: rgba(251, 146, 60, 0.20); }
+
+    /* —— 每日复盘（HIG 严格：无玻璃） —— */
+    .review {
+      margin-top: var(--sp-6);
+      padding: var(--sp-6);
+      border-radius: var(--r-xl);
+      display: flex; align-items: center; gap: var(--sp-5);
+      background: var(--accent-soft);
+    }
+    .review__icon {
+      width: 48px; height: 48px; border-radius: var(--r-md);
+      background: linear-gradient(135deg, var(--accent), var(--amber));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; color: white; flex-shrink: 0;
+      box-shadow: 0 6px 16px var(--accent-glow);
+    }
+    .review__body { flex: 1; min-width: 0; }
+    .review__title {
+      font-family: var(--font-display); font-size: 14px;
+      font-weight: 700; margin-bottom: 2px;
+    }
+    .review__words {
+      font-family: var(--font-serif); font-size: 18px;
+      font-style: italic; color: var(--accent); letter-spacing: 0.02em;
+    }
+    .review__words span { margin-right: var(--sp-3); }
+    .review__input {
+      width: 100%; padding: var(--sp-3) var(--sp-4);
+      background: transparent; border-radius: var(--r-sm);
+      border: 1px solid var(--border);
+      font-family: var(--font-serif); font-style: italic;
+      font-size: 16px; color: var(--text); margin-top: var(--sp-2);
+      transition: border-color var(--dur-fast);
+    }
+    .review__input:focus { border-color: var(--accent); }
+    .review__input::placeholder { color: var(--text-muted); font-style: italic; }
+
+    /* ============================================================
+       6. 浮动 [+] 按钮（重强度 + 5 层堆叠）
+       ============================================================ */
+    .fab {
+      position: fixed;
+      bottom: 32px; right: 32px;
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      color: white; font-size: 32px; font-weight: 200; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+      cursor: grab; z-index: 100;
+      touch-action: none; user-select: none;
+      isolation: isolate; overflow: hidden;
+      transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 240ms cubic-bezier(0.16, 1, 0.3, 1);
+      background:
+        radial-gradient(ellipse 80% 50% at 30% 18%,
+          rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0.18) 40%, transparent 70%),
+        linear-gradient(135deg, #F472B6 0%, #EC4899 50%, #DB2777 100%);
+      box-shadow:
+        inset 0 1.5px 1px rgba(255, 255, 255, 0.60),
+        inset 1.5px 0 1px rgba(255, 255, 255, 0.25),
+        inset 0 -1px 2px rgba(0, 0, 0, 0.14),
+        0 2px 8px rgba(244, 114, 182, 0.35),
+        0 16px 40px -8px rgba(0, 0, 0, 0.20);
+    }
+    .fab::before {
+      content: ""; position: absolute; inset: 0; border-radius: inherit;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+      background-size: 200px 200px;
+      opacity: 0.07; mix-blend-mode: overlay;
+      pointer-events: none; z-index: 1;
+    }
+    .fab::after {
+      content: ""; position: absolute; inset: 0; border-radius: inherit;
+      background: radial-gradient(100px circle at var(--mx, 50%) var(--my, 50%),
+        rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.15) 30%, transparent 55%);
+      pointer-events: none; opacity: 0;
+      transition: opacity 280ms cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 2;
+    }
+    .fab:hover::after { opacity: 1; }
+    .fab > * { position: relative; z-index: 3; }
+    .fab:hover { transform: scale(1.06) translateY(-1px); }
+    .fab__hint {
+      position: absolute; bottom: -32px; left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px; font-weight: 600; color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.55);
+      backdrop-filter: blur(40px) saturate(220%) brightness(110%) contrast(108%);
+      -webkit-backdrop-filter: blur(40px) saturate(220%) brightness(110%) contrast(108%);
+      padding: 5px 12px; border-radius: var(--r-pill);
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        0 2px 8px rgba(0, 0, 0, 0.05),
+        0 16px 40px -8px rgba(0, 0, 0, 0.14);
+      white-space: nowrap; opacity: 0;
+      transition: opacity var(--dur-mid); pointer-events: none; z-index: 4;
+    }
+    .fab:hover .fab__hint { opacity: 1; }
+
+    /* ============================================================
+       7. 快速记录弹窗（重强度玻璃 + 完整 5 层阴影）
+       ============================================================ */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0, 0, 0, 0.15);
+      z-index: 200;
+      display: flex; align-items: center; justify-content: center;
+      padding: var(--sp-5);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--dur-mid) var(--ease-out);
+    }
+
+    .modal-overlay--open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal {
+      width: 100%; max-width: 540px; max-height: 80vh;
+      border-radius: var(--r-xl);
+      padding: var(--sp-6);
+      transform-origin: var(--modal-origin-x, 50%) var(--modal-origin-y, 100%);
+      transition: transform 480ms var(--ease-spring), opacity 320ms var(--ease-out);
+      overflow: hidden;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0.48) 100%);
+      backdrop-filter: blur(40px) saturate(220%) brightness(110%) contrast(108%);
+      -webkit-backdrop-filter: blur(40px) saturate(220%) brightness(110%) contrast(108%);
+      box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.75),
+        inset 1px 0 0 rgba(255, 255, 255, 0.22),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.05),
+        0 2px 8px rgba(0, 0, 0, 0.05),
+        0 16px 40px -8px rgba(0, 0, 0, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.55);
+    }
+    .modal::before {
+      content: ""; position: absolute; inset: 0; border-radius: inherit;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+      background-size: 200px 200px;
+      opacity: 0.07; mix-blend-mode: overlay;
+      pointer-events: none; z-index: 1;
+    }
+    .modal::after {
+      content: ""; position: absolute; inset: 0; border-radius: inherit;
+      background: radial-gradient(500px circle at var(--mx, 50%) var(--my, 50%),
+        rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.10) 30%, transparent 55%);
+      pointer-events: none; opacity: 0;
+      transition: opacity 320ms var(--ease-out);
+      z-index: 2;
+    }
+    .modal:hover::after { opacity: 1; }
+    .modal > * { position: relative; z-index: 3; }
+
+    .modal__header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: var(--sp-5);
+    }
+    .modal__title {
+      font-family: var(--font-display); font-size: 22px;
+      font-weight: 700; letter-spacing: -0.01em;
+    }
+    .modal__close {
+      width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-muted); transition: all var(--dur-fast);
+    }
+    .modal__close:hover { background: rgba(255, 255, 255, 0.45); color: var(--text); }
+    .modal__grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--sp-3);
+    }
+    .category {
+      padding: var(--sp-4); border-radius: var(--r-md);
+      display: flex; flex-direction: column; align-items: center; gap: var(--sp-2);
+      cursor: pointer;
+      transition: background-color var(--dur-fast) var(--ease-out);
+      background: transparent; border: 1px solid transparent;
+    }
+    .category:hover { background: var(--accent-soft); border-color: rgba(244, 114, 182, 0.25); }
+    .category__icon {
+      width: 44px; height: 44px; border-radius: var(--r-md);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; color: white;
+    }
+    .category__icon--mood    { background: linear-gradient(135deg, #FED7AA, #FBCFE8); }
+    .category__icon--sleep   { background: linear-gradient(135deg, #C7D2FE, #A5B4FC); }
+    .category__icon--water   { background: linear-gradient(135deg, #BAE6FD, #7DD3FC); }
+    .category__icon--med     { background: linear-gradient(135deg, #A7F3D0, #6EE7B7); }
+    .category__icon--idea    { background: linear-gradient(135deg, #FEF3C7, #FDE68A); }
+    .category__icon--todo    { background: linear-gradient(135deg, #FCE7F3, #FBCFE8); }
+    .category__icon--habit   { background: linear-gradient(135deg, #EDE9FE, #DDD6FE); }
+    .category__icon--expense { background: linear-gradient(135deg, #FFEDD5, #FED7AA); }
+    .category__icon--review  { background: linear-gradient(135deg, #FCE7F3, #FED7AA); }
+    .category__name { font-size: 13px; font-weight: 600; text-align: center; }
+    .modal__footer {
+      margin-top: var(--sp-5);
+      padding-top: var(--sp-4);
+      border-top: 1px solid var(--border);
+      font-size: 12px; color: var(--text-muted); text-align: center;
+      display: flex; align-items: center; justify-content: center; gap: var(--sp-2);
+    }
+    .modal__kbd {
+      font-family: var(--font-display); font-weight: 600;
+      padding: 2px 8px; border-radius: var(--r-xs);
+      background: transparent; border: 1px solid var(--border); text-transform: none;
+    }
+
+    /* ============================================================
+       8. 移动端底部 tab（重强度玻璃）
+       ============================================================ */
+    .bottom-tab {
+      position: fixed;
+      bottom: 16px; left: 16px; right: 16px;
+      height: 60px; border-radius: var(--r-pill);
+      display: none;
+      align-items: center; justify-content: space-around;
+      padding: 0 var(--sp-4); z-index: 90;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0.45) 100%);
+      backdrop-filter: blur(40px) saturate(220%) brightness(110%) contrast(108%);
+      -webkit-backdrop-filter: blur(40px) saturate(220%) brightness(110%) contrast(108%);
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.75),
+        inset 1px 0 0 rgba(255, 255, 255, 0.22),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.05),
+        0 2px 8px rgba(0, 0, 0, 0.05),
+        0 16px 40px -8px rgba(0, 0, 0, 0.14);
+      isolation: isolate; overflow: hidden;
+    }
+    .bottom-tab::before {
+      content: ""; position: absolute; inset: 0; border-radius: inherit;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+      background-size: 200px 200px;
+      opacity: 0.07; mix-blend-mode: overlay;
+      pointer-events: none; z-index: 1;
+    }
+    .bottom-tab__item {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      padding: var(--sp-2) var(--sp-4); border-radius: var(--r-pill);
+      color: var(--text-muted); font-size: 12px; font-weight: 500;
+      transition: all var(--dur-fast); text-transform: none;
+    }
+    .bottom-tab__item--active {
+      background: var(--accent); color: white;
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+    .bottom-tab__icon { font-size: 18px; }
+
+    /* ============================================================
+       12. 焦点样式（键盘可达性）
+       ============================================================ */
+    *:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .fab:focus-visible { outline-offset: 4px; }
+
+    /* ============================================================
+       Motion Response · 6 层材质系统的 Motion 补齐
+       —— Q4 性格：重玻璃 · 严格 · 空间感 · 沉稳
+       —— @keyframes 数量：4 个（fade-up · lift-in · settle · breath）
+       —— 用量：中强（stagger 0.07s、hover lift、settle 落定）
+       ============================================================ */
+
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes lift-in {
+      0%   { opacity: 0; transform: translateY(16px) scale(0.98); }
+      100% { opacity: 1; transform: translateY(0)    scale(1); }
+    }
+    @keyframes settle {
+      0%   { transform: translateY(-4px); }
+      60%  { transform: translateY(2px);  }
+      100% { transform: translateY(0);    }
+    }
+    @keyframes breath {
+      0%, 100% { box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.75),
+        inset 1px 0 0 rgba(255, 255, 255, 0.22),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.05),
+        0 2px 8px rgba(0, 0, 0, 0.05),
+        0 16px 40px -8px rgba(0, 0, 0, 0.14); }
+      50%      { box-shadow:
+        inset 0 1px 1.5px rgba(255, 255, 255, 0.85),
+        inset 1px 0 0 rgba(255, 255, 255, 0.30),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.05),
+        0 3px 10px rgba(0, 0, 0, 0.06),
+        0 20px 48px -8px rgba(0, 0, 0, 0.16); }
+    }
+
+    /* —— 入场 stagger：内容层 record / stat —— */
+    .record, .stat {
+      animation: fade-up 560ms var(--ease-out) both;
+    }
+    .record:nth-child(1)  { animation-delay: 0ms;   }
+    .record:nth-child(2)  { animation-delay: 70ms;  }
+    .record:nth-child(3)  { animation-delay: 140ms; }
+    .record:nth-child(4)  { animation-delay: 210ms; }
+    .record:nth-child(5)  { animation-delay: 280ms; }
+    .record:nth-child(6)  { animation-delay: 350ms; }
+    .record:nth-child(7)  { animation-delay: 420ms; }
+    .record:nth-child(8)  { animation-delay: 490ms; }
+    .record:nth-child(9)  { animation-delay: 560ms; }
+    .record:nth-child(10) { animation-delay: 630ms; }
+
+    .stat {
+      animation: lift-in 600ms var(--ease-out) both;
+    }
+    .stat:nth-child(1) { animation-delay: 90ms;  }
+    .stat:nth-child(2) { animation-delay: 180ms; }
+    .stat:nth-child(3) { animation-delay: 270ms; }
+    .stat:nth-child(4) { animation-delay: 360ms; }
+
+    .review {
+      animation: settle 560ms var(--ease-out) both;
+      animation-delay: 700ms;
+    }
+
+    /* —— 玻璃元素 hover lift（已有 specular，加深 transition）—— */
+    .glass-functional, .sidebar, .menubar, .modal, .fab, .bottom-tab {
+      transition:
+        background-color 360ms var(--ease-out),
+        box-shadow 360ms var(--ease-out),
+        transform 360ms var(--ease-out);
+    }
+
+    /* —— FAB hover 增强：scale 1.06 已存在，加深阴影 + breath 微动画 —— */
+    .fab:hover {
+      animation: breath 2400ms ease-in-out infinite;
+    }
+
+    /* —— Scroll edge effect：.main 顶部 sticky 渐变（mask-image 实现）
+       注：Q4 已存在 .main::before 用于 scrolled 状态。这里追加新的 ::after 用于边缘 mask。
+       —— */
+    .main::after {
+      content: "";
+      position: sticky;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: block;
+      height: 28px;
+      margin-top: -28px;
+      margin-bottom: 28px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.50), transparent);
+      -webkit-mask-image: linear-gradient(180deg, black 0%, transparent 100%);
+              mask-image: linear-gradient(180deg, black 0%, transparent 100%);
+      pointer-events: none;
+      z-index: 5;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- 顶部原生菜单栏 -->
+    <div class="menubar" role="banner">
+      <span class="menubar__app-name">Mindtap</span>
+      <span class="menubar__dot" aria-hidden="true"></span>
+      <nav class="menubar__menu" aria-label="应用菜单">
+        <span>文件</span><span>编辑</span><span>视图</span><span>窗口</span><span>帮助</span>
+      </nav>
+      <span class="menubar__spacer"></span>
+      <div class="menubar__traffic" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+
+    <!-- 浮动侧栏 -->
+    <aside class="sidebar" role="navigation" aria-label="主导航">
+      <div class="sidebar__brand">
+        <div class="sidebar__logo" aria-hidden="true">M</div>
+        <div>
+          <div class="sidebar__name">Mindtap</div>
+          <div class="sidebar__subname">轻念 · V1.0</div>
+        </div>
+      </div>
+
+      <div class="sidebar__group">
+        <div class="sidebar__label">导航</div>
+        <a class="sidebar__item sidebar__item--active" href="#" aria-current="page">
+          <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+          记录
+        </a>
+        <a class="sidebar__item" href="#">
+          <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+          </svg>
+          概览
+        </a>
+        <a class="sidebar__item" href="#">
+          <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+          设置
+        </a>
+      </div>
+
+      <div class="sidebar__divider"></div>
+
+      <div class="sidebar__group">
+        <div class="sidebar__label">视图</div>
+        <a class="sidebar__item" href="#">
+          <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+          主题
+        </a>
+        <a class="sidebar__item" href="#">
+          <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          数据导出
+        </a>
+      </div>
+
+      <div class="sidebar__footer">
+        <span class="sidebar__footer-dot" aria-hidden="true"></span>
+        <span>本地存储 · 已同步</span>
+      </div>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="main" role="main">
+      <header class="header">
+        <h1 class="greeting">晚安，今天有 <span class="greeting__em">9 个</span> 灵感被记录。</h1>
+        <p class="header__sub">
+          <span>2026 年 6 月 14 日 · 星期日</span>
+          <span class="header__sub-dot"></span>
+          <span>Light · 1.0</span>
+        </p>
+      </header>
+
+      <!-- 4 个统计卡（HIG 严格：无玻璃） -->
+      <section class="stats" aria-label="今日统计">
+        <div class="stat stat--pink">
+          <div class="stat__icon" aria-hidden="true">💡</div>
+          <div class="stat__label">灵感捕捉</div>
+          <div class="stat__value">3</div>
+          <div class="stat__delta">+1 vs 昨日</div>
+        </div>
+        <div class="stat stat--amber">
+          <div class="stat__icon" aria-hidden="true">💧</div>
+          <div class="stat__label">饮水</div>
+          <div class="stat__value">5 <span style="font-size:14px;color:var(--text-muted);">/ 8</span></div>
+          <div class="stat__delta">1000 ml</div>
+        </div>
+        <div class="stat stat--green">
+          <div class="stat__icon" aria-hidden="true">✓</div>
+          <div class="stat__label">待办完成</div>
+          <div class="stat__value">2 / 3</div>
+          <div class="stat__delta">67%</div>
+        </div>
+        <div class="stat stat--violet">
+          <div class="stat__icon" aria-hidden="true">🌱</div>
+          <div class="stat__label">习惯打卡</div>
+          <div class="stat__value">1 / 3</div>
+          <div class="stat__delta">阅读 ✅</div>
+        </div>
+      </section>
+
+      <!-- 今日记录时间线（HIG 严格：无玻璃） -->
+      <h2 class="section-title">今日记录 <span class="section-title__count">9 条</span></h2>
+
+      <div class="timeline" role="list">
+        <article class="record" role="listitem">
+          <div class="record__time">07:30</div>
+          <div class="record__body">
+            <div class="record__icon record__icon--sleep" aria-hidden="true">🌅</div>
+            <div class="record__text">
+              <div class="record__title">起床 · 系统时间</div>
+              <div class="record__meta">睡眠时长 7h 45m</div>
+            </div>
+          </div>
+          <span class="record__tag record__tag--done">已记录</span>
+        </article>
+
+        <article class="record" role="listitem">
+          <div class="record__time">08:15</div>
+          <div class="record__body">
+            <div class="record__icon record__icon--mood" aria-hidden="true">🌡</div>
+            <div class="record__text">
+              <div class="record__title">情绪 / 能量 <strong style="color:var(--accent-deep);">7</strong> / 10</div>
+              <div class="record__meta">清醒、专注，略有兴奋</div>
+            </div>
+          </div>
+          <span class="record__tag">能量</span>
+        </article>
+
+        <article class="record" role="listitem">
+          <div class="record__time">08:20</div>
+          <div class="record__body">
+            <div class="record__icon record__icon--water" aria-hidden="true">💧</div>
+            <div class="record__text">
+              <div class="record__title">饮水 +1 杯</div>
+              <div class="record__meta">200 ml · 今日 1 / 8</div>
+            </div>
+          </div>
+          <span class="record__tag">饮水</span>
+        </article>
+
+        <article class="record" role="listitem">
+          <div class="record__time">10:42</div>
+          <div class="record__body">
+            <div class="record__icon record__icon--idea" aria-hidden="true">💡</div>
+            <div class="record__text">
+              <div class="record__title">"如果人脑有 API，每个人都能把灵感打包成可调用的函数。"</div>
+              <div class="record__meta">语音转文字 · 8.2 秒</div>
+            </div>
+          </div>
+          <span class="record__tag">灵感</span>
+        </article>
+
+        <article class="record" role="listitem">
+          <div class="record__time">12:30</div>
+          <div class="record__body">
+            <div class="record__icon record__icon--expense" aria-hidden="true">💰</div>
+            <div class="record__text">
+              <div class="record__title">消费 · <strong>¥ 35</strong></div>
+              <div class="record__meta">午餐 · 必要</div>
+            </div>
+          </div>
+          <span class="record__tag">必要</span>
+        </article>
+
+        <article class="record" role="listitem">
+          <div class="record__time">15:08</div>
+          <div class="record__body">
+            <div class="record__icon record__icon--idea" aria-hidden="true">💡</div>
+            <div class="record__text">
+              <div class="record__title">"梦里的海浪声 — 像有什么东西在试图告诉我，但我听不清。"</div>
+              <div class="record__meta">关键词速记</div>
+            </div>
+          </div>
+          <span class="record__tag">灵感</span>
+        </article>
+
+        <article class="record" role="listitem">
+          <div class="record__time">17:00</div>
+          <div class="record__body">
+            <div class="record__icon record__icon--habit" aria-hidden="true">🌱</div>
+            <div class="record__text">
+              <div class="record__title">习惯 · 阅读 30 分钟</div>
+              <div class="record__meta">已读《原子习惯》第 4 章</div>
+            </div>
+          </div>
+          <span class="record__tag record__tag--done">已完成</span>
+        </article>
+
+        <article class="record" role="listitem">
+          <div class="record__time">20:15</div>
+          <div class="record__body">
+            <div class="record__icon record__icon--todo" aria-hidden="true">✓</div>
+            <div class="record__text">
+              <div class="record__title">待办 · 买牛奶</div>
+              <div class="record__meta">截止：明天</div>
+            </div>
+          </div>
+          <span class="record__tag record__tag--pending">进行中</span>
+        </article>
+
+        <article class="record" role="listitem">
+          <div class="record__time">22:30</div>
+          <div class="record__body">
+            <div class="record__icon record__icon--med" aria-hidden="true">💊</div>
+            <div class="record__text">
+              <div class="record__title">服药 · 维生素 D</div>
+              <div class="record__meta">已服用</div>
+            </div>
+          </div>
+          <span class="record__tag record__tag--done">已服用</span>
+        </article>
+      </div>
+
+      <!-- 每日复盘（HIG 严格：无玻璃） -->
+      <article class="review">
+        <div class="review__icon" aria-hidden="true">✦</div>
+        <div class="review__body">
+          <div class="review__title">今日 3 词复盘</div>
+          <div class="review__words">
+            <span>灵光</span><span>探索</span><span>温暖</span>
+          </div>
+          <input class="review__input" type="text" placeholder="用 3 个词总结今天，逗号分隔…" aria-label="今日复盘输入">
+        </div>
+      </article>
+    </main>
+  </div>
+
+  <!-- 浮动 [+] 按钮（重强度玻璃） -->
+  <button class="fab" id="fab" aria-label="快速记录 — 点击或拖动">
+    <span aria-hidden="true">+</span>
+    <span class="fab__hint">拖动我 · 位置自动记忆</span>
+  </button>
+
+  <!-- 移动端底部 tab（重强度玻璃） -->
+  <nav class="bottom-tab" aria-label="移动端主导航">
+    <a class="bottom-tab__item bottom-tab__item--active" href="#">
+      <span class="bottom-tab__icon" aria-hidden="true">📝</span>
+      <span>记录</span>
+    </a>
+    <a class="bottom-tab__item" href="#">
+      <span class="bottom-tab__icon" aria-hidden="true">📊</span>
+      <span>概览</span>
+    </a>
+    <a class="bottom-tab__item" href="#">
+      <span class="bottom-tab__icon" aria-hidden="true">⚙</span>
+      <span>设置</span>
+    </a>
+  </nav>
+
+  <!-- 快速记录弹窗（重强度玻璃） -->
+  <div class="modal-overlay" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <header class="modal__header">
+        <h2 class="modal__title" id="modalTitle">快速记录</h2>
+        <button class="modal__close" id="modalClose" aria-label="关闭">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </header>
+
+      <div class="modal__grid" role="list">
+        <button class="category" role="listitem">
+          <div class="category__icon category__icon--mood" aria-hidden="true">🌡</div>
+          <div class="category__name">情绪 / 能量</div>
+        </button>
+        <button class="category" role="listitem">
+          <div class="category__icon category__icon--sleep" aria-hidden="true">🌅</div>
+          <div class="category__name">作息</div>
+        </button>
+        <button class="category" role="listitem">
+          <div class="category__icon category__icon--water" aria-hidden="true">💧</div>
+          <div class="category__name">饮水</div>
+        </button>
+        <button class="category" role="listitem">
+          <div class="category__icon category__icon--med" aria-hidden="true">💊</div>
+          <div class="category__name">服药</div>
+        </button>
+        <button class="category" role="listitem">
+          <div class="category__icon category__icon--idea" aria-hidden="true">💡</div>
+          <div class="category__name">灵感</div>
+        </button>
+        <button class="category" role="listitem">
+          <div class="category__icon category__icon--todo" aria-hidden="true">✓</div>
+          <div class="category__name">待办</div>
+        </button>
+        <button class="category" role="listitem">
+          <div class="category__icon category__icon--habit" aria-hidden="true">🌱</div>
+          <div class="category__name">习惯</div>
+        </button>
+        <button class="category" role="listitem">
+          <div class="category__icon category__icon--expense" aria-hidden="true">💰</div>
+          <div class="category__name">消费</div>
+        </button>
+        <button class="category" role="listitem">
+          <div class="category__icon category__icon--review" aria-hidden="true">✦</div>
+          <div class="category__name">复盘</div>
+        </button>
+      </div>
+
+      <footer class="modal__footer">
+        <span>按 <span class="modal__kbd">Esc</span> 关闭</span>
+        <span>·</span>
+        <span>按 <span class="modal__kbd">N</span> 快速记录</span>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    /* ============================================================
+       Mindtap · 轻念 · 统一交互工具集（Q4 Heavy Strict）
+       —— IIFE 包裹避免全局污染
+       —— 触发器：FAB 开 / × 关 / 背景关 / Esc 关 / N 开
+       —— Scroll edge：main 滚动 > 16px 触发 sticky 渐显
+       ============================================================ */
+    (function () {
+      'use strict';
+
+      // 模态框开关（通过 .modal-overlay--open 触发 CSS 显示）
+      function openModal() {
+        var m = document.getElementById('modal');
+        if (!m) return;
+        m.classList.add('modal-overlay--open');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeModal() {
+        var m = document.getElementById('modal');
+        if (!m) return;
+        m.classList.remove('modal-overlay--open');
+        document.body.style.overflow = '';
+      }
+
+      // FAB 点击 → 开模态框
+      var fab = document.getElementById('fab');
+      if (fab) fab.addEventListener('click', openModal);
+
+      // × 关闭按钮
+      var mc = document.getElementById('modalClose');
+      if (mc) mc.addEventListener('click', closeModal);
+
+      // 点击背景遮罩关闭（仅 target === overlay 时触发）
+      var overlay = document.getElementById('modal');
+      if (overlay) overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) closeModal();
+      });
+
+      // Esc 关闭 / N 打开（键盘可达性）
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeModal();
+        if (e.key === 'n' || e.key === 'N') openModal();
+      });
+
+      // Scroll edge effect：主滚动区顶部 sticky 渐显
+      var main = document.querySelector('.main');
+      if (main) {
+        main.addEventListener('scroll', function () {
+          if (main.scrollTop > 16) main.classList.add('main--scrolled');
+          else main.classList.remove('main--scrolled');
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
