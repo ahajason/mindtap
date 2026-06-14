@@ -1,5 +1,5 @@
 // src/floating/App.tsx
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { MouseEvent as ReactMouseEvent } from "react";
 import { getCurrentWindow, LogicalSize } from "@tauri-apps/api/window";
 import { FocusBlock } from "./components/FocusBlock";
@@ -18,13 +18,28 @@ const MIN_H = 36;
 const MAX_W = 480;
 const MAX_H = 460;
 
+// 折叠/展开两种状态的显式尺寸
+const FOLD_W = 320;
+const FOLD_H = 36;
+const EXPAND_W = 360;
+const EXPAND_H = 280;
+
 export default function App() {
   const [expanded, setExpanded] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   // 手动 resize 期间阻止 ResizeObserver 反馈循环
   const manualResizingRef = useRef(false);
 
-  // ResizeObserver 监听根容器尺寸 → setSize 让窗口跟随内容
+  // 显式 setSize：在 expanded 切换时立即同步（兜底 ResizeObserver 漏触发）
+  useEffect(() => {
+    const w = expanded ? EXPAND_W : FOLD_W;
+    const h = expanded ? EXPAND_H : FOLD_H;
+    getWin()
+      .setSize(new LogicalSize(w, h))
+      .catch((e) => console.error("setSize (toggle) failed:", e));
+  }, [expanded]);
+
+  // ResizeObserver 监听根容器尺寸 → 动态跟内容（SwitchDropdown、长内容等）
   useLayoutEffect(() => {
     const el = rootRef.current;
     if (!el) return;
@@ -36,7 +51,7 @@ export default function App() {
       const h = Math.max(MIN_H, Math.min(MAX_H, Math.ceil(r.height)));
       getWin()
         .setSize(new LogicalSize(w, h))
-        .catch((e) => console.error("setSize failed:", e));
+        .catch((e) => console.error("setSize (observer) failed:", e));
     };
 
     const ro = new ResizeObserver(sync);
@@ -53,7 +68,6 @@ export default function App() {
       manualResizingRef.current = true;
       const startX = e.clientX;
       const startY = e.clientY;
-      // 用 Tauri 外层尺寸（logical）做基准
       const startW = window.innerWidth;
       const startH = window.innerHeight;
 
