@@ -1,7 +1,7 @@
 /* src/floating/styles/expand-state.css */
 .expand-state {
   width: 360px;
-  height: 280px;
+  min-height: 280px;
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.42);
   backdrop-filter: blur(32px) saturate(200%);
@@ -57,12 +57,13 @@
 .control-row {
   display: flex;
   gap: 5px;
-  align-items: center;
-  height: 24px;
+  align-items: flex-start;
+  min-height: 24px;
   flex-shrink: 0;
 }
 .control-row > :not(.switch-dropdown) {
   flex: 1;
+  align-self: center;
 }
 .btn-pause,
 .btn-complete {

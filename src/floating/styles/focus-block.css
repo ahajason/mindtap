@@ -15,6 +15,16 @@
   align-items: center;
 }
 
+/* 浮动窗根容器：让 ResizeObserver 测量到内容真实尺寸 */
+.floating-root.folded {
+  width: 320px;
+  height: 36px;
+}
+.floating-root.expanded {
+  width: 360px;
+  min-height: 280px;
+}
+
 .fold-state.active {
   background: rgba(255, 255, 255, 0.42);
 }

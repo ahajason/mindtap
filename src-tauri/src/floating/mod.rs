@@ -14,7 +14,7 @@ pub fn ensure_window(app: &tauri::AppHandle) -> Result<(), String> {
     .title("Mindtap")
     .inner_size(320.0, 36.0)
     .min_inner_size(320.0, 36.0)
-    .max_inner_size(360.0, 320.0)
+    .max_inner_size(480.0, 460.0)
     .transparent(true)
     .decorations(false)
     .always_on_top(true)
