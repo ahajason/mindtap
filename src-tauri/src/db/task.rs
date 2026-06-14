@@ -249,6 +249,16 @@ pub fn get_task(conn: &Connection, id: i64) -> AppResult<Task> {
     )?)
 }
 
+/// 归档：任何状态 → archived（设置 archived_at）
+pub fn archive(conn: &Connection, task_id: i64) -> AppResult<Task> {
+    let now = now_ms();
+    conn.execute(
+        "UPDATE task SET archived_at = ?1, updated_at = ?1 WHERE id = ?2",
+        params![now, task_id],
+    )?;
+    get_task(conn, task_id)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -365,5 +375,15 @@ mod tests {
         let undone = undo(&conn, task.id).unwrap();
         assert_eq!(undone.status, "active");
         assert!(undone.focus_started_at.is_some());
+    }
+
+    #[test]
+    fn archive_sets_archived_at() {
+        let conn = test_conn();
+        let t = create_task(&conn, "x", None).unwrap();
+        start_timer(&conn, t.id).unwrap();
+        complete(&conn, t.id).unwrap();
+        let archived = archive(&conn, t.id).unwrap();
+        assert!(archived.archived_at.is_some());
     }
 }
