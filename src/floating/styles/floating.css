@@ -6,3 +6,18 @@
   min-height: 36px;
   padding: 0;
 }
+
+/* 折叠态暗示可拖拽 */
+.floating-root.folded {
+  cursor: grab;
+  user-select: none;
+}
+.floating-root.folded:active {
+  cursor: grabbing;
+}
+
+/* 展开态背景：禁用文本选中（长按拖拽时不期望选中文本），但保持默认光标 */
+.floating-root.expanded {
+  user-select: none;
+  -webkit-user-select: none;
+}

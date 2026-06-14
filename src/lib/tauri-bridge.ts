@@ -53,6 +53,7 @@ export const api = {
   floatingHide: () => invoke<void>("floating_hide"),
   floatingToggle: () => invoke<void>("floating_toggle"),
   getPlatform: () => invoke<string>("get_platform"),
+  showFloatingContextMenu: () => invoke<void>("show_floating_context_menu"),
 };
 
 export const events = {

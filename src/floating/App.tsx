@@ -1,9 +1,11 @@
 // src/floating/App.tsx
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { MouseEvent as ReactMouseEvent } from "react";
+import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent } from "react";
 import { getCurrentWindow, LogicalSize } from "@tauri-apps/api/window";
 import { FocusBlock } from "./components/FocusBlock";
 import { ExpandState } from "./components/ExpandState";
+import { useDragLongPress } from "./hooks/useDragLongPress";
+import { api } from "../lib/tauri-bridge";
 
 // 缓存窗口实例（getCurrentWindow() 每次返回新对象，避免 effect deps 不稳定）
 let cachedWin: ReturnType<typeof getCurrentWindow> | null = null;
@@ -32,7 +34,31 @@ const HOVER_OUT_DELAY_MS = 200;
 // 过渡阶段：idle=稳定态，entering/leaving=过渡中（CSS 加 .transitioning）
 type Phase = "idle" | "entering" | "leaving";
 
+// 诊断日志开关：true 时打印 resize / phase / mouseleave 全链路
+// TODO: click-to-expand bug 修复后删除
+const DEBUG = true;
+const dlog = (...a: unknown[]) => DEBUG && console.log("[floating]", ...a);
+
+// 验证 setSize 是否真的影响 Tauri 窗口（在浏览器中 setSize 是 mock，无效）
+function patchWinForDebug() {
+  if (typeof window === "undefined") return;
+  const w = window as unknown as { __floatingDebugPatched?: boolean };
+  if (w.__floatingDebugPatched) return;
+  w.__floatingDebugPatched = true;
+  // 拦截 innerWidth/Height 变化（mock 用）：保留一个可改的 override
+  Object.defineProperty(window, "innerWidth", {
+    configurable: true,
+    get: () => (window as any).__mockInnerW ?? window.innerWidth,
+  });
+  Object.defineProperty(window, "innerHeight", {
+    configurable: true,
+    get: () => (window as any).__mockInnerH ?? window.innerHeight,
+  });
+  dlog("patchWinForDebug: innerWidth/innerHeight override armed");
+}
+
 export default function App() {
+  patchWinForDebug();
   const [expanded, setExpanded] = useState(false);
   const [phase, setPhase] = useState<Phase>("idle");
   const rootRef = useRef<HTMLDivElement>(null);
@@ -41,12 +67,21 @@ export default function App() {
   // 鼠标移出计时器（200ms 缓冲）
   const collapseTimerRef = useRef<number | null>(null);
 
+  dlog("render: expanded=", expanded, "phase=", phase, "inner=", window.innerWidth, "x", window.innerHeight);
+
   // 显式 setSize：在 expanded 切换时立即同步（兜底 ResizeObserver 漏触发）
   useEffect(() => {
     const w = expanded ? EXPAND_W : FOLD_W;
     const h = expanded ? EXPAND_H : FOLD_H;
+    dlog("[toggle useEffect] setSize request:", w, "x", h, "expanded=", expanded);
     getWin()
       .setSize(new LogicalSize(w, h))
+      .then(() => {
+        // 模拟 setSize 成功后真实窗口尺寸变化（仅 debug mock）
+        (window as any).__mockInnerW = w;
+        (window as any).__mockInnerH = h;
+        dlog("[toggle useEffect] setSize resolved, mock inner=", w, "x", h);
+      })
       .catch((e) => console.error("setSize (toggle) failed:", e));
   }, [expanded]);
 
@@ -60,8 +95,14 @@ export default function App() {
       const r = el.getBoundingClientRect();
       const w = Math.max(MIN_W, Math.min(MAX_W, Math.ceil(r.width)));
       const h = Math.max(MIN_H, Math.min(MAX_H, Math.ceil(r.height)));
+      dlog("[observer] rect=", r.width.toFixed(0), "x", r.height.toFixed(0),
+           "→ setSize", w, "x", h);
       getWin()
         .setSize(new LogicalSize(w, h))
+        .then(() => {
+          (window as any).__mockInnerW = w;
+          (window as any).__mockInnerH = h;
+        })
         .catch((e) => console.error("setSize (observer) failed:", e));
     };
 
@@ -85,6 +126,7 @@ export default function App() {
   // 展开：setSize 由 [expanded] useEffect 兜底；phase=entering 首帧渲染后
   // rAF 内切到 idle，触发 CSS transition 淡入 + 缩放回 1
   const expand = useCallback(() => {
+    dlog("[expand] click, current phase=", phase, "expanded=", expanded);
     if (collapseTimerRef.current !== null) {
       clearTimeout(collapseTimerRef.current);
       collapseTimerRef.current = null;
@@ -93,13 +135,15 @@ export default function App() {
     setPhase("entering");
     requestAnimationFrame(() => {
       // 二次渲染：移除 .transitioning → CSS transition 触发 fade-in
+      dlog("[expand] rAF → setPhase(idle)");
       setPhase("idle");
     });
-  }, []);
+  }, [phase, expanded]);
 
   // 折叠：phase=leaving → 150ms 过渡 → 切 expanded=false + phase=idle
   // setSize 仍由 [expanded] useEffect 兜底
   const collapse = useCallback(() => {
+    dlog("[collapse] called, expanded=", expanded, "phase=", phase);
     if (collapseTimerRef.current !== null) {
       clearTimeout(collapseTimerRef.current);
       collapseTimerRef.current = null;
@@ -107,6 +151,7 @@ export default function App() {
     if (!expanded || phase === "leaving") return; // 已经在折叠或折叠中，幂等
     setPhase("leaving");
     setTimeout(() => {
+      dlog("[collapse] timeout → setExpanded(false)");
       setExpanded(false);
       setPhase("idle");
     }, ANIM_MS);
@@ -114,6 +159,7 @@ export default function App() {
 
   // 鼠标移入：清掉待执行的折叠计时
   const onRootMouseEnter = useCallback(() => {
+    dlog("[mouse] enter, timer=", collapseTimerRef.current);
     if (collapseTimerRef.current !== null) {
       clearTimeout(collapseTimerRef.current);
       collapseTimerRef.current = null;
@@ -122,9 +168,11 @@ export default function App() {
 
   // 鼠标移出：仅在稳定态 + 展开态时启动 200ms 延迟折叠
   const onRootMouseLeave = useCallback(() => {
+    dlog("[mouse] leave, expanded=", expanded, "phase=", phase);
     if (!expanded || phase !== "idle") return;
     if (collapseTimerRef.current !== null) return;
     collapseTimerRef.current = window.setTimeout(() => {
+      dlog("[mouse] leave 200ms timer fired → collapse()");
       collapseTimerRef.current = null;
       collapse();
     }, HOVER_OUT_DELAY_MS);
@@ -172,6 +220,36 @@ export default function App() {
     .filter(Boolean)
     .join(" ");
 
+  // 右键浮窗：弹出 4 项主菜单（V1.4 spec §5.1 / 本次实现）
+  const onContextMenu = useCallback(
+    (e: ReactMouseEvent<HTMLElement>) => {
+      e.preventDefault();
+      api.showFloatingContextMenu().catch((err: unknown) => {
+        console.error("showFloatingContextMenu failed:", err);
+      });
+    },
+    []
+  );
+
+  // 长按拖拽：折叠/展开态各自的根容器都接；window 自带 startDragging
+  const drag = useDragLongPress({ thresholdMs: 300 });
+
+  // 展开态：仅当指针在 .floating-root 背景上（target === currentTarget）才起拖；
+  // 子元素（按钮/textarea/输入框）的 onPointerDown 在冒泡到根时会被过滤
+  const onExpandedPointerDown = useCallback(
+    (e: ReactPointerEvent<HTMLDivElement>) => {
+      if (e.target !== e.currentTarget) return;
+      drag.onPointerDown(e);
+    },
+    [drag]
+  );
+
+  // 折叠态：整窗可拖；click 处理器在 drag.wasDragged() 时跳过 expand
+  const onFoldedClick = useCallback(() => {
+    if (drag.wasDragged()) return;
+    expand();
+  }, [drag, expand]);
+
   if (expanded) {
     return (
       <div
@@ -179,6 +257,10 @@ export default function App() {
         className={rootClass}
         onMouseEnter={onRootMouseEnter}
         onMouseLeave={onRootMouseLeave}
+        onContextMenu={onContextMenu}
+        onPointerDown={onExpandedPointerDown}
+        onPointerUp={drag.onPointerUp}
+        onPointerLeave={drag.onPointerCancel}
       >
         <ExpandState onCollapse={collapse} />
         <div
@@ -195,7 +277,11 @@ export default function App() {
     <div
       ref={rootRef}
       className={rootClass}
-      onClick={expand}
+      onClick={onFoldedClick}
+      onContextMenu={onContextMenu}
+      onPointerDown={drag.onPointerDown}
+      onPointerUp={drag.onPointerUp}
+      onPointerLeave={drag.onPointerCancel}
     >
       <FocusBlock />
       <div

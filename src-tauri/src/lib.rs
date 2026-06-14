@@ -2,7 +2,9 @@ mod commands;
 mod db;
 mod error;
 mod floating;
+mod tray;
 
+use tauri::Manager;
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -18,6 +20,7 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             Some(vec!["--floating"]),
@@ -35,6 +38,17 @@ pub fn run() {
             db::init(app).map_err(|e| e.to_string())?;
             floating::ensure_window(&app.handle()).map_err(|e| e.to_string())?;
             app.global_shortcut().register(toggle_shortcut)?;
+
+            // 两窗口绑定 on_menu_event：浮窗右键菜单 / V1.4 托盘菜单复用同一分发
+            for label in ["main", "floating"] {
+                if let Some(w) = app.get_webview_window(label) {
+                    let app_handle = app.handle().clone();
+                    w.on_menu_event(move |_window, event| {
+                        tray::menu::handle_action(&app_handle, event.id().as_ref());
+                    });
+                }
+            }
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -57,6 +71,7 @@ pub fn run() {
             commands::floating_cmd::floating_hide,
             commands::floating_cmd::floating_toggle,
             commands::floating_cmd::get_platform,
+            commands::floating_cmd::show_floating_context_menu,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
