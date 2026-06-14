@@ -18,7 +18,7 @@ pub fn ensure_window(app: &tauri::AppHandle) -> Result<(), String> {
     .transparent(true)
     .decorations(false)
     .always_on_top(true)
-    .resizable(false)
+    .resizable(true)
     .skip_taskbar(true)
     .focused(false)
     .shadow(false)

@@ -1,5 +1,6 @@
 // src/floating/App.tsx
-import { useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import type { MouseEvent as ReactMouseEvent } from "react";
 import { getCurrentWindow, LogicalSize } from "@tauri-apps/api/window";
 import { FocusBlock } from "./components/FocusBlock";
 import { ExpandState } from "./components/ExpandState";
@@ -20,6 +21,8 @@ const MAX_H = 460;
 export default function App() {
   const [expanded, setExpanded] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  // 手动 resize 期间阻止 ResizeObserver 反馈循环
+  const manualResizingRef = useRef(false);
 
   // ResizeObserver 监听根容器尺寸 → setSize 让窗口跟随内容
   useLayoutEffect(() => {
@@ -27,6 +30,7 @@ export default function App() {
     if (!el) return;
 
     const sync = () => {
+      if (manualResizingRef.current) return; // 手动拖拽期间跳过
       const r = el.getBoundingClientRect();
       const w = Math.max(MIN_W, Math.min(MAX_W, Math.ceil(r.width)));
       const h = Math.max(MIN_H, Math.min(MAX_H, Math.ceil(r.height)));
@@ -41,10 +45,50 @@ export default function App() {
     return () => ro.disconnect();
   }, []);
 
+  // 手动 resize：拖拽右下角手柄
+  const onResizeHandleMouseDown = useCallback(
+    (e: ReactMouseEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      manualResizingRef.current = true;
+      const startX = e.clientX;
+      const startY = e.clientY;
+      // 用 Tauri 外层尺寸（logical）做基准
+      const startW = window.innerWidth;
+      const startH = window.innerHeight;
+
+      const onMove = (ev: globalThis.MouseEvent) => {
+        const dw = ev.clientX - startX;
+        const dh = ev.clientY - startY;
+        const w = Math.max(MIN_W, Math.min(MAX_W, Math.ceil(startW + dw)));
+        const h = Math.max(MIN_H, Math.min(MAX_H, Math.ceil(startH + dh)));
+        getWin()
+          .setSize(new LogicalSize(w, h))
+          .catch(() => {});
+      };
+
+      const onUp = () => {
+        manualResizingRef.current = false;
+        document.removeEventListener("mousemove", onMove);
+        document.removeEventListener("mouseup", onUp);
+      };
+
+      document.addEventListener("mousemove", onMove);
+      document.addEventListener("mouseup", onUp);
+    },
+    []
+  );
+
   if (expanded) {
     return (
       <div ref={rootRef} className="floating-root expanded">
         <ExpandState />
+        <div
+          className="resize-handle"
+          onMouseDown={onResizeHandleMouseDown}
+          title="拖动调整窗口大小"
+          aria-label="resize handle"
+        />
       </div>
     );
   }
@@ -56,6 +100,12 @@ export default function App() {
       onClick={() => setExpanded(true)}
     >
       <FocusBlock />
+      <div
+        className="resize-handle"
+        onMouseDown={onResizeHandleMouseDown}
+        title="拖动调整窗口大小"
+        aria-label="resize handle"
+      />
     </div>
   );
 }
