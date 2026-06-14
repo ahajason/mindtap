@@ -1,6 +1,7 @@
 mod commands;
 mod db;
 mod error;
+mod floating;
 
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 
@@ -32,6 +33,7 @@ pub fn run() {
         )
         .setup(move |app| {
             db::init(app).map_err(|e| e.to_string())?;
+            floating::ensure_window(&app.handle()).map_err(|e| e.to_string())?;
             app.global_shortcut().register(toggle_shortcut)?;
             Ok(())
         })
