@@ -1,11 +1,11 @@
-import { api, type Record } from "../../lib/tauri-bridge";
+import { api, type Task } from "../../lib/tauri-bridge";
 import { SwitchDropdown } from "./SwitchDropdown";
 
 export function ControlRow({
   active,
   onCollapse,
 }: {
-  active: Record | null;
+  active: Task | null;
   onCollapse?: () => void;
 }) {
   return (
@@ -15,8 +15,8 @@ export function ControlRow({
           <button
             className="btn-pause"
             onClick={() => {
-              if (active.status === "active") api.taskPause(active.source_id);
-              else if (active.status === "paused") api.taskResume(active.source_id);
+              if (active.status === "active") api.taskPause(active.id);
+              else if (active.status === "paused") api.taskResume(active.id);
             }}
           >
             {active.status === "active" ? "⏸ 暂停" : "▶ 继续"}
@@ -24,7 +24,7 @@ export function ControlRow({
           <button
             className="btn-complete"
             onClick={() =>
-              active.status !== "done" && api.taskComplete(active.source_id)
+              active.status !== "done" && api.taskComplete(active.id)
             }
           >
             ✓ 完成

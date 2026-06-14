@@ -178,4 +178,32 @@ mod tests {
         assert!(ids.contains(&t2.id));
         assert!(!ids.contains(&t3.id));
     }
+
+    /// 回归测试：文档化"Record 是窄字段（视图）、Task 是宽字段（源表）"的设计。
+    /// 前端计时显示需要 `duration_ms` + `focus_started_at`，仅 `get_active_task` 返回的 Record 不够。
+    /// `record_get_active_task` command（见 commands/record_cmd.rs）通过 `get_task(source_id)` 拼出完整 Task。
+    /// 此测试保证：源表里 active task 的 `focus_started_at` 在 start_timer 之后**确实**非空，
+    /// 且 `get_active_task` 能找到它 —— 防止后续重构把这两个查询断链。
+    #[test]
+    fn active_task_view_links_to_full_task_with_timing_data() {
+        use crate::db::task::get_task;
+
+        let conn = test_conn();
+        let t = create_task(&conn, "计时中的任务", None).unwrap();
+        start_timer(&conn, t.id).unwrap();
+
+        // 1) record 视图（窄字段，6 列）
+        let rec = get_active_task(&conn).unwrap().expect("active record 存在");
+        assert_eq!(rec.source_id, t.id);
+        assert_eq!(rec.status.as_deref(), Some("active"));
+
+        // 2) task 源表（宽字段，12 列）—— 前端要靠它算 live
+        let full = get_task(&conn, rec.source_id).unwrap();
+        assert_eq!(full.status, "active");
+        assert_eq!(full.duration_ms, 0);
+        assert!(
+            full.focus_started_at.is_some(),
+            "start_timer 后 focus_started_at 必须非空"
+        );
+    }
 }
