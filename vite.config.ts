@@ -22,7 +22,7 @@ export default defineConfig(async () => ({
     rollupOptions: {
       input: {
         main: path.resolve(__dirname, "index.html"),
-        floating: path.resolve(__dirname, "src/floating.html"),
+        floating: path.resolve(__dirname, "floating.html"),
       },
     },
   },
