@@ -3,7 +3,7 @@ import { useActiveTask } from "../hooks/useActiveTask";
 import { useTick } from "../hooks/useTick";
 import { formatDuration } from "../../lib/time";
 import { api } from "../../lib/tauri-bridge";
-import "./focus-block.css";
+import "../styles/focus-block.css";
 
 export function FocusBlock() {
   const active = useActiveTask();

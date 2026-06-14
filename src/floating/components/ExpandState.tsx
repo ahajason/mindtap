@@ -2,7 +2,7 @@ import { useState } from "react";
 import { api } from "../../lib/tauri-bridge";
 import { useActiveTask } from "../hooks/useActiveTask";
 import { ControlRow } from "./ControlRow";
-import "./expand-state.css";
+import "../styles/expand-state.css";
 
 type Type = "task" | "idea" | "check_in";
 

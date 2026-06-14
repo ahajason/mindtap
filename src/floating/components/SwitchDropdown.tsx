@@ -1,7 +1,7 @@
 // src/floating/components/SwitchDropdown.tsx
 import { useEffect, useState } from "react";
 import { api, type Record } from "../../lib/tauri-bridge";
-import "./switch-dropdown.css";
+import "../styles/switch-dropdown.css";
 
 export function SwitchDropdown() {
   const [open, setOpen] = useState(false);
