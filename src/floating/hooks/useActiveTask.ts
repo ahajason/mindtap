@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { api, events, type Record } from "../../lib/tauri-bridge";
+import { api, events, type Task } from "../../lib/tauri-bridge";
 
-export function useActiveTask(): Record | null {
-  const [active, setActive] = useState<Record | null>(null);
+export function useActiveTask(): Task | null {
+  const [active, setActive] = useState<Task | null>(null);
 
   useEffect(() => {
     refresh();
@@ -13,8 +13,11 @@ export function useActiveTask(): Record | null {
 
     async function refresh() {
       try {
-        const r = await api.recordGetActive();
-        setActive(r);
+        // 调 recordGetActiveTask 而非 recordGetActive：后者只返回 6 列
+        // record（缺 duration_ms / focus_started_at），导致前端算 live 时长
+        // 拿到 undefined → formatDuration 输出 NaN。
+        const t = await api.recordGetActiveTask();
+        setActive(t);
       } catch (e) {
         console.error(e);
       }

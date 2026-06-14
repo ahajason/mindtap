@@ -37,7 +37,7 @@ export function FocusBlock() {
             title="撤销"
             onClick={(e) => {
               e.stopPropagation();
-              api.taskUndo(active.source_id);
+              api.taskUndo(active.id);
             }}
           >
             ↶
@@ -65,9 +65,9 @@ export function FocusBlock() {
           onClick={(e) => {
             e.stopPropagation();
             if (active.status === "active") {
-              api.taskPause(active.source_id);
+              api.taskPause(active.id);
             } else {
-              api.taskResume(active.source_id);
+              api.taskResume(active.id);
             }
           }}
         >
