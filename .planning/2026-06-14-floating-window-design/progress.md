@@ -22,9 +22,26 @@
 
 ### 关键产出文件
 - `.superpowers/brainstorm/150600-1781431421/content/floating-*.html` × 13
+- `.superpowers/brainstorm/150600-1781431421/content/design-overview.html` (单页总览)
 - `.planning/2026-06-14-floating-window-design/task_plan.md`
 - `.planning/2026-06-14-floating-window-design/findings.md`
 - `.planning/2026-06-14-floating-window-design/progress.md`
+
+### Session 2: 2026-06-14 (续)
+- ✅ 设计文档落盘：`docs/superpowers/specs/2026-06-14-浮动窗口快速记录-design.md`（647 行，11 节，D1-D15 锁定）
+- ✅ git commit: `780072b design(v1.3): 浮动窗口快速记录设计文档 (D1-D15 锁定)`
+- ✅ 自定义 UTF-8 HTTP server（端口 8765）解决浏览器中文乱码
+- ✅ 实施计划落盘：`docs/superpowers/plans/2026-06-14-浮动窗口快速记录.md`（30 任务，6 阶段）
+
+### Session 2 阶段总结
+```
+Phase 1: 数据层（10 任务）   → rusqlite + 4 表 + 业务层双写 + 状态机
+Phase 2: Tauri 集成（5 任务） → commands + events + 全局快捷键
+Phase 3: 浮动窗 UI（10 任务）→ fold/expand/dropdown + Glass CSS
+Phase 4: 主窗时间线（2 任务）→ RecordTimeline 4 tab
+Phase 5: 跨平台（2 任务）    → macOS NSPanel + autostart
+Phase 6: 验收（1 任务）      → 3 秒记录 E2E
+```
 
 ### Errors / Corrections Encountered
 | # | 问题 | 修正 |
