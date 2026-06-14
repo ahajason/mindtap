@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { api } from "../../lib/tauri-bridge";
 import { useActiveTask } from "../hooks/useActiveTask";
+import { usePlatform, shortcutLabel } from "../hooks/usePlatform";
 import { ControlRow } from "./ControlRow";
 import "../styles/expand-state.css";
 
@@ -8,6 +9,7 @@ type Type = "task" | "idea" | "check_in";
 
 export function ExpandState({ onCollapse }: { onCollapse?: () => void } = {}) {
   const active = useActiveTask();
+  const platform = usePlatform();
   const [content, setContent] = useState("");
   const [type, setType] = useState<Type>("task");
   const [submitting, setSubmitting] = useState(false);
@@ -101,6 +103,9 @@ export function ExpandState({ onCollapse }: { onCollapse?: () => void } = {}) {
         >
           ⏵ 开始计时
         </button>
+      </div>
+      <div className="shortcut-hint" aria-hidden="true">
+        {shortcutLabel(platform)}
       </div>
     </div>
   );

@@ -23,8 +23,6 @@ export type Record = {
   source_id: number;
   content: string;
   status: "pending" | "active" | "paused" | "done" | null;
-  duration_ms: number;
-  focus_started_at: number | null;
   created_at: number;
 };
 
@@ -54,6 +52,7 @@ export const api = {
   floatingShow: () => invoke<void>("floating_show"),
   floatingHide: () => invoke<void>("floating_hide"),
   floatingToggle: () => invoke<void>("floating_toggle"),
+  getPlatform: () => invoke<string>("get_platform"),
 };
 
 export const events = {

@@ -2,6 +2,17 @@
 use tauri::Manager;
 
 #[tauri::command]
+pub fn get_platform() -> String {
+    if cfg!(target_os = "macos") {
+        "macos".to_string()
+    } else if cfg!(target_os = "windows") {
+        "windows".to_string()
+    } else {
+        "linux".to_string()
+    }
+}
+
+#[tauri::command]
 pub fn floating_show(app: tauri::AppHandle) -> Result<(), String> {
     if let Some(w) = app.get_webview_window("floating") {
         w.show().map_err(|e| e.to_string())?;

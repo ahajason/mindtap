@@ -166,3 +166,15 @@
 .start-btn:disabled {
   opacity: 0.5;
 }
+
+/* 展开态底部左下角：快捷键浅提示（区分系统） */
+.shortcut-hint {
+  align-self: flex-start;
+  font: 500 9.5px "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+  color: rgba(0, 0, 0, 0.38);
+  letter-spacing: 0.2px;
+  pointer-events: none;
+  user-select: none;
+  margin-top: -2px;
+  line-height: 1;
+}

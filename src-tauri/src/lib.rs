@@ -56,6 +56,7 @@ pub fn run() {
             commands::floating_cmd::floating_show,
             commands::floating_cmd::floating_hide,
             commands::floating_cmd::floating_toggle,
+            commands::floating_cmd::get_platform,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
