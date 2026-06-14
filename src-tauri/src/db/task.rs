@@ -249,6 +249,76 @@ pub fn get_task(conn: &Connection, id: i64) -> AppResult<Task> {
     )?)
 }
 
+/// 切换 Focus：当前 active → paused，new_id → active
+pub fn switch_focus(conn: &Connection, new_id: i64) -> AppResult<Task> {
+    let now = now_ms();
+    let tx = conn.unchecked_transaction()?;
+
+    // 把当前 active 暂停（保留时间）
+    let current: Option<(i64, Option<i64>, i64)> = tx
+        .query_row(
+            "SELECT id, focus_started_at, duration_ms FROM task WHERE status = 'active'",
+            [],
+            |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)),
+        )
+        .ok();
+    if let Some((cur_id, focus_started_at, duration_ms)) = current {
+        if cur_id != new_id {
+            let new_duration = if let Some(started) = focus_started_at {
+                duration_ms + (now - started)
+            } else {
+                duration_ms
+            };
+            tx.execute(
+                "UPDATE task
+                 SET status = 'paused',
+                     duration_ms = ?1,
+                     focus_started_at = NULL,
+                     paused_at = ?2
+                 WHERE id = ?3",
+                params![new_duration, now, cur_id],
+            )?;
+            tx.execute(
+                "UPDATE record SET status = 'paused' WHERE kind = 'task' AND source_id = ?1",
+                params![cur_id],
+            )?;
+        }
+    }
+
+    // 启动新 task
+    let target_status: String = tx
+        .query_row("SELECT status FROM task WHERE id = ?1", params![new_id], |r| r.get(0))
+        .map_err(|_| AppError::NotFound(format!("task {}", new_id)))?;
+    let new_status = match target_status.as_str() {
+        "pending" | "paused" => {
+            tx.execute(
+                "UPDATE task
+                 SET status = 'active',
+                     focus_started_at = ?1,
+                     first_focused_at = COALESCE(first_focused_at, ?1),
+                     focused_count = focused_count + 1,
+                     paused_at = NULL,
+                     updated_at = ?1
+                 WHERE id = ?2",
+                params![now, new_id],
+            )?;
+            "active"
+        }
+        "active" => "active",
+        other => {
+            return Err(AppError::InvalidTransition(format!(
+                "cannot switch to {} task", other
+            )));
+        }
+    };
+    tx.execute(
+        "UPDATE record SET status = ?1 WHERE kind = 'task' AND source_id = ?2",
+        params![new_status, new_id],
+    )?;
+    tx.commit()?;
+    get_task(conn, new_id)
+}
+
 /// 归档：任何状态 → archived（设置 archived_at）
 pub fn archive(conn: &Connection, task_id: i64) -> AppResult<Task> {
     let now = now_ms();
@@ -385,5 +455,27 @@ mod tests {
         complete(&conn, t.id).unwrap();
         let archived = archive(&conn, t.id).unwrap();
         assert!(archived.archived_at.is_some());
+    }
+
+    #[test]
+    fn switch_pauses_current_and_activates_new() {
+        let conn = test_conn();
+        let t1 = create_task(&conn, "first", None).unwrap();
+        let t2 = create_task(&conn, "second", None).unwrap();
+        start_timer(&conn, t1.id).unwrap();
+        std::thread::sleep(std::time::Duration::from_millis(30));
+        let switched = switch_focus(&conn, t2.id).unwrap();
+        assert_eq!(switched.id, t2.id);
+        assert_eq!(switched.status, "active");
+
+        let t1_after: (String, i64) = conn
+            .query_row(
+                "SELECT status, duration_ms FROM task WHERE id = ?1",
+                params![t1.id],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .unwrap();
+        assert_eq!(t1_after.0, "paused");
+        assert!(t1_after.1 >= 30);
     }
 }
