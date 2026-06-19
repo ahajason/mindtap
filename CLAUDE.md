@@ -128,9 +128,12 @@ pending ──start_timer──▶ active ◀──resume── paused ──pau
 
 ## 文档与规划文件
 
-- `docs/projects/v1.0/` — V1.0 PRD、specs、task_plan、progress、findings、prototype。
-- `docs/superpowers/plans/`、`docs/superpowers/specs/` — 实施用 plans 与 spec。
-- `docs/projects/design-system/glassmorphism-impl-spec.md` — Liquid Glass 设计系统权威（Glassic UI token 取此）。
+按**类型**组织(active 内容),版本进 `archive/`。详见 [`docs/README.md`](docs/README.md)。
+
+- `docs/design/` — 项目自有设计(design system 等)。
 - `docs/material/apple/` — Apple HIG Materials 参考。
-- `docs/v1.3-e2e-result.md` — V1.3 浮动窗口实施完成报告，含 18 个单元测试覆盖清单。
-- `.planning/YYYY-MM-DD-<topic>/` — 单次规划会话产物（task_plan / progress / findings），属于过程文档。
+- `docs/plans/` — 实施 plans。
+- `docs/specs/` — 实施 specs。
+- `docs/reports/` — 阶段性报告。
+- `docs/archive/v1.0/` — V1.0 完整沙盒(已交付)。
+- `.planning/YYYY-MM-DD-<topic>/` — 单次规划会话产物(task_plan / progress / findings),属于过程文档。
