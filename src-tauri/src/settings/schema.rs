@@ -59,6 +59,19 @@ pub struct HotkeySettings {
     pub code: String,
 }
 
+impl HotkeySettings {
+    /// Convert to a tauri Shortcut.
+    pub fn to_shortcut(&self) -> Result<Shortcut, tauri_plugin_global_shortcut::Error> {
+        let mods = Modifiers::from_bits(self.modifiers)
+            .ok_or_else(|| tauri_plugin_global_shortcut::Error::GlobalHotkey(
+                format!("invalid modifiers bitmask: {}", self.modifiers)
+            ))?;
+        let code = Code::from_str(&self.code)
+            .map_err(|e| tauri_plugin_global_shortcut::Error::GlobalHotkey(e.to_string()))?;
+        Ok(Shortcut::new(Some(mods), code))
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FloatingSettings {

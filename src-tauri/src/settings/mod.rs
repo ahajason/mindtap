@@ -6,6 +6,7 @@
 //!   - `schema.rs` — Settings struct, sections, Default, validate, to_shortcut
 //!   - `cmd.rs`    — #[tauri::command] handlers (settings_get/set/reset)
 
+pub mod apply;
 pub mod cmd;
 pub mod schema;
 
