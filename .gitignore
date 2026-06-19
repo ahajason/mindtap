@@ -45,3 +45,6 @@ Thumbs.db
 
 # Claude Code 插件运行时数据
 .superpowers/
+
+# Git worktrees（隔离开发工作区）
+.worktrees/
