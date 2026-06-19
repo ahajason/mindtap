@@ -55,19 +55,12 @@ pub fn run() {
                 }
             }
 
-            // macOS:主窗 close 按钮 (红点) 默认是 destroy 窗口 → 之后点 dock
-            // applicationShouldHandleReopen 转发到 Reopen event 时 show() 失效
-            // (底层 NSWindow 已 nil)。用标准 "close ≡ hide" 模式:CloseRequested
-            // 拦截 + prevent_close + hide,窗口永不被 destroy,Reopen 回调 show 直接恢复。
-            if let Some(main) = app.get_webview_window("main") {
-                let main_for_close = main.clone();
-                main.on_window_event(move |event| {
-                    if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                        api.prevent_close();
-                        let _ = main_for_close.hide();
-                    }
-                });
-            }
+            // macOS:主窗 close 按钮走 Tauri 2 默认 destroy 行为(不要拦截改 hide)。
+            // 原因:prevent_close + hide 会改变主窗 lifecycle,触发浮窗 NSPanel
+            // IMKCFRunLoopWakeUpReliable 错误(NSPanel 在失去 first responder 的
+            // 主窗 hide 时被 IME 找 first responder,失败)。点 dock Reopen 时
+            // 用 WebviewWindowBuilder 重建 main(get_webview_window 拿到的 zombie
+            // 句柄 show 不会 work)。
 
             Ok(())
         })
@@ -107,10 +100,21 @@ pub fn run() {
         .expect("error while building tauri application")
         .run(|app_handle, event| {
             // macOS:点 dock 栏图标触发 applicationShouldHandleReopen →
-            // Tauri 派发为 RunEvent::Reopen。主窗被 close 后点 dock 不会自动显示。
+            // Tauri 派发为 RunEvent::Reopen。主窗被 close (destroy) 后点 dock
+            // 不会自动显示,需要 WebviewWindowBuilder 重建(get_webview_window
+            // 拿到的 zombie 句柄 show 无效,因为底层 NSWindow 已 nil)。
             if let tauri::RunEvent::Reopen { has_visible_windows, .. } = event {
                 if !has_visible_windows {
-                    if let Some(w) = app_handle.get_webview_window("main") {
+                    if app_handle.get_webview_window("main").is_none() {
+                        let _ = tauri::WebviewWindowBuilder::new(
+                            app_handle,
+                            "main",
+                            tauri::WebviewUrl::App("index.html".into()),
+                        )
+                        .title("轻念 · Mindtap")
+                        .inner_size(800.0, 600.0)
+                        .build();
+                    } else if let Some(w) = app_handle.get_webview_window("main") {
                         let _ = w.show();
                         let _ = w.set_focus();
                     }
