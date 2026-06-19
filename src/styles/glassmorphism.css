@@ -1,0 +1,135 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─────────────────────────────────────────────────────────
+   Light Glassmorphism — design-system/glassmorphism-impl-spec
+   三 tier L1/L2/L3 + vivid 覆写 (v1.1 用)
+   ───────────────────────────────────────────────────────── */
+
+:root {
+  /* glass tier tokens (L1 < L2 < L3) */
+  --glass-l1-blur: 20px;
+  --glass-l1-fill: rgba(255, 255, 255, 0.35);
+  --glass-l1-border: rgba(255, 255, 255, 0.60);
+  --glass-l1-shadow: 0 8px 32px rgba(0, 30, 80, 0.08);
+
+  --glass-l2-blur: 24px;
+  --glass-l2-fill: rgba(255, 255, 255, 0.42);
+  --glass-l2-border: rgba(255, 255, 255, 0.70);
+  --glass-l2-shadow: 0 8px 32px rgba(0, 30, 80, 0.10);
+
+  --glass-l3-blur: 28px;
+  --glass-l3-fill: rgba(255, 255, 255, 0.50);
+  --glass-l3-border: rgba(255, 255, 255, 0.80);
+  --glass-l3-shadow: 0 8px 32px rgba(0, 30, 80, 0.12);
+
+  /* brand */
+  --primary-500: #165DFF;
+  --primary-600: #0E4AD9;
+  --primary-700: #0A3DBC;
+  --primary-glow: 0 4px 12px rgba(22, 93, 255, 0.25);
+  --primary-glow-hover: 0 6px 16px rgba(22, 93, 255, 0.35);
+
+  /* canvas gradient (subtle) */
+  --canvas-start: #F5F9FF;
+  --canvas-end: #E8F1FF;
+}
+
+@supports not (backdrop-filter: blur(20px)) {
+  /* Fallback: opaque-ish fills (no real blur through) */
+  .glass-l1, .glass-l2, .glass-l3 {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .glass-l1 { background: rgba(245, 249, 255, 0.95); }
+  .glass-l2 { background: rgba(245, 249, 255, 0.95); }
+  .glass-l3 { background: rgba(245, 249, 255, 0.95); }
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: #1D2939;
+  background:
+    radial-gradient(ellipse at 20% 0%, var(--canvas-start) 0%, transparent 60%),
+    radial-gradient(ellipse at 100% 100%, var(--canvas-end) 0%, transparent 50%),
+    linear-gradient(180deg, var(--canvas-start) 0%, var(--canvas-end) 100%);
+  background-attachment: fixed;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+}
+
+/* L1 — 普通卡片 / 标签 */
+.glass-l1 {
+  background: var(--glass-l1-fill);
+  border: 1px solid var(--glass-l1-border);
+  box-shadow: var(--glass-l1-shadow);
+  backdrop-filter: blur(var(--glass-l1-blur)) saturate(120%);
+  -webkit-backdrop-filter: blur(var(--glass-l1-blur)) saturate(120%);
+}
+
+/* L2 — 输入框 / 次按钮 */
+.glass-l2 {
+  background: var(--glass-l2-fill);
+  border: 1px solid var(--glass-l2-border);
+  box-shadow: var(--glass-l2-shadow);
+  backdrop-filter: blur(var(--glass-l2-blur)) saturate(120%);
+  -webkit-backdrop-filter: blur(var(--glass-l2-blur)) saturate(120%);
+}
+
+/* L3 — 主按钮 / 悬浮弹窗 */
+.glass-l3 {
+  background: var(--glass-l3-fill);
+  border: 1px solid var(--glass-l3-border);
+  box-shadow: var(--glass-l3-shadow);
+  backdrop-filter: blur(var(--glass-l3-blur)) saturate(120%);
+  -webkit-backdrop-filter: blur(var(--glass-l3-blur)) saturate(120%);
+}
+
+/* Vivid 覆写 — v1.1 启用 (spec §八.6) */
+.glass-vivid-l1 {
+  background: rgba(255, 255, 255, 0.20);
+  border-color: rgba(255, 255, 255, 0.50);
+  box-shadow: 0 12px 48px rgba(0, 30, 80, 0.20),
+              inset 0 1px 0 rgba(255, 255, 255, 0.40);
+}
+.glass-vivid-l2 {
+  background: rgba(255, 255, 255, 0.28);
+  border-color: rgba(255, 255, 255, 0.60);
+  box-shadow: 0 12px 48px rgba(0, 30, 80, 0.25),
+              inset 0 1px 0 rgba(255, 255, 255, 0.50);
+}
+.glass-vivid-l3 {
+  background: rgba(255, 255, 255, 0.38);
+  border-color: rgba(255, 255, 255, 0.70);
+  box-shadow: 0 16px 56px rgba(0, 30, 80, 0.30),
+              inset 0 1px 0 rgba(255, 255, 255, 0.60);
+}
+
+/* 边缘虹彩细带 — spec §八.3 */
+.glass-card {
+  position: relative;
+}
+.glass-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.50) 0%,
+    rgba(255, 255, 255, 0) 30%,
+    rgba(22, 93, 255, 0.10) 70%,
+    rgba(255, 255, 255, 0.30) 100%);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* 一级文本对比度兜底 (spec §八.5) */
+h1, h2, h3 {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
