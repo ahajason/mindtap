@@ -15,6 +15,9 @@ function formatKey(c: KeyCombo) {
   return mods ? `${mods}+${c.code}` : c.code
 }
 
+// 导出供 KeyRecorder 在 preset 推荐列表里复用展示格式
+export { formatKey }
+
 export function useKeyRecorder({ value, onChange }: { value: KeyCombo; onChange: (v: KeyCombo) => void }) {
   const [state, setState] = useState<RecorderState>('idle')
   const [draft, setDraft] = useState<KeyCombo | null>(null)

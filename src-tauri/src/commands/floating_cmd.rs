@@ -1,6 +1,13 @@
 // src-tauri/src/commands/floating_cmd.rs
-use tauri::Manager;
+use tauri::{LogicalSize, Manager};
 use tauri_plugin_autostart::ManagerExt;
+
+// 浮窗尺寸上下限（必须与 tauri.conf.json 的 maxInnerSize / minInnerSize
+// 以及 src/floating/App.tsx 的 MIN_H/MAX_H 同步）
+const MIN_H: f64 = 36.0;
+const MAX_H: f64 = 460.0;
+// 展开态固定宽度（必须与 src/floating/App.tsx 的 EXPAND_W 同步）
+const EXPAND_W: f64 = 360.0;
 
 #[tauri::command]
 pub fn get_platform() -> String {
@@ -50,6 +57,20 @@ pub fn floating_is_visible(app: tauri::AppHandle) -> bool {
     app.get_webview_window("floating")
         .and_then(|w| w.is_visible().ok())
         .unwrap_or(false)
+}
+
+/// 浮窗自适应内容高度：前端测量根容器 scrollHeight 调入，
+/// Rust 端按 MIN/MAX_H clamp 后写窗口尺寸。宽度固定 EXPAND_W（展开态）。
+/// 折叠态不应调此 command——窗口本身已 36px 高。
+#[tauri::command]
+pub fn floating_set_height(app: tauri::AppHandle, height: f64) -> Result<(), String> {
+    let h = height.clamp(MIN_H, MAX_H);
+    let Some(w) = app.get_webview_window("floating") else {
+        return Ok(()); // 窗口不存在 = 静默成功，不报错
+    };
+    w.set_size(LogicalSize::new(EXPAND_W, h))
+        .map_err(|e| e.to_string())?;
+    Ok(())
 }
 
 /// 浮窗右键菜单：在浮动窗当前光标位置弹出 4 项主菜单。

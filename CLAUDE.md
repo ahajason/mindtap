@@ -103,24 +103,6 @@ pending ──start_timer──▶ active ◀──resume── paused ──pau
 
 `@tauri-apps/api/core` 的 `invoke` 已经帮你把后端 `AppError` 的字符串序列化抛到 Promise reject 端，前端 `try/catch` 即可。
 
-### 浮窗交互主路径
-
-```
-用户按 Cmd/Ctrl+Shift+Space
-  → global-shortcut plugin 触发
-  → commands::floating_cmd::floating_toggle
-  → get_webview_window("floating").show() / .hide()
-
-用户在浮窗右键
-  → api.showFloatingContextMenu()
-  → commands::floating_cmd::show_floating_context_menu
-  → tray::menu::build_main_menu
-  → window.on_menu_event(...)
-  → tray::menu::handle_action
-```
-
-折叠 ↔ 展开的状态机、200ms hover-out 延迟折叠、ResizeObserver 内容自适应、长按拖拽 (`useDragLongPress`) 都封装在 `src/floating/App.tsx`。**该文件顶部 `DEBUG = true` 是临时 debug 开关**（TODO 注明 click-to-expand bug 修好后删除）。
-
 ### 主窗设置页（V1.4 新）
 
 主窗从「左侧栏 + RecordTimeline 时间线」改造为单列滚动的 `SettingsPage`：
@@ -162,7 +144,6 @@ Hero（标题 + 浮动条 toggle 按钮 + 状态条）
 ### 全局约束与踩坑点
 
 - **路径别名**：`@/* → src/*`，vite 与 tsconfig 必须同步。改别名就两个文件一起改。
-- **窗口尺寸双源**：浮窗尺寸上限写死在两处 —— `tauri.conf.json` 与 `floating/App.tsx` 的 `MIN_W/MAX_W/...`。改一个必须改另一个。
 - **DB 全局锁**：`DbState(Mutex<Connection>)`，全 app 一个连接。所有 db 函数走 `state.0.lock().unwrap()`。要并发先想清楚是不是真要并发，不要无脑加 `Arc<RwLock>`。
 - **写后必发事件**：task 状态变更发 `focus-changed`，新增/归档发 `record-updated`。前端 hook 靠这个驱动刷新。漏发 = UI 与 DB 不一致。
 - **Settings 写后必发 `settings-changed`**：任何 settings 写操作（`settings_set` / `settings_reset`）必须通过 `emit("settings-changed", ())` 通知前端 `useSettings` hook 刷新。漏发 = UI 停留在 stale 值。
@@ -177,26 +158,3 @@ Hero（标题 + 浮动条 toggle 按钮 + 状态条）
 - `docs/material/apple/` — Apple HIG Materials 参考。
 - `docs/v1.3-e2e-result.md` — V1.3 浮动窗口实施完成报告，含 18 个单元测试覆盖清单。
 - `.planning/YYYY-MM-DD-<topic>/` — 单次规划会话产物（task_plan / progress / findings），属于过程文档。
-
-## 测试现状
-
-| 层 | 数量 | 覆盖 |
-|---|---|---|
-| Rust unit | 35 | schema / task 全状态机（L1/L2/L3 不变量）/ record 关键查询 / settings validate / load 迁移 / ring buffer |
-| Frontend vitest | 16 | useSettings debounce+error revert (3) / useAccessibility polling (1) / useDiagnostics mount (1) / useKeyRecorder FSM 5 相位 (5) / KeyRecorder 组件 (2) / smoke (2×2) |
-| **合计** | **51** | |
-
-跑全测前先 `npm install`（虽然不直接用，但 workspace 一致性），然后 `cargo test --manifest-path src-tauri/Cargo.toml`。
-
-## V1.4 主窗改造 4 wave 拆分
-
-立项 spec：`docs/superpowers/specs/2026-06-19-主窗改造为设置页-design.md`
-
-| Wave | PRs | 内容 | 锚点 |
-|---|---|---|---|
-| Wave 1 基建 | PR1-7 | Tailwind + Glassic UI + log + settings schema + appliers + accessibility + diagnostics + hooks | — |
-| Wave 2 主线 UI | PR8-10 | SettingsPage + 7 基础 + KeyRecorder + 5 高级 + LogViewer + 接入 | `ac74d7d` PR8 fix |
-| Wave 3 清理 | PR11 | recordList 合并 + SwitchDropdown 迁移 + 删 Surface | `64b2244` PR11 fix |
-| Wave 4 文档 | PR12 | CLAUDE.md + README + 完成报告 | HEAD |
-
-覆盖：12 commits（PR1-11）+ 3 fix commits = 15 commits from spec start，51 tests。

@@ -5,19 +5,26 @@ import { getCurrentWindow, LogicalSize } from "@tauri-apps/api/window";
 import { FocusBlock } from "./components/FocusBlock";
 import { ExpandState } from "./components/ExpandState";
 import { useDragLongPress } from "./hooks/useDragLongPress";
+import { clampHeight } from "./measure";
 import { api } from "../lib/tauri-bridge";
 
 // 缓存窗口实例（getCurrentWindow() 每次返回新对象，避免 effect deps 不稳定）
-let cachedWin: ReturnType<typeof getCurrentWindow> | null = null;
+// 浏览器开发模式无 Tauri runtime → getCurrentWindow 同步抛错 → React 整个 unmount。
+// 加 try/catch 让浮窗在 vite dev 也能 mount（视觉 + DOM 测试用）；
+// IPC setSize 在 vite dev 下静默 no-op，tauri dev/build 下正常工作。
+let cachedWin: ReturnType<typeof getCurrentWindow> | null | undefined = undefined;
 function getWin() {
-  if (!cachedWin) cachedWin = getCurrentWindow();
+  if (cachedWin !== undefined) return cachedWin;
+  try {
+    cachedWin = getCurrentWindow();
+  } catch {
+    cachedWin = null;
+  }
   return cachedWin;
 }
 
-// 内容自适应边界（与 tauri.conf.json maxInnerSize 同步）
-const MIN_W = 320;
+// 内容自适应边界（必须与 src-tauri/src/commands/floating_cmd.rs 的 MIN_H/MAX_H 同步）
 const MIN_H = 36;
-const MAX_W = 480;
 const MAX_H = 460;
 
 // 折叠/展开两种状态的显式尺寸
@@ -34,36 +41,15 @@ const HOVER_OUT_DELAY_MS = 200;
 // 过渡阶段：idle=稳定态，entering/leaving=过渡中（CSS 加 .transitioning）
 type Phase = "idle" | "entering" | "leaving";
 
-// 诊断日志开关：true 时打印 resize / phase / mouseleave 全链路
-// TODO: click-to-expand bug 修复后删除
-const DEBUG = true;
-const dlog = (...a: unknown[]) => DEBUG && console.log("[floating]", ...a);
-
-// 验证 setSize 是否真的影响 Tauri 窗口（在浏览器中 setSize 是 mock，无效）
-function patchWinForDebug() {
-  if (typeof window === "undefined") return;
-  const w = window as unknown as { __floatingDebugPatched?: boolean };
-  if (w.__floatingDebugPatched) return;
-  w.__floatingDebugPatched = true;
-  // 拦截 innerWidth/Height 变化（mock 用）：保留一个可改的 override
-  Object.defineProperty(window, "innerWidth", {
-    configurable: true,
-    get: () => (window as any).__mockInnerW ?? window.innerWidth,
-  });
-  Object.defineProperty(window, "innerHeight", {
-    configurable: true,
-    get: () => (window as any).__mockInnerH ?? window.innerHeight,
-  });
-  dlog("patchWinForDebug: innerWidth/innerHeight override armed");
-}
+// no-op 调试日志（V1.5 之前有 DEBUG=true 模式 + patchWinForDebug mock
+// 模拟 Tauri window innerWidth/Height，但 mock 用 getter 自递归导致
+// 浏览器栈溢出。已删 mock，仅留 stub 保持调用点不删）
+const dlog = (..._a: unknown[]) => {};
 
 export default function App() {
-  patchWinForDebug();
   const [expanded, setExpanded] = useState(false);
   const [phase, setPhase] = useState<Phase>("idle");
   const rootRef = useRef<HTMLDivElement>(null);
-  // 手动 resize 期间阻止 ResizeObserver 反馈循环
-  const manualResizingRef = useRef(false);
   // 鼠标移出计时器（200ms 缓冲）
   const collapseTimerRef = useRef<number | null>(null);
 
@@ -71,46 +57,53 @@ export default function App() {
 
   // 显式 setSize：在 expanded 切换时立即同步（兜底 ResizeObserver 漏触发）
   useEffect(() => {
+    const win = getWin();
+    if (!win) return; // 浏览器开发模式：getCurrentWindow 抛过 = no-op
     const w = expanded ? EXPAND_W : FOLD_W;
     const h = expanded ? EXPAND_H : FOLD_H;
     dlog("[toggle useEffect] setSize request:", w, "x", h, "expanded=", expanded);
-    getWin()
-      .setSize(new LogicalSize(w, h))
+    win.setSize(new LogicalSize(w, h))
       .then(() => {
-        // 模拟 setSize 成功后真实窗口尺寸变化（仅 debug mock）
-        (window as any).__mockInnerW = w;
-        (window as any).__mockInnerH = h;
-        dlog("[toggle useEffect] setSize resolved, mock inner=", w, "x", h);
+        dlog("[toggle useEffect] setSize resolved");
       })
       .catch((e) => console.error("setSize (toggle) failed:", e));
   }, [expanded]);
 
-  // ResizeObserver 监听根容器尺寸 → 动态跟内容（SwitchDropdown、长内容等）
+  // 内容自适应：测 rootRef.scrollHeight + rAF 合并 + MutationObserver 监听内容变化
+  // （取代之前的 ResizeObserver——后者依赖 root box size，但根容器在没显式 width
+  // 约束时不撑开，observer 永远不触发。openless LessComputerPanel 同款范式）
   useLayoutEffect(() => {
+    if (!expanded) return; // 折叠态固定 36px，无需 resize
     const el = rootRef.current;
     if (!el) return;
 
-    const sync = () => {
-      if (manualResizingRef.current) return; // 手动拖拽期间跳过
-      const r = el.getBoundingClientRect();
-      const w = Math.max(MIN_W, Math.min(MAX_W, Math.ceil(r.width)));
-      const h = Math.max(MIN_H, Math.min(MAX_H, Math.ceil(r.height)));
-      dlog("[observer] rect=", r.width.toFixed(0), "x", r.height.toFixed(0),
-           "→ setSize", w, "x", h);
-      getWin()
-        .setSize(new LogicalSize(w, h))
-        .then(() => {
-          (window as any).__mockInnerW = w;
-          (window as any).__mockInnerH = h;
-        })
-        .catch((e) => console.error("setSize (observer) failed:", e));
+    let frame: number | null = null;
+    const measure = () => {
+      frame = null;
+      const clamped = clampHeight(el.scrollHeight, { minH: MIN_H, maxH: MAX_H });
+      dlog("[content] scrollHeight=", el.scrollHeight, "→ setSize(EXPAND_W,", clamped, ")");
+      // api.floatingSetHeight 在 vite dev 浏览器下 invoke 同步抛（无 Tauri runtime）
+      try {
+        api.floatingSetHeight(clamped)
+          .catch((e: unknown) => console.error("floatingSetHeight failed:", e));
+      } catch {
+        // 浏览器开发模式：invoke undefined → 静默跳过
+      }
+    };
+    const schedule = () => {
+      if (frame != null) return;
+      frame = requestAnimationFrame(measure);
     };
 
-    const ro = new ResizeObserver(sync);
-    ro.observe(el);
-    sync(); // 初始同步一次
-    return () => ro.disconnect();
-  }, []);
+    schedule(); // 初始测量一次
+    // textarea 输入 / 子节点增删 / 字符修改 都会撑高根容器 scrollHeight
+    const mo = new MutationObserver(schedule);
+    mo.observe(el, { childList: true, subtree: true, characterData: true });
+    return () => {
+      mo.disconnect();
+      if (frame != null) cancelAnimationFrame(frame);
+    };
+  }, [expanded]);
 
   // unmount 时清理 mouseleave 计时器
   useEffect(
@@ -178,39 +171,6 @@ export default function App() {
     }, HOVER_OUT_DELAY_MS);
   }, [expanded, phase, collapse]);
 
-  // 手动 resize：拖拽右下角手柄
-  const onResizeHandleMouseDown = useCallback(
-    (e: ReactMouseEvent<HTMLDivElement>) => {
-      e.preventDefault();
-      e.stopPropagation();
-      manualResizingRef.current = true;
-      const startX = e.clientX;
-      const startY = e.clientY;
-      const startW = window.innerWidth;
-      const startH = window.innerHeight;
-
-      const onMove = (ev: globalThis.MouseEvent) => {
-        const dw = ev.clientX - startX;
-        const dh = ev.clientY - startY;
-        const w = Math.max(MIN_W, Math.min(MAX_W, Math.ceil(startW + dw)));
-        const h = Math.max(MIN_H, Math.min(MAX_H, Math.ceil(startH + dh)));
-        getWin()
-          .setSize(new LogicalSize(w, h))
-          .catch(() => {});
-      };
-
-      const onUp = () => {
-        manualResizingRef.current = false;
-        document.removeEventListener("mousemove", onMove);
-        document.removeEventListener("mouseup", onUp);
-      };
-
-      document.addEventListener("mousemove", onMove);
-      document.addEventListener("mouseup", onUp);
-    },
-    []
-  );
-
   // 根容器动态 className：phase !== idle 时挂 .transitioning
   const rootClass = [
     "floating-root",
@@ -263,12 +223,6 @@ export default function App() {
         onPointerLeave={drag.onPointerCancel}
       >
         <ExpandState onCollapse={collapse} />
-        <div
-          className="resize-handle"
-          onMouseDown={onResizeHandleMouseDown}
-          title="拖动调整窗口大小"
-          aria-label="resize handle"
-        />
       </div>
     );
   }
@@ -284,12 +238,6 @@ export default function App() {
       onPointerLeave={drag.onPointerCancel}
     >
       <FocusBlock />
-      <div
-        className="resize-handle"
-        onMouseDown={onResizeHandleMouseDown}
-        title="拖动调整窗口大小"
-        aria-label="resize handle"
-      />
     </div>
   );
 }

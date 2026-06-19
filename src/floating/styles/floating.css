@@ -3,8 +3,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 36px;
-  padding: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(246, 247, 250, 0.88);
+  border: 0.5px solid rgba(0, 0, 0, 0.12);
+  box-shadow: 0 18px 44px -18px rgba(15, 17, 22, 0.28);
+  box-sizing: border-box;
 }
 
 /* 折叠态暗示可拖拽 */
