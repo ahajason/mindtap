@@ -20,3 +20,40 @@ pub fn init(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     app.manage(DbState(Mutex::new(conn)));
     Ok(())
 }
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DbInfo {
+    pub path: String,
+    pub size_bytes: u64,
+    pub record_count: u64,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AppInfo {
+    pub version: String,
+    pub total_launches: u64,
+    pub first_launch_at: String,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ActiveTaskSummary {
+    pub id: i64,
+    pub content: String,
+    pub focus_started_at: i64,
+    pub duration_ms: i64,
+}
+
+pub fn info(conn: &rusqlite::Connection) -> Result<DbInfo, String> {
+    let path = match conn.path() {
+        Some(p) => p.to_string(),
+        None => return Err("database has no path".into()),
+    };
+    let size_bytes = std::fs::metadata(&path).map(|m| m.len()).unwrap_or(0);
+    let count: i64 = conn
+        .query_row("SELECT COUNT(*) FROM record", [], |r| r.get(0))
+        .unwrap_or(0);
+    Ok(DbInfo { path, size_bytes, record_count: count as u64 })
+}

@@ -329,6 +329,25 @@ pub fn archive(conn: &Connection, task_id: i64) -> AppResult<Task> {
     get_task(conn, task_id)
 }
 
+use crate::db::ActiveTaskSummary;
+
+pub fn active_task_summary(conn: &Connection) -> Result<Option<ActiveTaskSummary>, String> {
+    let mut stmt =
+        conn.prepare("SELECT id, content, focus_started_at, duration_ms FROM task WHERE status='active' LIMIT 1")
+            .map_err(|e| e.to_string())?;
+    let mut rows = stmt.query([]).map_err(|e| e.to_string())?;
+    if let Some(r) = rows.next().map_err(|e| e.to_string())? {
+        Ok(Some(ActiveTaskSummary {
+            id: r.get(0).map_err(|e| e.to_string())?,
+            content: r.get(1).map_err(|e| e.to_string())?,
+            focus_started_at: r.get(2).map_err(|e| e.to_string())?,
+            duration_ms: r.get(3).map_err(|e| e.to_string())?,
+        }))
+    } else {
+        Ok(None)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
