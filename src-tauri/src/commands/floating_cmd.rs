@@ -24,7 +24,9 @@ pub fn get_platform() -> String {
 pub fn floating_show(app: tauri::AppHandle) -> Result<(), String> {
     if let Some(w) = app.get_webview_window("floating") {
         w.show().map_err(|e| e.to_string())?;
-        w.set_focus().map_err(|e| e.to_string())?;
+        // 不调 set_focus():NSPanel 已被 set_as_panel 改成 setCanBecomeKeyWindow:false,
+        // set_focus 会触发 InputMethodKit wake up → hide→show 之间 IMKCFRunLoopWakeUpReliable
+        // 错误 → 命令抛错 → 前端 toggle 看似「点不开」。
     }
     Ok(())
 }
@@ -44,7 +46,7 @@ pub fn floating_toggle(app: tauri::AppHandle) -> Result<(), String> {
             w.hide().map_err(|e| e.to_string())?;
         } else {
             w.show().map_err(|e| e.to_string())?;
-            w.set_focus().map_err(|e| e.to_string())?;
+            // 不调 set_focus():理由同 floating_show (NSPanel IME mach port)
         }
     }
     Ok(())

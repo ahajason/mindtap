@@ -55,6 +55,20 @@ pub fn run() {
                 }
             }
 
+            // macOS:主窗 close 按钮 (红点) 默认是 destroy 窗口 → 之后点 dock
+            // applicationShouldHandleReopen 转发到 Reopen event 时 show() 失效
+            // (底层 NSWindow 已 nil)。用标准 "close ≡ hide" 模式:CloseRequested
+            // 拦截 + prevent_close + hide,窗口永不被 destroy,Reopen 回调 show 直接恢复。
+            if let Some(main) = app.get_webview_window("main") {
+                let main_for_close = main.clone();
+                main.on_window_event(move |event| {
+                    if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                        api.prevent_close();
+                        let _ = main_for_close.hide();
+                    }
+                });
+            }
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -89,6 +103,18 @@ pub fn run() {
             crate::diagnostics::cmd::diagnostics_recent_logs,
             crate::diagnostics::cmd::frontend_log,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app_handle, event| {
+            // macOS:点 dock 栏图标触发 applicationShouldHandleReopen →
+            // Tauri 派发为 RunEvent::Reopen。主窗被 close 后点 dock 不会自动显示。
+            if let tauri::RunEvent::Reopen { has_visible_windows, .. } = event {
+                if !has_visible_windows {
+                    if let Some(w) = app_handle.get_webview_window("main") {
+                        let _ = w.show();
+                        let _ = w.set_focus();
+                    }
+                }
+            }
+        });
 }
