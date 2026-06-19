@@ -1,6 +1,7 @@
 // src/lib/tauri-bridge.ts
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
+import type { Settings, Diagnostics, LogEntry } from "@/settings/schema";
 
 export type Task = {
   id: number;
@@ -63,4 +64,23 @@ export const events = {
     listen("record-updated", () => cb()),
   onTick: (cb: (now: number) => void): Promise<UnlistenFn> =>
     listen<number>("tick", (e) => cb(e.payload)),
+  settingsChanged: <T>(cb: (s: T) => void) =>
+    listen<T>("settings-changed", (e) => cb(e.payload)),
+};
+
+export const settings = {
+  get: () => invoke<Settings>("settings_get"),
+  set: (new_: Settings) => invoke<Settings>("settings_set", { new: new_ }),
+  reset: () => invoke<Settings>("settings_reset"),
+};
+
+export const accessibility = {
+  status: () => invoke<boolean>("accessibility_status"),
+  requestPrompt: () => invoke<void>("accessibility_request_prompt"),
+  openSettings: () => invoke<void>("open_ax_settings"),
+};
+
+export const diagnostics = {
+  get: () => invoke<Diagnostics>("diagnostics_get"),
+  recentLogs: () => invoke<LogEntry[]>("diagnostics_recent_logs"),
 };
