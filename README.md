@@ -50,13 +50,26 @@ npm run tauri build
 ```
 mindtap/
 ├── src/                    # React 前端
-│   ├── App.tsx            # 主组件（用户自有资产）
-│   ├── components/        # UI 组件
-│   └── styles/            # 全局样式
+│   ├── App.tsx            # 主组件（SettingsPage 单行）
+│   ├── settings/          # V1.4 设置页
+│   │   ├── SettingsPage.tsx
+│   │   ├── schema.ts      # TS settings schema
+│   │   ├── components/    # GlassCard / Section / Segmented / KeyRecorder / LogViewer
+│   │   └── sections/      # 11 个 section 组件
+│   ├── hooks/             # useSettings / useAccessibility / useDiagnostics / useKeyRecorder
+│   ├── lib/               # tauri-bridge.ts / log.ts / env.ts
+│   ├── components/        # shadcn UI 组件
+│   ├── floating/          # 浮窗
+│   └── timeline/           # RecordTimeline（v1 保留，未激活）
 ├── src-tauri/              # Rust 后端 + Tauri 2
 │   ├── src/
 │   │   ├── lib.rs         # 入口
-│   │   └── main.rs        # binary 入口
+│   │   ├── main.rs        # binary 入口
+│   │   ├── settings/      # settings/{mod,schema,apply,cmd}.rs
+│   │   ├── diagnostics/   # diagnostics/{mod,cmd}.rs
+│   │   ├── log/           # log/{mod,ring}.rs
+│   │   ├── accessibility/ # accessibility/{mod,cmd}.rs
+│   │   └── tray/          # tray/{menu,confirm}.rs
 │   ├── tauri.conf.json    # Tauri 配置
 │   └── Cargo.toml         # Rust 依赖
 ├── docs/projects/v1.0/     # 项目文档 + 设计资产
@@ -71,6 +84,21 @@ mindtap/
 
 ---
 
+## 🎨 V1.4 主窗改造为设置页
+
+主窗从「左侧栏 + RecordTimeline 时间线」改造为 SettingsPage 单列滚动布局：
+
+- **Hero 区**：标题 + 浮动条 toggle 按钮 + 状态条
+- **11 个 Section**：7 个 basic section（About / Accessibility / Appearance / Data / Diagnostics / Hotkey / Startup）+ 5 个高级 section（Floating / Logging / WindowState 等，支持整段折叠）
+- **三件事打包**：设置持久化（JSON atomic write）+ 日志基建（stderr + 文件 + 内存 ring）+ 诊断面板（聚合 accessibility / hotkey / task / db / logs）
+
+![Settings Page](docs/screenshots/settings-page.png)
+> 截图待补
+
+详见 `docs/v1.0-主窗改造完成.md`。
+
+---
+
 ## 🎯 V1.0 范围
 
 **灵感 + TODO + 复盘** 3 模块（用户决策 D29）
@@ -78,6 +106,8 @@ mindtap/
 - ✅ **跨平台**：单代码库（WSL / Windows / macOS / Linux）
 - ✅ **本地存储**：SQLite，全本地无后端
 - ✅ **Liquid Glass 设计**：Apple HIG Materials 原则
+- ✅ **主窗改造为设置页（V1.4）**：SettingsPage 单列滚动 + 11 sections + 诊断面板
+- ✅ **设置持久化 + 诊断面板**：settings.json atomic write + 三档日志 + 诊断聚合
 - ❌ 语音输入（V1.4 再加）
 - ❌ 导出 / 导入 / 同步（V1.0 全本地）
 
