@@ -37,8 +37,9 @@ export function SwitchDropdown({ onCollapse }: { onCollapse?: () => void } = {})
           <DropdownMenuItem
             key={r.id}
             onSelect={() => {
-              api.taskSwitch(r.source_id);
-              onCollapse?.();
+              api.taskSwitch(r.source_id)
+                .then(() => onCollapse?.())
+                .catch(e => console.error("taskSwitch failed", e));
             }}
             className="flex items-start gap-2"
           >
