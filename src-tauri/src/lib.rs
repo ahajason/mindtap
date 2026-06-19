@@ -7,7 +7,7 @@ mod tray;
 pub mod accessibility;
 pub mod settings;
 
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -40,6 +40,8 @@ pub fn run() {
         .setup(move |app| {
             crate::log::init(app.handle())?;
             db::init(app).map_err(|e| e.to_string())?;
+            let settings = crate::settings::load_or_default(app.handle());
+            app.manage(crate::settings::SettingsState(std::sync::Mutex::new(settings)));
             floating::ensure_window(&app.handle()).map_err(|e| e.to_string())?;
             app.global_shortcut().register(toggle_shortcut)?;
 
@@ -79,6 +81,9 @@ pub fn run() {
             crate::accessibility::cmd::accessibility_status,
             crate::accessibility::cmd::accessibility_request_prompt,
             crate::accessibility::cmd::open_ax_settings,
+            crate::settings::cmd::settings_get,
+            crate::settings::cmd::settings_set,
+            crate::settings::cmd::settings_reset,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
