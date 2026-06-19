@@ -167,12 +167,19 @@ pub fn init(_app: &tauri::AppHandle) -> Result<(), String> {
 }
 
 /// Apply a new log level filter at runtime (v1 settings UI).
+/// `env_logger` is replaced by our DualWriter at init, so we drive the
+/// `log` crate's global filter directly — changes take effect immediately.
 pub fn apply(level_filter: &str) {
-    std::env::set_var("RUST_LOG", level_filter);
-    log::info!(
-        "RUST_LOG set to '{}'; restart required to take effect",
-        level_filter
-    );
+    let f = match level_filter {
+        "error" => LevelFilter::Error,
+        "warn" => LevelFilter::Warn,
+        "info" => LevelFilter::Info,
+        "debug" => LevelFilter::Debug,
+        "trace" => LevelFilter::Trace,
+        _ => LevelFilter::Info,
+    };
+    log::set_max_level(f);
+    log::info!("log level filter set to '{level_filter}' (immediate)");
 }
 
 /// Return the most recent `n` log entries (newest last).
