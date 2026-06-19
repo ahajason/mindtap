@@ -1,5 +1,6 @@
 mod commands;
 mod db;
+mod diagnostics;
 mod error;
 mod floating;
 mod log;
@@ -83,6 +84,9 @@ pub fn run() {
             crate::settings::cmd::settings_get,
             crate::settings::cmd::settings_set,
             crate::settings::cmd::settings_reset,
+            crate::diagnostics::cmd::diagnostics_get,
+            crate::diagnostics::cmd::diagnostics_recent_logs,
+            crate::diagnostics::cmd::frontend_log,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
