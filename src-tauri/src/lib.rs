@@ -3,6 +3,7 @@ mod db;
 mod error;
 mod floating;
 mod tray;
+pub mod accessibility;
 
 use tauri::Manager;
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
@@ -72,6 +73,9 @@ pub fn run() {
             commands::floating_cmd::floating_toggle,
             commands::floating_cmd::get_platform,
             commands::floating_cmd::show_floating_context_menu,
+            crate::accessibility::cmd::accessibility_status,
+            crate::accessibility::cmd::accessibility_request_prompt,
+            crate::accessibility::cmd::open_ax_settings,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
