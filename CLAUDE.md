@@ -92,32 +92,11 @@ pending ──start_timer──▶ active ◀──resume── paused ──pau
 - `api.*` —— `invoke<T>(name, args)` 的类型化包装，对应后端 `commands/` 注册的每个 command。task 命令的参数名是驼峰（`content` / `dueAt` / `id`），Tauri 2 自动转 snake_case 给 Rust 端。
 - `events.*` —— `listen<T>(name, cb)`：常用三个：`focus-changed(Task)` / `record-updated(())` / `tick(number)`。订阅约定返回 `Promise<UnlistenFn>`，hook `useEffect` 清理时调用 `unlisten.then(u => u())`。
 
-**新增 IPC commands（V1.4）：**
+新 IPC commands 跟随各 V1.x spec 走，见 `docs/superpowers/specs/`。`@tauri-apps/api/core` 的 `invoke` 已把后端 `AppError` 序列化抛到 Promise reject 端，前端 `try/catch` 即可。
 
-| command | 用途 |
-|---|---|
-| `settings_get / settings_set / settings_reset` | Settings 读写 |
-| `accessibility_status / accessibility_request_prompt / open_ax_settings` | 辅助功能 |
-| `diagnostics_get / diagnostics_recent_logs / frontend_log` | 诊断面板 |
-| `floating_is_visible` | PR8 fix：判断浮窗是否显示 |
+### 主窗入口
 
-`@tauri-apps/api/core` 的 `invoke` 已经帮你把后端 `AppError` 的字符串序列化抛到 Promise reject 端，前端 `try/catch` 即可。
-
-### 主窗设置页（V1.4 新）
-
-主窗从「左侧栏 + RecordTimeline 时间线」改造为单列滚动的 `SettingsPage`：
-
-```
-Hero（标题 + 浮动条 toggle 按钮 + 状态条）
-  → 11 个 section（7 basic + 5 高级整段折叠 + 2 个 advanced 展开）
-```
-
-9 个 section 组件在 `src/settings/sections/`：
-`About / Accessibility / Appearance / Data / Diagnostics / Floating / Hotkey / Logging / Startup / WindowState`
-
-共享组件在 `src/settings/components/`：`GlassCard / Section / Segmented / KeyRecorder / LogViewer`
-
-`App.tsx` 现在就是 1 行：`<SettingsPage />`
+主窗是单列滚动的设置页，入口在 `src/App.tsx`（`<SettingsPage />`）。Section 拆分随版本迭代，要看当前结构直接读 `src/settings/sections/`。
 
 ### Settings 持久化
 
@@ -135,11 +114,7 @@ Hero（标题 + 浮动条 toggle 按钮 + 状态条）
 
 ### 诊断面板
 
-聚合信息（`Diagnostics` struct 字段）：`accessibility / hotkey_registered / active_task / floating_visible / db {path,size,count} / recent_logs / app {version,totalLaunches}`
-
-3 个 commands：`diagnostics_get / diagnostics_recent_logs / frontend_log`
-
-前端 `useDiagnostics` hook：mount + focus 刷新；`LogViewer` 组件 3s 轮询 ring。
+`useDiagnostics` hook mount + focus 刷新；`LogViewer` 组件 3s 轮询 ring。聚合字段以 `Diagnostics` struct 定义为准，见 `src-tauri/src/commands/`。
 
 ### 全局约束与踩坑点
 
@@ -155,6 +130,7 @@ Hero（标题 + 浮动条 toggle 按钮 + 状态条）
 
 - `docs/projects/v1.0/` — V1.0 PRD、specs、task_plan、progress、findings、prototype。
 - `docs/superpowers/plans/`、`docs/superpowers/specs/` — 实施用 plans 与 spec。
+- `docs/projects/design-system/glassmorphism-impl-spec.md` — Liquid Glass 设计系统权威（Glassic UI token 取此）。
 - `docs/material/apple/` — Apple HIG Materials 参考。
 - `docs/v1.3-e2e-result.md` — V1.3 浮动窗口实施完成报告，含 18 个单元测试覆盖清单。
 - `.planning/YYYY-MM-DD-<topic>/` — 单次规划会话产物（task_plan / progress / findings），属于过程文档。
