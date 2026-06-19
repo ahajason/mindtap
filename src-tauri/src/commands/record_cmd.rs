@@ -5,24 +5,21 @@ use crate::db::DbState;
 use crate::error::AppResult;
 use tauri::State;
 
+/// 统一列表：可选 kind 筛选（None = 全部），可选 hideArchived 默认 true。
 #[tauri::command]
 pub fn record_list(
     state: State<'_, DbState>,
+    kind: Option<String>,
     limit: Option<i64>,
     hide_archived: Option<bool>,
 ) -> AppResult<Vec<Record>> {
     let conn = state.0.lock().unwrap();
-    record::list_records(&conn, limit.unwrap_or(50), hide_archived.unwrap_or(true))
-}
-
-#[tauri::command]
-pub fn record_list_by_kind(
-    state: State<'_, DbState>,
-    kind: String,
-    limit: Option<i64>,
-) -> AppResult<Vec<Record>> {
-    let conn = state.0.lock().unwrap();
-    record::list_by_kind(&conn, &kind, limit.unwrap_or(50))
+    let lim = limit.unwrap_or(50);
+    let hide = hide_archived.unwrap_or(true);
+    match kind.as_deref() {
+        Some(k) => record::list_by_kind(&conn, k, lim),
+        None => record::list_records(&conn, lim, hide),
+    }
 }
 
 #[tauri::command]

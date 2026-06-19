@@ -69,7 +69,6 @@ pub fn run() {
             commands::idea_cmd::idea_create,
             commands::check_in_cmd::check_in_create,
             commands::record_cmd::record_list,
-            commands::record_cmd::record_list_by_kind,
             commands::record_cmd::record_list_switchable,
             commands::record_cmd::record_get_active,
             commands::record_cmd::record_get_active_task,
