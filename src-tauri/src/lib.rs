@@ -8,19 +8,10 @@ pub mod accessibility;
 pub mod settings;
 
 use tauri::{Emitter, Manager};
-use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
+use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let toggle_shortcut = Shortcut::new(
-        Some(if cfg!(target_os = "macos") {
-            Modifiers::SUPER | Modifiers::SHIFT
-        } else {
-            Modifiers::CONTROL | Modifiers::SHIFT
-        }),
-        Code::Space,
-    );
-
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
@@ -30,9 +21,14 @@ pub fn run() {
         ))
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
-                .with_handler(move |app, shortcut, event| {
-                    if shortcut == &toggle_shortcut && event.state == ShortcutState::Pressed {
-                        let _ = commands::floating_cmd::floating_toggle(app.clone());
+                .with_handler(move |app, sc, event| {
+                    if event.state != ShortcutState::Pressed {
+                        return;
+                    }
+                    let st = app.state::<crate::settings::SettingsState>();
+                    let cur = st.0.lock().unwrap().hotkey.to_shortcut().ok();
+                    if Some(sc) == cur.as_ref() {
+                        let _ = crate::commands::floating_cmd::floating_toggle(app.clone());
                     }
                 })
                 .build(),
@@ -43,7 +39,10 @@ pub fn run() {
             let settings = crate::settings::load_or_default(app.handle());
             app.manage(crate::settings::SettingsState(std::sync::Mutex::new(settings)));
             floating::ensure_window(&app.handle()).map_err(|e| e.to_string())?;
-            app.global_shortcut().register(toggle_shortcut)?;
+            crate::settings::apply::apply_floating_geometry(app.handle())?;
+            crate::settings::apply::apply_hotkey(app.handle())?;
+            crate::settings::apply::apply_autostart(app.handle())?;
+            crate::settings::apply::apply_logging(app.handle());
 
             // 两窗口绑定 on_menu_event：浮窗右键菜单 / V1.4 托盘菜单复用同一分发
             for label in ["main", "floating"] {
