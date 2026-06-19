@@ -2,18 +2,13 @@ import { Section } from '../components/Section'
 import { Button } from '@/components/ui/button'
 import { useSettings } from '@/hooks/useSettings'
 import { toast } from 'sonner'
-import { invoke } from '@tauri-apps/api/core'
-import { log } from '@/lib/log'
 
 export function WindowStateSection() {
   const { settings, setField } = useSettings()
   if (!settings) return null
-  const reset = async (which: 'main' | 'floating') => {
-    try {
-      await invoke('floating_toggle')  // noop placeholder, real impl uses tauri window APIs
-      setField('windowState', { ...settings.windowState, [which]: null })
-      toast.success(`已重置${which === 'main' ? '主窗' : '浮窗'}位置`)
-    } catch (e) { log.error('reset window state failed', e) }
+  const reset = (which: 'main' | 'floating') => {
+    setField('windowState', { ...settings.windowState, [which]: null })
+    toast.success(`已重置${which === 'main' ? '主窗' : '浮窗'}位置`)
   }
   return (
     <Section kicker="窗口位置" title="主窗 / 浮窗 位置">
