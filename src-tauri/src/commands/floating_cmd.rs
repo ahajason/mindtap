@@ -43,6 +43,15 @@ pub fn floating_toggle(app: tauri::AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+/// 查询浮窗当前可见性（SettingsPage 顶部状态条用）。
+/// 浮窗窗口不存在 / is_visible 失败时返回 false，绝不抛错到前端。
+#[tauri::command]
+pub fn floating_is_visible(app: tauri::AppHandle) -> bool {
+    app.get_webview_window("floating")
+        .and_then(|w| w.is_visible().ok())
+        .unwrap_or(false)
+}
+
 /// 浮窗右键菜单：在浮动窗当前光标位置弹出 4 项主菜单。
 /// 菜单用完即弃（V1.4 spec §5.3：每次 popup 前重读 autostart 真实状态）。
 /// 动作分发：window.on_menu_event → tray::menu::handle_action

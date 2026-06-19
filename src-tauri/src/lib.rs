@@ -76,6 +76,7 @@ pub fn run() {
             commands::floating_cmd::floating_show,
             commands::floating_cmd::floating_hide,
             commands::floating_cmd::floating_toggle,
+            commands::floating_cmd::floating_is_visible,
             commands::floating_cmd::get_platform,
             commands::floating_cmd::show_floating_context_menu,
             crate::accessibility::cmd::accessibility_status,
