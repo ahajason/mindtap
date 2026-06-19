@@ -15,12 +15,11 @@ export function useRecords(kind: KindFilter = "all") {
 
     async function refresh() {
       try {
-        let data: Record[];
-        if (kind === "all") {
-          data = await api.recordList(100, true);
-        } else {
-          data = await api.recordListByKind(kind, 100);
-        }
+        const data = await api.recordList(
+          kind === "all" ? undefined : kind,
+          100,
+          true,
+        );
         setRecords(data);
       } catch (e) {
         console.error(e);

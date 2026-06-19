@@ -42,10 +42,11 @@ export const api = {
   checkInCreate: (habit: string, note?: string) =>
     invoke<number>("check_in_create", { habit, note }),
 
-  recordList: (limit = 50, hideArchived = true) =>
-    invoke<Record[]>("record_list", { limit, hideArchived }),
-  recordListByKind: (kind: "task" | "idea" | "check_in", limit = 50) =>
-    invoke<Record[]>("record_list_by_kind", { kind, limit }),
+  recordList: (
+    kind?: "task" | "idea" | "check_in",
+    limit = 50,
+    hideArchived = true,
+  ) => invoke<Record[]>("record_list", { kind, limit, hideArchived }),
   recordListSwitchable: () => invoke<Record[]>("record_list_switchable"),
   recordGetActive: () => invoke<Record | null>("record_get_active"),
   recordGetActiveTask: () => invoke<Task | null>("record_get_active_task"),
