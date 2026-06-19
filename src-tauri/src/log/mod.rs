@@ -100,7 +100,7 @@ impl Log for DualWriter {
         // Push to ring
         self.ring.push(entry.clone());
 
-        // Append to file
+        // Format once for both stderr + file (single source of truth)
         let line = format!(
             "{} {} {}: {}\n",
             ts,
@@ -108,6 +108,11 @@ impl Log for DualWriter {
             record.target(),
             record.args()
         );
+
+        // Stderr (dev visibility — replaces env_logger)
+        eprint!("{}", line);
+
+        // File (rotated at startup if > 5MB)
         let mut g = self.file.lock().unwrap();
         if let Some(ref mut f) = *g {
             let _ = f.write_all(line.as_bytes());
@@ -136,28 +141,18 @@ fn ring() -> SharedRing {
 // Public API
 // ---------------------------------------------------------------------------
 
-/// Initialize logging: ring + env_logger + dual writer (stderr + file).
+/// Initialize logging: ring + DualWriter (stderr + file + ring).
 /// Must be called first in `setup()` before any other init that might log.
 pub fn init(_app: &tauri::AppHandle) -> Result<(), String> {
     let ring = RingBuffer::new(RING_CAPACITY).shared();
     RING.set(ring.clone()).map_err(|_| "log::init called twice")?;
 
-    // Build env_logger with custom format (writes to stderr)
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info"))
-        .format(|buf, record| {
-            writeln!(
-                buf,
-                "{} {} {}: {}",
-                chrono_now_ms(),
-                record.level(),
-                record.target(),
-                record.args()
-            )
-        })
-        .write_style(env_logger::WriteStyle::Always)
-        .init();
-
-    // Override log to use our dual writer (stderr + file + ring)
+    // Install our DualWriter as the global logger (stderr + file + ring).
+    // Previously we tried to keep env_logger for stderr formatting, but
+    // env_logger::Builder::init() conflicts with log::set_boxed_logger —
+    // calling both panics with "attempted to set a logger after the
+    // logging system was already initialized". DualWriter handles stderr
+    // directly (no env_logger dependency).
     let dual = DualWriter::new(ring);
     log::set_boxed_logger(Box::new(dual))
         .map(|()| log::set_max_level(LevelFilter::Trace))
