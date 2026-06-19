@@ -48,3 +48,16 @@ Thumbs.db
 
 # Git worktrees（隔离开发工作区）
 .worktrees/
+
+# 工具运行时数据(不入仓)
+.codegraph/
+
+# IDE 个人配置(不入仓)
+.cursor/
+.zed/
+
+# Playwright MCP 临时产物(不入仓)
+.playwright-mcp/
+
+# 顶层调试截图(不入仓,精确匹配根目录)
+/floating-*.png
