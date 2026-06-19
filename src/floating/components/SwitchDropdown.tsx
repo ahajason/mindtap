@@ -1,80 +1,55 @@
-// src/floating/components/SwitchDropdown.tsx
 import { useEffect, useState } from "react";
 import { api, type Record } from "../../lib/tauri-bridge";
-import "../styles/switch-dropdown.css";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { Repeat } from "lucide-react";
+
+const ghostIconBtn =
+  "inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50 size-8";
 
 export function SwitchDropdown({ onCollapse }: { onCollapse?: () => void } = {}) {
-  const [open, setOpen] = useState(false);
   const [list, setList] = useState<Record[]>([]);
 
   useEffect(() => {
-    if (!open) return;
     api.recordListSwitchable().then(setList).catch(console.error);
-    const close = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (!target.closest(".switch-dropdown")) setOpen(false);
-    };
-    document.addEventListener("click", close);
-    return () => document.removeEventListener("click", close);
-  }, [open]);
-
-  if (!open) {
-    return (
-      <button
-        className="switch-btn"
-        onClick={() => setOpen(true)}
-        title="切换 Focus"
-      >
-        ⇄ <span className="caret">▼</span>
-      </button>
-    );
-  }
+  }, []);
 
   return (
-    <div className="switch-dropdown">
-      <button
-        className="switch-btn open"
-        onClick={(e) => {
-          e.stopPropagation();
-          setOpen(false);
-        }}
-      >
-        ⇄ <span className="caret">▲</span>
-      </button>
-      <div className="dropdown-panel">
-        <div className="dropdown-header">⇄ 切换到</div>
+    <DropdownMenu onOpenChange={o => { if (o) api.recordListSwitchable().then(setList).catch(console.error) }}>
+      <DropdownMenuTrigger className={ghostIconBtn} title="切换 Focus">
+        <Repeat className="size-4" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="glass-l2 min-w-64">
+        <DropdownMenuLabel>切换到</DropdownMenuLabel>
+        <DropdownMenuSeparator />
         {list.length === 0 && (
-          <div className="dropdown-empty">没有可切换的任务</div>
+          <div className="px-2 py-3 text-xs text-muted-foreground text-center">
+            没有可切换的任务
+          </div>
         )}
-        {list.map((r) => (
-          <div className="dropdown-item" key={r.id}>
-            <span
-              className={
-                r.status === "paused" ? "item-tag tag-paused" : "item-tag tag-pending"
-              }
-            >
+        {list.map(r => (
+          <DropdownMenuItem
+            key={r.id}
+            onSelect={() => {
+              api.taskSwitch(r.source_id);
+              onCollapse?.();
+            }}
+            className="flex items-start gap-2"
+          >
+            <span className={r.status === "paused" ? "text-amber-500 text-xs shrink-0 mt-0.5" : "text-blue-500 text-xs shrink-0 mt-0.5"}>
               {r.status === "paused" ? "暂停" : "未开始"}
             </span>
-            <span className="item-title">{r.content}</span>
-            <span className="item-time">
-              {r.status === "paused" ? "已用时" : ""}
-            </span>
-            <button
-              className="item-play"
-              onClick={() => {
-                api.taskSwitch(r.source_id);
-                setOpen(false);
-                onCollapse?.();
-              }}
-            >
-              ⏵
-            </button>
-          </div>
+            <span className="flex-1 truncate">{r.content}</span>
+            <span className="text-xs text-muted-foreground">⏵</span>
+          </DropdownMenuItem>
         ))}
-        {list.length > 0 && (
-          <div className="dropdown-footer">查看全部 {list.length} 个 ›</div>
-        )}
-      </div>
-    </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
