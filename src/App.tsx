@@ -1,4 +1,4 @@
-import '@/styles/glass.css';
+import '@/styles/glassmorphism.css';
 import { RecordTimeline } from './timeline/RecordTimeline';
 
 /**
