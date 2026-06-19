@@ -58,6 +58,3 @@ Thumbs.db
 
 # Playwright MCP 临时产物(不入仓)
 .playwright-mcp/
-
-# 顶层调试截图(不入仓,精确匹配根目录)
-/floating-*.png
