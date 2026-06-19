@@ -1,9 +1,12 @@
 import { StartupSection } from './sections/StartupSection'
-import { HotkeySection } from './sections/HotkeySection'
-import { FloatingSection } from './sections/FloatingSection'
-import { AppearanceSection } from './sections/AppearanceSection'
+import { HotkeySection, HotkeyAdvanced } from './sections/HotkeySection'
+import { FloatingSection, FloatingAdvanced } from './sections/FloatingSection'
+import { AppearanceSection, AppearanceAdvanced } from './sections/AppearanceSection'
 import { AccessibilitySection } from './sections/AccessibilitySection'
-import { DataSection } from './sections/DataSection'
+import { LoggingSection } from './sections/LoggingSection'
+import { WindowStateSection } from './sections/WindowStateSection'
+import { DiagnosticsSection } from './sections/DiagnosticsSection'
+import { DataSection, DataAdvanced } from './sections/DataSection'
 import { AboutSection } from './sections/AboutSection'
 import { Button } from '@/components/ui/button'
 import { invoke } from '@tauri-apps/api/core'
@@ -25,18 +28,21 @@ export function SettingsPage() {
         <Button size="lg" onClick={async () => {
           try { await invoke('floating_toggle'); refreshVisible() }
           catch (e) { log.error('toggle failed', e) }
-        }}>显示浮动条</Button>
+        }}>{visible ? '隐藏浮动条' : '显示浮动条'}</Button>
         <div className="text-xs text-muted-foreground">
           浮窗状态: {visible === null ? '检测中' : visible ? '▣ 显示中' : '▢ 隐藏'}
         </div>
       </header>
       <div className="text-center text-sm uppercase tracking-widest text-muted-foreground">— 设置 —</div>
       <StartupSection />
-      <HotkeySection />
-      <FloatingSection />
-      <AppearanceSection />
+      <HotkeySection advancedSlot={<HotkeyAdvanced />} />
+      <FloatingSection advancedSlot={<FloatingAdvanced />} />
+      <AppearanceSection advancedSlot={<AppearanceAdvanced />} />
       <AccessibilitySection />
-      <DataSection />
+      <LoggingSection />
+      <WindowStateSection />
+      <DiagnosticsSection />
+      <DataSection advancedSlot={<DataAdvanced />} />
       <AboutSection />
     </main>
   )
