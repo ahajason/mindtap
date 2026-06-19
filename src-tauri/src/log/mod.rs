@@ -13,7 +13,6 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 
 const RING_CAPACITY: usize = 200;
-const ROTATION_BYTES: u64 = 5 * 1024 * 1024; // 5 MB
 
 // ---------------------------------------------------------------------------
 // Timestamp helper (std::time only — no chrono)
@@ -182,6 +181,12 @@ pub fn recent(n: usize) -> Vec<LogEntry> {
     ring().recent(n)
 }
 
+/// Append a log entry to the in-memory ring (so diagnostics_recent_logs
+/// sees frontend_log writes; init() must have run).
+pub fn push(e: LogEntry) {
+    ring().push(e)
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -200,10 +205,5 @@ mod tests {
     fn log_path_returns_log_file() {
         let path = log_path();
         assert_eq!(path.file_name().unwrap(), "mindtap.log");
-    }
-
-    #[test]
-    fn rotate_threshold_is_5mb() {
-        assert_eq!(ROTATION_BYTES, 5 * 1024 * 1024);
     }
 }

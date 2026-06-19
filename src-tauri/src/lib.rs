@@ -5,11 +5,10 @@ mod error;
 mod floating;
 mod log;
 mod tray;
-pub mod accessibility;
 pub mod settings;
 
-use tauri::{Emitter, Manager};
-use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
+use tauri::Manager;
+use tauri_plugin_global_shortcut::ShortcutState;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -86,9 +85,6 @@ pub fn run() {
             commands::floating_cmd::floating_set_height,
             commands::floating_cmd::get_platform,
             commands::floating_cmd::show_floating_context_menu,
-            crate::accessibility::cmd::accessibility_status,
-            crate::accessibility::cmd::accessibility_request_prompt,
-            crate::accessibility::cmd::open_ax_settings,
             crate::settings::cmd::settings_get,
             crate::settings::cmd::settings_set,
             crate::settings::cmd::settings_reset,
@@ -103,9 +99,17 @@ pub fn run() {
             // Tauri 派发为 RunEvent::Reopen。主窗被 close (destroy) 后点 dock
             // 不会自动显示,需要 WebviewWindowBuilder 重建(get_webview_window
             // 拿到的 zombie 句柄 show 无效,因为底层 NSWindow 已 nil)。
-            if let tauri::RunEvent::Reopen { has_visible_windows, .. } = event {
-                if !has_visible_windows {
-                    if app_handle.get_webview_window("main").is_none() {
+            if let tauri::RunEvent::Reopen { .. } = event {
+                // 门控用 main_handle_present,不用 has_visible_windows:floating window
+                // 默认 visible: true → macOS 永远认为有 visible 窗口,has_visible_windows
+                // 恒为 true,旧门控 `!has_visible_windows` 永远不进 rebuild 分支(诊断
+                // 验证:reopen-debug 日志显示 has_visible_windows=true 但 main 句柄已
+                // 被 close 销毁)。
+                match app_handle.get_webview_window("main") {
+                    None => {
+                        // 主窗被 close/destroy 后点 dock 触发 Reopen → 用
+                        // WebviewWindowBuilder 重建(get_webview_window 拿到的
+                        // zombie 句柄 show 无效,因为底层 NSWindow 已 nil)。
                         let _ = tauri::WebviewWindowBuilder::new(
                             app_handle,
                             "main",
@@ -114,7 +118,9 @@ pub fn run() {
                         .title("轻念 · Mindtap")
                         .inner_size(800.0, 600.0)
                         .build();
-                    } else if let Some(w) = app_handle.get_webview_window("main") {
+                    }
+                    Some(w) => {
+                        // main 还在(可能 hide 了)→ show + focus;show 已 visible 是 no-op
                         let _ = w.show();
                         let _ = w.set_focus();
                     }

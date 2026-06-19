@@ -7,9 +7,15 @@
   height: 100%;
   border-radius: 14px;
   overflow: hidden;
-  background: rgba(246, 247, 250, 0.88);
-  border: 0.5px solid rgba(0, 0, 0, 0.12);
-  box-shadow: 0 18px 44px -18px rgba(15, 17, 22, 0.28);
+  /* V1.5+ Liquid Glass：删 macOS set_as_panel 后 NSVisualEffectView 没了,
+     改用 Web CSS backdrop-filter 兜底(Safari engine 16+ 优化接近 native)。
+     展开态根容器是唯一需要模糊的层——折叠态靠 .fold-state 自己的 backdrop-filter。
+     bg / border / shadow 全部走 token, dark mode override 自动切换。 */
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 0.5px solid var(--glass-border);
+  box-shadow: 0 18px 44px -18px var(--glass-shadow-color, rgba(15, 17, 22, 0.28));
   box-sizing: border-box;
 }
 

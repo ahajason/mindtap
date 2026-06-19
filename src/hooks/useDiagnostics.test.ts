@@ -8,7 +8,7 @@ import { diagnostics } from '@/lib/tauri-bridge'
 
 describe('useDiagnostics', () => {
   it('loads diagnostics on mount', async () => {
-    const mock = { accessibility: true } as any
+    const mock = {} as any
     ;(diagnostics.get as any).mockResolvedValue(mock)
     const { result } = renderHook(() => useDiagnostics())
     await act(async () => { await Promise.resolve() })

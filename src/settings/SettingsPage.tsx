@@ -2,7 +2,6 @@ import { StartupSection } from './sections/StartupSection'
 import { HotkeySection, HotkeyAdvanced } from './sections/HotkeySection'
 import { FloatingSection, FloatingAdvanced } from './sections/FloatingSection'
 import { AppearanceSection, AppearanceAdvanced } from './sections/AppearanceSection'
-import { AccessibilitySection } from './sections/AccessibilitySection'
 import { LoggingSection } from './sections/LoggingSection'
 import { WindowStateSection } from './sections/WindowStateSection'
 import { DiagnosticsSection } from './sections/DiagnosticsSection'
@@ -38,7 +37,6 @@ export function SettingsPage() {
       <HotkeySection advancedSlot={<HotkeyAdvanced />} />
       <FloatingSection advancedSlot={<FloatingAdvanced />} />
       <AppearanceSection advancedSlot={<AppearanceAdvanced />} />
-      <AccessibilitySection />
       <LoggingSection />
       <WindowStateSection />
       <DiagnosticsSection />

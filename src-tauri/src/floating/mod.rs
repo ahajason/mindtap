@@ -1,5 +1,8 @@
-pub mod platform;
-
+// 浮窗模块入口。V1.5+ macOS 不再 set_as_panel —— set_as_panel 把 NSWindow
+// 改成 NSPanel,触发 macOS 26 InputMethodKit IMKCFRunLoopWakeUpReliable 错误
+// (NSPanel 没 first responder 时 IME mach port 通信失败)。删 platform 模块后
+// macOS 走 fallback:transparent + decorations(false) + alwaysOnTop + Web CSS
+// backdrop-filter 兜底(见 src/floating/styles/floating.css 的 --glass-blur)。
 use tauri::Manager;
 
 pub fn ensure_window(app: &tauri::AppHandle) -> Result<(), String> {
@@ -26,8 +29,5 @@ pub fn ensure_window(app: &tauri::AppHandle) -> Result<(), String> {
     .build()
     .map_err(|e| e.to_string())?;
 
-    if let Some(win) = app.get_webview_window("floating") {
-        platform::set_as_panel(&win)?;
-    }
     Ok(())
 }

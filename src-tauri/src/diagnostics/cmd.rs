@@ -32,5 +32,6 @@ pub fn frontend_log(level: String, message: String, args: Option<String>) {
         _ => message,
     };
     let entry = LogEntry { ts, level: level.to_lowercase(), target: target.into(), message: full.clone() };
+    crate::log::push(entry);
     log::info!("[FE] {}", full);
 }

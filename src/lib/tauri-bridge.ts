@@ -76,12 +76,6 @@ export const settings = {
   reset: () => invoke<Settings>("settings_reset"),
 };
 
-export const accessibility = {
-  status: () => invoke<boolean>("accessibility_status"),
-  requestPrompt: () => invoke<void>("accessibility_request_prompt"),
-  openSettings: () => invoke<void>("open_ax_settings"),
-};
-
 export const diagnostics = {
   get: () => invoke<Diagnostics>("diagnostics_get"),
   recentLogs: () => invoke<LogEntry[]>("diagnostics_recent_logs"),

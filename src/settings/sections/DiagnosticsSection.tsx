@@ -14,10 +14,6 @@ export function DiagnosticsSection() {
     <Section kicker="诊断" title="运行状态">
       <div className="grid grid-cols-2 gap-2 text-sm">
         <div className="glass-l2 rounded-glass-sm p-2">
-          <div className="text-xs text-muted-foreground">辅助功能</div>
-          <div>{data.accessibility ? '✓ 已授权' : '✗ 未授权'}</div>
-        </div>
-        <div className="glass-l2 rounded-glass-sm p-2">
           <div className="text-xs text-muted-foreground">快捷键</div>
           <div>{data.hotkeyRegistered ? '✓ 已注册' : '✗ 未注册'}</div>
         </div>

@@ -13,7 +13,6 @@ use serde::Serialize;
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Diagnostics {
-    pub accessibility: bool,
     pub hotkey_registered: bool,
     pub active_task: Option<ActiveTaskSummary>,
     pub floating_visible: bool,
@@ -27,7 +26,6 @@ pub fn gather(
     settings: &SettingsState,
     db: &DbState,
 ) -> Diagnostics {
-    let accessibility = crate::accessibility::is_trusted();
     let hotkey_registered = settings.0.lock().unwrap().hotkey.to_shortcut().is_ok();
     let active_task =
         crate::db::task::active_task_summary(&db.0.lock().unwrap()).ok().flatten();
@@ -46,7 +44,6 @@ pub fn gather(
     };
     drop(s);
     Diagnostics {
-        accessibility,
         hotkey_registered,
         active_task,
         floating_visible,

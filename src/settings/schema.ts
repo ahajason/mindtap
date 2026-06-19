@@ -22,6 +22,6 @@ export interface DbInfo { path: string; sizeBytes: number; recordCount: number }
 export interface AppInfo { version: string; totalLaunches: number; firstLaunchAt: string }
 export interface ActiveTaskSummary { id: number; content: string; focusStartedAt: number; durationMs: number }
 export interface Diagnostics {
-  accessibility: boolean; hotkeyRegistered: boolean; activeTask: ActiveTaskSummary | null;
+  hotkeyRegistered: boolean; activeTask: ActiveTaskSummary | null;
   floatingVisible: boolean; db: DbInfo; recentLogs: LogEntry[]; app: AppInfo
 }
