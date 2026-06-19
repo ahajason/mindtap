@@ -2,6 +2,7 @@ mod commands;
 mod db;
 mod error;
 mod floating;
+mod log;
 mod tray;
 pub mod accessibility;
 
@@ -36,6 +37,7 @@ pub fn run() {
                 .build(),
         )
         .setup(move |app| {
+            crate::log::init(app.handle())?;
             db::init(app).map_err(|e| e.to_string())?;
             floating::ensure_window(&app.handle()).map_err(|e| e.to_string())?;
             app.global_shortcut().register(toggle_shortcut)?;
