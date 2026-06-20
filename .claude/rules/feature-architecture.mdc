@@ -1,0 +1,58 @@
+---
+description: 业务域对称 + 跨 runtime 索引
+alwaysApply: true
+---
+
+# Feature Architecture
+
+## 业务对称
+
+后端 `commands/` 拆到各业务域 (`floating/commands.rs` / `settings/commands.rs` 等).
+前端 ESLint 强制 feature 边界(见 `eslint-boundary.mdc`).
+
+```
+src-tauri/src/
+  commands/
+    mod.rs               # 改成重导出总线: pub use crate::floating::commands::*; ...
+  floating/
+    mod.rs
+    commands.rs          # ★ 从 commands/ 拆过来
+  settings/
+    mod.rs
+    commands.rs          # ★ 同样拆
+```
+
+## 业务域根 README 跨 runtime 索引
+
+每个业务域根有 `README.md`, 列 5+ runtime 物理位置:
+
+| 路径                                                       | 角色       |
+| ---------------------------------------------------------- | ---------- |
+| `tauri.conf.json` → `app.windows[<feature>]`               | 窗口声明   |
+| `vite.config.ts` → `rollupOptions.input.<feature>`         | 前端入口   |
+| `src/<feature>/`                                           | 前端根     |
+| `src/<feature>/hooks/`                                     | 前端 hook  |
+| `src-tauri/src/<feature>/mod.rs`                           | 后端 entry |
+| `src-tauri/src/<feature>/commands.rs`                      | 后端 IPC   |
+| `src-tauri/capabilities/<feature>.json`                    | capability |
+
+## docs/architecture/<feature>.md 收口
+
+每个业务有 `docs/architecture/<feature>.md` 做跨 runtime 总览(单文件收口).
+
+## 修改 DoD
+
+改任何一处 → 同步检查表里其他位置 → 跑 `npm run smoke:<feature>` 5/5 PASS 才允许 commit.
+
+## 10 个业务域 README 清单
+
+- `src/floating/README.md`
+- `src/settings/README.md`
+- `src/timeline/README.md`
+- `src/hooks/README.md` (共享域)
+- `src/components/README.md` (共享域)
+- `src/lib/README.md` (共享域)
+- `src-tauri/src/floating/README.md`
+- `src-tauri/src/settings/README.md`
+- `src-tauri/src/db/README.md`
+- `src-tauri/src/tray/README.md`

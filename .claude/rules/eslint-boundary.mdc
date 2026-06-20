@@ -1,0 +1,38 @@
+---
+description: 前端 ESLint feature 边界规则
+alwaysApply: false
+globs: ["src/**/*.{ts,tsx}"]
+---
+
+# ESLint Boundary
+
+## 规则
+
+业务域内部文件不能直接 import 其它业务域内部.
+只能:
+- import 业务域自身 barrel (`src/<x>/index.ts`)
+- import shared 层 (`src/components/` / `src/hooks/` / `src/lib/`)
+
+## 配置位置
+
+`.eslintrc.cjs` 的 `overrides` 段, 使用 `import/no-restricted-paths` rule.
+
+## 三个业务域 barrel 必须存在
+
+- `src/floating/index.ts`
+- `src/settings/index.ts`
+- `src/timeline/index.ts`
+
+## 业务域内禁止跨引
+
+- `src/floating/components/*` ❌ import `src/settings/components/*` 内部
+- `src/floating/hooks/*` ❌ import `src/settings/hooks/*` 内部
+- ...(其它组合类推)
+
+## 允许的引用
+
+- ✅ `src/floating/components/Foo.tsx` import `src/floating/hooks/useFoo.ts` (同业务)
+- ✅ `src/floating/App.tsx` import `src/floating/index.ts` (自身 barrel)
+- ✅ `src/floating/components/Bar.tsx` import `src/components/ui/Button.tsx` (shared)
+- ✅ `src/floating/components/Baz.tsx` import `src/hooks/useDebounce.ts` (shared)
+- ✅ `src/floating/components/Qux.tsx` import `src/lib/tauri-bridge.ts` (shared)

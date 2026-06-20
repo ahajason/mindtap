@@ -1,0 +1,93 @@
+---
+description: Git commit message and granularity conventions
+alwaysApply: true
+---
+
+# Commit Style
+
+## Format
+
+```
+<type>(<scope>): <subject>
+
+<why 段 — clean-comments 风格, 只写"为什么"不重复"做了什么">
+- 业务痛点
+- 边界条件
+- 不这样改会怎样
+```
+
+## Type set
+
+| type     | 用法                  | 例子                                |
+| -------- | --------------------- | ----------------------------------- |
+| feat     | 新功能 / 新行为       | `feat(floating): V3 玻璃态浮窗重构` |
+| fix      | 修 bug                | `fix(floating): 首启位置被菜单栏遮` |
+| refactor | 重构(不改行为)        | `refactor(commands): 拆到各业务域`  |
+| docs     | 纯文档                | `docs(architecture): 浮窗跨 runtime 索引` |
+| test     | 纯测试                | `test(floating): useWindowPosition 边界用例` |
+| chore    | 工具 / 依赖 / 配置    | `chore(deps): 升 commitlint v19`    |
+| build    | 构建 / CI             | `build(ci): 加 commit-msg hook`     |
+| revert   | 撤销                  | `revert: feat(floating): V3 玻璃态浮窗重构` |
+
+## Scope
+
+`floating` / `settings` / `timeline` / `db` / `tray` / `bridge` / `diagnostics` / `log` / `meta`
+
+scope 选择规则: commit 改的代码 80% 以上在哪个业务域, 就用哪个 scope; 跨多个用最核心的那个.
+
+## Granularity
+
+**1 个任务(`docs/tasks/<slug>/`) = 1-3 个 commit**.
+
+| 任务规模 | commit 数 | 例                                                 |
+| -------- | --------- | -------------------------------------------------- |
+| 小       | 1         | `fix(floating): 单点 bug`                          |
+| 中       | 2         | `feat(floating): V3 重构` = 1 产品代码 + 1 测试   |
+| 大       | 3         | `feat(floating): V3 重构` = 1 后端 + 1 前端 + 1 测试 |
+
+**反模式**:
+- ❌ 1 个任务 10+ commit(拆太散)
+- ❌ 1 个 commit 跨 3 个不相关任务(聚合过度)
+
+## Body 段写法 (clean-comments 风格)
+
+**写"为什么"**, 不写"做了什么"(diff 会显示"做了什么"):
+
+**正面例子**:
+
+```
+fix(floating): F3' 位置兜底 P1 clamp 屏外 + Rust (100, 60) 兜底
+
+- macOS 菜单栏遮 ~25px, 首启 (0,0) 被遮
+- P1 clamp 防多屏拖出屏外
+- Rust 侧 mod.rs 兜底应对 Tauri 启动 race
+```
+
+**反例**(重复"做了什么"):
+
+```
+❌ 改了 useWindowPosition.ts 加了 P1 clamp
+❌ 改了 useWindowPosition.test.ts 加测试
+❌ 改了 mod.rs 加 .position(100.0, 60.0)
+```
+
+## 不引 footer
+
+❌ `Refs:` / `Closes:` / `See also:` / `BREAKING CHANGE:` — 不是任何标准 footer, git 不识别, 冗余.
+
+反向追溯靠 `git log -- <path>`:
+
+```bash
+# 查某任务的 commit
+git log --all --oneline -- docs/tasks/fix-F-floating-position-clamp/
+
+# 查某业务的 commit
+git log --all --oneline -- src/floating/ src-tauri/src/floating/ \
+  src-tauri/capabilities/floating.json
+```
+
+## Subject 长度
+
+- ≤ 72 字符
+- 中文可读
+- 不加句号

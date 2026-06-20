@@ -1,5 +1,7 @@
 # 用户本地配置（不进 git）
-.claude/
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+.claude/skills/
 
 # Logs
 logs
