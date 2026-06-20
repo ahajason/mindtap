@@ -15,7 +15,8 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "smoke:floating": "bash scripts/floating-smoke.sh"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
