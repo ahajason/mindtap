@@ -56,4 +56,38 @@ describe('App', () => {
     const win = getCurrentWindow()
     expect(win.close).toBeDefined()
   })
+
+  it('Form ↔ Timer 切换时 textarea 内容保留(D-13 DOM 复用)', async () => {
+    // Polyfill matchMedia for jsdom — segmented click may rely on it indirectly.
+    if (!window.matchMedia) {
+      window.matchMedia = () => ({ matches: false, addListener: () => {}, removeListener: () => {} } as any)
+    }
+    const { container } = render(<App />)
+    // Expand
+    const shellRoot = container.querySelector('[class*="select-none"]') as HTMLElement
+    fireEvent.mouseDown(shellRoot, { clientX: 5, clientY: 5 })
+    fireEvent.mouseUp(shellRoot, { clientX: 5, clientY: 5 })
+
+    // Default segment is 'form' — textarea should be present.
+    const ta = screen.getByRole('textbox') as HTMLTextAreaElement
+    expect(ta).toBeTruthy()
+
+    // Type into form
+    fireEvent.change(ta, { target: { value: '继续手头的小事' } })
+    expect(ta.value).toBe('继续手头的小事')
+
+    // Switch to timer segment
+    const timerTab = screen.getByRole('tab', { name: /计时/ })
+    fireEvent.click(timerTab)
+
+    // Form should still be in DOM (D-13) — query it via role, then verify content
+    // survives the round trip back to form
+    const formTab = screen.getByRole('tab', { name: /记录/ })
+    fireEvent.click(formTab)
+
+    // Re-query textarea — it MUST still be the same DOM node and retain content
+    const ta2 = screen.getByRole('textbox') as HTMLTextAreaElement
+    expect(ta2).toBe(ta)  // same DOM node = not unmounted
+    expect(ta2.value).toBe('继续手头的小事')
+  })
 })

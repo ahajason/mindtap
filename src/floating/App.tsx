@@ -131,13 +131,14 @@ export default function App() {
               <span aria-hidden>×</span>
             </button>
             <Segmented value={segment} onChange={setSegment} />
-            {segment === 'form' && (
+            {/* D-13 / §5.3:始终挂载两个 sub-panel,用 CSS 切显隐,避免表单状态丢失 */}
+            <div data-segment="form" className={segment === 'form' ? '' : 'hidden'}>
               <FormSubPanel
                 activeTaskContent={activeTask?.content}
                 onSubmit={handleFormSubmit}
               />
-            )}
-            {segment === 'timer' && (
+            </div>
+            <div data-segment="timer" className={segment === 'timer' ? '' : 'hidden'}>
               <TimerSubPanel
                 status={status}
                 durationMs={durationMs}
@@ -147,7 +148,7 @@ export default function App() {
                 onComplete={() => activeTask && api.taskComplete(activeTask.id).catch(console.error)}
                 onUndo={() => activeTask && api.taskUndo(activeTask.id).catch(console.error)}
               />
-            )}
+            </div>
           </div>
         </GlassSurface>
       </FloatShell>
