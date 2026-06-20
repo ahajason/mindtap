@@ -12,12 +12,7 @@ import { Segmented, type SegmentedValue } from './Segmented'
 import { FormSubPanel } from './FormSubPanel'
 import { TimerSubPanel, type TimerStatus } from './TimerSubPanel'
 import { FoldedBar } from './FoldedBar'
-import { clampHeight } from './measure'
 import type { RecordKind as PanelRecordKind } from './FormSubPanel'
-
-// D-13 / §5.4:webview 物理尺寸上下限(必须与 floating_cmd.rs MIN/MAX_H 同步)
-const FLOAT_MIN_H = 36
-const FLOAT_MAX_H = 460
 
 type Variant = 'L1' | 'L3' | 'fb' | 'legacy'
 
@@ -67,24 +62,6 @@ export default function App() {
       })
       .catch(() => { /* 降级显示 0:00:00 */ })
     return () => { cancelled = true }
-  }, [isExpanded, segment])
-
-  // D-13 / §5.4:webview 物理尺寸自适应。
-  // 折叠态重置 36,展开态测量根容器 scrollHeight 并 clamp 到 [MIN, MAX]
-  // 后调 floating_set_height 改 webview 大小。否则 tauri.conf.json 固定的
-  // 320×36 webview 会裁掉展开态内容(实测用户报告"拖不大、内容看不到")。
-  // 走 querySelector 直接抓 [data-float-expand] > div — FloatShell 不向外
-  // 暴露 ref,跨组件边界用 DOM 选择器最简。后续若要监听内容动态 resize
-  // (textarea 输入 / segmented 切换),加 ResizeObserver 在此 effect 内。
-  useEffect(() => {
-    if (!isExpanded) {
-      api.floatingSetHeight(FLOAT_MIN_H).catch(() => {})
-      return
-    }
-    const root = document.querySelector('[data-float-expand] > div') as HTMLElement | null
-    if (!root) return
-    const h = clampHeight(root.scrollHeight, { minH: FLOAT_MIN_H, maxH: FLOAT_MAX_H })
-    api.floatingSetHeight(h).catch(() => {})
   }, [isExpanded, segment])
 
   // 项目既有 hook:useActiveTask 返回 Task | null

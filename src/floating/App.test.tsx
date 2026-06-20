@@ -2,7 +2,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, fireEvent, screen } from '@testing-library/react'
 import App from './App'
-import { api } from '@/lib/tauri-bridge'
 
 // @tauri-apps/api/core / event / window 全局 mock 见 src/test/setup.ts
 
@@ -85,41 +84,5 @@ describe('App', () => {
     const ta2 = screen.getByRole('textbox') as HTMLTextAreaElement
     expect(ta2).toBe(ta)  // same DOM node = not unmounted
     expect(ta2.value).toBe('继续手头的小事')
-  })
-
-  // 2026-06-20 bug 修复:D-13 webview 物理尺寸自适应
-  // Rust 端有 floating_set_height command(改 webview 尺寸) + 前端
-  // tauri-bridge 有 floatingSetHeight wrapper,但 App.tsx 从来没调过,
-  // 导致用户展开浮窗时 webview 仍是 320×36,展开态内容被裁剪。
-  it('展开浮窗时调 floatingSetHeight 撑大 webview(D-13)', async () => {
-    const spy = vi.spyOn(api, 'floatingSetHeight').mockResolvedValue(undefined)
-    const { container } = render(<App />)
-    const shellRoot = container.querySelector('[class*="select-none"]') as HTMLElement
-
-    // 初始 mount:isExpanded=false → 折叠 reset 到 36(useEffect 跑一次)
-    await new Promise(r => setTimeout(r, 30))
-    spy.mockClear()
-
-    // 展开:短按触发 onToggle → isExpanded=true → useEffect 跑 → setHeight(clampHeight)
-    // 注:jsdom 不渲染 layout,scrollHeight=0,clampHeight(0, {min:36, max:460}) = 36。
-    // 这里只断言"被调了 + 参数在 [36, 460] 范围内",不要求严格 > 36。
-    fireEvent.mouseDown(shellRoot, { clientX: 5, clientY: 5 })
-    fireEvent.mouseUp(shellRoot, { clientX: 5, clientY: 5 })
-    await new Promise(r => setTimeout(r, 50))
-
-    expect(spy).toHaveBeenCalled()
-    spy.mock.calls.forEach(([h]) => {
-      expect(typeof h).toBe('number')
-      expect(h as number).toBeGreaterThanOrEqual(36)  // MIN_H
-      expect(h as number).toBeLessThanOrEqual(460)    // MAX_H
-    })
-
-    // 折叠:再次短按 → isExpanded=false → 重置到 36
-    fireEvent.mouseDown(shellRoot, { clientX: 5, clientY: 5 })
-    fireEvent.mouseUp(shellRoot, { clientX: 5, clientY: 5 })
-    await new Promise(r => setTimeout(r, 50))
-    expect(spy).toHaveBeenCalledWith(36)
-
-    spy.mockRestore()
   })
 })

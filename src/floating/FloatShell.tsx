@@ -92,16 +92,7 @@ export function FloatShell({ isExpanded, onToggle, foldedBar, children, classNam
         // CSS transform 走 GPU,无重渲染
         transform: 'translateZ(0)',
       }}
-      // V1.5 floating.css 定义 .floating-root(背景 var(--glass-bg) +
-      // backdrop-filter blur + 圆角 + 阴影)。D-11 创建时漏挂,折叠态
-      // 完全透明 → webview transparent=true → 用户看不到。挂上后
-      // 折叠/展开态都走 .floating-root,展开态追加 .expanded 改光标策略。
-      className={twMerge(
-        'floating-root select-none cursor-grab',
-        isExpanded ? 'expanded' : 'folded',
-        'active:cursor-grabbing',
-        className,
-      )}
+      className={twMerge('select-none cursor-grab active:cursor-grabbing', className)}
     >
       {/* 折叠态 bar */}
       {isExpanded ? null : foldedBar}

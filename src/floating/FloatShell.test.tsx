@@ -102,30 +102,6 @@ describe('FloatShell', () => {
     expect(onToggle).toHaveBeenCalled()
   })
 
-  // 2026-06-20 bug:floating.css 定义了 .floating-root 类(背景 var(--glass-bg)
-  // + backdrop-filter blur + 圆角 + 阴影),floating.test.ts 验证 CSS 文件
-  // 包含该选择器,但 D-11 FloatShell 创建时漏挂 .floating-root 类,折叠态
-  // 完全透明 → webview transparent=true → 用户看到 320×36 空气。
-  // 此测试断言实际挂载契约(不光 CSS 存在,还要被组件挂上)。
-  it('浮窗根容器契约:顶层 div 必须挂 .floating-root 类(V1.5 漏挂导致不可见 bug 修复)', () => {
-    const { rerender, container } = render(
-      <FloatShell isExpanded={false} onToggle={() => {}} foldedBar={<span>bar</span>}>
-        <span>expanded</span>
-      </FloatShell>
-    )
-    const root = container.firstChild as HTMLElement
-    expect(root.className).toMatch(/floating-root/)
-    expect(root.className).toMatch(/\bfolded\b/)
-
-    rerender(
-      <FloatShell isExpanded={true} onToggle={() => {}} foldedBar={<span>bar</span>}>
-        <span>expanded</span>
-      </FloatShell>
-    )
-    expect(root.className).toMatch(/floating-root/)
-    expect(root.className).toMatch(/\bexpanded\b/)
-  })
-
   it('展开态 mousedown 在 [data-close] 元素上不触发 drag(D-12 / §5.2)', () => {
     const onToggle = vi.fn()
     render(
