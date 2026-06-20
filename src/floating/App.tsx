@@ -1,5 +1,6 @@
 // src/floating/App.tsx
 import { useEffect, useState, useCallback } from 'react'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useActiveTask } from './hooks/useActiveTask'
 import { useTick } from './hooks/useTick'
 import { api, type Task } from '@/lib/tauri-bridge'
@@ -80,6 +81,16 @@ export default function App() {
   const status: TimerStatus = statusOf(activeTask)
   const durationMs = liveDurationMs(activeTask, now)
 
+  // D-12 / §5.2:展开态右上角 × 关闭浮窗
+  const handleClose = useCallback(async () => {
+    try {
+      await getCurrentWindow().close()
+    } catch (e) {
+      // 非 Tauri 环境(jsdom 测试)静默忽略
+      console.warn('[floating] close failed', e)
+    }
+  }, [])
+
   // 注意:FormSubPanel onSubmit 签名是 (kind: RecordKind, content: string) —
   // RecordKind 在 FormSubPanel 中定义为 'task' | 'idea' | 'check_in'。
   // 此处用 PanelRecordKind 作为 Panel 接口契约,实际 IPC 按 kind 分发到
@@ -109,7 +120,16 @@ export default function App() {
         }
       >
         <GlassSurface variant={variant}>
-          <div className="flex flex-col gap-2 p-2">
+          <div className="relative flex flex-col gap-2 p-2">
+            {/* D-12 / §5.2:展开态右上角关闭按钮 */}
+            <button
+              data-close
+              aria-label="关闭浮窗"
+              onClick={handleClose}
+              className="absolute right-1 top-1 inline-flex h-6 w-6 items-center justify-center rounded-md bg-white/15 hover:bg-white/55 text-ink-900 transition-colors active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+            >
+              <span aria-hidden>×</span>
+            </button>
             <Segmented value={segment} onChange={setSegment} />
             {segment === 'form' && (
               <FormSubPanel

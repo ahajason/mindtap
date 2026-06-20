@@ -36,8 +36,8 @@ export function FloatShell({ isExpanded, onToggle, foldedBar, children, classNam
   const handleMouseDown = (e: RMouseEvent<HTMLDivElement>) => {
     // 展开态下,内部控件不响应
     if (isExpanded) return
-    // 折叠态下,带 data-no-expand 的子元素不响应(btn 短路)
-    if ((e.target as HTMLElement).closest('[data-no-expand]')) return
+    // 折叠态下,带 data-no-expand / [data-close] 的子元素不响应(btn 短路)
+    if ((e.target as HTMLElement).closest('[data-no-expand], [data-close]')) return
 
     dragRef.current = {
       startX: e.clientX,
