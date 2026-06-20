@@ -32,3 +32,20 @@
   /* 字体族(Geist Variable 已装未注册) */
   --font-sans: "Geist Variable", system-ui, -apple-system, sans-serif;
 }
+
+/* 呼吸 v6 关键帧(D-09) */
+@layer utilities {
+  @keyframes pulse-v6 {
+    0%, 100% {
+      box-shadow: 0 0 0 4px oklch(1 0 0 / 0.18), 0 0 16px 0 oklch(0.36 0.15 165 / 0);
+      filter: brightness(1);
+    }
+    50% {
+      box-shadow: 0 0 0 16px oklch(1 0 0 / 0), 0 0 16px 4px oklch(0.36 0.15 165 / 0.5);
+      filter: brightness(1.15);
+    }
+  }
+  .animate-pulse-v6 {
+    animation: pulse-v6 2.8s ease-in-out infinite;
+  }
+}
