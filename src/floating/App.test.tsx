@@ -3,7 +3,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, fireEvent, screen } from '@testing-library/react'
 import App from './App'
 
-// @tauri-apps/api/core / event / window 全局 mock 见 src/test/setup.ts
+// Mock getCurrentWindow from @tauri-apps/api/window — jsdom has no Tauri runtime.
+vi.mock('@tauri-apps/api/window', () => ({
+  getCurrentWindow: () => ({
+    close: vi.fn().mockResolvedValue(undefined),
+  }),
+}))
 
 beforeEach(() => {
   // jsdom doesn't expose WebGL by default; OuterShell's hasWebGL() check would

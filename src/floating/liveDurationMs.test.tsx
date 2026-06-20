@@ -6,11 +6,13 @@
 // the spec notes this is a "small unit test" priority-low, so we cover
 // the observable contract via the rendered TimerSubPanel hero aria-label.
 
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, fireEvent, screen } from '@testing-library/react'
 import App from './App'
 
-// @tauri-apps/api/window 全局 mock 见 src/test/setup.ts
+vi.mock('@tauri-apps/api/window', () => ({
+  getCurrentWindow: () => ({ close: vi.fn().mockResolvedValue(undefined) }),
+}))
 
 beforeEach(() => {
   delete (window as any).WebGLRenderingContext
