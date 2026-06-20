@@ -44,7 +44,7 @@ Thumbs.db
 # WSL 元数据（如果项目被软链到 Windows）
 .wslconfig
 
-# Claude Code 插件运行时数据
+# Claude Code 插件运行时数据(2026-06-21 起已归档到 .archive/.superpowers/)
 .superpowers/
 
 # Git worktrees（隔离开发工作区）
@@ -64,6 +64,9 @@ Thumbs.db
 test-results/
 playwright-report/
 
-# 竞品上游代码快照(参考用,不编辑、不入仓;分析文档 `_analysis.md` 仍跟踪)
-# 详见 docs/competitors/README.md
-docs/competitors/*/source/
+# 上游代码快照(参考用,不编辑、不入仓;分析文档 `_analysis.md` 仍跟踪)
+# 详见 docs/references/README.md
+docs/references/source/*/
+
+# 归档目录(2026-06-21 起);还原: git checkout pre-archive-2026-06-21 -- .
+.archive/
