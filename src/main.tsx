@@ -1,3 +1,4 @@
+import "./index.css";
 import "./styles/glassmorphism.css";
 
 import React from "react";

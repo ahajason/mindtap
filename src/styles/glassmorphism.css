@@ -1,9 +1,6 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 /* ─────────────────────────────────────────────────────────
    Light Glassmorphism — design-system/glassmorphism-impl-spec
@@ -214,9 +211,10 @@ h1, h2, h3 {
     outline-color: oklch(0.708 0 0 / 0.5);
   }
   body {
-    @apply bg-background text-foreground;
+    background-color: oklch(1 0 0);
+    color: oklch(0.145 0 0);
   }
   html {
-    @apply font-sans;
+    font-family: "Geist Variable", system-ui, -apple-system, sans-serif;
   }
 }
