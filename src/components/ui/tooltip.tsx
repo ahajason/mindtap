@@ -17,7 +17,7 @@ export function TooltipWrapper({ content, side = 'top', children }: TooltipWrapp
       <Tooltip.Trigger render={children} />
       <Tooltip.Portal>
         <Tooltip.Positioner side={side} sideOffset={6}>
-          <Tooltip.Popup className="glass-l2 rounded-md px-2 py-1 text-xs text-text-1">
+          <Tooltip.Popup className={cn('glass-l2 rounded-md px-2 py-1 text-xs text-text-1')}>
             {content}
           </Tooltip.Popup>
         </Tooltip.Positioner>
