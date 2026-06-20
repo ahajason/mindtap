@@ -116,4 +116,28 @@ describe('FloatShell', () => {
     fireEvent.mouseUp(btn, { clientX: 60, clientY: 60 })
     expect(onToggle).not.toHaveBeenCalled()
   })
+
+  // L5 挂载契约(V3 重构漏挂,V1.5 时代根 div 直接挂 floating-root)
+  // 根 div 必须挂 floating-root + folded/expanded,玻璃外观才生效
+  it('折叠态顶层 div className 含 floating-root folded', () => {
+    const { container } = render(
+      <FloatShell isExpanded={false} onToggle={() => {}} foldedBar={<span>bar</span>}>
+        <span>expanded</span>
+      </FloatShell>
+    )
+    const root = container.firstChild as HTMLElement
+    expect(root.className).toMatch(/floating-root/)
+    expect(root.className).toMatch(/\bfolded\b/)
+  })
+
+  it('展开态顶层 div className 含 floating-root expanded', () => {
+    const { container } = render(
+      <FloatShell isExpanded={true} onToggle={() => {}} foldedBar={<span>bar</span>}>
+        <span>expanded</span>
+      </FloatShell>
+    )
+    const root = container.firstChild as HTMLElement
+    expect(root.className).toMatch(/floating-root/)
+    expect(root.className).toMatch(/\bexpanded\b/)
+  })
 })

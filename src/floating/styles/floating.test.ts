@@ -15,7 +15,11 @@ describe("floating.css · 浮窗根容器 Liquid Glass", () => {
   it(".floating-root 背景用 var(--glass-bg) token(动态适配 light/dark mode)", () => {
     // 展开态根容器背景必须走 token,不能写死 rgba,
     // 否则 dark mode override 改 token 时浮窗展开态不变色
-    expect(floatCss).toMatch(/\.floating-root\s*\{[\s\S]*?background:\s*var\(--glass-bg\)/);
+    // R1 防御:CSS variable 未生效时降级到 rgba 兜底(避免 webview transparent
+    // + transparent bg = 不可见)。断言只验「背景引用 var(--glass-bg) token」——
+    // 是否带 fallback 是 CSS 写法的细节,不在本测试硬编码;所以匹配到 `var(--glass-bg`
+    // 即可,允许 ) 或 , 跟在后面。
+    expect(floatCss).toMatch(/\.floating-root\s*\{[\s\S]*?background:[^;]*var\(--glass-bg/);
   });
 
   it(".floating-root 有 border-radius(玻璃圆角轮廓)", () => {

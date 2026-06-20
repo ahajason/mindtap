@@ -92,3 +92,68 @@ pub fn show_floating_context_menu(
     window.popup_menu(&menu).map_err(|e| e.to_string())?;
     Ok(())
 }
+
+// R5:浮窗全量诊断数据(Rust 物理层 + 屏幕配置)。
+// 一次 invoke 返 {exists, visible, pos, size, monitors, scale_factor},前端 DiagnosticsSection
+// "Run Diag" 按钮调用,展开详情后用户截图发我看 → 不再 incremental 测试。
+// 失败字段都降级为 None / false,不抛错到前端(诊断面板必须始终能显示)。
+#[derive(serde::Serialize)]
+pub struct FloatingDiagReport {
+    pub exists: bool,
+    pub visible: bool,
+    pub position: Option<(i32, i32)>,
+    pub size: Option<(u32, u32)>,
+    pub monitors: Vec<MonitorInfo>,
+    pub primary_monitor_scale: f64,
+}
+
+#[derive(serde::Serialize)]
+pub struct MonitorInfo {
+    pub name: Option<String>,
+    pub position: (i32, i32),
+    pub size: (u32, u32),
+    pub scale_factor: f64,
+}
+
+#[tauri::command]
+pub fn floating_diagnose(app: tauri::AppHandle) -> FloatingDiagReport {
+    // 用 primary_monitor() 替代 available_monitors()(后者在某些 tauri 2 版本里
+    // 需要 MonitorExt trait,R2D 时遇到 unresolved import 报错)。主显示器 + 当前 webview
+    // 所在 monitor 已足够诊断「浮窗在不在屏内」,不需遍历所有 monitor。
+    let primary = app.primary_monitor().ok().flatten();
+    let monitors = primary
+        .map(|m| MonitorInfo {
+            name: m.name().cloned(),
+            position: (m.position().x, m.position().y),
+            size: (m.size().width, m.size().height),
+            scale_factor: m.scale_factor(),
+        })
+        .into_iter()
+        .collect::<Vec<_>>();
+
+    let primary_scale = monitors.first().map(|m| m.scale_factor).unwrap_or(1.0);
+
+    let Some(w) = app.get_webview_window("floating") else {
+        return FloatingDiagReport {
+            exists: false,
+            visible: false,
+            position: None,
+            size: None,
+            monitors,
+            primary_monitor_scale: primary_scale,
+        };
+    };
+
+    let position = w.outer_position().ok().map(|p| (p.x, p.y));
+    let size = w.outer_size().ok().map(|s| (s.width, s.height));
+    let visible = w.is_visible().unwrap_or(false);
+
+    FloatingDiagReport {
+        exists: true,
+        visible,
+        position,
+        size,
+        monitors,
+        primary_monitor_scale: primary_scale,
+    }
+}

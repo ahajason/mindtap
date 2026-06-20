@@ -33,5 +33,11 @@ anyhow = "1"
 thiserror = "1"
 log = { version = "0.4", features = ["std"] }
 
+# macOS-only:浮窗 WKWebView 圆角修复。CSS border-radius 不能 round native NSWindow,
+# 必须设 WKWebView.layer.cornerRadius + masksToBounds 才能让 webview 边界贴合 .floating-root
+# 的 14px 圆角。objc2 由 tauri 2 间接拉入,这里只声明为直接 dep 让代码能用。
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6"
+
 [dev-dependencies]
 tempfile = "3"

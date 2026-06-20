@@ -11,7 +11,22 @@ import { render, fireEvent, screen } from '@testing-library/react'
 import App from './App'
 
 vi.mock('@tauri-apps/api/window', () => ({
-  getCurrentWindow: () => ({ close: vi.fn().mockResolvedValue(undefined) }),
+  getCurrentWindow: () => ({
+    close: vi.fn().mockResolvedValue(undefined),
+    setSize: vi.fn().mockResolvedValue(undefined),
+    setPosition: vi.fn().mockResolvedValue(undefined),
+    onMoved: () => Promise.resolve(() => {}),
+  }),
+  // F4' 尺寸自适应:App.tsx 在 useEffect [isExpanded] 调 win.setSize(new LogicalSize(...))
+  // (V1.5 webview API 路径,不依赖 capability)。必须 mock LogicalSize export,
+  // 否则 `new LogicalSize(...)` 抛 "No export defined" 同步错。
+  LogicalSize: class LogicalSize {
+    constructor(public w: number, public h: number) {}
+  },
+  // F3' useWindowPosition hook 调 win.setPosition(new PhysicalPosition(...))
+  PhysicalPosition: class PhysicalPosition {
+    constructor(public x: number, public y: number) {}
+  },
 }))
 
 beforeEach(() => {

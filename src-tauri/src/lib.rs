@@ -84,6 +84,7 @@ pub fn run() {
             commands::floating_cmd::floating_toggle,
             commands::floating_cmd::floating_is_visible,
             commands::floating_cmd::floating_set_height,
+            commands::floating_cmd::floating_diagnose,
             commands::floating_cmd::get_platform,
             commands::floating_cmd::show_floating_context_menu,
             crate::settings::cmd::settings_get,

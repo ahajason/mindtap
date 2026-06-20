@@ -61,6 +61,22 @@ export const api = {
   floatingHide: () => invoke<void>("floating_hide"),
   floatingToggle: () => invoke<void>("floating_toggle"),
   floatingSetHeight: (height: number) => invoke<void>("floating_set_height", { height }),
+  // R5:floating_diagnose Rust command,返 {exists, visible, position, size, monitors, primary_monitor_scale}
+  // 主窗 DiagnosticsSection "Run Diag" 按钮调用,展开详情 → 不再 incremental 测试
+  floatingDiagnose: () =>
+    invoke<{
+      exists: boolean
+      visible: boolean
+      position: [number, number] | null
+      size: [number, number] | null
+      monitors: Array<{
+        name: string | null
+        position: [number, number]
+        size: [number, number]
+        scale_factor: number
+      }>
+      primary_monitor_scale: number
+    }>("floating_diagnose"),
   getPlatform: () => invoke<string>("get_platform"),
   showFloatingContextMenu: () => invoke<void>("show_floating_context_menu"),
 };

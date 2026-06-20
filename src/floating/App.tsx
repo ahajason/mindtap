@@ -1,8 +1,9 @@
 // src/floating/App.tsx
 import { useEffect, useState, useCallback } from 'react'
-import { getCurrentWindow } from '@tauri-apps/api/window'
+import { getCurrentWindow, LogicalSize } from '@tauri-apps/api/window'
 import { useActiveTask } from './hooks/useActiveTask'
 import { useTick } from './hooks/useTick'
+import { useWindowPosition } from './hooks/useWindowPosition'
 import { api, type Task } from '@/lib/tauri-bridge'
 import { OuterShell } from './OuterShell'
 import { FloatShell } from './FloatShell'
@@ -14,6 +15,28 @@ import { FoldedBar } from './FoldedBar'
 import type { RecordKind as PanelRecordKind } from './FormSubPanel'
 
 type Variant = 'L1' | 'L3' | 'fb' | 'legacy'
+
+// F4' 尺寸自适应:复用 V1.5 webview API 路径。走 getCurrentWindow().setSize + LogicalSize
+// (webview 核心 API,不依赖 capability),不走 invoke('floating_set_height')。
+// 折叠态 webview 默认 320×36(tauri.conf.json 固定),不需 reset。
+// 展开态内容自适应由 GlassSurface variant + grid-template-rows CSS 控制(V3 决策),
+// 无需手动测 scrollHeight。
+const EXPAND_W = 360
+const EXPAND_H = 280
+
+// 缓存窗口实例(getCurrentWindow 每次返回新对象,避免 effect deps 不稳定)
+// 浏览器 dev 无 Tauri runtime → getCurrentWindow 同步抛错 → 加 try/catch 兜底,
+// 让浮窗在 vite dev 也能 mount(测试用);IPC setSize 在 vite dev 下静默 no-op。
+let cachedWin: ReturnType<typeof getCurrentWindow> | null | undefined
+function getWin() {
+  if (cachedWin !== undefined) return cachedWin
+  try {
+    cachedWin = getCurrentWindow()
+  } catch {
+    cachedWin = null
+  }
+  return cachedWin
+}
 
 function detectLegacy(): Variant {
   if (typeof navigator === 'undefined') return 'L1'
@@ -48,6 +71,15 @@ export default function App() {
 
   useEffect(() => setVariant(isExpanded ? 'L3' : detectLegacy()), [isExpanded])
 
+  // F4' 尺寸自适应:展开时 webview 立即撑大 360×280(V1.5 路径)
+  useEffect(() => {
+    if (!isExpanded) return
+    const win = getWin()
+    if (!win) return  // 浏览器 dev:无 Tauri runtime
+    win.setSize(new LogicalSize(EXPAND_W, EXPAND_H))
+      .catch((e: unknown) => console.error('[floating] setSize on expand failed:', e))
+  }, [isExpanded])
+
   // D-06 副标题
   useEffect(() => {
     if (!isExpanded || segment !== 'timer') return
@@ -63,6 +95,10 @@ export default function App() {
   // 项目既有 hook:useActiveTask 返回 Task | null
   const activeTask = useActiveTask()
   const now = useTick()
+
+  // F3' 浮窗位置兜底:首次启动主动 setPosition(100, 60) 避 macOS 菜单栏,后续
+  // 用户拖动通过 onMoved 自动持久化(localStorage)。
+  useWindowPosition()
 
   const handleFormSubmit = useCallback((kind: PanelRecordKind, content: string) => {
     if (!content.trim()) return

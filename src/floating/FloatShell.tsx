@@ -92,7 +92,18 @@ export function FloatShell({ isExpanded, onToggle, foldedBar, children, classNam
         // CSS transform 走 GPU,无重渲染
         transform: 'translateZ(0)',
       }}
-      className={twMerge('select-none cursor-grab active:cursor-grabbing', className)}
+      className={twMerge(
+        // V3 重构漏挂的根 className。V1.5 根 div 直接装配
+        // ["floating-root", expanded ? "expanded" : "folded", ...].join(" "),
+        // V3 FloatShell 接管渲染根后必须延续这个契约,否则
+        // styles/floating.css 的 .floating-root { backdrop-filter, border, box-shadow, ... } 全失效,
+        // 折叠态 transparent=true webview = 完全透明不可见。
+        'floating-root',
+        isExpanded ? 'expanded' : 'folded',
+        'select-none',
+        isExpanded ? '' : 'cursor-grab active:cursor-grabbing',
+        className,
+      )}
     >
       {/* 折叠态 bar */}
       {isExpanded ? null : foldedBar}

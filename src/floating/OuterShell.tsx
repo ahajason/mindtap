@@ -13,9 +13,29 @@ function hasWebGL(): boolean {
 }
 
 export function OuterShell({ isExpanded, children }: Props) {
-  if (!hasWebGL()) {
-    // 降级:无折射,纯 div
-    return <div style={{ borderRadius: 16, overflow: 'hidden' }}>{children}</div>
+  // R2 防御:折叠态完全不用 LiquidGlass。
+  // liquid-glass-react 在 WKWebView 折叠态有 3 个已知坑:
+  //   1) 内部 WebGL canvas 默认 270x69 (dist/index.esm.js:209) absolute 定位,
+  //      浮在 children 之上,在 WKWebView 折叠态小尺寸 (320x36) 渲染异常
+  //   2) GlassContainer 是 inline-flex,折叠态 auto-size 在 0 高度的 root
+  //      里变成 0x0,children 看不见
+  //   3) WebGL shader 编译失败时仍显示透明 canvas,遮住 children 但不显示
+  // 展开态才用 LiquidGlass(WebGL 折射效果在 360x280 才有视觉价值)。
+  if (!isExpanded || !hasWebGL()) {
+    return (
+      <div
+        data-outer-shell="fallback"
+        style={{
+          position: 'relative',
+          width: '100%',
+          height: '100%',
+          borderRadius: 16,
+          overflow: 'hidden',
+        }}
+      >
+        {children}
+      </div>
+    )
   }
 
   return (

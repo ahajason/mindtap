@@ -5,14 +5,21 @@ export function useActiveTask(): Task | null {
   const [active, setActive] = useState<Task | null>(null);
 
   useEffect(() => {
-    // vite dev 浏览器无 Tauri runtime：invoke / listen 同步抛错。
-    // 不 try/catch 会导致 React 整个 tree uncaught exception → unmount → DOM 空。
-    // tauri dev / build 后正常调 IPC。
+    // 防御:invoke / listen 在 vite dev / 测试 jsdom 下抛错,unhandled rejection
+    // 会让 React unmount 整个 App。三处吞错:外层 try/catch 兜同步 throw;
+    // onFocusChanged 返 Promise 挂 .catch(() => null) 吞初始 reject;
+    // refresh() 内部 try/catch 写 console.error 不抛。
     try {
       refresh();
-      const unlisten = events.onFocusChanged(() => refresh());
+      const unlisten = events
+        .onFocusChanged(() => refresh())
+        .catch(() => null);
       return () => {
-        unlisten.then((u) => u()).catch(() => {});
+        unlisten
+          .then((u) => {
+            if (typeof u === 'function') u();
+          })
+          .catch(() => {});
       };
     } catch {
       return; // 非 Tauri 环境 = 永远空 active

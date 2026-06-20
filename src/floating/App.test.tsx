@@ -3,14 +3,43 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, fireEvent, screen } from '@testing-library/react'
 import App from './App'
 
-// Mock getCurrentWindow from @tauri-apps/api/window — jsdom has no Tauri runtime.
+// F4' 复用 V1.5 路径:App.tsx 应调 win.setSize(new LogicalSize(w, h))(webview API,
+// 不依赖 capability)。F3' useWindowPosition 调 win.setPosition / win.onMoved。
+// vi.hoisted 让 spy 在 vi.mock factory 顶层 hoist 时可用,
+// 跨 beforeEach mockClear 共享同一 mock 实例。
+const { setSizeMock, closeMock, setPositionMock, onMovedCallbacks } = vi.hoisted(() => {
+  const setSizeMock = vi.fn().mockResolvedValue(undefined)
+  const closeMock = vi.fn().mockResolvedValue(undefined)
+  const setPositionMock = vi.fn().mockResolvedValue(undefined)
+  const onMovedCallbacks: Array<(e: { payload: { x: number; y: number } }) => void> = []
+  return { setSizeMock, closeMock, setPositionMock, onMovedCallbacks }
+})
+
+// Mock @tauri-apps/api/window — jsdom has no Tauri runtime.
+// 提供 close + setSize + setPosition + onMoved + LogicalSize + PhysicalPosition。
 vi.mock('@tauri-apps/api/window', () => ({
   getCurrentWindow: () => ({
-    close: vi.fn().mockResolvedValue(undefined),
+    close: closeMock,
+    setSize: setSizeMock,
+    setPosition: setPositionMock,
+    onMoved: (cb: (e: { payload: { x: number; y: number } }) => void) => {
+      onMovedCallbacks.push(cb)
+      return Promise.resolve(() => {})
+    },
   }),
+  LogicalSize: class LogicalSize {
+    constructor(public w: number, public h: number) {}
+  },
+  PhysicalPosition: class PhysicalPosition {
+    constructor(public x: number, public y: number) {}
+  },
 }))
 
 beforeEach(() => {
+  setSizeMock.mockClear()
+  closeMock.mockClear()
+  setPositionMock.mockClear()
+  onMovedCallbacks.length = 0
   // jsdom doesn't expose WebGL by default; OuterShell's hasWebGL() check would
   // try to render <LiquidGlass>. Force fallback by deleting the property so
   // OuterShell renders a plain div. This keeps tests focused on App behavior.
@@ -89,5 +118,22 @@ describe('App', () => {
     const ta2 = screen.getByRole('textbox') as HTMLTextAreaElement
     expect(ta2).toBe(ta)  // same DOM node = not unmounted
     expect(ta2.value).toBe('继续手头的小事')
+  })
+
+  // F4' 尺寸自适应:展开时 webview 立即 setSize(360, 280),复用 V1.5 webview API 路径
+  // (走 getCurrentWindow().setSize + LogicalSize,不依赖 capability)。
+  // V3 之前用 invoke('floating_set_height'),capability 缺失时被拒 → 展开态撑不大。
+  // 折叠态 webview 默认 320×36(tauri.conf.json 内层尺寸),不需 setSize 重置。
+  it('展开态 webview setSize(360, 280) 被调(F4 尺寸自适应,V1.5 webview API 路径)', () => {
+    const { container } = render(<App />)
+    setSizeMock.mockClear()
+    // FloatShell 折叠态 mousedown 空白(< 4px 阈值)→ onToggle 翻转 isExpanded=true
+    const shellRoot = container.querySelector('[class*="select-none"]') as HTMLElement
+    fireEvent.mouseDown(shellRoot, { clientX: 5, clientY: 5 })
+    fireEvent.mouseUp(shellRoot, { clientX: 5, clientY: 5 })
+    expect(setSizeMock).toHaveBeenCalled()
+    const calls = setSizeMock.mock.calls
+    const lastArg = calls.length > 0 ? calls[calls.length - 1][0] : undefined
+    expect(lastArg).toMatchObject({ w: 360, h: 280 })
   })
 })
