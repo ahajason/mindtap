@@ -25,6 +25,10 @@ export default defineConfig(async () => ({
     globals: true,
     setupFiles: ["./src/test/setup.ts"],
     css: true,
+    // Playwright e2e 走 `npx playwright test`,不要让 vitest 误收
+    // 旧默认会收 `**/*.spec.ts`,把 tests/visual/floating.spec.ts 当 vitest 测试
+    // (Playwright 用了 vitest 没装的 test.describe,会抛 "did not expect test.describe() to be called here")
+    exclude: ['**/node_modules/**', '**/dist/**', 'tests/visual/**'],
   },
 
   build: {

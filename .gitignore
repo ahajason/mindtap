@@ -58,3 +58,7 @@ Thumbs.db
 
 # Playwright MCP 临时产物(不入仓)
 .playwright-mcp/
+
+# Playwright 运行产物(不入仓)
+test-results/
+playwright-report/
