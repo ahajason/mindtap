@@ -3,6 +3,12 @@ use crate::error::{AppError, AppResult};
 use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 
+#[derive(Debug, serde::Serialize)]
+pub struct TaskAggregateToday {
+    pub total_ms: i64,
+    pub segment_count: i32,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Task {
     pub id: i64,
@@ -348,6 +354,25 @@ pub fn active_task_summary(conn: &Connection) -> Result<Option<ActiveTaskSummary
     }
 }
 
+pub fn aggregate_today(conn: &rusqlite::Connection) -> Result<TaskAggregateToday, crate::error::AppError> {
+    let today_start_ms = {
+        let now = now_ms();
+        let secs_today = (now / 1000) - ((now / 1000) % 86400);
+        secs_today * 1000
+    };
+    let mut stmt = conn.prepare(
+        "SELECT COALESCE(SUM(duration_ms), 0), COUNT(*) FROM task
+         WHERE status = 'done' AND updated_at >= ?1",
+    )?;
+    let (total_ms, count): (i64, i64) = stmt.query_row([today_start_ms], |row| {
+        Ok((row.get::<_, i64>(0)?, row.get::<_, i64>(1)?))
+    })?;
+    Ok(TaskAggregateToday {
+        total_ms,
+        segment_count: count as i32,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -496,5 +521,54 @@ mod tests {
             .unwrap();
         assert_eq!(t1_after.0, "paused");
         assert!(t1_after.1 >= 30);
+    }
+}
+
+#[cfg(test)]
+mod tests_aggregate {
+    use super::*;
+    use crate::db::schema::create_tables;
+    use rusqlite::Connection;
+
+    fn test_conn() -> Connection {
+        let conn = Connection::open_in_memory().unwrap();
+        create_tables(&conn).unwrap();
+        conn
+    }
+
+    fn today_midnight() -> i64 {
+        let now = now_ms();
+        now - (now % 86_400_000)
+    }
+
+    #[test]
+    fn aggregate_today_empty() {
+        let conn = test_conn();
+        let result = aggregate_today(&conn).unwrap();
+        assert_eq!(result.total_ms, 0);
+        assert_eq!(result.segment_count, 0);
+    }
+
+    #[test]
+    fn aggregate_today_sums_done_tasks() {
+        let conn = test_conn();
+        let today = today_midnight();
+        // 插入 2 个 done task,跨日边界
+        conn.execute(
+            "INSERT INTO task (content, status, duration_ms, created_at, updated_at, archived_at) VALUES (?, ?, ?, ?, ?, ?)",
+            rusqlite::params!["t1", "done", 1500_000, today, today + 1000, None::<i64>],
+        ).unwrap();
+        conn.execute(
+            "INSERT INTO task (content, status, duration_ms, created_at, updated_at, archived_at) VALUES (?, ?, ?, ?, ?, ?)",
+            rusqlite::params!["t2", "done", 3000_000, today, today + 2000, None::<i64>],
+        ).unwrap();
+        // 昨日 1 个 done,不计入
+        conn.execute(
+            "INSERT INTO task (content, status, duration_ms, created_at, updated_at, archived_at) VALUES (?, ?, ?, ?, ?, ?)",
+            rusqlite::params!["yesterday", "done", 999_000, today - 1000, today - 1000, None::<i64>],
+        ).unwrap();
+        let result = aggregate_today(&conn).unwrap();
+        assert_eq!(result.total_ms, 4500_000);
+        assert_eq!(result.segment_count, 2);
     }
 }

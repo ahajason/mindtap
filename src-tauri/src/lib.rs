@@ -72,6 +72,7 @@ pub fn run() {
             commands::task_cmd::task_undo,
             commands::task_cmd::task_switch,
             commands::task_cmd::task_archive,
+            commands::task_cmd::task_aggregate_today,
             commands::idea_cmd::idea_create,
             commands::check_in_cmd::check_in_create,
             commands::record_cmd::record_list,

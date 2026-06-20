@@ -5,6 +5,14 @@ use crate::error::AppResult;
 use tauri::{Emitter, State};
 
 #[tauri::command]
+pub fn task_aggregate_today(
+    state: State<'_, DbState>,
+) -> AppResult<task::TaskAggregateToday> {
+    let conn = state.0.lock().unwrap();
+    task::aggregate_today(&conn)
+}
+
+#[tauri::command]
 pub fn task_create(
     state: State<'_, DbState>,
     app: tauri::AppHandle,
