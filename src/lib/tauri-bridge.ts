@@ -18,6 +18,11 @@ export type Task = {
   archived_at: number | null;
 };
 
+export type TaskAggregateToday = {
+  total_ms: number;
+  segment_count: number;
+};
+
 export type Record = {
   id: number;
   kind: "task" | "idea" | "check_in";
@@ -37,6 +42,7 @@ export const api = {
   taskUndo: (id: number) => invoke<Task>("task_undo", { id }),
   taskSwitch: (id: number) => invoke<Task>("task_switch", { id }),
   taskArchive: (id: number) => invoke<Task>("task_archive", { id }),
+  taskAggregateToday: () => invoke<TaskAggregateToday>("task_aggregate_today"),
 
   ideaCreate: (content: string) => invoke<number>("idea_create", { content }),
   checkInCreate: (habit: string, note?: string) =>
