@@ -62,3 +62,7 @@ Thumbs.db
 # Playwright 运行产物(不入仓)
 test-results/
 playwright-report/
+
+# 竞品上游代码快照(参考用,不编辑、不入仓;分析文档 `_analysis.md` 仍跟踪)
+# 详见 docs/competitors/README.md
+docs/competitors/*/source/
