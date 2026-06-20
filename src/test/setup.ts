@@ -14,3 +14,16 @@ vi.mock("@tauri-apps/api/event", () => ({
   listen: vi.fn().mockResolvedValue(() => {}),
   emit: vi.fn(),
 }));
+// 全局 mock @tauri-apps/api/window — useWindowPosition / App.handleClose
+// 都依赖。getCurrentWindow 返回 close/setPosition/onMoved 三个 stub,
+// PhysicalPosition 类保留 x/y 字段。
+vi.mock("@tauri-apps/api/window", () => ({
+  getCurrentWindow: () => ({
+    close: vi.fn().mockResolvedValue(undefined),
+    setPosition: vi.fn().mockResolvedValue(undefined),
+    onMoved: vi.fn().mockResolvedValue(() => {}),
+  }),
+  PhysicalPosition: class {
+    constructor(public x: number, public y: number) {}
+  },
+}));

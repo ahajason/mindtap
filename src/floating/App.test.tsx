@@ -4,12 +4,7 @@ import { render, fireEvent, screen } from '@testing-library/react'
 import App from './App'
 import { api } from '@/lib/tauri-bridge'
 
-// Mock getCurrentWindow from @tauri-apps/api/window — jsdom has no Tauri runtime.
-vi.mock('@tauri-apps/api/window', () => ({
-  getCurrentWindow: () => ({
-    close: vi.fn().mockResolvedValue(undefined),
-  }),
-}))
+// @tauri-apps/api/core / event / window 全局 mock 见 src/test/setup.ts
 
 beforeEach(() => {
   // jsdom doesn't expose WebGL by default; OuterShell's hasWebGL() check would

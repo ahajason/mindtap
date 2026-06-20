@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useActiveTask } from './hooks/useActiveTask'
 import { useTick } from './hooks/useTick'
+import { useWindowPosition } from './hooks/useWindowPosition'
 import { api, type Task } from '@/lib/tauri-bridge'
 import { OuterShell } from './OuterShell'
 import { FloatShell } from './FloatShell'
@@ -50,6 +51,9 @@ export default function App() {
   const [segment, setSegment] = useState<SegmentedValue>('form')  // D-07 Form-first
   const [variant, setVariant] = useState<Variant>('L1')
   const [aggregate, setAggregate] = useState({ totalMs: 0, segmentCount: 0 })
+
+  // D-12 对偶:首次启动主动 setPosition(100, 60) 避开 macOS 菜单栏
+  useWindowPosition()
 
   useEffect(() => setVariant(isExpanded ? 'L3' : detectLegacy()), [isExpanded])
 
