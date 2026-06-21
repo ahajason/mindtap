@@ -196,3 +196,9 @@ body {
     transition: none;
   }
 }
+
+/* drag region:user-select 防 mousedown 选中文本;不加 cursor(反 HIG,AppKit 决定 cursor) */
+[data-tauri-drag-region] {
+  user-select: none;
+  -webkit-user-select: none;
+}
