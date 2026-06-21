@@ -23,7 +23,7 @@ export default function CodeBlock({ code, language = 'tsx' }: CodeBlockProps) {
       </pre>
       <button
         onClick={handleCopy}
-        className="absolute top-2 right-2 p-1.5 rounded-md glass-l1 opacity-0 group-hover:opacity-100 transition-opacity"
+        className="absolute top-2 right-2 p-1.5 rounded-md glass-l1 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
         aria-label={copied ? '已复制' : '复制代码'}
       >
         {copied ? (

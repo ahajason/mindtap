@@ -10,11 +10,11 @@ const buttonVariants = cva(
         primary:
           'bg-gradient-to-b from-primary to-primary-hover text-white shadow-[0_4px_12px_var(--color-primary-glow)] hover:from-primary-hover hover:to-primary-active hover:shadow-[0_6px_16px_var(--color-primary-glow)] active:scale-[0.97]',
         secondary:
-          'glass-l1 text-text-1 hover:bg-white/55',
+          'glass-l1 text-text-1 hover:bg-white/45',
         ghost:
           'bg-transparent text-text-2 hover:glass-l1',
         icon:
-          'glass-l1 rounded-[var(--radius-button)] text-text-1 hover:bg-white/55',
+          'glass-l1 rounded-[var(--radius-button)] text-text-1 hover:bg-white/45',
       },
       size: {
         sm: 'h-8 px-3 text-sm rounded-[var(--radius-button)]',

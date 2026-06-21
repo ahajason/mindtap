@@ -43,10 +43,17 @@
 
 | 规则 | 何时参考 |
 |---|---|
+| `.claude/rules/decision-method.mdc` | **任何代码/文档改动前必查**(三层穷举 + 闭环复盘);**任何交付完成后必查**(走 `/retro`) |
 | `.claude/rules/commit-style.mdc` | 写 commit message 前 / 决定何时 commit（业务层粒度 + 完整性门槛） |
 | `.claude/rules/comment-style.mdc` | 写代码时（注释只写 why, 代码即注释） |
 | `.claude/rules/codegraph.mdc` | 跨文件结构查询时（vs grep） |
 | `.claude/rules/task-directory.mdc` | 写任务正式档时（slug 命名 + 模板 + 跟 commit 关系） |
+
+## 工作流铁律(贯穿所有任务)
+
+- **三层决策法**: 改前 L1 原始权威 / L2 统一设计 / L3 具体问题(主动枚举副作用);改后走 `/retro` 闭环
+- **避免决策疲劳**: 2-4 离散选项才用 AskUserQuestion;有 spec / convention / rule → 优先查
+- **穷举再下手**: 多个 root cause 不分散修(见 `memory/exhaust-layers-before-fix`)
 
 ## 本地配置
 

@@ -23,7 +23,7 @@ export function TabsTrigger({
     <Tabs.Tab
       className={cn(
         'px-3 py-1.5 text-sm font-medium text-text-2 rounded-md transition-all duration-base',
-        'data-[selected]:bg-white/55 data-[selected]:text-text-1',
+        'data-[selected]:bg-white/55 data-[selected]:text-primary',
         'hover:bg-white/35',
         className
       )}

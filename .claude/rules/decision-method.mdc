@@ -1,0 +1,40 @@
+---
+description: 任何代码/文档改动前,任何交付完成后必走 — 三层决策法 + 闭环复盘
+alwaysApply: true
+---
+
+# Decision Method
+
+## 改前:三层穷举(必走)
+
+任何改动前,先对照三层检查清单:
+
+| Layer | 内容 | 来源 |
+|---|---|---|
+| **L1 原始权威** | Apple HIG / WCAG / MDN / Tauri 官方文档 / 库官方 API 文档 | WebFetch / context7 |
+| **L2 统一设计** | `docs/design/glassic-ui-spec.md` / 已立 convention / 项目 rule | `docs/design/` + `.claude/rules/` |
+| **L3 具体问题** | 当前 issue / bug / 需求 + **所有 user-facing 副作用** | 用户描述 + **主动枚举**(不只是用户说的) |
+
+**任一层缺失 = 停下来补查再动手**。V0.1.1 漏 L3 副作用 → V0.1.4 发现 3 症状同根因。
+
+## 改后:闭环复盘(必做)
+
+交付完成后:
+
+1. **对照当初 L3 列表 vs 实际行为** — 哪些副作用没识别?
+2. **调用 `/retro`** — 走 4 段模板(决策/未识别/暴露/沉淀)
+3. **可推广教训 → memory** — 不是"这次具体反思",是"未来类似场景怎么防"
+
+## 关键文件
+
+- 完整方法论: `~/.claude/projects/.../memory/three-layer-decision-method.md`
+- 4 层机制分层: `~/.claude/projects/.../memory/mechanism-layering.md`
+- 复盘 skill: `/retro`(调出 4 段模板)
+- 根因穷尽: `exhaust-layers-before-fix.md`(memory)
+
+## 反模式
+
+- ❌ "用户说改什么就改什么" — 缺 L3 主动枚举
+- ❌ "smoke 过了 = 验证完了" — 缺 L3 副作用验证
+- ❌ "交付完不写 retro" — 缺闭环,系统性盲点会复发
+- ❌ "把整篇 retro 塞进 rule" — always-load 污染 context,retro 是 skill 不是 rule
