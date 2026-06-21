@@ -1,1 +1,102 @@
 @import "tailwindcss";
+
+/* === Glassic UI Tokens (spec: docs/design/glassic-ui-spec.md) === */
+@theme {
+  /* 背景 */
+  --color-bg-from: #F5F9FF;
+  --color-bg-to:   #E8F1FF;
+
+  /* 主强调色 */
+  --color-primary:        #165DFF;
+  --color-primary-hover:  #0E4AD9;
+  --color-primary-active: #0A3DBC;
+  --color-primary-glow:   rgba(22, 93, 255, 0.25);
+
+  /* 文本 */
+  --color-text-1: #1D2939;
+  --color-text-2: #475467;
+  --color-text-3: #98A2B3;
+
+  /* 功能色 */
+  --color-success:  #5BCBA0;
+  --color-inactive: #DDE3EE;
+
+  /* 玻璃四要素 (L1 / L2 / L3) */
+  --glass-blur-1:   20px;
+  --glass-fill-1:   0.35;
+  --glass-border-1: 0.60;
+  --glass-shadow-1: 0.08;
+  --glass-blur-2:   24px;
+  --glass-fill-2:   0.42;
+  --glass-border-2: 0.70;
+  --glass-shadow-2: 0.10;
+  --glass-blur-3:   28px;
+  --glass-fill-3:   0.50;
+  --glass-border-3: 0.80;
+  --glass-shadow-3: 0.12;
+
+  /* 圆角 */
+  --radius-card:    20px;
+  --radius-input:   12px;
+  --radius-button:  12px;
+  --radius-badge:   10px;
+
+  /* 间距 */
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 24px;
+  --spacing-6: 32px;
+
+  /* 字号 */
+  --text-core:    48px;
+  --text-h1:      24px;
+  --text-h2:      16px;
+  --text-h3:      14px;
+  --text-caption: 12px;
+
+  /* 字重 */
+  --font-weight-regular:  400;
+  --font-weight-medium:   500;
+  --font-weight-semibold: 600;
+  --font-weight-bold:     700;
+
+  /* 动效 */
+  --ease-out:    cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* === Glass utilities (L1 / L2 / L3) === */
+@layer utilities {
+  .glass-l1 {
+    backdrop-filter: blur(var(--glass-blur-1)) saturate(120%);
+    -webkit-backdrop-filter: blur(var(--glass-blur-1)) saturate(120%);
+    background: rgba(255, 255, 255, var(--glass-fill-1));
+    border: 1px solid rgba(255, 255, 255, var(--glass-border-1));
+    box-shadow: 0 8px 32px rgba(0, 30, 80, var(--glass-shadow-1));
+  }
+
+  .glass-l2 {
+    backdrop-filter: blur(var(--glass-blur-2)) saturate(120%);
+    -webkit-backdrop-filter: blur(var(--glass-blur-2)) saturate(120%);
+    background: rgba(255, 255, 255, var(--glass-fill-2));
+    border: 1px solid rgba(255, 255, 255, var(--glass-border-2));
+    box-shadow: 0 8px 32px rgba(0, 30, 80, var(--glass-shadow-2));
+  }
+
+  .glass-l3 {
+    backdrop-filter: blur(var(--glass-blur-3)) saturate(120%);
+    -webkit-backdrop-filter: blur(var(--glass-blur-3)) saturate(120%);
+    background: rgba(255, 255, 255, var(--glass-fill-3));
+    border: 1px solid rgba(255, 255, 255, var(--glass-border-3));
+    box-shadow: 0 8px 32px rgba(0, 30, 80, var(--glass-shadow-3));
+  }
+}
+
+/* === 全局 body 冷蓝渐变 (spec §三.1) === */
+body {
+  background: linear-gradient(180deg, var(--color-bg-from) 0%, var(--color-bg-to) 100%);
+  color: var(--color-text-1);
+  min-height: 100vh;
+}
