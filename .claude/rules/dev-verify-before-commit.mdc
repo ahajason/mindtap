@@ -1,0 +1,55 @@
+---
+description: 改 system API / OS 集成 / 框架 runtime 后,commit 前必须 dev 环境实测新机制本身在工作
+---
+
+# Dev 实测 = System API 改动的 hard gate
+
+## 反模式
+
+```text
+1. 改 system API 代码
+2. 跑 tsc / cargo check / vitest 全绿
+3. ❌ 没在 dev 实测新 API 触发的用户行为
+4. commit
+```
+
+**症状消失 ≠ 修复成功**。当修复是反向/替代性的,反向症状消失有两种解释:
+- ✓ 新机制替代旧机制且无副作用
+- ✗ 新机制根本没运行,旧机制被下线 = 双方都没在跑
+
+**区分唯一可靠手段:dev 实测新机制本身在工作**。
+
+## 错误信号 vs 真实信号
+
+| 信号 | 真实? | 原因 |
+|---|---|---|
+| `tsc --noEmit` 无输出 | ✗ | 只证 type 正确 |
+| `cargo check` Finished | ✗ | 只证 compile 成功 |
+| `vitest` 全绿 | ✗ | 只证 mock 内的代码逻辑 |
+| **dev 实际触发 API,看行为符合预期** | ✓ | runtime 真接受 |
+| **跨进程 IPC,双端 log 都有** | ✓ | IPC 真过 capability gate |
+| **Web Platform API,DevTools 看到调用** | ✓ | API 真被 runtime 接受 |
+
+## 各类 API 实测手段
+
+| API 类别 | 实测手段 |
+|---|---|
+| OS native API | 实际启动应用,做 API 触发的用户行为,看应用层是否符合 |
+| 框架 runtime hook(React effect / IPC / Web API) | dev 触发 hook,看 hook 内部状态(DevTools / console / 实际输出) |
+| Web Platform API(Service Worker / IndexedDB / DnD) | 实际触发,看 DevTools Network / Application / 持久化结果 |
+| 跨进程 IPC | 触发 IPC,看双端 log |
+
+## 何时用
+
+| 场景 | 用 |
+|---|---|
+| 改任何 system API(OS / 框架 / runtime) | ✅ 必用 |
+| 引入跨进程 IPC | ✅ 必用 |
+| 引入 Web Platform API | ✅ 必用 |
+| 纯前端业务逻辑(UI state / data transform / algorithm) | 弱用 — vitest 够 |
+| 单行 typo / 命名修复 | 不用 |
+
+## 跟其他规则关系
+
+- `first-step-research` — 实测前置:先搜清楚"应该看到什么"再去测
+- `record-failed-attempts-as-data` — 实测失败的尝试也要记

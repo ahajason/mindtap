@@ -31,3 +31,25 @@ describe('Separator 组件', () => {
     expect(container.querySelector('[role="separator"]')).toBeTruthy();
   });
 });
+
+describe('Sidebar drag region (V0.1.6)', () => {
+  it('aside deep(父 deep 实测不继承到含子元素的子区)', () => {
+    const { container } = render(
+      <MemoryRouter>
+        <Sidebar />
+      </MemoryRouter>
+    );
+    const aside = container.querySelector('aside');
+    expect(aside?.getAttribute('data-tauri-drag-region')).toBe('deep');
+  });
+
+  it('nav false(保护 link 可点击,不被父 deep 吞掉)', () => {
+    const { container } = render(
+      <MemoryRouter>
+        <Sidebar />
+      </MemoryRouter>
+    );
+    const nav = container.querySelector('aside > nav');
+    expect(nav?.getAttribute('data-tauri-drag-region')).toBe('false');
+  });
+});

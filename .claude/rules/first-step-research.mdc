@@ -1,0 +1,70 @@
+---
+description: 接到 bug 反馈 / "X 不工作" / 改 system API 前的尽职调查 — 双层调研:项目内部历史 + 外部 search 并行
+---
+
+# 第一步:调研 + 沉淀,再推断
+
+## 反模式
+
+```text
+1. 接到 bug 反馈
+2. 看 commit diff / 历史经验
+3. 直接推断根因
+4. 改源码
+5. 等用户反馈
+6. 失败,才搜索
+```
+
+把"接到反馈 → 动手"之间的调研窗口压成"看 commit diff" → 每次循环 5 轮起步。
+
+## 正确做法: 双层调研并行
+
+| # | 动作 | 输出 |
+|---|---|---|
+| 1 | 建任务档占位 | 写"问题描述 + 已知猜测 + 待验证项" + Attempt Log 段(append-only) |
+| 2 | 看 commit / 历史 | `git log --grep=...` + `git show` 客观事实 → append |
+| 3 | **扫项目内部调研成果** | 见下方 5 个必查路径 |
+| 4 | **派 1-3 个 subagent 并行外部 search** | 见 prompt 模板 |
+| 5 | 整合 + 推断 | 基于 2-4 事实推断,不基于 commit diff 猜,append 到 Attempt Log |
+
+## 项目内部必查 5 路径
+
+| # | 路径 | 怎么查 | 用途 |
+|---|---|---|---|
+| 1 | 内部调研 / 文档缓存 | `grep -rl "<keyword>" <项目调研缓存目录>/` | 本地已 fetch 的官方文档,比 web 重新 fetch 快 |
+| 2 | 历史 retro | `grep "<keyword>" docs/reports/...` | 之前类似问题怎么解决 + 失败模式 |
+| 3 | 旧 plan / spec | `grep -rl "<keyword>" docs/archive/.../plans/ docs/specs/` | 当时的设计决策 + 未执行的 step |
+| 4 | Release notes / TODO 段 | `grep "<keyword>" docs/reports/.../release-notes` | 是否标"待用户验证"等 TODO |
+| 5 | 旧 commit 验证段 | `git log --format="%H %s%n%b" \| grep -A 3 "验证"` | 之前 commit 是否真的 dev 实测过 |
+| 6 | **项目归档 codebase**(如有) | grep 项目自己的归档目录(`.archive/src/` / `legacy/` / `v0/` 等) | 完整历史 codebase,看已踩坑 + 已修过的实现 |
+
+**项目内部历史 > web search**。本地缓存成本已付;旧 retro 是已反思;旧 commit 验证段是当时的 dev 实测证据。
+
+## 外部 search subagent prompt 模板
+
+```
+查 <framework / platform / API> 的 <具体机制>。
+需求:
+1. <框架官方文档原文 + URL>(必读,WebFetch 完整页面不只看首页)
+2. <框架 runtime 源码>(wry / Next.js / React 等)
+3. <平台 HIG / 规范>(macOS HIG / WCAG / Apple Developer)
+4. <社区/对照实现>(同类项目怎么处理)
+5. 跨平台差异(macOS / Windows / Linux)
+回报时给具体 URL + 原文摘抄,不要总结。
+```
+
+## 何时用
+
+| 场景 | 用 |
+|---|---|
+| 用户报"X 不工作" | ✅ 必用 |
+| 用户报"X 行为异常" | ✅ 必用 |
+| 改 system API / framework runtime 前的尽职调查 | ✅ 必用 |
+| 引入新依赖 | ✅ 必用(查 `stdlib > 已有 dep > 第三方` 决策) |
+| 用户要求"加 feature X" | 弱用 — 看 spec,不一定搜 |
+| 用户问"为什么 Y 是这样" | 不用 |
+
+## 跟其他规则关系
+
+- `dev-verify-before-commit` — 调研在前,实测在后
+- `record-failed-attempts-as-data` — 即使做完调研,推断仍可能错,Attempt Log 兜底

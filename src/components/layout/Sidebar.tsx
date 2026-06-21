@@ -3,24 +3,24 @@ import { SidebarNavLink } from './SidebarNavLink';
 import { Separator } from '@/components/ui/separator';
 
 /**
- * Sidebar — 玻璃容器内 floating,4 角圆,glass-l2
- *
- * - 用 navOrder 数据源,Lucide icon 平铺,无分组容器
- * - 顶部简化标题"轻念 · Mindtap"(单行,无副标题)
- * - 拖动由 NSWindow.setMovableByWindowBackground 接管,不需要 marker
- * - V0.1.2: 使用 SidebarNavLink 统一 active + focus + hover 三层视觉
- * - V0.1.3: header 与 nav 之间加 Separator 分隔(清晰视觉层级)
+ * Sidebar 浮窗(L2)。
+ * V0.1.6 drag region:aside + header 都 deep(实测父 deep 不继承到子元素,h1 自动 no-drag),
+ *   nav 显式 false 保护 link 可点击。
+ * 历史/失败模式见 docs/reports/v0.1.6-retrospective.md
  */
 export default function Sidebar() {
   return (
-    <aside className="w-60 ml-3 mt-10 mb-3 rounded-xl glass-l2 p-4 flex flex-col gap-3 shrink-0">
-      <header>
+    <aside
+      data-tauri-drag-region="deep"
+      className="w-60 ml-3 mt-10 mb-3 rounded-xl glass-l2 p-4 flex flex-col gap-3 shrink-0"
+    >
+      <header data-tauri-drag-region="deep">
         <h1 className="text-sm font-medium text-text-2">轻念 · Mindtap</h1>
       </header>
 
       <Separator className="bg-white/40" />
 
-      <nav className="flex flex-col gap-1">
+      <nav data-tauri-drag-region="false" className="flex flex-col gap-1">
         {navOrder.map((item) => (
           <SidebarNavLink
             key={item.to}
