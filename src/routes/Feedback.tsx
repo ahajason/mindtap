@@ -6,6 +6,7 @@ import { TabsRoot, TabsList, TabsTrigger, TabsPanel } from '@/components/ui/tabs
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DialogWrapper } from '@/components/ui/dialog';
+import { contentContainer } from '@/lib/styles';
 
 export default function FeedbackRoute() {
   const [open, setOpen] = useState(false);
@@ -16,7 +17,7 @@ export default function FeedbackRoute() {
         title="Feedback"
         description="Badge / Sonner Toast / Dialog"
       />
-      <section className="glass-l3 rounded-xl p-4">
+      <section className={contentContainer}>
         <TabsRoot defaultValue="preview">
           <TabsList>
             <TabsTrigger value="preview">预览</TabsTrigger>

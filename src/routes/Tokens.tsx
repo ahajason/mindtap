@@ -1,5 +1,6 @@
 import PageHeader from '@/components/style-guide/PageHeader';
 import { Card } from '@/components/ui/card';
+import { contentContainer } from '@/lib/styles';
 
 const colors = [
   { name: 'primary', value: '#165DFF' },
@@ -19,13 +20,13 @@ export default function TokensRoute() {
         title="Token 速查"
         description="色板 / 字号 / 间距 (静态展示,无 Live Preview)"
       />
-      <section className="glass-l3 rounded-xl p-4 space-y-6">
+      <section className={`${contentContainer} space-y-[var(--spacing-6)]`}>
         <div>
-          <h2 className="text-lg font-semibold text-text-1 mb-3">色板</h2>
-          <div className="grid grid-cols-4 gap-3">
+          <h2 className="text-lg font-semibold text-text-1 mb-[var(--spacing-3)]">色板</h2>
+          <div className="grid grid-cols-4 gap-[var(--spacing-3)]">
             {colors.map((c) => (
-              <Card key={c.name} tier="l1" className="p-3">
-                <div className="w-full h-12 rounded-md mb-2" style={{ background: c.value }} />
+              <Card key={c.name} tier="l1" padding="sm">
+                <div className="w-full h-12 rounded-md mb-[var(--spacing-2)]" style={{ background: c.value }} />
                 <div className="text-xs font-mono text-text-1">{c.name}</div>
                 <div className="text-xs font-mono text-text-3">{c.value}</div>
               </Card>

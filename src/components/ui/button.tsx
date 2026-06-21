@@ -14,10 +14,10 @@ const buttonVariants = cva(
         ghost:
           'bg-transparent text-text-2 hover:glass-l1',
         icon:
-          'glass-l1 rounded-full text-text-1 hover:bg-white/55',
+          'glass-l1 rounded-[var(--radius-button)] text-text-1 hover:bg-white/55',
       },
       size: {
-        sm: 'h-8 px-3 text-[13px] rounded-md',
+        sm: 'h-8 px-3 text-sm rounded-[var(--radius-button)]',
         md: 'h-10 px-4 text-sm rounded-[var(--radius-button)]',
       },
     },

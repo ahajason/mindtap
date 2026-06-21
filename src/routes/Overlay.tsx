@@ -4,6 +4,7 @@ import { TabsRoot, TabsList, TabsTrigger, TabsPanel } from '@/components/ui/tabs
 import { TooltipProvider, TooltipWrapper } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { contentContainer } from '@/lib/styles';
 
 export default function OverlayRoute() {
   return (
@@ -12,7 +13,7 @@ export default function OverlayRoute() {
         title="Overlay"
         description="Tooltip / Tabs (浮层组件)"
       />
-      <section className="glass-l3 rounded-xl p-4">
+      <section className={contentContainer}>
         <TabsRoot defaultValue="preview">
           <TabsList>
             <TabsTrigger value="preview">预览</TabsTrigger>
