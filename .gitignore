@@ -70,3 +70,7 @@ docs/references/source/*/
 
 # 归档目录(2026-06-21 起);还原: git checkout pre-archive-2026-06-21 -- .
 .archive/
+
+# Swift SPM build 产物
+src-tauri/swift/MindtapGlass/.build/
+src-tauri/swift/MindtapGlass/Package.resolved
