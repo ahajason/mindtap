@@ -3,13 +3,9 @@ mod glass;
 
 use tauri::Manager;
 
-#[derive(Default)]
-pub struct AppState {}
-
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
-    .manage(AppState::default())
     .setup(|app| {
       if cfg!(debug_assertions) {
         app.handle().plugin(
@@ -19,13 +15,7 @@ pub fn run() {
         )?;
       }
       if let Some(window) = app.get_webview_window("main") {
-        #[cfg(target_os = "macos")]
-        {
-          // 同步调,setup 阶段 window 已就绪
-          let _ = tauri::async_runtime::block_on(async {
-            commands::glass::glass_attach(window).await
-          });
-        }
+        let _ = commands::glass::glass_attach(window);
       }
       Ok(())
     })

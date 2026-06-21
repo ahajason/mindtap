@@ -10,10 +10,10 @@ mod platform {
 
     extern "C" {
         fn mindtap_glass_attach(ns_window_ptr: *mut std::ffi::c_void);
-        fn mindtap_glass_register(json: *const c_char) -> *const c_char;
-        fn mindtap_glass_update_rect(json: *const c_char) -> *const c_char;
-        fn mindtap_glass_unregister(json: *const c_char) -> *const c_char;
-        fn mindtap_glass_clear() -> *const c_char;
+        fn mindtap_glass_register(json: *const c_char) -> *mut c_char;
+        fn mindtap_glass_update_rect(json: *const c_char) -> *mut c_char;
+        fn mindtap_glass_unregister(json: *const c_char) -> *mut c_char;
+        fn mindtap_glass_clear() -> *mut c_char;
         fn mindtap_glass_response_free(ptr: *mut c_char);
     }
 
@@ -28,10 +28,10 @@ mod platform {
                 _ => return Err(format!("unknown cmd: {}", cmd)),
             }
         };
-        let response = unsafe { CStr::from_ptr(response_ptr) }
+        let response = unsafe { CStr::from_ptr(response_ptr as *const c_char) }
             .to_string_lossy()
             .into_owned();
-        unsafe { mindtap_glass_response_free(response_ptr as *mut _) };
+        unsafe { mindtap_glass_response_free(response_ptr) };
         log::debug!("glass {} → {}", cmd, response);
         Ok(())
     }

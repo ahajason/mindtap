@@ -1,5 +1,8 @@
 import AppKit
 import SwiftUI
+import os
+
+private let glassLog = Logger(subsystem: "com.mindtap.app", category: "GlassOverlayManager")
 
 /// 事件穿透:hitTest 返回 nil,鼠标穿透到下层 WKWebView
 private final class PassThroughHostingView: NSHostingView<AnyView> {
@@ -20,7 +23,7 @@ public final class GlassOverlayManager {
 
     public func register(id: String, tier: GlassTier, rect: CGRect) {
         guard let window = hostWindow else {
-            print("[GlassOverlayManager] hostWindow not set; register ignored: \(id)")
+            glassLog.error("hostWindow not set; register ignored: \(id, privacy: .public)")
             return
         }
         // 同一 id 重复 register: 先清旧

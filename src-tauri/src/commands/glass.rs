@@ -3,12 +3,10 @@
 //! macOS: 路由到 Swift FFI。
 //! 其他平台: no-op,log warn。
 
-use tauri::State;
-use crate::AppState;
 use crate::glass::ffi;
 
 #[tauri::command]
-pub async fn glass_attach(window: tauri::WebviewWindow) -> Result<(), String> {
+pub fn glass_attach(window: tauri::WebviewWindow) -> Result<(), String> {
     #[cfg(target_os = "macos")]
     {
         let ns_window_ptr = window
@@ -26,7 +24,6 @@ pub async fn glass_attach(window: tauri::WebviewWindow) -> Result<(), String> {
 
 #[tauri::command]
 pub async fn glass_register(
-    _state: State<'_, AppState>,
     id: String,
     tier: String,
     x: f64, y: f64, w: f64, h: f64,
@@ -39,7 +36,6 @@ pub async fn glass_register(
 
 #[tauri::command]
 pub async fn glass_update_rect(
-    _state: State<'_, AppState>,
     id: String,
     x: f64, y: f64, w: f64, h: f64,
 ) -> Result<(), String> {
@@ -50,16 +46,13 @@ pub async fn glass_update_rect(
 }
 
 #[tauri::command]
-pub async fn glass_unregister(
-    _state: State<'_, AppState>,
-    id: String,
-) -> Result<(), String> {
+pub async fn glass_unregister(id: String) -> Result<(), String> {
     let payload = serde_json::json!({ "id": id }).to_string();
     ffi::call("unregister", &payload)
 }
 
 #[tauri::command]
-pub async fn glass_clear(_state: State<'_, AppState>) -> Result<(), String> {
+pub async fn glass_clear() -> Result<(), String> {
     ffi::call("clear", "{}")
 }
 
