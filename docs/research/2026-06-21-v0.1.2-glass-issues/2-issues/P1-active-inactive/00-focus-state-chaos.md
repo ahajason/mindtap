@@ -2,7 +2,8 @@
 
 > **优先级**: P1(架构性问题,影响全部页)
 > **创建**: 2026-06-21
-> **状态**: **待解决** — 路径已确定,实施待用户决策
+> **状态**: ✅ **已修复**(2026-06-21 实施 Phase 2 路径 F2)
+> **修复 commit**: `67ff1ea` feat(focus): 3 层 focus 模型
 > **关联设计规范**: [`../../1-design/10-focus-state-spec.md`](../../1-design/10-focus-state-spec.md)
 > **关联原始资料**:
 > - `0-originals/mdn/focus-visible.md`

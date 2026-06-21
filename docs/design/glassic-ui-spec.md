@@ -2,10 +2,8 @@
 title: 浅色玻璃拟态（Light Glassmorphism）— 开发落地实现规范
 source: 项目内部设计规范（前端 CSS 落地）
 established: 2026-06-19
+tags: [design-system, liquid-glass, light-glassmorphism, impl-spec, css, projects-v1]
 status: active
-version: v0.1.0
-restored_from: .archive/docs/design/glassic-ui-spec.md (字面恢复, 2026-06-21)
-tags: [design-system, liquid-glass, light-glassmorphism, impl-spec, css, mindtap-v0.1]
 ---
 
 # 浅色玻璃拟态（Light Glassmorphism）— 开发落地实现规范
@@ -112,14 +110,17 @@ tags: [design-system, liquid-glass, light-glassmorphism, impl-spec, css, mindtap
 
 ### 间距体系（spacing token）
 
+> **V0.1.2 G3 修复(2026-06-21)**:编号跟 Tailwind 默认 `space-y-N = N*4px` 对齐。旧 `--spacing-5: 24px` / `--spacing-6: 32px` 编号错位,改为跟 Tailwind 一致 + 新增 `--spacing-7`。
+
 | Token | 值 | 用途 |
 | :--- | :--- | :--- |
 | `space-1` | `4px` | 极小间距（图标与文字） |
 | `space-2` | `8px` | 紧凑间距（控件内部） |
 | `space-3` | `12px` | 默认内边距（输入框 / 次按钮） |
 | `space-4` | `16px` | 标准间距（卡片内边距） |
-| `space-5` | `24px` | 区块间距 |
-| `space-6` | `32px` | 大区块 / 弹窗边距 |
+| `space-5` | `20px` | 区块间距 |
+| `space-6` | `24px` | 大区块 / 弹窗边距 |
+| `space-7` | `32px` | 极大区块 / 页面级边距 |
 
 ---
 
@@ -267,7 +268,7 @@ tags: [design-system, liquid-glass, light-glassmorphism, impl-spec, css, mindtap
 
 ## 关联文档
 
-- [Token 落地映射表](./glass-tokens.md)
-- [组件接口规范](./component-format.md)
-- [原始素材库(reference only)](./_references/README.md)
-- [CLAUDE.md](../../CLAUDE.md)
+- [Apple HIG 参考资料](../../material/apple/liquid-glass/01-overview.md) — Liquid Glass 总览
+- [Apple HIG Materials](../../material/apple/liquid-glass/03-hig-materials.md) — Liquid Glass / Standard materials 边界
+- [`docs/projects/v1.0/prd-v1.2.md`](../v1.0/prd-v1.2.md) — 项目 PRD（设计语言描述）
+- [`CLAUDE.md`](../../../CLAUDE.md) — 项目架构与全局约束

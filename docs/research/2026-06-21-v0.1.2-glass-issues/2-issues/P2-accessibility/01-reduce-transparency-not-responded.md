@@ -2,6 +2,8 @@
 
 > **优先级**: 🟡 P2(无障碍合规,Apple HIG 强制响应)
 > **创建**: 2026-06-21
+> **状态**: ✅ **已修复**(2026-06-21 @media (prefers-reduced-transparency: reduce) 降级)
+> **修复 commit**: `9540ad9` feat(a11y): Reduce Transparency + Reduce Motion 降级
 > **关联设计**: [`../../1-design/07-accessibility.md`](../../1-design/07-accessibility.md) §二
 > **关联原始**:
 > - `0-originals/apple/hig/08-accessibility.md` §"Reduce Transparency"

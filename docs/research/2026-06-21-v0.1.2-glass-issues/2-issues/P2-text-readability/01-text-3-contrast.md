@@ -2,6 +2,7 @@
 
 > **优先级**: 🟡 P2(WCAG AA 失败,文字可读性)
 > **创建**: 2026-06-21
+> **状态**: 🟡 **待解决**(V0.1.3+ 延后,本 plan 未覆盖)
 > **关联设计**: [`../../1-design/06-color-and-contrast.md`](../../1-design/06-color-and-contrast.md) §五
 > **关联原始**:
 > - `0-originals/wcag/1.4.3-contrast-minimum.md`(4.5:1 强制)

@@ -9,7 +9,7 @@ const badgeVariants = cva(
       variant: {
         default: 'text-text-1',
         success: 'text-[var(--color-success)]',
-        inactive: 'text-text-3',
+        inactive: 'text-text-3 font-medium',
         warning: 'text-[var(--color-warning)]',
       },
     },

@@ -2,6 +2,8 @@
 
 > **优先级**: 🟠 P1(违反 4 铁律 §1 + 性能铁律 §1)
 > **创建**: 2026-06-21
+> **状态**: 🟡 **部分修复** — Card 加 `padding` prop 默认 md=16px,但 `tier="l1/l2/l3"` 仍保留(供 Dialog 等 L2/L3 容器使用)
+> **修复 commit**: `b89d8a0` fix(controls): Card padding prop
 > **关联设计**: [`../../1-design/01-glass-layer-rules.md`](../../1-design/01-glass-layer-rules.md) §二 L2 容器 vs L3 内容
 > **关联原始**:
 > - `0-originals/apple/liquid-glass/03-hig-materials.md`(4 铁律 + 节制使用)

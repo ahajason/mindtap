@@ -2,6 +2,7 @@
 
 > **优先级**: 🟡 P2(性能优化,非阻塞)
 > **创建**: 2026-06-21
+> **状态**: 🟡 **待解决**(V0.2.x 延后,本 plan 未覆盖 — 需 SwiftUI Tier 2 升级)
 > **关联设计**: [`../../1-design/08-performance.md`](../../1-design/08-performance.md) §二铁律
 > **关联原始**:
 > - `0-originals/apple/swiftui/01-key-apis.md` §2(`GlassEffectContainer` 性能铁律)

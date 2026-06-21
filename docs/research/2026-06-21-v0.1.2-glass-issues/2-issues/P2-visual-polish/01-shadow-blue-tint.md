@@ -2,6 +2,7 @@
 
 > **优先级**: 🟡 P2(视觉细节,跟 brand 调色不冲突但偏离系统)
 > **创建**: 2026-06-21
+> **状态**: 🟡 **待解决**(V0.1.3+ 延后,本 plan 未覆盖)
 > **关联设计**: [`../../1-design/01-glass-layer-rules.md`](../../1-design/01-glass-layer-rules.md) §四 玻璃深度
 > **关联原始**:
 > - `0-originals/apple/liquid-glass/03-hig-materials.md`(玻璃材质应中性)

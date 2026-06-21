@@ -2,6 +2,7 @@
 
 > **优先级**: 🟢 P2(视觉细节,辅助信息层级)
 > **创建**: 2026-06-21
+> **状态**: 🟡 **待解决**(V0.1.3+ 延后,本 plan 未覆盖)
 > **关联设计**: [`../../1-design/02-sidebar-spec.md`](../../1-design/02-sidebar-spec.md) §七 Section Header 规范
 > **关联原始**:
 > - `0-originals/apple/hig/04-sidebars.md`(Section header 清晰,不用 divider)

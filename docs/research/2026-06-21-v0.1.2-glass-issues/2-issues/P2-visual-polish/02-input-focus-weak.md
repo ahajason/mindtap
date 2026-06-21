@@ -2,6 +2,7 @@
 
 > **优先级**: 🟡 P2(可访问性边界,WCAG 边界)
 > **创建**: 2026-06-21
+> **状态**: 🟡 **待解决**(V0.1.3+ 延后,本 plan 未覆盖)
 > **关联设计**: [`../../1-design/10-focus-state-spec.md`](../../1-design/10-focus-state-spec.md) §五 Focus Ring
 > **关联原始**:
 > - `0-originals/mdn/focus-visible.md`(WCAG 1.4.11 3:1 强制)
