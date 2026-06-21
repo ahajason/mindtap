@@ -1,6 +1,8 @@
 mod commands;
 mod glass;
 
+use tauri::Manager;
+
 #[derive(Default)]
 pub struct AppState {}
 
@@ -15,6 +17,15 @@ pub fn run() {
             .level(log::LevelFilter::Info)
             .build(),
         )?;
+      }
+      if let Some(window) = app.get_webview_window("main") {
+        #[cfg(target_os = "macos")]
+        {
+          // 同步调,setup 阶段 window 已就绪
+          let _ = tauri::async_runtime::block_on(async {
+            commands::glass::glass_attach(window).await
+          });
+        }
       }
       Ok(())
     })
