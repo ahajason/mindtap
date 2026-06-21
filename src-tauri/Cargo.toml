@@ -5,37 +5,27 @@ description = "极简记录 APP · 跨平台桌面"
 authors = ["AhaJason <Jason-c1@outlook.com>"]
 license = "MIT"
 edition = "2021"
-repository = ""
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+rust-version = "1.77.2"
 
 [lib]
-# The `_lib` suffix may seem redundant but it is necessary
-# to make the lib name unique and wouldn't conflict with the bin name.
-# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
 name = "mindtap_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = { version = "2", features = [] }
+tauri-build = { version = "2.6.3", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = ["macos-private-api"] }
+tauri = { version = "2.11.3", features = ["macos-private-api"] }
+tauri-plugin-log = "2"
 tauri-plugin-opener = "2"
-tauri-plugin-global-shortcut = "2"
-tauri-plugin-autostart = "2"
-tauri-plugin-dialog = "2"
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+log = "0.4"
 rusqlite = { version = "0.32", features = ["bundled"] }
 tokio = { version = "1", features = ["sync", "time", "rt"] }
 anyhow = "1"
 thiserror = "1"
-log = { version = "0.4", features = ["std"] }
 
-# macOS-only:浮窗 WKWebView 圆角修复。CSS border-radius 不能 round native NSWindow,
-# 必须设 WKWebView.layer.cornerRadius + masksToBounds 才能让 webview 边界贴合 .floating-root
-# 的 14px 圆角。objc2 由 tauri 2 间接拉入,这里只声明为直接 dep 让代码能用。
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6"
 

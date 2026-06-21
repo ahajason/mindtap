@@ -1,0 +1,51 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/forms";
+
+@theme {
+  /* Glass 背景 - OKLCH 调色板(D-16) */
+  --color-glass-L1: oklch(1 0 0 / 0.22);
+  --color-glass-L3: oklch(1 0 0 / 0.30);
+  --color-glass-fb: oklch(0.85 0 0 / 0.72);
+  --color-glass-legacy: oklch(1 0 0 / 0.28);
+
+  /* Glass 边框 - OKLCH */
+  --color-glass-border-L1: oklch(1 0 0 / 0.32);
+  --color-glass-border-L3: oklch(1 0 0 / 0.42);
+  --color-glass-border-fb: oklch(0.9 0 0 / 0.85);
+
+  /* Backdrop utilities */
+  --backdrop-blur-glass: 24px;
+  --backdrop-blur-glass-legacy: 16px;
+  --backdrop-saturate-glass: 140%;
+  --backdrop-saturate-glass-legacy: 120%;
+  --backdrop-brightness-glass: 104%;
+
+  /* 状态色(呼吸 v6 三态) */
+  --color-status-active: #5BCBA0;
+  --color-status-paused: #F5A623;
+  --color-status-done: #98A2B3;
+
+  /* 圆角 */
+  --radius-glass-sm: 16px;
+  --radius-glass-lg: 20px;
+
+  /* 字体族(Geist Variable 已装未注册) */
+  --font-sans: "Geist Variable", system-ui, -apple-system, sans-serif;
+}
+
+/* 呼吸 v6 关键帧(D-09) */
+@layer utilities {
+  @keyframes pulse-v6 {
+    0%, 100% {
+      box-shadow: 0 0 0 4px oklch(1 0 0 / 0.18), 0 0 16px 0 oklch(0.36 0.15 165 / 0);
+      filter: brightness(1);
+    }
+    50% {
+      box-shadow: 0 0 0 16px oklch(1 0 0 / 0), 0 0 16px 4px oklch(0.36 0.15 165 / 0.5);
+      filter: brightness(1.15);
+    }
+  }
+  .animate-pulse-v6 {
+    animation: pulse-v6 2.8s ease-in-out infinite;
+  }
+}

@@ -15,12 +15,10 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "smoke:floating": "bash scripts/floating-smoke.sh"
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
-    "@fontsource-variable/geist": "^5.2.9",
     "@tailwindcss/forms": "0.5.11",
     "@tailwindcss/vite": "^4.3.1",
     "@tauri-apps/api": "^2",
@@ -29,12 +27,11 @@
     "next-themes": "^0.4.6",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-router-dom": "^7.18.0",
     "shadcn": "^4.11.0",
     "tw-animate-css": "^1.4.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.55.0",
-    "@tailwindcss/typography": "^0.5.20",
     "@tauri-apps/cli": "^2",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -44,7 +41,7 @@
     "@vitejs/plugin-react": "^4.6.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "jsdom": "^24.1.3",
+    "jsdom": "^29.1.1",
     "lucide-react": "^0.469.0",
     "postcss-nested": "^7.0.2",
     "sonner": "^1.7.4",
@@ -52,6 +49,6 @@
     "tailwindcss": "^4.3.1",
     "typescript": "~5.8.3",
     "vite": "^7.0.4",
-    "vitest": "^1.6.1"
+    "vitest": "^4.1.9"
   }
 }

@@ -110,14 +110,17 @@ status: active
 
 ### 间距体系（spacing token）
 
+> **V0.1.2 G3 修复(2026-06-21)**:编号跟 Tailwind 默认 `space-y-N = N*4px` 对齐。旧 `--spacing-5: 24px` / `--spacing-6: 32px` 编号错位,改为跟 Tailwind 一致 + 新增 `--spacing-7`。
+
 | Token | 值 | 用途 |
 | :--- | :--- | :--- |
 | `space-1` | `4px` | 极小间距（图标与文字） |
 | `space-2` | `8px` | 紧凑间距（控件内部） |
 | `space-3` | `12px` | 默认内边距（输入框 / 次按钮） |
 | `space-4` | `16px` | 标准间距（卡片内边距） |
-| `space-5` | `24px` | 区块间距 |
-| `space-6` | `32px` | 大区块 / 弹窗边距 |
+| `space-5` | `20px` | 区块间距 |
+| `space-6` | `24px` | 大区块 / 弹窗边距 |
+| `space-7` | `32px` | 极大区块 / 页面级边距 |
 
 ---
 

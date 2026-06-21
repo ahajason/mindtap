@@ -1,23 +1,23 @@
-import { Separator as SeparatorPrimitive } from "@base-ui/react/separator"
+import { forwardRef, type HTMLAttributes } from 'react';
+import { cn } from '@/lib/utils';
 
-import { cn } from "@/lib/utils"
+export interface SeparatorProps extends HTMLAttributes<HTMLDivElement> {
+  orientation?: 'horizontal' | 'vertical';
+}
 
-function Separator({
-  className,
-  orientation = "horizontal",
-  ...props
-}: SeparatorPrimitive.Props) {
-  return (
-    <SeparatorPrimitive
-      data-slot="separator"
-      orientation={orientation}
+export const Separator = forwardRef<HTMLDivElement, SeparatorProps>(
+  ({ className, orientation = 'horizontal', ...props }, ref) => (
+    <div
+      ref={ref}
+      role="separator"
+      aria-orientation={orientation}
       className={cn(
-        "shrink-0 bg-border data-horizontal:h-px data-horizontal:w-full data-vertical:w-px data-vertical:self-stretch",
+        'bg-white/60',
+        orientation === 'horizontal' ? 'h-px w-full' : 'w-px h-full',
         className
       )}
       {...props}
     />
   )
-}
-
-export { Separator }
+);
+Separator.displayName = 'Separator';

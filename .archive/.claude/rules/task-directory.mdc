@@ -1,0 +1,98 @@
+---
+description: docs/tasks/ task directory conventions
+alwaysApply: true
+---
+
+# Task Directory
+
+## Location
+
+`docs/tasks/<type>-<scope>-<short-desc>/`
+
+(与现有 `docs/specs/` / `docs/plans/` / `docs/reports/` / `docs/architecture/` 同级)
+
+## 命名
+
+`<type>-<scope>-<short-desc>` 三段式:
+
+| 段        | 取值                                                | 例                        |
+| --------- | --------------------------------------------------- | ------------------------- |
+| type      | `feat` / `fix` / `chore` / `docs` / `refactor`      | `feat` / `fix`            |
+| scope     | 业务短别名 (`F` / `S` / `T` / `DB` / `Tr`)          | `F`                       |
+| short-desc| kebab-case, 2-4 词                                  | `floating-v3-redesign`    |
+
+**注意**: slug 里的 scope 用**短别名**, 但 task.md 内部 / commit message / README 标题仍用**语义全名** (`floating` / `settings` / `db`).
+
+## task.md 极简模板 (~10 行)
+
+```markdown
+# <type>(<scope>): <subject>
+
+> 创建: YYYY-MM-DD
+
+## Why
+
+<!-- 1-3 句。痛点 + 业务场景 + 为什么不修不行 -->
+
+## What
+
+<!-- 1 句业务边界 -->
+
+## Done when
+
+- [ ] 业务行为 X 正确
+- [ ] 浮窗 DoD 4 件套全绿(如果涉及浮窗)
+- [ ] 不引入新规范违反项
+```
+
+**借鉴**:
+- K8s `doc.go` 2 行包摘要
+- Rust std `//!` 1-3 行极简密度
+- Discourse `19-service-objects.md` 结构(去掉 Files 段)
+
+## 绝不写什么 (反向规则)
+
+| 不写                | 为什么                                                    |
+| ------------------- | --------------------------------------------------------- |
+| `## Files` 段       | git 知道(`git log -- <path>` 反查)                        |
+| `## 提交记录` 段    | commit hash 会过期(squash / rebase 后失效); 鸡生蛋问题   |
+| `## 状态` 字段      | git 事实推断(看到 commit 就算"已交付")                   |
+| `## 关联` 段        | 路径自解释(`docs/tasks/<slug>/` 跟 `docs/architecture/<x>.md` 同仓同 commit) |
+| Refs: / See also:   | 不是任何标准, git 不识别                                 |
+
+## 跟 commit 的关系
+
+**模式**: task.md 跟业务代码**同 commit**.
+
+```bash
+# 步骤 1: 先写 task.md(前置)
+# 步骤 2: 写业务代码
+# 步骤 3: 同 commit
+git add docs/tasks/fix-F-floating-position-clamp/task.md \
+        src/floating/hooks/useWindowPosition.ts \
+        src/floating/hooks/useWindowPosition.test.ts \
+        src-tauri/src/floating/mod.rs
+
+git commit -m "fix(floating): F3' 位置兜底 P1 clamp 屏外 + Rust (100, 60) 兜底
+
+- macOS 菜单栏遮 ~25px, 首启 (0,0) 被遮
+- P1 clamp 防多屏拖出屏外
+- Rust 侧 mod.rs 兜底应对 Tauri 启动 race"
+```
+
+**反向追溯**(不要 commit 写 footer, 靠 `git log`):
+
+```bash
+# 查某任务的所有 commit
+git log --all --oneline -- docs/tasks/fix-F-floating-position-clamp/
+
+# 查某业务的所有 commit
+git log --all --oneline -- src/floating/ src-tauri/src/floating/ \
+  src-tauri/capabilities/floating.json
+```
+
+## 跟 `.planning/` 的关系
+
+- **保留 `.planning/`**: 作为"过程产物"(findings / progress / synthesis), git 跟踪
+- **`docs/tasks/<slug>/`**: 任务正式档, git 跟踪
+- V1.0 发版后, 现有 `.planning/2026-06-20-floating-redesign/` 归档到 `docs/archive/v1.0/.planning/`, 正式档迁到 `docs/tasks/feat-F-floating-v3-redesign/`
