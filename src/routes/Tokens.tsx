@@ -19,16 +19,20 @@ export default function TokensRoute() {
         title="Token 速查"
         description="色板 / 字号 / 间距 (静态展示,无 Live Preview)"
       />
-      <h2 className="text-lg font-semibold text-text-1 mb-3">色板</h2>
-      <div className="grid grid-cols-4 gap-3 mb-8">
-        {colors.map((c) => (
-          <Card key={c.name} tier="l1" className="p-3">
-            <div className="w-full h-12 rounded-md mb-2" style={{ background: c.value }} />
-            <div className="text-xs font-mono text-text-1">{c.name}</div>
-            <div className="text-xs font-mono text-text-3">{c.value}</div>
-          </Card>
-        ))}
-      </div>
+      <section className="glass-l3 rounded-xl p-4 space-y-6">
+        <div>
+          <h2 className="text-lg font-semibold text-text-1 mb-3">色板</h2>
+          <div className="grid grid-cols-4 gap-3">
+            {colors.map((c) => (
+              <Card key={c.name} tier="l1" className="p-3">
+                <div className="w-full h-12 rounded-md mb-2" style={{ background: c.value }} />
+                <div className="text-xs font-mono text-text-1">{c.name}</div>
+                <div className="text-xs font-mono text-text-3">{c.value}</div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

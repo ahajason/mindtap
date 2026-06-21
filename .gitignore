@@ -2,6 +2,11 @@
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
 
+# Working memory(本地 planning files,不进 git)
+task_plan.md
+findings.md
+progress.md
+
 # Logs
 logs
 *.log

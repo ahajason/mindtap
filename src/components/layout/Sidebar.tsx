@@ -1,59 +1,39 @@
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { navOrder } from '@/lib/nav-order';
 
-const sections = [
-  { title: '总览', items: [{ to: '/', label: '设计语言' }] },
-  {
-    title: '表面',
-    items: [{ to: '/surface', label: 'Card / Separator' }],
-  },
-  {
-    title: '表单',
-    items: [
-      { to: '/button', label: 'Button' },
-      { to: '/input', label: 'Input / Textarea / Label' },
-    ],
-  },
-  {
-    title: '反馈',
-    items: [{ to: '/feedback', label: 'Badge / Toast / Dialog' }],
-  },
-  { title: '浮层', items: [{ to: '/overlay', label: 'Tooltip / Tabs' }] },
-  { title: 'Token', items: [{ to: '/tokens', label: 'Token 速查' }] },
-];
-
+/**
+ * Sidebar — 玻璃容器内 floating,4 角圆,glass-l2
+ *
+ * - 用 navOrder 数据源,Lucide icon 平铺,无分组容器
+ * - 顶部简化标题"轻念 · Mindtap"(单行,无副标题)
+ * - 拖动由 NSWindow.setMovableByWindowBackground 接管,不需要 marker
+ */
 export default function Sidebar() {
   return (
-    <aside className="w-60 shrink-0 h-screen glass-l1 border-r border-white/40 p-4 flex flex-col gap-4 overflow-y-auto">
+    <aside className="w-60 ml-3 mt-10 mb-3 rounded-xl glass-l2 p-4 flex flex-col gap-3 shrink-0">
       <header>
-        <h1 className="text-lg font-semibold text-text-1">轻念 · Mindtap</h1>
-        <p className="text-xs text-text-3 mt-0.5">V0.1.0 · Style Guide</p>
+        <h1 className="text-sm font-medium text-text-2">轻念 · Mindtap</h1>
       </header>
-      <nav className="flex flex-col gap-3">
-        {sections.map((section) => (
-          <div key={section.title}>
-            <h2 className="text-xs font-medium text-text-3 px-2 mb-1">{section.title}</h2>
-            <ul className="flex flex-col gap-0.5">
-              {section.items.map((item) => (
-                <li key={item.to}>
-                  <NavLink
-                    to={item.to}
-                    end={item.to === '/'}
-                    className={({ isActive }) =>
-                      cn(
-                        'block px-2 py-1.5 rounded-md text-sm transition-all duration-base',
-                        isActive
-                          ? 'bg-white/55 text-primary font-medium'
-                          : 'text-text-2 hover:bg-white/35'
-                      )
-                    }
-                  >
-                    {item.label}
-                  </NavLink>
-                </li>
-              ))}
-            </ul>
-          </div>
+
+      <nav className="flex flex-col gap-1">
+        {navOrder.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            end={item.end}
+            className={({ isActive }) =>
+              cn(
+                'flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-all duration-base',
+                isActive
+                  ? 'bg-primary text-white font-semibold'
+                  : 'bg-white/30 text-text-2 hover:bg-white/50'
+              )
+            }
+          >
+            <item.icon className="w-4 h-4 shrink-0" aria-hidden />
+            <span>{item.label}</span>
+          </NavLink>
         ))}
       </nav>
     </aside>
