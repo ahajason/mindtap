@@ -77,6 +77,28 @@ V0.2 是**单人**本地工具，不考虑多用户 / 团队 / 多设备——�
 **Windows toast** [事实 — V0.2.2]:
 完成通知用 Windows 系统 toast——用户决策，参见 [ADR 0008](adr/0008-v0.2.2-scope-pomodoro-and-notification.md)。**toast 内容 / 交互按钮 / macOS 替代方案待 V0.2.2 spec 阶段 grill**。
 
+## V0.2.1 范围 (V0.2.1 Scope)
+
+> V0.2.1 在 V0.2.0 折叠 + 展开输(无选择)基础上,**叠加** SwitchDropdown — 在展开态加"或选择已有任务"入口,从历史 completed timer_session 中挑 task_title 复用,创建新 session 后立即 active。**不**修改 V0.2.0 折叠态,不修改 V0.2.0 状态机。
+
+**SwitchDropdown** [事实 = spec v1.1 grill 9.1-9.5]:
+V0.2.1 在**展开态**新增的子组件。仅在"无 active session"时显示;折叠态不变。数据源 = `timer_session` WHERE status='completed' GROUP BY task_title ORDER BY MAX(completed_at) DESC LIMIT 5 — 最近 5 个**不同 task_title**(末次使用倒序)。详细见 [ADR 0009](adr/0009-v0.2.1-scope-task-switching.md)。
+
+**SwitchDropdown popover overlay** [事实 = spec v1.1 grill 9.9-C]:
+V0.2.1 SwitchDropdown 展开时 = **浮层 popover** 形式(InputBar 始终在底)。SwitchDropdown 是 popover,绝对定位浮在 trigger 上方,**覆盖 InputBar 上沿**(可接受,与 V0.2.0 状态机一致 — InputBar 永远可见可切)。详见 [spec §3.1](../specs/2026-07-11-v0.2.1-task-switching-design.md)。
+
+**9.6 引导新建气泡** [事实 = spec v1.1 grill 9.6-C]:
+首次启动 / 0 条 completed session → SwitchDropdown 区段**不显示**折叠按钮;改显示引导气泡: `👋 还没有历史任务,先新建一个试试?` (点击 → 焦点跳到 InputBar)。**仅首次**(空状态)显示,有 1 条 completed 后即换为 SwitchDropdown 入口。
+
+**9.7 不引入 pending 态** [事实 = spec v1.1 grill 9.7-A]:
+V0.2.1 **沿用 V0.2.0 3 态**(active / paused / completed),**不**新增 pending 暂存态。SwitchDropdown 选中 task_title 后 → 仅前端 React state 更新 + InputBar 显示完整 task_title → 按 Enter 才落库(`status='active'`)。db 永远不出现"半提交"行。
+
+**9.8 列表滚动完整** [事实 = spec v1.1 grill 9.8-B]:
+SwitchDropdown 列表项 task_title **不截断**;列表内 `overflow-y: auto` 滚动。task_title 上限仍为 50 字符(同 V0.2.0)。
+
+**9.3 选后 = 创建新 session 复用 task_title** [事实 = spec v1.1 grill 9.3-A]:
+SwitchDropdown 选中 → InputBar 显示完整 task_title(可二次编辑)→ 用户按 Enter / 开始 → 创建新 `timer_session`(`task_title=该值`, `status='active'`, `started_at=now`, `focus_ms=0`)。**不**复用旧 session(避免历史被覆盖)。
+
 ## UI 状态 (UI State)
 
 **折叠态** [事实 = spec v1.1 grill]:
