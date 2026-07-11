@@ -93,3 +93,4 @@ docs/references/source/*/
 
 # 归档目录(2026-06-21 起);还原: git checkout pre-archive-2026-06-21 -- .
 .archive/
+/.archive/docs/archive
