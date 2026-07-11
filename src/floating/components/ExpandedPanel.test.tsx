@@ -70,3 +70,12 @@ describe("ExpandedPanel", () => {
     expect(screen.queryByPlaceholderText(/我现在在做什么/)).toBeNull();
   });
 });
+describe("ExpandedPanel 折叠触发", () => {
+  it("失焦 (blur) 触发 onCancel (V0.2 spec §3.2 失焦 = 折叠)", () => {
+    const onCancel = vi.fn();
+    render(<ExpandedPanel {...baseProps} onCancel={onCancel} />);
+    const input = screen.getByPlaceholderText(/我现在在做什么/) as HTMLInputElement;
+    fireEvent.blur(input);
+    expect(onCancel).toHaveBeenCalledTimes(1);
+  });
+});
