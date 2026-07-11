@@ -21,17 +21,35 @@ export function FoldedBar({ taskTitle, focusMs, status, onClick }: FoldedBarProp
 
   return (
     <div
-      className="glass-l2 flex cursor-pointer items-center justify-between rounded-full px-3 py-1 text-[12px]"
-      role="status"
-      aria-label={
-        isEmpty
-          ? "Mindtap 计时器，未开始任务"
-          : `当前任务 ${title}，已计时 ${formatFocusMs(focusMs)}`
-      }
+      className="relative w-full"
       onClick={onClick}
     >
-      <span className="truncate pr-2">{title}</span>
-      <span className="tabular-nums">{formatFocusMs(focusMs)}</span>
+      <div
+        className="flex h-9 w-full cursor-pointer items-center gap-2 rounded-full px-3 py-1.5 text-text-1 backdrop-blur-md transition-colors hover:bg-white/30"
+        style={{
+          background: "rgba(255, 255, 255, 0.45)",
+          boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 4px 16px rgba(0, 30, 80, 0.06)",
+        }}
+        role="status"
+        aria-label={
+          isEmpty
+            ? "Mindtap 计时器，未开始任务"
+            : `当前任务 ${title}，已计时 ${formatFocusMs(focusMs)}`
+        }
+      >
+        <span
+          className="min-w-0 max-w-[220px] flex-1 truncate text-[13px] font-medium"
+          title={title}
+        >
+          {title}
+        </span>
+        <span
+          className="shrink-0 rounded-md px-1.5 py-0.5 font-mono text-[13px] font-semibold tabular-nums text-primary"
+          aria-label="已计时"
+        >
+          {formatFocusMs(focusMs)}
+        </span>
+      </div>
     </div>
   );
 }

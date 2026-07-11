@@ -1,4 +1,5 @@
 use tauri::{Manager, WindowEvent};
+use tauri_plugin_dialog::{DialogExt, MessageDialogButtons};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 
 pub mod commands;
@@ -8,34 +9,73 @@ pub mod error;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             if cfg!(debug_assertions) {
-                app.handle().plugin(
+                if let Err(e) = app.handle().plugin(
                     tauri_plugin_log::Builder::default()
                         .level(log::LevelFilter::Info)
                         .build(),
-                )?;
+                ) {
+                    eprintln!("[setup] log plugin init failed: {e}");
+                }
             }
 
             let toggle_shortcut =
                 Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::Space);
-            app.handle().plugin(
+            if let Err(e) = app.handle().plugin(
                 tauri_plugin_global_shortcut::Builder::new()
                     .with_handler(move |app, _shortcut, event| {
                         if event.state() == ShortcutState::Pressed {
                             if let Some(floating) = app.get_webview_window("floating") {
-                                let visible = floating.is_visible().unwrap_or(false);
-                                if visible {
-                                    let _ = floating.hide();
-                                } else {
-                                    let _ = floating.show();
+                                match floating.is_visible() {
+                                    Ok(true) => {
+                                        let _ = floating.hide();
+                                    }
+                                    Ok(false) => {
+                                        let _ = floating.show();
+                                    }
+                                    Err(err) => {
+                                        eprintln!("[shortcut] floating is_visible failed: {err}");
+                                        let _ = floating.show();
+                                    }
                                 }
+                            } else {
+                                eprintln!("[shortcut] floating window not found");
                             }
                         }
                     })
                     .build(),
-            )?;
-            app.global_shortcut().register(toggle_shortcut)?;
+            ) {
+                eprintln!("[setup] global-shortcut plugin init failed");
+                let _ = app
+                    .dialog()
+                    .message("全局快捷键插件初始化失败, 浮窗快捷键可能无效。")
+                    .title("初始化错误")
+                    .buttons(MessageDialogButtons::Ok)
+                    .show(|_| {});
+            }
+
+            match app.global_shortcut().register(toggle_shortcut) {
+                Ok(()) => {
+                    eprintln!("[setup] global shortcut Ctrl+Shift+Space registered");
+                }
+                Err(err) => {
+                    eprintln!(
+                        "[setup] global shortcut Ctrl+Shift+Space register failed: {err} (likely hotkey conflict, see spec §3.8)"
+                    );
+                    let _ = app
+                        .dialog()
+                        .message(format!(
+                            "Ctrl+Shift+Space 已被其他应用占用, 浮窗无法用快捷键显示/隐藏。\n\n\
+                            建议: 在系统设置里关闭其他应用(如中文输入法)的全局快捷键, 或编辑 src-tauri/src/lib.rs:21 改其他 Modifier。\n\n\
+                            错误详情: {err}"
+                        ))
+                        .title("快捷键冲突")
+                        .buttons(MessageDialogButtons::Ok)
+                        .show(|_| {});
+                }
+            }
 
             if let Some(main) = app.get_webview_window("main") {
                 let main_clone = main.clone();
@@ -47,8 +87,24 @@ pub fn run() {
                 });
             }
 
-            let db_state = db::init(app.handle()).map_err(|e| format!("db init failed: {e}"))?;
-            app.manage(db_state);
+            let db_state = db::init(app.handle());
+            match db_state {
+                Ok(state) => {
+                    app.manage(state);
+                }
+                Err(e) => {
+                    eprintln!("[setup] db init failed: {e}");
+                    let _ = app
+                        .dialog()
+                        .message(format!(
+                            "数据库初始化失败: {e}\n\n\
+                            应用无法启动。请删除 %APPDATA%\\com.mindtap.desktop\\projects.db 后重试。"
+                        ))
+                        .title("数据库错误")
+                        .buttons(MessageDialogButtons::Ok)
+                        .show(|_| {});
+                }
+            }
 
             Ok(())
         })

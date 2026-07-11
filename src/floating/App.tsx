@@ -22,7 +22,7 @@ const TASK_TITLE_MAX = 50;
 
 const FRAME_W = 320;
 const FRAME_H = 36;
-const POS_MARGIN = 8;
+const POS_MARGIN = 16;
 const DEFAULT_X = 100;
 const DEFAULT_Y = 60;
 const POS_KEY = "floating-position";
@@ -60,13 +60,11 @@ export function FloatingApp() {
               pos.y - (EXPANDED_H - FOLDED_H),
             ),
           );
-          await win.setFocusable(true);
         } else {
           await win.setSize(new LogicalSize(FOLDED_W, FOLDED_H));
-          await win.setFocusable(false);
         }
       } catch (err) {
-        console.error("[resize/focus] failed", err);
+        console.error("[resize/position] failed", err);
       }
     })();
     return () => {
@@ -159,24 +157,24 @@ export function FloatingApp() {
   }
 
   useEffect(() => {
-    function handleMove(e: MouseEvent) {
+    const onMouseMove = (e: MouseEvent) => {
       if (!dragRef.current?.isDragging) return;
       const dx = e.clientX - dragRef.current.startX;
       const dy = e.clientY - dragRef.current.startY;
       if (Math.hypot(dx, dy) >= DRAG_THRESHOLD_PX) dragRef.current.dragStarted = true;
-    }
-    function handleUp() {
+    };
+    const onMouseUp = () => {
       if (!dragRef.current) return;
       if (!dragRef.current.dragStarted) {
         setExpanded(true);
       }
       dragRef.current = null;
-    }
-    document.addEventListener("mousemove", handleMove);
-    document.addEventListener("mouseup", handleUp);
+    };
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
     return () => {
-      document.removeEventListener("mousemove", handleMove);
-      document.removeEventListener("mouseup", handleUp);
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
     };
   }, []);
 
