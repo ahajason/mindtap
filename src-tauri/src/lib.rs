@@ -1,4 +1,4 @@
-use tauri::Manager;
+use tauri::{Manager, WindowEvent};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 
 pub mod commands;
@@ -40,6 +40,16 @@ pub fn run() {
         )?;
       app.global_shortcut().register(toggle_shortcut)?;
 
+      if let Some(main) = app.get_webview_window("main") {
+        let main_clone = main.clone();
+        main.on_window_event(move |event| {
+          if let WindowEvent::CloseRequested { api, .. } = event {
+            api.prevent_close();
+            let _ = main_clone.hide();
+          }
+        });
+      }
+
       let db_state = db::init(&app.handle())
         .map_err(|e| format!("db init failed: {e}"))?;
       app.manage(db_state);
@@ -54,6 +64,7 @@ pub fn run() {
       commands::timer_session::timer_session_pause,
       commands::timer_session::timer_session_resume,
       commands::timer_session::timer_session_complete,
+      commands::app::app_exit,
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
