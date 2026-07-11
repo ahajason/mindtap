@@ -136,8 +136,8 @@ mod tests {
 
     fn fresh_db() -> Connection {
         let id = COUNTER.fetch_add(1, Ordering::SeqCst);
-        let path = std::env::temp_dir()
-            .join(format!("mindtap_test_{}_{}.db", std::process::id(), id));
+        let path =
+            std::env::temp_dir().join(format!("mindtap_test_{}_{}.db", std::process::id(), id));
         let _ = std::fs::remove_file(&path);
         let conn = Connection::open(&path).unwrap();
         conn.execute_batch(crate::db::schema::CREATE_SQL).unwrap();
@@ -166,7 +166,10 @@ mod tests {
     fn get_active_returns_only_active() {
         let conn = fresh_db();
         let a = create(&conn, "A".into()).unwrap();
-        assert!(create(&conn, "B".into()).is_err(), "partial unique index must reject 2nd active");
+        assert!(
+            create(&conn, "B".into()).is_err(),
+            "partial unique index must reject 2nd active"
+        );
         let active = get_active(&conn).unwrap().unwrap();
         assert_eq!(active.id, a.id);
         assert_eq!(active.task_title, "A");
