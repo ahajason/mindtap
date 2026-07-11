@@ -59,6 +59,7 @@ pub fn run() {
             commands::timer_session::timer_session_pause,
             commands::timer_session::timer_session_resume,
             commands::timer_session::timer_session_complete,
+            commands::timer_session::timer_session_list_recent_task_titles,
             commands::app::app_exit,
         ])
         .run(tauri::generate_context!())

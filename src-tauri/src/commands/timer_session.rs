@@ -66,3 +66,12 @@ pub fn timer_session_complete(
     let conn = state.0.lock().map_err(|e| AppError(e.to_string()))?;
     timer_session::complete(&conn, id)
 }
+
+#[tauri::command]
+pub fn timer_session_list_recent_task_titles(
+    limit: Option<i64>,
+    state: State<DbState>,
+) -> Result<Vec<timer_session::TaskTitleRec>, AppError> {
+    let conn = state.0.lock().map_err(|e| AppError(e.to_string()))?;
+    timer_session::list_recent_task_titles(&conn, limit.unwrap_or(5))
+}
