@@ -194,11 +194,6 @@ export function FloatingApp() {
     }
   }
 
-  function handleContextMenu(e: React.MouseEvent) {
-    e.preventDefault();
-    setContextMenu({ x: e.clientX, y: e.clientY });
-  }
-
   useEffect(() => {
     if (!contextMenu) return;
     const handleClick = () => setContextMenu(null);
@@ -213,7 +208,6 @@ export function FloatingApp() {
         data-tauri-drag-region="deep"
         className="floating-root folded flex items-center gap-2 px-2 py-1"
         onMouseDown={handleMouseDown}
-        onContextMenu={handleContextMenu}
       >
         <StatusDot status={session?.status ?? null} />
         <FoldedBar
