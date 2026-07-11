@@ -95,7 +95,8 @@ export function FloatingApp() {
   if (!expanded) {
     return (
       <div
-        className="flex items-center gap-2 px-2 py-1"
+        data-testid="floating-root-folded"
+        className="floating-root folded flex items-center gap-2 px-2 py-1"
         onContextMenu={handleContextMenu}
       >
         <StatusDot status={session?.status ?? null} />
@@ -117,35 +118,37 @@ export function FloatingApp() {
   }
 
   return (
-    <ExpandedPanel
-      taskTitle={taskTitle}
-      onTaskTitleChange={setTaskTitle}
-      onStart={handleStart}
-      onCancel={() => {
-        setTaskTitle("");
-        setExpanded(false);
-      }}
-      maxLength={TASK_TITLE_MAX}
-      submitting={submitting}
-      activeSession={session}
-      onPause={async () => {
-        if (!session) return;
-        const { api } = await import("../../lib/tauri-bridge");
-        await api.timerSession.pause(session.id);
-        await refresh();
-      }}
-      onResume={async () => {
-        if (!session) return;
-        const { api } = await import("../../lib/tauri-bridge");
-        await api.timerSession.resume(session.id);
-        await refresh();
-      }}
-      onComplete={async () => {
-        if (!session) return;
-        const { api } = await import("../../lib/tauri-bridge");
-        await api.timerSession.complete(session.id);
-        await refresh();
-      }}
-    />
+    <div className="floating-root expanded" data-testid="floating-root-expanded">
+      <ExpandedPanel
+        taskTitle={taskTitle}
+        onTaskTitleChange={setTaskTitle}
+        onStart={handleStart}
+        onCancel={() => {
+          setTaskTitle("");
+          setExpanded(false);
+        }}
+        maxLength={TASK_TITLE_MAX}
+        submitting={submitting}
+        activeSession={session}
+        onPause={async () => {
+          if (!session) return;
+          const { api } = await import("../../lib/tauri-bridge");
+          await api.timerSession.pause(session.id);
+          await refresh();
+        }}
+        onResume={async () => {
+          if (!session) return;
+          const { api } = await import("../../lib/tauri-bridge");
+          await api.timerSession.resume(session.id);
+          await refresh();
+        }}
+        onComplete={async () => {
+          if (!session) return;
+          const { api } = await import("../../lib/tauri-bridge");
+          await api.timerSession.complete(session.id);
+          await refresh();
+        }}
+      />
+    </div>
   );
 }
