@@ -31,20 +31,17 @@ _Avoid_: "done"（V1.0 task 状态机用的是 done，V0.2 timer_session 用 com
 
 ## 状态机 (State Machine)
 
-**3 态状态机** [事实 = spec v1.1]: V0.2.0 `timer_session` **不需要 `pending` 态**（V0.2.0 流程：展开 → 输入 → 点"开始" → 直接 active）。V0.2.1 "选已有 timer_session" 时再加 `pending` 暂存态。
+**3 态状态机** [事实 = spec v1.1]: V0.2.0 `timer_session` **3 态状态机**（active / paused / completed），**不**包含 `pending` 暂存态。V0.2.1 spec v1.1 grill 9.7-A 锁定 **不引入 pending** — SwitchDropdown 选中仅前端 state,按 Enter 才落库 `status='active'`。
 
 ```
-                    ┌──────────────┐
-                    │              │
-                    ▼              │
-              [pending] ───► [active] ──[pause]──► [paused]
-                                │  ▲                  │
-                                │  └────[resume]─────┘
-                                │
-                              [complete]
-                                │
-                                ▼
-                            [completed]
+              [active] ──[pause]──► [paused]
+                  ▲  │                  │
+                  │  └────[resume]─────┘
+                  │
+                [complete]
+                  │
+                  ▼
+              [completed]
 ```
 
 ## 行为 (Behavior)
