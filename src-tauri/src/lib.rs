@@ -47,10 +47,6 @@ pub fn run() {
                 });
             }
 
-            if let Some(floating) = app.get_webview_window("floating") {
-                let _ = floating.set_focusable(false);
-            }
-
             let db_state = db::init(app.handle()).map_err(|e| format!("db init failed: {e}"))?;
             app.manage(db_state);
 
