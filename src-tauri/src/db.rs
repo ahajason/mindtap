@@ -12,7 +12,10 @@ pub mod timer_session;
 pub struct DbState(pub Mutex<Connection>);
 
 pub fn init(app: &AppHandle) -> Result<DbState, AppError> {
-    let dir = app.path().app_data_dir().map_err(|e| AppError(e.to_string()))?;
+    let dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| AppError(e.to_string()))?;
     std::fs::create_dir_all(&dir)?;
     let db_path = dir.join("projects.db");
     let conn = Connection::open(&db_path)?;
