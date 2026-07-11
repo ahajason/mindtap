@@ -144,6 +144,7 @@ export function FloatingApp() {
         if (!session) return;
         const updated = await api.timerSession.complete(session.id);
         setSession(updated);
+        setExpanded(false);
       }}
     />
   );
