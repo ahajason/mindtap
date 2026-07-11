@@ -12,6 +12,11 @@ export type TimerSession = {
   updated_at: number;
 };
 
+export type TaskTitleRec = {
+  task_title: string;
+  last_used: number;
+};
+
 async function invoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
   return tauriInvoke<T>(cmd, args);
 }
@@ -29,5 +34,9 @@ export const api = {
     pause: (id: number) => invoke<TimerSession>("timer_session_pause", { id }),
     resume: (id: number) => invoke<TimerSession>("timer_session_resume", { id }),
     complete: (id: number) => invoke<TimerSession>("timer_session_complete", { id }),
+    listRecentTaskTitles: (limit?: number) =>
+      invoke<TaskTitleRec[]>("timer_session_list_recent_task_titles", {
+        limit: limit ?? 5,
+      }),
   },
 };
