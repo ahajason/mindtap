@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>V2-C · Editorial — The Stackdesk Review</title>
+<meta name="viewport" content="width=1440" />
+<style>
+  *,*::before,*::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Charter", "Iowan Old Style", "Source Serif Pro", "Georgia", serif;
+    color: #2a221c;
+    background: #efe7d8;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    min-width: 1280px;
+  }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; cursor: pointer; border: 0; background: transparent; color: inherit; }
+
+  /* ---------- Page surface (warm paper) ---------- */
+  .page {
+    min-height: 100vh;
+    background:
+      radial-gradient(800px 500px at 15% 0%, #e6d4b6 0%, transparent 60%),
+      radial-gradient(900px 700px at 100% 80%, #d8c19a 0%, transparent 60%),
+      linear-gradient(180deg, #f1e8d6 0%, #e8dcc1 100%);
+    padding: 0;
+  }
+
+  /* ---------- Top chrome (GLASS) ---------- */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    display: grid; grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 14px 36px;
+    background: rgba(245,238,222,.7);
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
+    border-bottom: 1px solid rgba(60,40,20,.14);
+  }
+  .masthead {
+    font-family: "Charter", "Iowan Old Style", Georgia, serif;
+    font-size: 22px; font-weight: 700; letter-spacing: -0.01em;
+    text-align: center;
+  }
+  .masthead .amp { font-style: italic; font-weight: 400; opacity: .7; }
+  .topbar .left, .topbar .right { display: flex; align-items: center; gap: 14px; font-family: -apple-system, "SF Pro Text", sans-serif; font-size: 12px; color: #5a4838; }
+  .topbar .right { justify-content: flex-end; }
+  .topbar .right .pill {
+    padding: 4px 10px; border-radius: 999px;
+    background: rgba(60,40,20,.08); color: #3a2c1f;
+    font-family: -apple-system, "SF Pro Text", sans-serif; font-size: 11.5px;
+  }
+
+  /* ---------- Article header ---------- */
+  .article {
+    max-width: 1200px; margin: 0 auto;
+    padding: 36px 36px 24px;
+  }
+  .kicker {
+    font-family: -apple-system, "SF Pro Text", sans-serif;
+    font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+    color: #8a6a4a; font-weight: 600;
+  }
+  .hed {
+    font-size: 68px; line-height: 1.02; font-weight: 700;
+    letter-spacing: -0.025em; margin: 14px 0 16px;
+    max-width: 18ch;
+  }
+  .hed em { font-style: italic; font-weight: 400; color: #6a4a2a; }
+  .standfirst {
+    font-size: 19px; line-height: 1.55; color: #4a3a2a;
+    max-width: 60ch; font-weight: 400;
+  }
+  .byline {
+    display: flex; align-items: center; gap: 14px;
+    margin-top: 22px; padding: 12px 0;
+    border-top: 1px solid rgba(60,40,20,.2);
+    border-bottom: 1px solid rgba(60,40,20,.2);
+    font-family: -apple-system, "SF Pro Text", sans-serif;
+    font-size: 12px; color: #5a4838;
+  }
+  .byline .author { font-weight: 600; color: #2a221c; }
+  .byline .dot { color: #8a6a4a; }
+  .byline .right { margin-left: auto; display: flex; gap: 8px; }
+  .byline .pill {
+    padding: 3px 9px; border-radius: 999px;
+    background: rgba(60,40,20,.08); color: #3a2c1f;
+    font-size: 11px;
+  }
+
+  /* ---------- KPI strip (as marginal numbers, like a financial page) ---------- */
+  .kpis {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    border-top: 1px solid rgba(60,40,20,.2);
+    border-bottom: 1px solid rgba(60,40,20,.2);
+    margin-top: 32px;
+  }
+  .kpi {
+    padding: 22px 24px 22px 0;
+    border-right: 1px solid rgba(60,40,20,.15);
+  }
+  .kpi:last-child { border-right: 0; }
+  .kpi .label {
+    font-family: -apple-system, "SF Pro Text", sans-serif;
+    font-size: 10.5px; text-transform: uppercase; letter-spacing: .1em;
+    color: #8a6a4a; font-weight: 600;
+  }
+  .kpi .value {
+    font-size: 44px; font-weight: 700; letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    margin: 6px 0 2px;
+  }
+  .kpi .caption { font-size: 13px; color: #5a4838; line-height: 1.5; }
+  .kpi .delta { font-size: 12px; font-family: -apple-system, "SF Pro Text", sans-serif; margin-top: 4px; font-weight: 500; }
+  .delta.up { color: #2c6a3a; }
+  .delta.down { color: #a83a2a; }
+  .kpi .spark { margin-top: 10px; }
+
+  /* ---------- Body grid ---------- */
+  .body {
+    display: grid; grid-template-columns: 1.4fr 1fr;
+    gap: 48px; margin-top: 36px;
+  }
+  .col h2 {
+    font-size: 28px; font-weight: 700; letter-spacing: -0.015em;
+    margin: 0 0 4px;
+  }
+  .col .sub {
+    font-family: -apple-system, "SF Pro Text", sans-serif;
+    font-size: 12px; color: #5a4838; margin-bottom: 18px;
+  }
+
+  /* Drop cap on first paragraph */
+  .lede p:first-of-type::first-letter {
+    font-size: 64px; line-height: .85; font-weight: 700;
+    float: left; padding: 4px 10px 0 0; color: #6a4a2a;
+  }
+  .lede p {
+    font-size: 16px; line-height: 1.65; margin: 0 0 14px;
+    color: #2a221c;
+  }
+  .lede p strong { font-weight: 600; }
+
+  /* Pullquote */
+  .pullquote {
+    margin: 24px 0;
+    padding: 18px 0 18px 22px;
+    border-left: 3px solid #6a4a2a;
+    font-size: 22px; line-height: 1.4; font-style: italic;
+    color: #3a2c1f;
+  }
+  .pullquote .attrib {
+    display: block; margin-top: 8px;
+    font-style: normal; font-family: -apple-system, sans-serif;
+    font-size: 12px; color: #5a4838;
+  }
+
+  /* Table styled like a print table */
+  table.tbl {
+    width: 100%; border-collapse: collapse;
+    font-family: -apple-system, "SF Pro Text", sans-serif;
+    font-size: 13px;
+  }
+  table.tbl thead th {
+    text-align: left;
+    font-family: -apple-system, "SF Pro Text", sans-serif;
+    font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em;
+    color: #8a6a4a; font-weight: 600;
+    padding: 8px 0; border-bottom: 1.5px solid #3a2c1f;
+  }
+  table.tbl tbody td {
+    padding: 12px 0; border-bottom: 1px solid rgba(60,40,20,.15);
+    vertical-align: top;
+  }
+  table.tbl td.num {
+    text-align: right; font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+  table.tbl .deal-name { font-weight: 600; color: #2a221c; }
+  table.tbl .deal-id { font-size: 11px; color: #8a6a4a; margin-top: 2px; }
+
+  .stage {
+    display: inline-block; font-size: 10.5px;
+    padding: 1px 7px; border-radius: 2px;
+    text-transform: uppercase; letter-spacing: .06em; font-weight: 600;
+  }
+  .stage.commit  { background: #2c6a3a; color: #f3eadb; }
+  .stage.neg     { background: #a05a1a; color: #f3eadb; }
+  .stage.disco   { background: #1f4d6e; color: #f3eadb; }
+  .stage.closed  { background: #6a5a4a; color: #f3eadb; }
+
+  /* Activity list (numbered, newspaper style) */
+  .feed {
+    border-top: 1.5px solid #3a2c1f;
+    font-family: -apple-system, "SF Pro Text", sans-serif;
+  }
+  .feed .row {
+    display: grid; grid-template-columns: 38px 60px 1fr;
+    gap: 12px; padding: 12px 0;
+    border-bottom: 1px solid rgba(60,40,20,.15);
+    align-items: flex-start;
+  }
+  .feed .num {
+    font-family: "Charter", Georgia, serif; font-size: 18px; font-weight: 700;
+    color: #6a4a2a;
+  }
+  .feed .when { font-size: 11px; color: #8a6a4a; padding-top: 4px; }
+  .feed .what { font-size: 13.5px; line-height: 1.55; color: #2a221c; }
+  .feed .what b { font-weight: 600; }
+
+  /* In-text chart */
+  .chart {
+    margin: 24px 0; padding: 16px;
+    background: rgba(255,250,238,.5);
+    border: 1px solid rgba(60,40,20,.15);
+  }
+  .chart h4 {
+    margin: 0 0 8px; font-size: 14px; font-weight: 700;
+    font-family: -apple-system, "SF Pro Text", sans-serif;
+    color: #2a221c;
+  }
+  .chart .sub {
+    font-family: -apple-system, "SF Pro Text", sans-serif;
+    font-size: 11.5px; color: #8a6a4a; margin-bottom: 12px;
+  }
+  .chart svg { width: 100%; height: auto; }
+
+  /* Filters as a sort bar */
+  .sortbar {
+    display: flex; align-items: center; gap: 10px;
+    font-family: -apple-system, "SF Pro Text", sans-serif;
+    font-size: 12px; color: #5a4838;
+    padding: 10px 0; border-bottom: 1px solid rgba(60,40,20,.15);
+  }
+  .sortbar .chip {
+    padding: 3px 9px; border: 1px solid rgba(60,40,20,.2); border-radius: 2px;
+    color: #3a2c1f;
+  }
+  .sortbar .chip.on { background: #3a2c1f; color: #f3eadb; border-color: #3a2c1f; }
+  .sortbar .right { margin-left: auto; }
+
+  /* Footer */
+  .colophon {
+    max-width: 1200px; margin: 48px auto 0;
+    padding: 20px 36px 36px;
+    border-top: 1.5px solid #3a2c1f;
+    font-family: -apple-system, "SF Pro Text", sans-serif;
+    font-size: 11.5px; color: #5a4838;
+    display: flex; justify-content: space-between; gap: 20px;
+  }
+  .colophon b { color: #2a221c; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <!-- Top chrome (GLASS) -->
+  <div class="topbar">
+    <div class="left">
+      <span>VOL. III · ISSUE 24</span>
+      <span>·</span>
+      <span>MONDAY, JUNE 14, 2026</span>
+    </div>
+    <div class="masthead">The Stackdesk <span class="amp">Review</span></div>
+    <div class="right">
+      <span>Q2 2026</span>
+      <span class="pill">Northwind workspace</span>
+    </div>
+  </div>
+
+  <article class="article">
+    <div class="kicker">Pipeline · Quarterly Review</div>
+    <h1 class="hed">A quietly excellent <em>quarter</em>, led by two deals that refused to slip.</h1>
+    <p class="standfirst">
+      MRR crossed <strong>$184k</strong> for the first time since the company was founded, with a single enterprise logo accounting for a third of the gain. Inside: the deals that defined the quarter, the renewals that almost didn't, and what the next ninety days look like.
+    </p>
+
+    <div class="byline">
+      <span>By <span class="author">M. Ortega</span>, Head of Revenue Operations</span>
+      <span class="dot">·</span>
+      <span>6 min read</span>
+      <span class="dot">·</span>
+      <span>Last sync 2 min ago</span>
+      <div class="right">
+        <span class="pill">Share</span>
+        <span class="pill">Export PDF</span>
+        <span class="pill">⌘P Print</span>
+      </div>
+    </div>
+
+    <!-- KPI strip — editorial layout -->
+    <div class="kpis">
+      <div class="kpi">
+        <div class="label">MRR</div>
+        <div class="value">$184,260</div>
+        <div class="caption">All-time high; +$11,120 from Q1 close.</div>
+        <div class="delta up">▲ 6.4% vs. last 28 days</div>
+        <svg class="spark" viewBox="0 0 120 22" preserveAspectRatio="none" style="height:22px"><polyline fill="none" stroke="#2c6a3a" stroke-width="1.5" points="0,18 14,17 28,17 42,13 56,14 70,10 84,11 98,7 120,5"/></svg>
+      </div>
+      <div class="kpi">
+        <div class="label">Net new ARR</div>
+        <div class="value">$42,800</div>
+        <div class="caption">Driven by Soren Press expansion.</div>
+        <div class="delta up">▲ 11.2% MoM</div>
+        <svg class="spark" viewBox="0 0 120 22" preserveAspectRatio="none" style="height:22px"><polyline fill="none" stroke="#2c6a3a" stroke-width="1.5" points="0,20 16,17 32,18 48,12 64,13 80,8 96,6 120,3"/></svg>
+      </div>
+      <div class="kpi">
+        <div class="label">Logo churn</div>
+        <div class="value">2.1%</div>
+        <div class="caption">Four of seven at-risk accounts renewed.</div>
+        <div class="delta down">▼ 0.4 pp</div>
+        <svg class="spark" viewBox="0 0 120 22" preserveAspectRatio="none" style="height:22px"><polyline fill="none" stroke="#a83a2a" stroke-width="1.5" points="0,8 16,9 32,7 48,11 64,9 80,13 96,15 120,17"/></svg>
+      </div>
+      <div class="kpi">
+        <div class="label">Open pipeline</div>
+        <div class="value">$1.27M</div>
+        <div class="caption">Weighted by stage probability.</div>
+        <div class="delta up">▲ $94k WoW</div>
+        <svg class="spark" viewBox="0 0 120 22" preserveAspectRatio="none" style="height:22px"><polyline fill="none" stroke="#2c6a3a" stroke-width="1.5" points="0,16 14,15 28,16 42,11 56,12 70,9 84,6 98,5 120,3"/></svg>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="body">
+
+      <!-- Left col: prose + pullquote + chart -->
+      <div class="col">
+        <h2>The week that was</h2>
+        <div class="sub">Mon 8 Jun — Sun 14 Jun · week 24</div>
+
+        <div class="lede">
+          <p>For a quarter that <strong>started with a flat forecast</strong>, the closing stretch has been a study in execution. Maple &amp; Finch, the procurement-led enterprise account that reps have been chasing for fourteen months, finally turned the corner at 09:14 on Monday morning — proposal accepted, awaiting legal redlines. The $182,000 deal is the largest single new logo of the year.</p>
+
+          <p>Cedar Robotics, which slipped from a "should-close" to "will-likely-slip" in the back half of May, was rescued by a late add of four seats pushed through by R. Okafor. The deal re-closed at $96,500, up from an original $86,000. <em>Net of credits, this is the cleanest expansion of the quarter.</em></p>
+
+          <div class="pullquote">
+            "The numbers tell a story: when the team protects at-risk renewals instead of chasing net new, both line items move."
+            <span class="attrib">— L. Tanaka, Senior AE</span>
+          </div>
+
+          <p>Halberd Logistics remains the one live disappointment. The decision committee postponed on Sunday evening; the deal sits paused until July 2. With $58,200 of weighted pipeline resting on a single committee meeting, the team is rightly nervous. The mitigant: a clean Discovery-stage pipeline that is the strongest in three quarters.</p>
+        </div>
+
+        <div class="chart">
+          <h4>Pipeline by stage, weighted</h4>
+          <div class="sub">Dollars in thousands · stacked by deal · as of 09:41 today</div>
+          <svg viewBox="0 0 520 160" preserveAspectRatio="xMidYMid meet">
+            <!-- axis -->
+            <line x1="40" y1="140" x2="510" y2="140" stroke="#3a2c1f" stroke-width="1"/>
+            <line x1="40" y1="20" x2="40" y2="140" stroke="#3a2c1f" stroke-width="1"/>
+            <!-- bars -->
+            <g>
+              <rect x="60"  y="40"  width="60" height="100" fill="#2c6a3a"/>
+              <rect x="140" y="68"  width="60" height="72"  fill="#a05a1a"/>
+              <rect x="220" y="92"  width="60" height="48"  fill="#1f4d6e"/>
+              <rect x="300" y="105" width="60" height="35"  fill="#1f4d6e" opacity=".65"/>
+              <rect x="380" y="118" width="60" height="22"  fill="#6a5a4a"/>
+            </g>
+            <!-- labels -->
+            <g font-family="Georgia, serif" font-size="10" fill="#3a2c1f" text-anchor="middle">
+              <text x="90"  y="156">Commit</text>
+              <text x="170" y="156">Negotiate</text>
+              <text x="250" y="156">Discovery</text>
+              <text x="330" y="156">Qualified</text>
+              <text x="410" y="156">Closed</text>
+            </g>
+            <g font-family="Georgia, serif" font-size="10" fill="#3a2c1f" text-anchor="end">
+              <text x="34" y="142">0</text>
+              <text x="34" y="92">200</text>
+              <text x="34" y="42">400</text>
+            </g>
+            <g font-family="Georgia, serif" font-size="11" font-weight="700" fill="#2a221c" text-anchor="middle">
+              <text x="90"  y="32">$420k</text>
+              <text x="170" y="60">$296k</text>
+              <text x="250" y="84">$184k</text>
+              <text x="330" y="97">$112k</text>
+              <text x="410" y="110">$58k</text>
+            </g>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Right col: deal ledger + activity -->
+      <div class="col">
+        <h2>Top opportunities</h2>
+        <div class="sub">Sorted by close date · weighted</div>
+
+        <div class="sortbar">
+          <span class="chip on">All stages</span>
+          <span class="chip">Owner: anyone</span>
+          <span class="chip">Close: this month</span>
+          <span class="right"><span>12 deals · $1.27M weighted</span></span>
+        </div>
+
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th style="width:42%">Account</th>
+              <th>Stage</th>
+              <th style="text-align:right">Amount</th>
+              <th style="text-align:right">Close</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <div class="deal-name">Maple &amp; Finch</div>
+                <div class="deal-id">L. Tanaka · 85% prob.</div>
+              </td>
+              <td><span class="stage commit">Commit</span></td>
+              <td class="num">$182,000</td>
+              <td class="num">Jun 18</td>
+            </tr>
+            <tr>
+              <td>
+                <div class="deal-name">Cedar Robotics</div>
+                <div class="deal-id">R. Okafor · 78% prob.</div>
+              </td>
+              <td><span class="stage commit">Commit</span></td>
+              <td class="num">$96,500</td>
+              <td class="num">Jun 21</td>
+            </tr>
+            <tr>
+              <td>
+                <div class="deal-name">Northwind Co.</div>
+                <div class="deal-id">P. Adler · 60% prob.</div>
+              </td>
+              <td><span class="stage neg">Negotiate</span></td>
+              <td class="num">$74,000</td>
+              <td class="num">Jun 27</td>
+            </tr>
+            <tr>
+              <td>
+                <div class="deal-name">Halberd Logistics</div>
+                <div class="deal-id">M. Ortega · 55% prob.</div>
+              </td>
+              <td><span class="stage neg">Negotiate</span></td>
+              <td class="num">$58,200</td>
+              <td class="num">Jul 02</td>
+            </tr>
+            <tr>
+              <td>
+                <div class="deal-name">Soren Press</div>
+                <div class="deal-id">L. Tanaka · 25% prob.</div>
+              </td>
+              <td><span class="stage disco">Discovery</span></td>
+              <td class="num">$22,000</td>
+              <td class="num">Jul 11</td>
+            </tr>
+            <tr>
+              <td>
+                <div class="deal-name">Bramble &amp; Co.</div>
+                <div class="deal-id">R. Okafor · 30% prob.</div>
+              </td>
+              <td><span class="stage disco">Discovery</span></td>
+              <td class="num">$18,400</td>
+              <td class="num">Jul 18</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2 style="margin-top:36px">Activity, today</h2>
+        <div class="sub">A running ledger · last updated 09:41</div>
+
+        <div class="feed">
+          <div class="row">
+            <div class="num">i.</div>
+            <div class="when">09:14</div>
+            <div class="what"><b>Maple &amp; Finch</b> — proposal accepted by Procurement; redlines from Legal expected 11:00.</div>
+          </div>
+          <div class="row">
+            <div class="num">ii.</div>
+            <div class="when">08:42</div>
+            <div class="what"><b>R. Okafor</b> moved <b>Cedar Robotics</b> → Commit ($96.5k).</div>
+          </div>
+          <div class="row">
+            <div class="num">iii.</div>
+            <div class="when">08:11</div>
+            <div class="what"><b>Halberd Logistics</b> paused: committee postponed to Jul 2.</div>
+          </div>
+          <div class="row">
+            <div class="num">iv.</div>
+            <div class="when">07:50</div>
+            <div class="what">Auto-billed <b>14 accounts</b> for Q3 ($46,820 MRR).</div>
+          </div>
+          <div class="row">
+            <div class="num">v.</div>
+            <div class="when">Yest</div>
+            <div class="what"><b>Soren Press</b> upgraded to Growth (3 → 11 seats).</div>
+          </div>
+          <div class="row">
+            <div class="num">vi.</div>
+            <div class="when">Yest</div>
+            <div class="what">2 new leads from <b>Northwind Reseller</b>; routed to L. Tanaka &amp; P. Adler.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </article>
+
+  <footer class="colophon">
+    <span><b>Stackdesk</b> · The Review is a daily auto-generated report for paying workspaces.</span>
+    <span>Printed from data as of 09:41, Mon 14 Jun 2026 · build 2026.6.14-rc2</span>
+  </footer>
+</div>
+
+</body>
+</html>

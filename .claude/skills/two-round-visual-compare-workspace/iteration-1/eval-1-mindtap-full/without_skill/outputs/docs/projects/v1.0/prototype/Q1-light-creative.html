@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Round 1 · Q1 · Light + Creative</title>
+<style>
+  :root {
+    --bg-a: #f0e6d8;
+    --bg-b: #d8c9a8;
+    --bg-c: #b89968;
+    --ink: #1c1812;
+    --ink-2: #5a4f3e;
+    --glass-tint: rgba(255, 250, 240, 0.45);
+    --glass-border: rgba(255, 255, 255, 0.6);
+    --glass-shadow: rgba(80, 60, 30, 0.18);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 1440px;
+    height: 900px;
+    font-family: -apple-system, "SF Pro Display", "PingFang SC", sans-serif;
+    background: linear-gradient(135deg, var(--bg-a) 0%, var(--bg-b) 45%, var(--bg-c) 100%);
+    overflow: hidden;
+    color: var(--ink);
+  }
+  .stage {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+  /* Decorative blobs (soft, organic — photo-like) */
+  .blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.65;
+  }
+  .blob.b1 { width: 520px; height: 520px; background: #e8c89a; top: -120px; right: -100px; }
+  .blob.b2 { width: 380px; height: 380px; background: #c4d8b8; bottom: -80px; left: 20%; }
+  .blob.b3 { width: 280px; height: 280px; background: #f4d8c0; top: 35%; left: -60px; }
+  /* Top label */
+  .meta {
+    position: absolute;
+    top: 28px;
+    left: 32px;
+    z-index: 20;
+    color: var(--ink-2);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .meta .h { font-weight: 600; color: var(--ink); }
+  /* Window frame (mac) */
+  .window {
+    position: absolute;
+    top: 80px;
+    left: 100px;
+    width: 1240px;
+    height: 760px;
+    border-radius: 18px;
+    background: rgba(255, 250, 240, 0.18);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 30px 80px var(--glass-shadow), 0 0 0 1px rgba(0,0,0,0.04);
+    overflow: hidden;
+  }
+  /* Window title bar — glass tool-bar (system-provided look) */
+  .titlebar {
+    height: 44px;
+    background: rgba(255, 250, 240, 0.35);
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+  }
+  .traffic { display: flex; gap: 8px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot.r { background: #ff5f57; }
+  .dot.y { background: #febc2e; }
+  .dot.g { background: #28c840; }
+  .toolbar-group {
+    margin-left: 24px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: rgba(255, 250, 240, 0.5);
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.5);
+  }
+  .toolbar-spacer { width: 1px; height: 16px; background: rgba(0,0,0,0.08); margin: 0 8px; }
+  .t-icon { width: 22px; height: 22px; border-radius: 5px; display: grid; place-items: center; color: var(--ink-2); font-size: 13px; }
+  .titlebar .search {
+    margin-left: auto;
+    width: 240px;
+    height: 26px;
+    border-radius: 13px;
+    background: rgba(255,250,240,0.5);
+    border: 1px solid rgba(255,255,255,0.4);
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    color: var(--ink-2);
+    font-size: 12px;
+  }
+  /* Body: split layout */
+  .body { display: grid; grid-template-columns: 240px 1fr 320px; height: 716px; }
+  /* Sidebar — clear glass variant on rich background */
+  .sidebar {
+    background: rgba(255, 250, 240, 0.22);
+    backdrop-filter: blur(40px) saturate(160%);
+    -webkit-backdrop-filter: blur(40px) saturate(160%);
+    border-right: 1px solid rgba(255,255,255,0.3);
+    padding: 24px 16px;
+  }
+  .brand { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 28px; }
+  .nav-section { font-size: 10px; text-transform: uppercase; letter-spacing: 0.16em; color: var(--ink-2); margin: 18px 8px 8px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 8px;
+    color: var(--ink); font-size: 13px;
+  }
+  .nav-item.active { background: rgba(255, 250, 240, 0.55); border: 1px solid rgba(255,255,255,0.5); }
+  .nav-item .ic { width: 18px; text-align: center; opacity: 0.7; }
+  /* Content — note list (no glass on content) */
+  .content {
+    padding: 24px 36px;
+    overflow: hidden;
+  }
+  .h1 { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 4px; }
+  .sub { font-size: 13px; color: var(--ink-2); margin-bottom: 22px; }
+  .note-card {
+    background: rgba(255, 252, 245, 0.55);
+    border: 1px solid rgba(255,255,255,0.55);
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.4) inset, 0 4px 14px rgba(120,90,40,0.08);
+  }
+  .note-card .date { font-size: 11px; color: var(--ink-2); margin-bottom: 4px; }
+  .note-card .title { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .note-card .body { font-size: 13px; color: var(--ink-2); line-height: 1.5; }
+  .tag-row { display: flex; gap: 6px; margin-top: 10px; }
+  .tag { font-size: 10px; padding: 3px 8px; border-radius: 8px; background: rgba(180,140,80,0.15); color: #6a5424; }
+  /* Inspector */
+  .inspector {
+    background: rgba(255, 250, 240, 0.18);
+    backdrop-filter: blur(40px) saturate(160%);
+    -webkit-backdrop-filter: blur(40px) saturate(160%);
+    border-left: 1px solid rgba(255,255,255,0.3);
+    padding: 24px 18px;
+  }
+  .inspector h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--ink-2); margin: 14px 0 8px; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 99px; background: rgba(255,250,240,0.6); border: 1px solid rgba(255,255,255,0.5); font-size: 11px; margin: 0 6px 6px 0; }
+  /* FAB — floating glass (regular variant) */
+  .fab {
+    position: absolute;
+    right: 60px;
+    bottom: 80px;
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: rgba(255, 250, 240, 0.6);
+    backdrop-filter: blur(30px) saturate(200%);
+    -webkit-backdrop-filter: blur(30px) saturate(200%);
+    border: 1px solid rgba(255,255,255,0.7);
+    box-shadow: 0 10px 30px rgba(120,90,40,0.25), 0 0 0 1px rgba(0,0,0,0.04);
+    display: grid; place-items: center;
+    font-size: 24px; color: var(--ink);
+  }
+  /* Bottom badge (sidebar tab bar) */
+  .dock {
+    position: absolute;
+    bottom: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 250, 240, 0.55);
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    border: 1px solid rgba(255,255,255,0.55);
+    border-radius: 18px;
+    padding: 8px;
+    display: flex; gap: 6px;
+    box-shadow: 0 10px 30px rgba(120,90,40,0.18);
+  }
+  .dock .ditem { width: 36px; height: 36px; border-radius: 12px; display: grid; place-items: center; font-size: 16px; color: var(--ink-2); }
+  .dock .ditem.active { background: rgba(255,250,240,0.85); color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+
+  <div class="meta">
+    <span class="h">Q1 · Light + Creative</span> &nbsp;·&nbsp; clear glass on warm photo-like background &nbsp;·&nbsp; 1440×900
+  </div>
+
+  <div class="window">
+    <div class="titlebar">
+      <div class="traffic">
+        <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+      </div>
+      <div class="toolbar-group">
+        <div class="t-icon">＋</div>
+        <div class="t-icon">⌘</div>
+      </div>
+      <div class="toolbar-spacer"></div>
+      <div class="toolbar-group">
+        <div class="t-icon">♡</div>
+        <div class="t-icon">★</div>
+        <div class="t-icon">⤴</div>
+      </div>
+      <div class="search">🔍 &nbsp;搜索笔记…</div>
+    </div>
+
+    <div class="body">
+      <aside class="sidebar">
+        <div class="brand">mindtap</div>
+        <div class="nav-section">库</div>
+        <div class="nav-item active"><span class="ic">✦</span>全部</div>
+        <div class="nav-item"><span class="ic">❀</span>灵感</div>
+        <div class="nav-item"><span class="ic">◐</span>打卡</div>
+        <div class="nav-item"><span class="ic">▢</span>待办</div>
+        <div class="nav-section">视图</div>
+        <div class="nav-item"><span class="ic">≡</span>时间线</div>
+        <div class="nav-item"><span class="ic">◇</span>标签</div>
+      </aside>
+
+      <main class="content">
+        <div class="h1">最近的念头</div>
+        <div class="sub">14 条记录 · 本周 6 条</div>
+
+        <div class="note-card">
+          <div class="date">今天 · 09:42</div>
+          <div class="title">读到「留白也是一种表达」</div>
+          <div class="body">雨天的咖啡馆很安静，墙上那幅画的留白让人觉得舒服。开始意识到不必把所有事情都说尽。</div>
+          <div class="tag-row">
+            <span class="tag">灵感</span><span class="tag">随笔</span>
+          </div>
+        </div>
+        <div class="note-card">
+          <div class="date">昨天 · 22:15</div>
+          <div class="title">连续第 14 天·早起 30 分钟</div>
+          <div class="body">今天读了半章《活法》。窗外的天色是那种刚刚亮起来的浅蓝。</div>
+          <div class="tag-row">
+            <span class="tag">打卡</span><span class="tag">阅读</span>
+          </div>
+        </div>
+        <div class="note-card">
+          <div class="date">昨天 · 18:08</div>
+          <div class="title">周末想去那个陶艺市集</div>
+          <div class="body">记得带相机。</div>
+          <div class="tag-row">
+            <span class="tag">待办</span>
+          </div>
+        </div>
+      </main>
+
+      <aside class="inspector">
+        <div class="nav-section" style="margin-top:0">本月回顾</div>
+        <h3>情绪</h3>
+        <div class="pill">◌ 平静 4</div>
+        <div class="pill">◌ 充实 3</div>
+        <div class="pill">◌ 期待 2</div>
+        <h3>常用标签</h3>
+        <div class="pill">#灵感 8</div>
+        <div class="pill">#随笔 5</div>
+        <div class="pill">#阅读 4</div>
+        <div class="pill">#待办 6</div>
+        <h3>连接</h3>
+        <div class="pill">↗ 灵感 × 阅读</div>
+        <div class="pill">↗ 打卡 × 待办</div>
+      </aside>
+    </div>
+  </div>
+
+  <div class="fab">＋</div>
+  <div class="dock">
+    <div class="ditem active">✦</div>
+    <div class="ditem">≡</div>
+    <div class="ditem">▢</div>
+    <div class="ditem">◯</div>
+  </div>
+</div>
+</body>
+</html>

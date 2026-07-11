@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Two-Round Visual Compare · SaaS Dashboard</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #0a0a0c; color: #e4e4e7; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif; min-height: 100%; }
+  body { padding: 56px 64px 80px; max-width: 1280px; margin: 0 auto; }
+  h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
+  h1 .sub { display: block; font-size: 13px; color: #71717a; font-weight: 500; margin-top: 6px; line-height: 1.5; max-width: 720px; }
+  .crumb { font-size: 11px; color: #52525b; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px; font-weight: 600; }
+  h2 { font-size: 16px; font-weight: 600; margin: 40px 0 16px; }
+  .rounds { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .round {
+    display: block; border-radius: 14px; overflow: hidden; border: 1px solid #27272a;
+    background: #18181b; text-decoration: none; color: inherit;
+    transition: transform 120ms ease, border-color 120ms ease;
+  }
+  .round:hover { transform: translateY(-2px); border-color: #3f3f46; }
+  .round .thumb { aspect-ratio: 1280 / 800; background: #0e0e10; position: relative; overflow: hidden; }
+  .round .thumb iframe { width: 200%; height: 200%; border: 0; transform: scale(0.5); transform-origin: 0 0; pointer-events: none; }
+  .round .meta { padding: 14px 18px; }
+  .round .meta .label { font-size: 10.5px; color: #71717a; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
+  .round .meta .title { font-size: 15px; font-weight: 600; margin-top: 2px; }
+  .round .meta .desc { font-size: 12px; color: #a1a1aa; margin-top: 4px; line-height: 1.5; }
+  .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #1a1a1e; display: flex; gap: 14px; font-size: 12px; color: #52525b; }
+  .footer a { color: #a1a1aa; text-decoration: none; }
+  .footer a:hover { color: #e4e4e7; }
+  .grid-12 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-top: 12px; }
+  .grid-12 .cell { aspect-ratio: 480 / 360; background: #18181b; border: 1px solid #27272a; border-radius: 8px; position: relative; overflow: hidden; }
+  .grid-12 .cell iframe { width: 200%; height: 200%; border: 0; transform: scale(0.5); transform-origin: 0 0; pointer-events: none; }
+  .grid-12 .cell .lbl { position: absolute; top: 6px; left: 6px; padding: 2px 6px; border-radius: 4px; background: rgba(228,228,231,0.92); color: #18181b; font-size: 9.5px; font-weight: 700; letter-spacing: 0.05em; z-index: 2; }
+  .grid-12 .cell .lbl.dark { background: rgba(24,24,27,0.85); color: #e4e4e7; }
+  .grid-12 .cell a { position: absolute; inset: 0; z-index: 1; }
+</style>
+</head>
+<body>
+  <div class="crumb">SaaS Dashboard · Two-Round Visual Compare</div>
+  <h1>Pick a visual direction for the dashboard
+    <span class="sub">The previous design was purple-pink gradient + centered glass card + 28px headline — AI slop. This set runs two rounds: a density matrix first, then four full pages with real content underneath the glass. Glass is for controls and navigation only; content cards stay flat.</span>
+  </h1>
+
+  <h2>Round 1 · Glass density matrix (8 tiles)</h2>
+  <a class="round" href="compare.html">
+    <div class="thumb"><iframe src="compare.html" loading="lazy"></iframe></div>
+    <div class="meta">
+      <div class="label">Q1–Q4 + D5–D8</div>
+      <div class="title">4×4 glass density matrix</div>
+      <div class="desc">Light vs Heavy (density) × Creative vs Strict (shape). Plus 4 immersive variants. Each tile is a 480×360 SaaS dashboard slice with real KPI / table / chips under the glass.</div>
+    </div>
+  </a>
+  <div class="grid-12">
+    <div class="cell"><span class="lbl">Q1</span><a href="Q1-light-creative.html" target="_blank"></a><iframe src="Q1-light-creative.html" loading="lazy"></iframe></div>
+    <div class="cell"><span class="lbl">Q2</span><a href="Q2-light-strict.html" target="_blank"></a><iframe src="Q2-light-strict.html" loading="lazy"></iframe></div>
+    <div class="cell"><span class="lbl">Q3</span><a href="Q3-heavy-creative.html" target="_blank"></a><iframe src="Q3-heavy-creative.html" loading="lazy"></iframe></div>
+    <div class="cell"><span class="lbl dark">Q4</span><a href="Q4-heavy-strict.html" target="_blank"></a><iframe src="Q4-heavy-strict.html" loading="lazy"></iframe></div>
+    <div class="cell"><span class="lbl dark">D5</span><a href="D5-immersive.html" target="_blank"></a><iframe src="D5-immersive.html" loading="lazy"></iframe></div>
+    <div class="cell"><span class="lbl">D6</span><a href="D6-productive.html" target="_blank"></a><iframe src="D6-productive.html" loading="lazy"></iframe></div>
+    <div class="cell"><span class="lbl">D7</span><a href="D7-adaptive.html" target="_blank"></a><iframe src="D7-adaptive.html" loading="lazy"></iframe></div>
+    <div class="cell"><span class="lbl">D8</span><a href="D8-expressive.html" target="_blank"></a><iframe src="D8-expressive.html" loading="lazy"></iframe></div>
+  </div>
+
+  <h2>Round 2 · Four full direction pages (1280×800)</h2>
+  <div class="rounds">
+    <a class="round" href="v2-a-macos26.html" target="_blank">
+      <div class="thumb"><iframe src="v2-a-macos26.html" loading="lazy"></iframe></div>
+      <div class="meta">
+        <div class="label">A · System-native</div>
+        <div class="title">macOS 26 Tahoe — billing overview</div>
+        <div class="desc">Heavy glass on system colors. KPI cards, grouped bar chart, activity feed, invoice table. Sans display.</div>
+      </div>
+    </a>
+    <a class="round" href="v2-b-linear.html" target="_blank">
+      <div class="thumb"><iframe src="v2-b-linear.html" loading="lazy"></iframe></div>
+      <div class="meta">
+        <div class="label">B · Dev-tool dark</div>
+        <div class="title">Linear / Raycast — issue inbox</div>
+        <div class="desc">Subtle glass on near-black. Filter chips, dense task flow, glass inspector with timeline, monospace status bar.</div>
+      </div>
+    </a>
+    <a class="round" href="v2-c-editorial.html" target="_blank">
+      <div class="thumb"><iframe src="v2-c-editorial.html" loading="lazy"></iframe></div>
+      <div class="meta">
+        <div class="label">C · Editorial</div>
+        <div class="title">"Quarterly" — magazine issue</div>
+        <div class="desc">Delicate glass on warm beige. Serif dropcap + 2-col body, pull quote, embedded dashboard numbers, sidebar of cards.</div>
+      </div>
+    </a>
+    <a class="round" href="v2-d-engdoc.html" target="_blank">
+      <div class="thumb"><iframe src="v2-d-engdoc.html" loading="lazy"></iframe></div>
+      <div class="meta">
+        <div class="label">D · Engineering doc</div>
+        <div class="title">API reference — POST /v1/invoices</div>
+        <div class="desc">Sparse glass on warm white. TOC, monospace body, prop table, ASCII tree, live response panel.</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="footer">
+    <a href="compare.html">Round 1 — 4×4 matrix</a>
+    <a href="compare-v2.html">Round 2 — 4 directions</a>
+    <a href="../compare-method.md">Methodology</a>
+  </div>
+</body>
+</html>

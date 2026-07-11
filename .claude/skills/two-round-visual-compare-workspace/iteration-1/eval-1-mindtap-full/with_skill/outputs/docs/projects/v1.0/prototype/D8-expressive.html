@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=480,initial-scale=1">
+<title>D8 · Expressive (tinted glass)</title>
+<style>
+  /* ===== D8: Expressive =====
+     染色玻璃：玻璃层带 accent tint，作为强调。
+     适合：状态徽章、情绪标签、关键操作。
+  */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 480px; height: 360px; overflow: hidden; font-family: -apple-system, "SF Pro Display", sans-serif; }
+  body {
+    background:
+      radial-gradient(80% 60% at 30% 30%, #e8e0d0 0%, transparent 60%),
+      radial-gradient(70% 50% at 80% 80%, #d6c8b8 0%, transparent 60%),
+      #efe7d8;
+    color: #2a2620;
+  }
+  /* 内容层：纸面卡片（不玻璃） */
+  .paper {
+    position: absolute;
+    inset: 60px 24px 70px 24px;
+    background: #fdf9f0;
+    border: 1px solid rgba(80,50,20,.08);
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .paper h3 { font-size: 13px; font-weight: 700; color: #2a2620; margin-bottom: 8px; }
+  .paper p { font-size: 11.5px; line-height: 1.6; color: #5a4a35; }
+  .paper .feel {
+    margin-top: 12px;
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+  .paper .feel span {
+    font-size: 10px; padding: 3px 8px; border-radius: 999px;
+    background: #f0e3cd; color: #6b5234;
+  }
+  /* 染色玻璃顶栏（暖色 accent） */
+  .topbar-glass {
+    position: absolute;
+    top: 14px; left: 24px; right: 24px; height: 36px;
+    background: rgba(201, 169, 120, 0.32);  /* tinted glass */
+    backdrop-filter: saturate(200%) blur(18px);
+    -webkit-backdrop-filter: saturate(200%) blur(18px);
+    border-radius: 12px;
+    border: 1px solid rgba(201, 169, 120, .45);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.5),
+      inset 0 -1px 0 rgba(120,80,40,.08);
+    display: flex; align-items: center; padding: 0 14px; gap: 10px;
+  }
+  .topbar-glass .label {
+    font-size: 11.5px; font-weight: 600; color: #4a3a22;
+  }
+  .topbar-glass .spacer { flex: 1; }
+  .topbar-glass .ico {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: rgba(255,255,255,.3);
+    display: grid; place-items: center;
+    font-size: 11px; color: #4a3a22;
+  }
+  /* 染色浮动按钮（强调：温暖琥珀） */
+  .fab-glass {
+    position: absolute; right: 24px; bottom: 18px;
+    width: 48px; height: 48px; border-radius: 50%;
+    background: rgba(201, 130, 60, 0.6);  /* tinted amber */
+    backdrop-filter: saturate(220%) blur(20px);
+    -webkit-backdrop-filter: saturate(220%) blur(20px);
+    border: 1px solid rgba(255,255,255,.45);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.5),
+      inset 0 -1px 0 rgba(80,40,10,.18),
+      0 10px 22px -6px rgba(160,80,30,.4);
+    display: grid; place-items: center;
+    font-size: 22px; font-weight: 300; color: #fff;
+  }
+  /* 浮动菜单（染色玻璃，向上展开） */
+  .menu-glass {
+    position: absolute; right: 24px; bottom: 78px;
+    width: 168px;
+    background: rgba(255, 248, 232, 0.7);
+    backdrop-filter: saturate(200%) blur(20px);
+    -webkit-backdrop-filter: saturate(200%) blur(20px);
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,.5);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.7),
+      0 10px 24px -8px rgba(120,80,40,.3);
+    padding: 6px;
+  }
+  .menu-glass .item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 10px; border-radius: 8px;
+    font-size: 11.5px; color: #3a2e1a;
+  }
+  .menu-glass .item .ic {
+    width: 20px; height: 20px;
+    display: grid; place-items: center;
+    color: #c9823c;
+    font-size: 12px;
+  }
+  .label-q {
+    position: absolute; top: 8px; right: 24px;
+    font-size: 10px; letter-spacing: .15em; color: #8a7250;
+  }
+</style>
+</head>
+<body>
+  <!-- 控制层：染色玻璃顶栏 -->
+  <div class="topbar-glass">
+    <div class="label">晚念 · evening</div>
+    <div class="spacer"></div>
+    <div class="ico">⌕</div>
+    <div class="ico">♡</div>
+  </div>
+
+  <!-- 内容层：纸面 -->
+  <div class="paper">
+    <h3>今天 · 周日</h3>
+    <p>下午去了老巷子，阳光斜进来。喝了杯凉茶，发了一会儿呆。想起去年这个时候。</p>
+    <div class="feel">
+      <span>安静</span>
+      <span>温暖</span>
+      <span>怀念</span>
+    </div>
+  </div>
+
+  <!-- 染色浮动菜单 -->
+  <div class="menu-glass">
+    <div class="item"><div class="ic">✎</div>灵感记录</div>
+    <div class="item"><div class="ic">✓</div>每日打卡</div>
+    <div class="item"><div class="ic">☆</div>待办事项</div>
+  </div>
+
+  <!-- 染色浮动按钮 -->
+  <div class="fab-glass">+</div>
+
+  <div class="label-q">D8 · EXPRESSIVE</div>
+</body>
+</html>

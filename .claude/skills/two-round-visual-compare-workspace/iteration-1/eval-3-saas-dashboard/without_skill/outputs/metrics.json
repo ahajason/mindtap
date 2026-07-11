@@ -1,0 +1,73 @@
+{
+  "project": "Stackdesk SaaS dashboard — visual direction",
+  "round": "two-round visual comparison (V1 glass density + V2 context directions)",
+  "methodology": "Hand-built, no external skill execution. Adheres to Apple HIG materials principle: glass is for controls/navigation only, never for content cards.",
+  "files": {
+    "index.html": {
+      "path": "index.html",
+      "size_bytes": 7120,
+      "role": "Directory — entry point linking V1 + V2 with thumbnails"
+    },
+    "v1-glass-density/compare.html": {
+      "path": "v1-glass-density/compare.html",
+      "size_bytes": 44206,
+      "role": "V1 main — 4 density variants (A ultra-thin, B regular, C thick, D hybrid) of the same dashboard over the same warm-sunset background, shown 2x2"
+    },
+    "v1-glass-density/index.html": {
+      "path": "v1-glass-density/index.html",
+      "size_bytes": 5853,
+      "role": "V1 overview — 4 cards summarizing each density variant"
+    },
+    "v2-contexts/compare-v2.html": {
+      "path": "v2-contexts/compare-v2.html",
+      "size_bytes": 8833,
+      "role": "V2 overview — 4 direction cards with thumbnail iframes, each opens in its own tab"
+    },
+    "v2-contexts/v2-a-macos26.html": {
+      "path": "v2-contexts/v2-a-macos26.html",
+      "size_bytes": 28109,
+      "role": "V2-A: macOS 26 Tahoe — heavy glass on warm sunset wallpaper, SF Pro, full command palette modal"
+    },
+    "v2-contexts/v2-b-linear.html": {
+      "path": "v2-contexts/v2-b-linear.html",
+      "size_bytes": 27119,
+      "role": "V2-B: developer-tool dark (Linear/Vercel style) — icon rail, subtle glass topbar, JetBrains Mono accents, near-black background"
+    },
+    "v2-contexts/v2-c-editorial.html": {
+      "path": "v2-contexts/v2-c-editorial.html",
+      "size_bytes": 20227,
+      "role": "V2-C: editorial / magazine — Charter serif, drop cap, pull quote, SVG bar chart, roman-numeral activity feed, warm paper"
+    },
+    "v2-contexts/v2-d-engdoc.html": {
+      "path": "v2-contexts/v2-d-engdoc.html",
+      "size_bytes": 17750,
+      "role": "V2-D: engineering doc / operator reference — JetBrains Mono everywhere, prop API table, ASCII resource tree, terminal output"
+    }
+  },
+  "total_files": 8,
+  "total_size_bytes": 159217,
+  "round_1_variants": 4,
+  "round_2_variants": 4,
+  "shared_data": {
+    "kpis": ["MRR $184,260 +6.4%", "Net new ARR $42,800 +11.2%", "Logo churn 2.1% -0.4pp", "Open pipeline $1.27M +$94k"],
+    "deals": ["Maple & Finch $182k Commit", "Cedar Robotics $96.5k Commit", "Northwind Co. $74k Negotiate", "Halberd Logistics $58.2k Negotiate", "Soren Press $22k Discovery", "Bramble & Co. $18.4k Discovery"],
+    "activity_events": 6,
+    "narrative": "Same Q2 pipeline review for Northwind workspace, week 24 2026"
+  },
+  "anti_ai_slop_checks": {
+    "purple_pink_gradient_present": false,
+    "centered_hero_card_with_480px": false,
+    "headline_at_28px": false,
+    "emoji_as_decoration": false,
+    "glass_on_content_cards": false,
+    "real_dashboard_components_present": true,
+    "real_content_not_placeholder": true,
+    "distinct_fonts_per_direction": true,
+    "self_contained_no_external_assets": true,
+    "v2_pages_meet_1280x800_minimum": true
+  },
+  "decisions_to_make": {
+    "v1_question": "How much glass? (A ultra-thin / B regular / C thick / D hybrid)",
+    "v2_question": "What context is this product? (A system-native macOS 26 / B dark dev tool / C editorial / D engineering doc)"
+  }
+}

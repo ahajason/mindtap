@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=480,initial-scale=1">
+<title>D5 · Immersive (single hue)</title>
+<style>
+  /* ===== D5: Immersive (single hue) =====
+     单色沉浸：玻璃漂浮在单一色调的丰富背景上。
+     适合：写日记、思考、安静时刻。
+  */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 480px; height: 360px; overflow: hidden; font-family: -apple-system, "SF Pro Display", serif; }
+  body {
+    background:
+      radial-gradient(80% 60% at 50% 30%, #d4e0e8 0%, transparent 70%),
+      radial-gradient(100% 80% at 50% 100%, #88a4bd 0%, transparent 60%),
+      #6a89a3;
+    color: #fff;
+  }
+  /* 内容层：单色云团（不玻璃） */
+  .haze {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(30% 20% at 20% 70%, rgba(255,255,255,.18), transparent 70%),
+      radial-gradient(35% 25% at 75% 35%, rgba(255,255,255,.12), transparent 70%),
+      radial-gradient(40% 30% at 50% 90%, rgba(255,255,255,.08), transparent 70%);
+  }
+  /* 内容文字：漂浮在背景上，不玻璃 */
+  .thoughts {
+    position: absolute;
+    inset: 60px 32px 70px 32px;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .thoughts .day {
+    font-size: 10px; letter-spacing: .2em; color: rgba(255,255,255,.75);
+    text-transform: uppercase; margin-bottom: 14px;
+  }
+  .thoughts h2 {
+    font-family: "Charter", "Georgia", serif;
+    font-size: 26px; font-weight: 500; font-style: italic;
+    line-height: 1.2; letter-spacing: -.01em;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,.18);
+  }
+  /* 玻璃顶栏（清晰、单色） */
+  .topbar-glass {
+    position: absolute;
+    top: 14px; left: 24px; right: 24px; height: 36px;
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: saturate(160%) blur(20px);
+    -webkit-backdrop-filter: saturate(160%) blur(20px);
+    border-radius: 18px;
+    border: 1px solid rgba(255,255,255,.3);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.4),
+      inset 0 -1px 0 rgba(0,0,0,.05);
+    display: flex; align-items: center; padding: 0 16px; gap: 8px;
+  }
+  .topbar-glass .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: rgba(255,255,255,.9);
+  }
+  .topbar-glass .label {
+    font-size: 11px; font-weight: 500; color: #fff; letter-spacing: .04em;
+  }
+  .topbar-glass .spacer { flex: 1; }
+  .topbar-glass .ico {
+    font-size: 12px; color: rgba(255,255,255,.9);
+    width: 24px; height: 24px;
+    display: grid; place-items: center;
+    border-radius: 50%;
+    background: rgba(255,255,255,.1);
+  }
+  /* 浮动玻璃按钮（清晰变体） */
+  .fab-glass {
+    position: absolute; left: 50%; bottom: 18px;
+    transform: translateX(-50%);
+    height: 36px; padding: 0 18px; border-radius: 18px;
+    background: rgba(255, 255, 255, 0.22);
+    backdrop-filter: saturate(160%) blur(20px);
+    -webkit-backdrop-filter: saturate(160%) blur(20px);
+    border: 1px solid rgba(255,255,255,.4);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.5),
+      0 6px 16px -4px rgba(0,0,0,.25);
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 600; color: #fff; letter-spacing: .02em;
+  }
+  .label-q {
+    position: absolute; top: 8px; right: 24px;
+    font-size: 9.5px; letter-spacing: .2em; color: rgba(255,255,255,.55);
+  }
+</style>
+</head>
+<body>
+  <div class="haze"></div>
+
+  <!-- 内容层 -->
+  <div class="thoughts">
+    <div class="day">SUNDAY · 14 JUNE</div>
+    <h2>"安静的时刻，<br/>是给自己的礼物。"</h2>
+  </div>
+
+  <!-- 控制层：玻璃顶栏 -->
+  <div class="topbar-glass">
+    <div class="dot"></div>
+    <div class="label">晚念</div>
+    <div class="spacer"></div>
+    <div class="ico">⌕</div>
+    <div class="ico">⋯</div>
+  </div>
+
+  <!-- 控制层：浮动胶囊按钮 -->
+  <div class="fab-glass">+ 写下此刻</div>
+
+  <div class="label-q">D5 · IMMERSIVE</div>
+</body>
+</html>

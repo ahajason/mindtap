@@ -1,0 +1,105 @@
+{
+  "eval_id": 2,
+  "skill_used": "two-round-visual-compare",
+  "round1_skipped": true,
+  "round1_skip_reason": "User said '我心里有方向了' — has direction. Skill rule: skip Round 1 if user has direction.",
+  "round2_produced": true,
+  "files": [
+    {
+      "path": "docs/projects/v1.0/prototype/v2-a-macos26.html",
+      "label": "A · macOS 26 Tahoe (heavy native glass)",
+      "user_specified": true,
+      "lean": "hard",
+      "size_kb": 17.3,
+      "viewport": "1440x900",
+      "glass_locations": ["topbar", "sidebar", "toolbar", "right inspector", "footbar"],
+      "typography": "SF Pro sans (system)",
+      "content_shape": "long-form note + data table + inspector"
+    },
+    {
+      "path": "docs/projects/v1.0/prototype/v2-b-linear.html",
+      "label": "B · Developer-tool dark (Linear/Vercel/Raycast)",
+      "user_specified": false,
+      "lean": "moderate",
+      "size_kb": 23.3,
+      "viewport": "1440x900",
+      "glass_locations": ["topbar", "right inspector"],
+      "typography": "JetBrains Mono + Inter",
+      "content_shape": "issue with sub-tasks + checklist + command palette"
+    },
+    {
+      "path": "docs/projects/v1.0/prototype/v2-c-editorial.html",
+      "label": "C · Editorial / Magazine (warm serif)",
+      "user_specified": false,
+      "lean": "moderate",
+      "size_kb": 16.1,
+      "viewport": "1440x900",
+      "glass_locations": ["topbar", "sidebar", "right column"],
+      "typography": "Charter + Fraunces (serif)",
+      "content_shape": "feature article + dropcap + pullquote + figure"
+    },
+    {
+      "path": "docs/projects/v1.0/prototype/v2-d-engdoc.html",
+      "label": "D · Engineering doc (dense mono on dark)",
+      "user_specified": true,
+      "lean": "hard",
+      "size_kb": 21.4,
+      "viewport": "1440x900",
+      "glass_locations": ["topbar", "sidebar", "right rail"],
+      "typography": "JetBrains Mono (monospace end-to-end)",
+      "content_shape": "API reference + signature + prop table + ASCII tree"
+    },
+    {
+      "path": "docs/projects/v1.0/prototype/compare-v2.html",
+      "label": "compare-v2.html (entry page, 2x2 grid + comparison table)",
+      "user_specified": false,
+      "lean": "n/a",
+      "size_kb": 21.0,
+      "viewport": "1440x900",
+      "glass_locations": [],
+      "typography": "Inter + JetBrains Mono",
+      "content_shape": "overview + thumb previews + axis comparison table"
+    }
+  ],
+  "directories": [
+    "docs/projects/v1.0/prototype/"
+  ],
+  "root_output_dir": "/home/jason/workspace/mindtap/.claude/skills/two-round-visual-compare-workspace/iteration-1/eval-2-mindtap-v2-only/with_skill/outputs/",
+  "quality_checks": {
+    "no_banned_purple_gradient": true,
+    "no_centered_card_480px": true,
+    "no_font_size_28_hero": true,
+    "no_emoji_decoration": true,
+    "glass_only_on_controls": true,
+    "all_files_1280_or_larger": true,
+    "compare_v2_exists": true,
+    "three_or_more_distinct_fonts": true,
+    "each_file_self_contained": true
+  },
+  "constraint_compliance": {
+    "did_not_produce_round1": true,
+    "did_not_write_to_real_project": true,
+    "v2_files_all_1280x800_plus": true,
+    "A_clearly_macos26": true,
+    "D_clearly_engdoc": true,
+    "B_C_model_picked_not_user": true
+  },
+  "model_chosen_directions": {
+    "B": "Developer-tool dark (Linear / Vercel / Raycast) — chose because it is the obvious 'second reading' of the engineer's near-black + monospace request, but framed as a tool/issue tracker rather than a doc. Subtle glass only on topbar + right inspector, dense keyboard hints, command palette, kbd chrome.",
+    "C": "Editorial / Magazine (warm beige serif) — chose because it is the polar opposite of the requested engineering-doc density. Warm paper, Charter + Fraunces, dropcap, pullquote. The glass almost disappears. This makes the A vs D contrast visible (your picks) AND shows the breadth of what's possible."
+  },
+  "what_was_kept_from_full_skill": [
+    "Step 1 single question (asked and answered by user statement)",
+    "Step 3 Round 2 four-direction comparison",
+    "Glass-only-on-controls rule (topbar/sidebar/toolbar/inspector/right rail)",
+    "Mirror highlight on glass elements (inset border + top highlight + bottom shadow)",
+    "Distinct fonts per direction (SF Pro / JetBrains Mono+Inter / Charter+Fraunces / JetBrains Mono)",
+    "Real content underneath (the same 'capture cost optimization' story across all 4 directions to make differences visible)",
+    "Quality bar self-check"
+  ],
+  "what_was_dropped_for_eval": [
+    "Round 1 (4x4 glass matrix + 4 immersive variants) — user said skip",
+    "prototype/index.html directory page — not strictly required by eval-2 assertions",
+    "docs/projects/v1.0/compare-method.md methodology doc — not strictly required by eval-2 assertions"
+  ]
+}

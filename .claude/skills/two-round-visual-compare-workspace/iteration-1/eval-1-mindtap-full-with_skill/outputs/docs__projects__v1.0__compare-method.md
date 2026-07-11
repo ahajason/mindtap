@@ -1,0 +1,1 @@
+/home/jason/workspace/mindtap/.claude/skills/two-round-visual-compare-workspace/iteration-1/eval-1-mindtap-full/with_skill/outputs/docs/projects/v1.0/compare-method.md

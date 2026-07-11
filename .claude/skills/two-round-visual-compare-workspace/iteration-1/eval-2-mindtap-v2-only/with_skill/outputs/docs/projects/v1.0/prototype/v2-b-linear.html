@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Mindtap · Direction B — Developer-tool dark</title>
+<style>
+  :root {
+    --bg: #0B0C0E;
+    --bg-1: #111317;
+    --bg-2: #161A20;
+    --bg-3: #1C2128;
+    --line: rgba(255,255,255,0.06);
+    --line-2: rgba(255,255,255,0.10);
+    --ink-1: #E8EAED;
+    --ink-2: #A8AEBA;
+    --ink-3: #6B7280;
+    --ink-4: #4B5563;
+    --accent: #7E83FF;        /* Linear-ish violet */
+    --ok: #4CB782;
+    --warn: #E5C07B;
+    --err: #E06C75;
+    --mono: "JetBrains Mono", "SF Mono", "IBM Plex Mono", Menlo, Consolas, monospace;
+    --sans: "Inter", -apple-system, "SF Pro Text", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink-1); font-family: var(--sans); -webkit-font-smoothing: antialiased; font-size: 13px; line-height: 1.5; }
+  .stage { width: 1440px; height: 900px; display: grid; grid-template-columns: 240px 56px 1fr 360px; grid-template-rows: 44px 1fr 24px; grid-template-areas: "top top top top" "side rail main right" "foot foot foot foot"; background: var(--bg); }
+
+  /* ---- TOPBAR (subtle glass on near-black) ---- */
+  .topbar { grid-area: top; display: flex; align-items: center; gap: 10px; padding: 0 14px; background: rgba(11,12,14,0.72); backdrop-filter: saturate(140%) blur(20px); -webkit-backdrop-filter: saturate(140%) blur(20px); border-bottom: 1px solid var(--line); }
+  .logo { width: 18px; height: 18px; border-radius: 4px; background: linear-gradient(180deg, #7E83FF, #5C61E0); display: inline-flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; color: #fff; font-weight: 700; }
+  .workspace { font-family: var(--mono); font-size: 12px; color: var(--ink-2); padding: 4px 8px; border-radius: 5px; background: var(--bg-2); }
+  .workspace .caret { color: var(--ink-3); margin-left: 6px; }
+  .cmd { flex: 1; max-width: 460px; margin: 0 12px; padding: 5px 10px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 6px; display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 12px; color: var(--ink-3); }
+  .cmd .kbd { font-family: var(--mono); font-size: 10.5px; padding: 1px 5px; border-radius: 3px; background: var(--bg-3); border: 1px solid var(--line-2); color: var(--ink-2); }
+  .top-icons { display: flex; gap: 4px; align-items: center; }
+  .icon-btn { width: 28px; height: 28px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; color: var(--ink-2); font-family: var(--mono); font-size: 13px; }
+  .icon-btn:hover { background: var(--bg-2); color: var(--ink-1); }
+  .icon-btn .bdg { position: relative; }
+  .icon-btn .bdg::after { content: "3"; position: absolute; top: -4px; right: -6px; background: var(--accent); color: #fff; border-radius: 999px; font-size: 9px; padding: 1px 4px; font-family: var(--mono); }
+  .me { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, #F08A4B, #E06C75); display: inline-flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; font-weight: 700; }
+
+  /* ---- ICON RAIL (subtle glass) ---- */
+  .rail { grid-area: rail; background: var(--bg-1); border-right: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; padding: 10px 0; gap: 4px; }
+  .rail-btn { width: 36px; height: 36px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; color: var(--ink-3); font-family: var(--mono); font-size: 14px; position: relative; }
+  .rail-btn:hover { background: var(--bg-2); color: var(--ink-1); }
+  .rail-btn.active { background: var(--bg-3); color: var(--ink-1); }
+  .rail-btn.active::before { content: ""; position: absolute; left: -10px; top: 8px; bottom: 8px; width: 2px; background: var(--accent); border-radius: 2px; }
+  .rail-spacer { flex: 1; }
+  .rail-hint { font-family: var(--mono); font-size: 9.5px; color: var(--ink-4); }
+
+  /* ---- SIDEBAR ---- */
+  .sidebar { grid-area: side; background: var(--bg-1); border-right: 1px solid var(--line); padding: 10px 0; overflow: hidden; font-family: var(--mono); font-size: 12px; }
+  .sb-section { padding: 8px 12px 4px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.10em; color: var(--ink-4); display: flex; align-items: center; justify-content: space-between; }
+  .sb-section .add { color: var(--ink-3); cursor: default; }
+  .sb-item { display: flex; align-items: center; gap: 8px; padding: 4px 12px; color: var(--ink-2); border-left: 2px solid transparent; }
+  .sb-item .lhash { color: var(--ink-4); width: 12px; }
+  .sb-item .badge { margin-left: auto; font-size: 10.5px; padding: 1px 5px; border-radius: 3px; background: var(--bg-3); color: var(--ink-3); }
+  .sb-item .badge.accent { background: rgba(126,131,255,0.16); color: var(--accent); }
+  .sb-item .badge.ok { background: rgba(76,183,130,0.16); color: var(--ok); }
+  .sb-item:hover { background: var(--bg-2); }
+  .sb-item.active { background: var(--bg-3); color: var(--ink-1); border-left-color: var(--accent); }
+  .sb-issue { display: flex; flex-direction: column; gap: 2px; padding: 6px 12px; border-left: 2px solid transparent; }
+  .sb-issue.active { background: var(--bg-3); border-left-color: var(--accent); }
+  .sb-issue .irow { display: flex; gap: 8px; align-items: center; font-family: var(--mono); font-size: 11.5px; color: var(--ink-2); }
+  .sb-issue .ititle { color: var(--ink-1); font-family: var(--sans); font-size: 12.5px; }
+  .sb-issue .itags { display: flex; gap: 6px; margin-top: 2px; }
+  .pill-tag { font-family: var(--mono); font-size: 10px; padding: 1px 6px; border-radius: 3px; background: var(--bg-2); color: var(--ink-3); }
+  .pill-tag.now { background: rgba(126,131,255,0.16); color: var(--accent); }
+  .pill-tag.qa { background: rgba(229,192,123,0.16); color: var(--warn); }
+
+  /* ---- MAIN ---- */
+  .main { grid-area: main; display: flex; flex-direction: column; overflow: hidden; }
+  .bread { height: 36px; display: flex; align-items: center; gap: 10px; padding: 0 16px; background: rgba(11,12,14,0.5); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); font-family: var(--mono); font-size: 11.5px; color: var(--ink-3); }
+  .bread .crumb-sep { color: var(--ink-4); }
+  .bread .crumb-cur { color: var(--ink-1); }
+
+  .issue-head { padding: 14px 20px 8px; border-bottom: 1px solid var(--line); }
+  .issue-id { font-family: var(--mono); font-size: 11.5px; color: var(--ink-3); }
+  .issue-id .status { font-size: 10.5px; padding: 1px 6px; border-radius: 3px; background: rgba(126,131,255,0.16); color: var(--accent); margin-left: 8px; }
+  .issue-title { font-family: var(--sans); font-size: 20px; font-weight: 600; color: var(--ink-1); margin: 6px 0 8px; letter-spacing: -0.01em; }
+  .issue-meta { display: flex; gap: 14px; font-family: var(--mono); font-size: 11.5px; color: var(--ink-3); align-items: center; }
+  .issue-meta .pri { color: var(--warn); }
+  .issue-meta .assign { display: inline-flex; align-items: center; gap: 6px; }
+  .assignee { width: 18px; height: 18px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #fff; font-size: 9px; font-weight: 700; }
+  .assignee.js { background: linear-gradient(135deg, #F08A4B, #E06C75); }
+  .assignee.ml { background: linear-gradient(135deg, #4CB782, #7E83FF); }
+  .assignee.dk { background: linear-gradient(135deg, #7E83FF, #5C61E0); }
+
+  .toolbar2 { display: flex; align-items: center; gap: 6px; padding: 8px 20px; border-bottom: 1px solid var(--line); font-family: var(--mono); font-size: 11.5px; color: var(--ink-3); }
+  .toolbar2 button { background: var(--bg-2); border: 1px solid var(--line); color: var(--ink-2); padding: 3px 8px; border-radius: 5px; font-family: var(--mono); font-size: 11.5px; cursor: default; }
+  .toolbar2 .sep { color: var(--ink-4); margin: 0 4px; }
+  .toolbar2 .kbd { background: var(--bg-2); border: 1px solid var(--line-2); padding: 1px 5px; border-radius: 3px; color: var(--ink-3); }
+
+  .body { display: grid; grid-template-columns: 1fr 280px; gap: 16px; padding: 16px 20px; flex: 1; overflow: hidden; }
+  .desc { background: var(--bg-1); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; font-family: var(--sans); font-size: 13px; color: var(--ink-2); line-height: 1.6; }
+  .desc p { margin: 0 0 10px; }
+  .desc .checklist { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
+  .desc .check { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 12px; color: var(--ink-2); }
+  .desc .check .box { width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--line-2); display: inline-flex; align-items: center; justify-content: center; color: var(--ok); font-size: 10px; }
+  .desc .check.done .box { background: rgba(76,183,130,0.16); border-color: var(--ok); }
+  .desc .check .num { color: var(--ink-4); }
+  .desc .code { font-family: var(--mono); font-size: 12px; background: var(--bg); padding: 8px 10px; border: 1px solid var(--line); border-radius: 5px; color: var(--ink-2); white-space: pre; overflow: hidden; }
+  .desc .code .c-kw { color: var(--accent); }
+  .desc .code .c-fn { color: var(--warn); }
+  .desc .code .c-str { color: var(--ok); }
+  .desc .code .c-com { color: var(--ink-4); }
+  .desc .label { font-family: var(--mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.10em; color: var(--ink-4); margin: 12px 0 4px; }
+
+  .subpanel { background: var(--bg-1); border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
+  .subpanel h4 { font-family: var(--mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.10em; color: var(--ink-4); margin: 0 0 8px; font-weight: 500; }
+  .kv { display: grid; grid-template-columns: 90px 1fr; gap: 6px 12px; font-family: var(--mono); font-size: 11.5px; }
+  .kv .k { color: var(--ink-4); }
+  .kv .v { color: var(--ink-1); }
+  .kv .v.dim { color: var(--ink-2); }
+
+  /* ---- RIGHT GLASS PANEL ---- */
+  .right { grid-area: right; background: rgba(17,19,23,0.85); backdrop-filter: saturate(160%) blur(20px); -webkit-backdrop-filter: saturate(160%) blur(20px); border-left: 1px solid var(--line); padding: 12px 14px; overflow: hidden; display: flex; flex-direction: column; gap: 14px; }
+  .cmd-palette { background: var(--bg-2); border: 1px solid var(--line-2); border-radius: 7px; }
+  .cmd-palette .inp { padding: 8px 10px; border-bottom: 1px solid var(--line); font-family: var(--mono); font-size: 12px; color: var(--ink-1); display: flex; gap: 8px; align-items: center; }
+  .cmd-palette .inp .caret { display: inline-block; width: 1px; height: 14px; background: var(--ink-1); animation: blink 1s infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .cmd-palette .items { padding: 4px 0; }
+  .cmd-palette .it { padding: 6px 10px; display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 12px; color: var(--ink-2); }
+  .cmd-palette .it.active { background: rgba(126,131,255,0.10); color: var(--ink-1); }
+  .cmd-palette .it .name { color: var(--ink-1); }
+  .cmd-palette .it .hint { margin-left: auto; color: var(--ink-4); font-size: 10.5px; }
+  .cmd-palette .it .ico { color: var(--accent); }
+
+  .recent { font-family: var(--mono); font-size: 12px; }
+  .recent .row { display: flex; gap: 8px; padding: 5px 0; color: var(--ink-2); border-bottom: 1px solid var(--line); }
+  .recent .row:last-child { border-bottom: 0; }
+  .recent .row .t { color: var(--ink-4); width: 36px; flex: none; }
+  .recent .row .a { color: var(--ink-1); }
+
+  /* ---- FOOTBAR ---- */
+  .footbar { grid-area: foot; display: flex; align-items: center; gap: 14px; padding: 0 14px; background: var(--bg-1); border-top: 1px solid var(--line); font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); }
+  .footbar .ok { color: var(--ok); }
+  .footbar .seg { display: inline-flex; align-items: center; gap: 6px; }
+  .footbar .seg .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <div class="topbar">
+    <div class="logo">M</div>
+    <div class="workspace">mindtap / dev <span class="caret">▾</span></div>
+    <div class="cmd"><span style="color:var(--ink-3);">⌕</span> jump to note, command, or issue… <span style="margin-left:auto;"><span class="kbd">⌘</span><span class="kbd">K</span></span></div>
+    <div class="top-icons">
+      <div class="icon-btn bdg">⌕</div>
+      <div class="icon-btn">⌘</div>
+      <div class="icon-btn">⏱</div>
+      <div class="icon-btn bdg">✉</div>
+      <div class="me">JS</div>
+    </div>
+  </div>
+
+  <div class="rail">
+    <div class="rail-btn active">⌂</div>
+    <div class="rail-btn">⌕</div>
+    <div class="rail-btn">≡</div>
+    <div class="rail-btn">✎</div>
+    <div class="rail-btn">⬢</div>
+    <div class="rail-btn">▦</div>
+    <div class="rail-btn">⚙</div>
+    <div class="rail-spacer"></div>
+    <div class="rail-hint">⌘1..7</div>
+  </div>
+
+  <div class="sidebar">
+    <div class="sb-section"><span>Inbox</span><span class="add">+</span></div>
+    <div class="sb-item active"><span class="lhash">#</span> <span style="color:var(--ink-1);">Today</span><span class="badge accent">12</span></div>
+    <div class="sb-item"><span class="lhash">#</span> This week<span class="badge">84</span></div>
+    <div class="sb-item"><span class="lhash">#</span> Backlog<span class="badge">1,261</span></div>
+    <div class="sb-item"><span class="lhash">#</span> Archive<span class="badge ok">synced</span></div>
+
+    <div class="sb-section"><span>Issues · Sprint 4</span><span class="add">+</span></div>
+    <div class="sb-issue active">
+      <div class="irow"><span class="status-dot" style="width:6px;height:6px;border-radius:50%;background:var(--accent);"></span>MIN-204<span class="badge" style="margin-left:auto;">in progress</span></div>
+      <div class="ititle">Capture cost optimization</div>
+      <div class="itags"><span class="pill-tag now">P0</span><span class="pill-tag">cost</span><span class="pill-tag">ocr</span></div>
+    </div>
+    <div class="sb-issue">
+      <div class="irow"><span style="width:6px;height:6px;border-radius:50%;background:var(--ok);"></span>MIN-198<span class="badge ok" style="margin-left:auto;">review</span></div>
+      <div class="ititle">OCR batch window, 30s design</div>
+      <div class="itags"><span class="pill-tag">cost</span><span class="pill-tag qa">qa-pending</span></div>
+    </div>
+    <div class="sb-issue">
+      <div class="irow"><span style="width:6px;height:6px;border-radius:50%;background:var(--ink-4);"></span>MIN-181<span class="badge" style="margin-left:auto;">backlog</span></div>
+      <div class="ititle">Tokenizer 32k BPE swap</div>
+      <div class="itags"><span class="pill-tag">post-release</span></div>
+    </div>
+    <div class="sb-issue">
+      <div class="irow"><span style="width:6px;height:6px;border-radius:50%;background:var(--ink-4);"></span>MIN-176<span class="badge" style="margin-left:auto;">backlog</span></div>
+      <div class="ititle">Drop keystroke preview render</div>
+      <div class="itags"><span class="pill-tag">perf</span></div>
+    </div>
+    <div class="sb-issue">
+      <div class="irow"><span style="width:6px;height:6px;border-radius:50%;background:var(--ink-4);"></span>MIN-169<span class="badge" style="margin-left:auto;">backlog</span></div>
+      <div class="ititle">Cold-start skip for empty notebooks</div>
+      <div class="itags"><span class="pill-tag">perf</span></div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="bread">
+      <span>mindtap</span><span class="crumb-sep">›</span>
+      <span>Sprint 4</span><span class="crumb-sep">›</span>
+      <span class="crumb-cur">MIN-204 · Capture cost optimization</span>
+      <span style="margin-left:auto;color:var(--ink-4);">branch: feat/capture-cost · 3 commits ahead</span>
+    </div>
+    <div class="issue-head">
+      <div class="issue-id">MIN-204 <span class="status">In progress · Sprint 4</span></div>
+      <div class="issue-title">Capture cost: OCR batched, tokenizer swap, drop preview</div>
+      <div class="issue-meta">
+        <span class="pri">P0</span>
+        <span>estimate · 5 pts</span>
+        <span>due · 18 Jun</span>
+        <span class="assign">assignee <span class="assignee js">JS</span> + <span class="assignee ml">ML</span></span>
+        <span style="margin-left:auto;">3 of 7 sub-tasks complete</span>
+      </div>
+    </div>
+    <div class="toolbar2">
+      <button>Edit</button><button>Subscribe</button><button>Copy link</button>
+      <span class="sep">|</span>
+      <button>Add sub-task</button><button>Link note</button>
+      <span class="sep">|</span>
+      <button>Move to Sprint 5</button>
+      <span style="margin-left:auto;color:var(--ink-3);">last edit 14:08 · autosave on</span>
+    </div>
+
+    <div class="body">
+      <div class="desc">
+        <p>The v1.1 capture pipeline spends 78% of wall time in the OCR pre-pass. We need three lanes in Sprint 4 to bring the per-1k-note cost from <code style="font-family:var(--mono);background:var(--bg);padding:1px 4px;border-radius:3px;color:var(--warn);">$0.84</code> down to under <code style="font-family:var(--mono);background:var(--bg);padding:1px 4px;border-radius:3px;color:var(--warn);">$0.12</code> before the v1.2 review.</p>
+        <div class="label">Acceptance criteria</div>
+        <div class="checklist">
+          <div class="check done"><span class="box">✓</span><span class="num">[1]</span> OCR batch window collapses calls inside 30s into a single job</div>
+          <div class="check done"><span class="box">✓</span><span class="num">[2]</span> Tokenizer swap to 32k BPE, same accuracy on validation set</div>
+          <div class="check done"><span class="box">✓</span><span class="num">[3]</span> Drop the per-keystroke preview render from the editor</div>
+          <div class="check"><span class="box"></span><span class="num">[4]</span> Cold-start skip when the notebook is empty</div>
+          <div class="check"><span class="box"></span><span class="num">[5]</span> EU entitlement gate for 32k tokenizer ships in 26.2</div>
+          <div class="check"><span class="box"></span><span class="num">[6]</span> Telemetry shows &lt; 5% regression on warm-cache ingest</div>
+          <div class="check"><span class="box"></span><span class="num">[7]</span> QA pass on the EU build before sprint review</div>
+        </div>
+        <div class="label">Implementation sketch · src/capture/pipeline.ts</div>
+        <div class="code"><span class="c-com">// batch OCR inside a 30s window</span>
+<span class="c-kw">export async function</span> <span class="c-fn">runOcrBatch</span>(notes: Note[]) {
+  <span class="c-kw">const</span> window = <span class="c-fn">groupByWindow</span>(notes, <span class="c-str">"30s"</span>);
+  <span class="c-kw">return await</span> Promise.<span class="c-fn">all</span>(
+    window.<span class="c-fn">map</span>(w =&gt; <span class="c-fn">ocr</span>(w.<span class="c-fn">join</span>(<span class="c-str">"\n"</span>)))
+  );
+}</div>
+        <div class="label">Notes</div>
+        <p style="font-size:12.5px;color:var(--ink-3);">Hold lane 2 (tokenizer swap) for the post-release window — the on-device build doesn't ship in EU until the 26.2 entitlement lands.</p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div class="subpanel">
+          <h4>Properties</h4>
+          <div class="kv">
+            <div class="k">status</div><div class="v">in progress</div>
+            <div class="k">priority</div><div class="v" style="color:var(--warn);">P0</div>
+            <div class="k">sprint</div><div class="v">4 · v1.2</div>
+            <div class="k">estimate</div><div class="v">5 pts</div>
+            <div class="k">branch</div><div class="v">feat/capture-cost</div>
+            <div class="k">commits</div><div class="v">3 ahead · 0 behind</div>
+            <div class="k">PR</div><div class="v dim">#284 open</div>
+            <div class="k">reviewer</div><div class="v">DK</div>
+            <div class="k">CI</div><div class="v" style="color:var(--ok);">passing · 4m12s</div>
+          </div>
+        </div>
+        <div class="subpanel">
+          <h4>Recent activity</h4>
+          <div class="recent">
+            <div class="row"><span class="t">14:08</span><span class="a">JS</span><span class="dim" style="color:var(--ink-3);">completed sub-task 3</span></div>
+            <div class="row"><span class="t">13:50</span><span class="a">ML</span><span class="dim" style="color:var(--ink-3);">linked note Onboarding v1.2</span></div>
+            <div class="row"><span class="t">11:42</span><span class="a">JS</span><span class="dim" style="color:var(--ink-3);">pushed commit a4f81c</span></div>
+            <div class="row"><span class="t">09:12</span><span class="a">JS</span><span class="dim" style="color:var(--ink-3);">created from voice memo</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="cmd-palette">
+      <div class="inp"><span style="color:var(--ink-3);">⌕</span><span style="color:var(--ink-1);">ocr</span><span class="caret"></span></div>
+      <div class="items">
+        <div class="it active"><span class="ico">▸</span> Jump to <span class="name">MIN-204 · Capture cost</span><span class="hint">↵</span></div>
+        <div class="it"><span class="ico">▸</span> Run command <span class="name">OCR batch window, 30s design</span><span class="hint">⌘↵</span></div>
+        <div class="it"><span class="ico">▸</span> Open note <span class="name">Tokenizer 32k BPE — the trade</span><span class="hint">⇧↵</span></div>
+        <div class="it"><span class="ico">▸</span> Search notes containing <span class="name">ocr</span> <span class="hint" style="color:var(--accent);">12 results</span></div>
+        <div class="it"><span class="ico">▸</span> Recent · <span class="name" style="color:var(--ink-3);">v1.1 OCR pre-pass design</span></div>
+      </div>
+    </div>
+
+    <div>
+      <h4 style="font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:0.10em;color:var(--ink-4);margin:0 0 8px;font-weight:500;">Linked notes · 4</h4>
+      <div style="font-family:var(--mono);font-size:12px;color:var(--ink-2);display:flex;flex-direction:column;gap:6px;">
+        <div>→ On-device tokenizer, the trade</div>
+        <div>→ OCR batch window design</div>
+        <div>→ v1.2 sprint plan, lane 2</div>
+        <div>→ Lighthouse on v1.1 build</div>
+      </div>
+    </div>
+
+    <div>
+      <h4 style="font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:0.10em;color:var(--ink-4);margin:0 0 8px;font-weight:500;">Status</h4>
+      <div style="font-family:var(--mono);font-size:11.5px;color:var(--ink-2);line-height:1.6;">
+        <div><span class="ok">●</span> ingest median · <span style="color:var(--ink-1);">41 ms</span> <span style="color:var(--ok);">↓ 8.3×</span></div>
+        <div><span class="ok">●</span> cost / 1k · <span style="color:var(--ink-1);">$0.21</span> <span style="color:var(--ok);">↓ 75%</span></div>
+        <div><span style="color:var(--warn);">●</span> EU build · pending entitlement</div>
+        <div><span style="color:var(--accent);">●</span> queue depth · <span style="color:var(--ink-1);">3 jobs</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footbar">
+    <div class="seg"><span class="dot"></span> main branch · clean</div>
+    <div class="seg">feat/capture-cost · 3↑ 0↓</div>
+    <div class="seg" style="color:var(--ok);">● CI green</div>
+    <div class="seg" style="margin-left:auto;">14:08:42 · mem 412 MB · utf-8</div>
+  </div>
+
+</div>
+</body>
+</html>

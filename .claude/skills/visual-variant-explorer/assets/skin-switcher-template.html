@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Skin Switcher Template · visual-variant-explorer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  /* === 基础 reset + 全局变量（每个 skin 覆盖） === */
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body {
+    font-family: var(--font-sans);
+    color: var(--ink);
+    background: var(--bg);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+
+  /* === 共享布局 === */
+  .app {
+    display: grid;
+    grid-template-rows: 56px 1fr;
+    grid-template-columns: 220px 1fr;
+    grid-template-areas: "topbar topbar" "side main";
+    height: 100vh;
+  }
+  .topbar { grid-area: topbar; }
+  .side { grid-area: side; overflow: auto; }
+  .main { grid-area: main; overflow: auto; padding: 32px; }
+
+  /* === 默认 chrome（每个 skin 覆盖） === */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--rule);
+    background: var(--chrome-bg);
+  }
+  .side {
+    border-right: 1px solid var(--rule);
+    background: var(--chrome-bg);
+    padding: 16px 12px;
+  }
+  .nav-item {
+    display: block;
+    padding: 8px 12px;
+    border-radius: 8px;
+    color: var(--ink-soft);
+    text-decoration: none;
+    font-size: 14px;
+  }
+  .nav-item.active { background: var(--accent-soft); color: var(--accent); }
+
+  /* === 共享主区 === */
+  h1 { font-family: var(--font-display); font-size: 32px; margin: 0 0 8px; letter-spacing: -0.01em; }
+  .lead { color: var(--ink-soft); margin: 0 0 24px; font-size: 15px; }
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+  }
+  .card h3 { margin: 0 0 6px; font-size: 16px; }
+  .card p { margin: 0; color: var(--ink-soft); font-size: 13px; }
+
+  /* === 极简矩阵浮窗（所有 skin 并列） === */
+  .matrix-floater {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    width: 320px;
+    padding: 14px;
+    background: var(--chrome-bg);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 12px 32px rgba(0, 0, 0, 0.08);
+    z-index: 100;
+    font-size: 12px;
+  }
+  .matrix-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding: 0 2px;
+  }
+  .matrix-title {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .matrix-count {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 10px;
+    color: var(--ink-soft);
+  }
+  .matrix-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+  /* N=8 时改 4 列：.matrix-grid--n8 { grid-template-columns: repeat(4, 1fr); } */
+  .matrix-grid button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    background: var(--card-bg);
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 120ms ease, transform 120ms ease, background 120ms ease;
+    font: inherit;
+    color: inherit;
+  }
+  .matrix-grid button:hover {
+    border-color: var(--ink-soft);
+    transform: translateY(-1px);
+  }
+  .matrix-grid button.active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .thumb {
+    width: 28px;
+    height: 20px;
+    border-radius: 3px;
+    border: 1px solid var(--rule);
+    flex-shrink: 0;
+    background: linear-gradient(135deg, var(--bg) 50%, var(--accent) 50%);
+  }
+  .meta { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
+  .meta .id {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-weight: 600;
+    font-size: 11px;
+    color: var(--ink);
+  }
+  .meta .name {
+    font-size: 10px;
+    color: var(--ink-soft);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ============================================================ */
+  /* === SKIN A · Sparse · Warm Minimal ========================== */
+  /* ============================================================ */
+  [data-skin="A"] {
+    --bg: #faf8f3;
+    --ink: #1a1816;
+    --ink-soft: #6b6661;
+    --rule: rgba(26, 24, 22, 0.08);
+    --accent: #c2410c;
+    --accent-soft: rgba(194, 65, 12, 0.08);
+    --chrome-bg: rgba(255, 255, 255, 0.7);
+    --card-bg: #ffffff;
+    --radius: 14px;
+    --font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", system-ui, sans-serif;
+    --font-display: Georgia, "Times New Roman", "Songti SC", serif;
+  }
+
+  /* === SKIN B · Dense · Engineering =========================== */
+  [data-skin="B"] {
+    --bg: #f5f5f4;
+    --ink: #0c0a09;
+    --ink-soft: #57534e;
+    --rule: rgba(12, 10, 9, 0.1);
+    --accent: #0369a1;
+    --accent-soft: rgba(3, 105, 161, 0.08);
+    --chrome-bg: #ffffff;
+    --card-bg: #ffffff;
+    --radius: 6px;
+    --font-sans: ui-sans-serif, system-ui, -apple-system, "PingFang SC", sans-serif;
+    --font-display: ui-sans-serif, system-ui, -apple-system, sans-serif;
+  }
+  [data-skin="B"] .main { padding: 16px; }
+  [data-skin="B"] .grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; }
+  [data-skin="B"] .card { padding: 12px; }
+  [data-skin="B"] h1 { font-size: 22px; }
+
+  /* === SKIN C · Editorial · Dark ============================== */
+  [data-skin="C"] {
+    --bg: #0c0a09;
+    --ink: #fafaf9;
+    --ink-soft: #a8a29e;
+    --rule: rgba(250, 250, 249, 0.1);
+    --accent: #f59e0b;
+    --accent-soft: rgba(245, 158, 11, 0.12);
+    --chrome-bg: #1c1917;
+    --card-bg: #1c1917;
+    --radius: 4px;
+    --font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+    --font-display: "Playfair Display", Georgia, "Songti SC", serif;
+  }
+  [data-skin="C"] h1 { font-style: italic; font-weight: 500; }
+  [data-skin="C"] .card { border-left: 2px solid var(--accent); }
+  [data-skin="C"] .lead { font-family: var(--font-display); font-size: 18px; }
+
+  /* === SKIN D · Industrial · High-contrast ==================== */
+  [data-skin="D"] {
+    --bg: #fafafa;
+    --ink: #000000;
+    --ink-soft: #404040;
+    --rule: rgba(0, 0, 0, 0.15);
+    --accent: #dc2626;
+    --accent-soft: rgba(220, 38, 38, 0.1);
+    --chrome-bg: #ffffff;
+    --card-bg: #ffffff;
+    --radius: 0;
+    --font-sans: ui-monospace, "SF Mono", Menlo, "Cascadia Code", monospace;
+    --font-display: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  [data-skin="D"] .topbar { border-bottom: 2px solid var(--ink); }
+  [data-skin="D"] .side { border-right: 2px solid var(--ink); }
+  [data-skin="D"] .card { border: 1px solid var(--ink); }
+  [data-skin="D"] h1 { text-transform: uppercase; letter-spacing: 0.04em; }
+</style>
+</head>
+<body data-skin="A">
+
+<div class="app">
+  <header class="topbar">
+    <div style="font-weight:600;font-size:15px;">Mindtap · Notes</div>
+    <div style="font-size:12px;color:var(--ink-soft);" id="skin-label">Skin A · Sparse Warm</div>
+  </header>
+
+  <nav class="side">
+    <a class="nav-item active">Inbox</a>
+    <a class="nav-item">Today</a>
+    <a class="nav-item">Archive</a>
+    <a class="nav-item">Tags</a>
+  </nav>
+
+  <main class="main">
+    <h1>Today</h1>
+    <p class="lead">3 notes · last edited 2 hours ago</p>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Design tokens</h3>
+        <p>Extract iron rules from Apple HIG 4 铁律: glass only on chrome, ≤4 elements, clear on rich bg.</p>
+      </div>
+      <div class="card">
+        <h3>Variant axes</h3>
+        <p>Pick 2+ from {font, color, decoration, density} for real differentiation across 4 directions.</p>
+      </div>
+      <div class="card">
+        <h3>Live switcher</h3>
+        <p>One HTML, N skins via [data-skin] + CSS vars. Pick any from the matrix floater (bottom-right) to compare.</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<nav class="matrix-floater" aria-label="skin matrix">
+  <div class="matrix-head">
+    <span class="matrix-title">Skin Matrix</span>
+    <span class="matrix-count">1 of 4</span>
+  </div>
+  <div class="matrix-grid">
+    <button data-set-skin="A" class="active">
+      <span class="thumb" aria-hidden="true"></span>
+      <span class="meta">
+        <span class="id">A</span>
+        <span class="name">Sparse</span>
+      </span>
+    </button>
+    <button data-set-skin="B">
+      <span class="thumb" aria-hidden="true"></span>
+      <span class="meta">
+        <span class="id">B</span>
+        <span class="name">Dense</span>
+      </span>
+    </button>
+    <button data-set-skin="C">
+      <span class="thumb" aria-hidden="true"></span>
+      <span class="meta">
+        <span class="id">C</span>
+        <span class="name">Editorial</span>
+      </span>
+    </button>
+    <button data-set-skin="D">
+      <span class="thumb" aria-hidden="true"></span>
+      <span class="meta">
+        <span class="id">D</span>
+        <span class="name">Industrial</span>
+      </span>
+    </button>
+  </div>
+</nav>
+
+<script>
+  (function () {
+    const SKINS = {
+      A: 'Skin A · Sparse Warm',
+      B: 'Skin B · Dense Engineering',
+      C: 'Skin C · Editorial Dark',
+      D: 'Skin D · Industrial Mono',
+    };
+    const body = document.body;
+    const label = document.getElementById('skin-label');
+    const countEl = document.querySelector('.matrix-count');
+    const buttons = document.querySelectorAll('[data-set-skin]');
+    const SKIN_KEYS = Object.keys(SKINS);
+
+    function setSkin(name) {
+      if (!SKINS[name]) return;
+      body.setAttribute('data-skin', name);
+      label.textContent = SKINS[name];
+      const idx = SKIN_KEYS.indexOf(name) + 1;
+      countEl.textContent = idx + ' of ' + SKIN_KEYS.length;
+      buttons.forEach(b => b.classList.toggle('active', b.dataset.setSkin === name));
+    }
+
+    buttons.forEach(b => b.addEventListener('click', () => setSkin(b.dataset.setSkin)));
+
+    // 快捷键 A/B/C/D（仅在非输入元素聚焦时）
+    document.addEventListener('keydown', e => {
+      const tag = (e.target.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || e.metaKey || e.ctrlKey || e.altKey) return;
+      const k = e.key.toUpperCase();
+      if (SKINS[k]) { setSkin(k); e.preventDefault(); }
+    });
+  })();
+</script>
+
+</body>
+</html>

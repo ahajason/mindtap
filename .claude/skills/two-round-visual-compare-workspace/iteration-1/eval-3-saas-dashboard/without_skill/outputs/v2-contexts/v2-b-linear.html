@@ -1,0 +1,632 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>V2-B · Developer-tool dark · Stackdesk</title>
+<meta name="viewport" content="width=1440" />
+<style>
+  *,*::before,*::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Inter", -apple-system, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
+    color: #e6e6e6;
+    background: #0a0a0b;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    min-width: 1280px;
+    font-feature-settings: "ss01", "cv11";
+  }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; cursor: pointer; border: 0; background: transparent; color: inherit; }
+  code, kbd, .mono { font-family: "JetBrains Mono", "SF Mono", "Menlo", ui-monospace, monospace; font-variant-ligatures: contextual; }
+
+  /* ---------- App ---------- */
+  .app {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    min-height: 100vh;
+    background: #0a0a0b;
+  }
+
+  /* ---------- Side rail (icon, minimal — Linear style) ---------- */
+  .rail {
+    background: #0d0d0e;
+    border-right: 1px solid #1c1c1f;
+    padding: 10px 8px;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .rail-mark {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: linear-gradient(135deg, #5e6ad2, #2d3a8c);
+    color: #fff; font-size: 13px; font-weight: 700;
+    display: grid; place-items: center; margin: 2px auto 12px;
+    letter-spacing: -0.02em;
+  }
+  .rail-item {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    margin: 0 auto;
+    display: grid; place-items: center;
+    color: #8a8a8e;
+  }
+  .rail-item:hover { background: #18181b; color: #d4d4d8; }
+  .rail-item.active { background: #18181b; color: #fff; box-shadow: 0 0 0 1px #27272a inset; }
+  .rail-item .kbd {
+    position: absolute; transform: translate(20px, -10px);
+    font-size: 9.5px; color: #52525b; font-family: "JetBrains Mono", monospace;
+  }
+  .rail-spacer { flex: 1; }
+
+  /* ---------- Sidebar (NAV, dark dense) ---------- */
+  .sidebar {
+    background: #0a0a0b;
+    border-right: 1px solid #1c1c1f;
+    display: flex; flex-direction: column; min-height: 100vh;
+  }
+  .ws-switch {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 14px;
+    border-bottom: 1px solid #1c1c1f;
+  }
+  .ws-switch .av {
+    width: 22px; height: 22px; border-radius: 6px;
+    background: linear-gradient(135deg, #ff8b5a, #b85a3a);
+    color: #fff; font-size: 11px; font-weight: 600;
+    display: grid; place-items: center;
+  }
+  .ws-switch .name { font-size: 13px; font-weight: 600; color: #fafafa; }
+  .ws-switch .sub { font-size: 11px; color: #71717a; }
+  .ws-switch .caret { margin-left: auto; color: #52525b; }
+
+  .nav {
+    padding: 10px 8px;
+    display: flex; flex-direction: column; gap: 1px;
+    overflow-y: auto;
+  }
+  .nav-group { display: flex; flex-direction: column; gap: 1px; }
+  .nav-group h4 {
+    margin: 10px 8px 4px;
+    font-size: 10.5px; color: #52525b; text-transform: uppercase;
+    letter-spacing: .08em; font-weight: 600;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 9px;
+    padding: 5px 8px; border-radius: 6px;
+    font-size: 13px; color: #a1a1aa;
+  }
+  .nav-item:hover { background: #18181b; color: #d4d4d8; }
+  .nav-item.active { background: #18181b; color: #fafafa; }
+  .nav-item .ic { width: 14px; height: 14px; opacity: .8; }
+  .nav-item .count {
+    margin-left: auto; font-size: 11px; color: #71717a;
+    font-variant-numeric: tabular-nums;
+  }
+  .nav-item .ic-bullet {
+    width: 8px; height: 8px; border-radius: 999px; flex: none;
+  }
+
+  .sb-foot {
+    margin-top: auto; padding: 8px; border-top: 1px solid #1c1c1f;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .sb-foot .kbd {
+    font-size: 10.5px; padding: 1px 5px; border-radius: 4px;
+    background: #18181b; color: #71717a; border: 1px solid #27272a;
+  }
+
+  /* ---------- Main ---------- */
+  .main { display: flex; flex-direction: column; min-width: 0; }
+
+  /* Topbar (GLASS — very subtle on dark) */
+  .topbar {
+    height: 48px;
+    display: flex; align-items: center; gap: 8px;
+    padding: 0 18px;
+    background: rgba(13,13,14,.65);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    border-bottom: 1px solid #1c1c1f;
+    position: sticky; top: 0; z-index: 20;
+  }
+  .crumbs { font-size: 12.5px; color: #71717a; display: flex; align-items: center; gap: 6px; }
+  .crumbs b { color: #e6e6e6; font-weight: 500; }
+  .crumbs .sep { color: #3f3f46; }
+
+  .t-search {
+    margin-left: 8px;
+    display: flex; align-items: center; gap: 8px;
+    width: 320px; height: 28px;
+    padding: 0 10px; border-radius: 6px;
+    background: #18181b;
+    border: 1px solid #27272a;
+    font-size: 12.5px; color: #71717a;
+    transition: border-color .12s;
+  }
+  .t-search:focus-within { border-color: #5e6ad2; }
+  .t-search .kbd { font-size: 10px; padding: 1px 5px; border-radius: 3px; background: #0d0d0e; color: #71717a; border: 1px solid #27272a; margin-left: auto; }
+
+  .topbar .right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+  .iconbtn {
+    width: 28px; height: 28px; border-radius: 6px;
+    display: grid; place-items: center; color: #a1a1aa;
+  }
+  .iconbtn:hover { background: #18181b; color: #e6e6e6; }
+
+  .btn {
+    height: 28px; padding: 0 10px; border-radius: 6px;
+    font-size: 12.5px; font-weight: 500;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn.ghost { background: #18181b; color: #d4d4d8; border: 1px solid #27272a; }
+  .btn.primary { background: #5e6ad2; color: #fff; }
+  .btn.primary:hover { background: #6b78e0; }
+
+  /* Status pill */
+  .status {
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 28px; padding: 0 10px; border-radius: 6px;
+    background: #18181b; border: 1px solid #27272a;
+    font-size: 12px; color: #a1a1aa;
+  }
+  .status .dot { width: 6px; height: 6px; border-radius: 999px; background: #22c55e; box-shadow: 0 0 6px rgba(34,197,94,.6); }
+
+  /* ---------- Content ---------- */
+  .content { padding: 22px 28px 40px; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+
+  .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+  .page-title { font-size: 24px; font-weight: 600; margin: 0; letter-spacing: -0.015em; color: #fafafa; }
+  .page-sub { font-size: 12.5px; color: #71717a; margin-top: 4px; font-family: "JetBrains Mono", monospace; }
+
+  /* View tabs */
+  .view-tabs {
+    display: flex; align-items: center; gap: 2px;
+    padding: 3px; border-radius: 7px;
+    background: #0d0d0e; border: 1px solid #1c1c1f;
+    width: fit-content;
+  }
+  .view-tabs button {
+    height: 24px; padding: 0 10px; border-radius: 5px;
+    font-size: 12px; color: #a1a1aa;
+  }
+  .view-tabs button.on { background: #27272a; color: #fafafa; }
+
+  /* KPI strip */
+  .kpis {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+    background: #1c1c1f; border-radius: 10px; overflow: hidden;
+    border: 1px solid #1c1c1f;
+  }
+  .kpi {
+    background: #0d0d0e; padding: 14px 16px;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .kpi .label { font-size: 11.5px; color: #71717a; display: flex; align-items: center; gap: 6px; }
+  .kpi .value { font-size: 22px; font-weight: 600; color: #fafafa; letter-spacing: -0.015em; font-variant-numeric: tabular-nums; }
+  .kpi .delta { font-size: 11.5px; font-family: "JetBrains Mono", monospace; }
+  .delta.up { color: #22c55e; }
+  .delta.down { color: #ef4444; }
+  .delta.flat { color: #71717a; }
+
+  /* Body grid: 2 columns */
+  .body { display: grid; grid-template-columns: 1.5fr 1fr; gap: 12px; min-width: 0; }
+
+  /* Panel */
+  .panel {
+    background: #0d0d0e; border: 1px solid #1c1c1f; border-radius: 10px;
+    overflow: hidden;
+  }
+  .panel-head {
+    padding: 10px 14px;
+    display: flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid #1c1c1f;
+  }
+  .panel-head h3 { margin: 0; font-size: 13px; font-weight: 500; color: #fafafa; }
+  .panel-head .meta { font-size: 11.5px; color: #71717a; font-family: "JetBrains Mono", monospace; }
+  .panel-head .right { margin-left: auto; display: flex; gap: 4px; }
+  .panel-head .iconbtn { width: 24px; height: 24px; }
+
+  .filters {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 12px; border-bottom: 1px solid #1c1c1f;
+  }
+  .filter {
+    height: 24px; padding: 0 9px; border-radius: 5px;
+    background: #18181b; color: #a1a1aa; border: 1px solid #27272a;
+    font-size: 11.5px; display: inline-flex; align-items: center; gap: 5px;
+  }
+  .filter.on { background: rgba(94,106,210,.16); color: #b8c0ff; border-color: rgba(94,106,210,.4); }
+  .filter .kbd { font-size: 10px; padding: 0 4px; border-radius: 3px; background: #0a0a0b; color: #71717a; }
+  .filter .x { color: #71717a; }
+
+  /* Table */
+  table.tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  table.tbl th {
+    text-align: left; font-weight: 500; color: #71717a;
+    font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em;
+    padding: 8px 14px; border-bottom: 1px solid #1c1c1f;
+  }
+  table.tbl td { padding: 9px 14px; border-bottom: 1px solid #18181b; color: #d4d4d8; }
+  table.tbl tr:last-child td { border-bottom: 0; }
+  table.tbl tr:hover td { background: #111114; }
+  table.tbl td.num { text-align: right; font-variant-numeric: tabular-nums; font-family: "JetBrains Mono", monospace; font-size: 12px; }
+  table.tbl td.mono { font-family: "JetBrains Mono", monospace; font-size: 11.5px; }
+
+  .id { color: #71717a; font-family: "JetBrains Mono", monospace; font-size: 11.5px; }
+  .stage {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11.5px; padding: 1px 8px; border-radius: 4px;
+  }
+  .stage::before { content:""; width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
+  .stage.commit  { background: rgba(34,197,94,.12); color: #4ade80; }
+  .stage.neg     { background: rgba(245,158,11,.12); color: #fbbf24; }
+  .stage.disco   { background: rgba(94,106,210,.16); color: #a5b4fc; }
+  .stage.closed  { background: rgba(113,113,122,.16); color: #a1a1aa; }
+
+  .av-tiny {
+    width: 18px; height: 18px; border-radius: 999px; display: inline-block;
+    background: #27272a; color: #d4d4d8; font-size: 9.5px; font-weight: 600;
+    line-height: 18px; text-align: center; margin-right: 4px;
+    vertical-align: -3px;
+  }
+  .av-tiny.a { background: #422006; color: #fbbf24; }
+  .av-tiny.b { background: #042f2e; color: #2dd4bf; }
+  .av-tiny.c { background: #1e1b4b; color: #a5b4fc; }
+  .av-tiny.d { background: #4c1d95; color: #d8b4fe; }
+  .av-tiny.e { background: #7f1d1d; color: #fca5a5; }
+
+  /* Activity */
+  .feed { padding: 4px 0; font-size: 12.5px; }
+  .feed .row {
+    display: grid; grid-template-columns: 80px 1fr; gap: 12px;
+    padding: 9px 14px; align-items: flex-start;
+    border-bottom: 1px solid #18181b;
+  }
+  .feed .row:last-child { border-bottom: 0; }
+  .feed .when { font-size: 10.5px; color: #52525b; font-family: "JetBrains Mono", monospace; padding-top: 2px; }
+  .feed .what { line-height: 1.5; color: #d4d4d8; }
+  .feed .what b { color: #fafafa; font-weight: 500; }
+  .feed .what code { background: #18181b; border: 1px solid #27272a; padding: 0 5px; border-radius: 3px; font-size: 11px; color: #e6e6e6; }
+  .feed .what .scope { color: #71717a; }
+  .feed .what .pill {
+    display: inline-block; font-size: 10.5px;
+    padding: 0 6px; border-radius: 999px;
+    background: rgba(94,106,210,.16); color: #a5b4fc; font-family: "JetBrains Mono", monospace;
+    margin-right: 4px;
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Icon rail -->
+  <nav class="rail" aria-label="Module switcher">
+    <div class="rail-mark">S</div>
+    <div class="rail-item active" title="Overview">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+    </div>
+    <div class="rail-item" title="Pipeline">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 13V6M6 13V3M10 13V8M14 13V5"/></svg>
+    </div>
+    <div class="rail-item" title="Accounts">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="6" r="2.5"/><path d="M3 13c.5-2.5 2.5-4 5-4s4.5 1.5 5 4"/></svg>
+    </div>
+    <div class="rail-item" title="Inbox">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M2 6h12M5 9h2"/></svg>
+    </div>
+    <div class="rail-item" title="Insights">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 13l3-3 3 2 4-5 2 2"/></svg>
+    </div>
+    <div class="rail-item" title="Integrations">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="8" r="2.5"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2"/></svg>
+    </div>
+    <div class="rail-spacer"></div>
+    <div class="rail-item" title="Help">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="8" r="6"/><path d="M6 6a2 2 0 014 0c0 1.5-2 1.5-2 3M8 11.5v.5"/></svg>
+    </div>
+  </nav>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="ws-switch">
+      <div class="av">N</div>
+      <div>
+        <div class="name">Northwind</div>
+        <div class="sub">7 reps · 142 accounts</div>
+      </div>
+      <span class="caret">⌄</span>
+    </div>
+
+    <div class="nav">
+      <div class="nav-group">
+        <h4>Workspace</h4>
+        <div class="nav-item active">
+          <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+          Overview
+        </div>
+        <div class="nav-item">
+          <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 13V6M6 13V3M10 13V8M14 13V5"/></svg>
+          Pipeline
+          <span class="count">12</span>
+        </div>
+        <div class="nav-item">
+          <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="6" r="2.5"/><path d="M3 13c.5-2.5 2.5-4 5-4s4.5 1.5 5 4"/></svg>
+          Accounts
+          <span class="count">142</span>
+        </div>
+        <div class="nav-item">
+          <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M2 6h12"/></svg>
+          Inbox
+          <span class="count">8</span>
+        </div>
+      </div>
+
+      <div class="nav-group">
+        <h4>Smart views</h4>
+        <div class="nav-item">
+          <span class="ic-bullet" style="background:#22c55e"></span>
+          Closing this week
+          <span class="count">3</span>
+        </div>
+        <div class="nav-item">
+          <span class="ic-bullet" style="background:#ef4444"></span>
+          Stuck &gt; 14d
+          <span class="count">2</span>
+        </div>
+        <div class="nav-item">
+          <span class="ic-bullet" style="background:#5e6ad2"></span>
+          Top 10 by ACV
+        </div>
+        <div class="nav-item">
+          <span class="ic-bullet" style="background:#fbbf24"></span>
+          At-risk renewals
+          <span class="count">4</span>
+        </div>
+      </div>
+
+      <div class="nav-group">
+        <h4>Reports</h4>
+        <div class="nav-item">Q2 forecast</div>
+        <div class="nav-item">Rep leaderboard</div>
+        <div class="nav-item">Cohort retention</div>
+      </div>
+    </div>
+
+    <div class="sb-foot">
+      <span class="status"><span class="dot"></span> All systems operational</span>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <!-- Topbar (GLASS) -->
+    <div class="topbar">
+      <div class="crumbs">
+        <span>Northwind</span>
+        <span class="sep">/</span>
+        <b>Overview</b>
+      </div>
+      <div class="t-search">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="4.5"/><path d="M11 11l3 3"/></svg>
+        Jump to deal, account, or run command…
+        <span class="kbd mono">⌘K</span>
+      </div>
+      <div class="right">
+        <div class="view-tabs">
+          <button class="on">7d</button><button>28d</button><button>QTD</button><button>YTD</button>
+        </div>
+        <button class="iconbtn" title="Filter"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 4h12M4 8h8M6 12h4"/></svg></button>
+        <button class="iconbtn" title="Notifications"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M8 2c-2 0-3.5 1.5-3.5 3 0 1 .5 1.5 1 2v1h5V7c.5-.5 1-1 1-2 0-1.5-1.5-3-3.5-3z"/></svg></button>
+        <button class="btn ghost">Share</button>
+        <button class="btn primary">
+          <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v10M3 8h10"/></svg>
+          New deal
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">Overview</h1>
+          <div class="page-sub">// week 24 · 2026-06-08 → 2026-06-14 · build 2026.6.14-rc2</div>
+        </div>
+      </div>
+
+      <!-- KPI strip -->
+      <div class="kpis">
+        <div class="kpi">
+          <div class="label">MRR</div>
+          <div class="value">$184,260</div>
+          <div class="delta up">+6.4%  ▲</div>
+        </div>
+        <div class="kpi">
+          <div class="label">Net new ARR</div>
+          <div class="value">$42,800</div>
+          <div class="delta up">+11.2% ▲</div>
+        </div>
+        <div class="kpi">
+          <div class="label">Logo churn</div>
+          <div class="value">2.1%</div>
+          <div class="delta down">-0.4 pp ▼</div>
+        </div>
+        <div class="kpi">
+          <div class="label">Open pipeline</div>
+          <div class="value">$1.27M</div>
+          <div class="delta up">+$94k ▲</div>
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="body">
+        <section class="panel">
+          <div class="panel-head">
+            <h3>Pipeline</h3>
+            <span class="meta mono">12 deals · $1.27M weighted</span>
+            <div class="right">
+              <button class="iconbtn" title="Sort"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 4h10M3 8h7M3 12h4"/></svg></button>
+              <button class="iconbtn" title="Columns"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="3" width="3" height="10"/><rect x="6.5" y="3" width="3" height="10"/><rect x="11" y="3" width="3" height="10"/></svg></button>
+              <button class="iconbtn" title="More"><svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><circle cx="3" cy="8" r="1.2"/><circle cx="8" cy="8" r="1.2"/><circle cx="13" cy="8" r="1.2"/></svg></button>
+            </div>
+          </div>
+          <div class="filters">
+            <span class="filter on">stage: all <span class="x">×</span></span>
+            <span class="filter">owner: anyone <span class="kbd">O</span></span>
+            <span class="filter">close: this month <span class="kbd">C</span></span>
+            <span class="filter">+ add filter</span>
+            <span class="filter" style="margin-left:auto">group: stage <span class="x">×</span></span>
+          </div>
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>Deal</th>
+                <th>Owner</th>
+                <th>Stage</th>
+                <th>Probability</th>
+                <th>Amount</th>
+                <th>Close</th>
+                <th>Last touch</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div style="font-weight:500;color:#fafafa">Maple &amp; Finch — annual</div>
+                  <div class="id">DEAL-4821 · added by <span class="av-tiny b">RT</span> L. Tanaka</div>
+                </td>
+                <td><span class="av-tiny b">RT</span> L. Tanaka</td>
+                <td><span class="stage commit">commit</span></td>
+                <td><span class="mono" style="color:#4ade80">85%</span></td>
+                <td class="num">$182,000</td>
+                <td class="num">2026-06-18</td>
+                <td class="mono">14m ago</td>
+              </tr>
+              <tr>
+                <td>
+                  <div style="font-weight:500;color:#fafafa">Cedar Robotics — pilot</div>
+                  <div class="id">DEAL-4837 · added by <span class="av-tiny c">RO</span> R. Okafor</div>
+                </td>
+                <td><span class="av-tiny c">RO</span> R. Okafor</td>
+                <td><span class="stage commit">commit</span></td>
+                <td><span class="mono" style="color:#4ade80">78%</span></td>
+                <td class="num">$96,500</td>
+                <td class="num">2026-06-21</td>
+                <td class="mono">38m ago</td>
+              </tr>
+              <tr>
+                <td>
+                  <div style="font-weight:500;color:#fafafa">Northwind Co. — Growth</div>
+                  <div class="id">DEAL-4802</div>
+                </td>
+                <td><span class="av-tiny a">PA</span> P. Adler</td>
+                <td><span class="stage neg">negotiate</span></td>
+                <td><span class="mono" style="color:#fbbf24">60%</span></td>
+                <td class="num">$74,000</td>
+                <td class="num">2026-06-27</td>
+                <td class="mono">2h ago</td>
+              </tr>
+              <tr>
+                <td>
+                  <div style="font-weight:500;color:#fafafa">Halberd Logistics — expansion</div>
+                  <div class="id">DEAL-4791</div>
+                </td>
+                <td><span class="av-tiny d">MO</span> M. Ortega</td>
+                <td><span class="stage neg">negotiate</span></td>
+                <td><span class="mono" style="color:#fbbf24">55%</span></td>
+                <td class="num">$58,200</td>
+                <td class="num">2026-07-02</td>
+                <td class="mono">6h ago</td>
+              </tr>
+              <tr>
+                <td>
+                  <div style="font-weight:500;color:#fafafa">Soren Press — upgrade</div>
+                  <div class="id">DEAL-4755</div>
+                </td>
+                <td><span class="av-tiny b">RT</span> L. Tanaka</td>
+                <td><span class="stage disco">discovery</span></td>
+                <td><span class="mono" style="color:#a5b4fc">25%</span></td>
+                <td class="num">$22,000</td>
+                <td class="num">2026-07-11</td>
+                <td class="mono">1d ago</td>
+              </tr>
+              <tr>
+                <td>
+                  <div style="font-weight:500;color:#fafafa">Bramble &amp; Co. — pilot</div>
+                  <div class="id">DEAL-4749</div>
+                </td>
+                <td><span class="av-tiny c">RO</span> R. Okafor</td>
+                <td><span class="stage disco">discovery</span></td>
+                <td><span class="mono" style="color:#a5b4fc">30%</span></td>
+                <td class="num">$18,400</td>
+                <td class="num">2026-07-18</td>
+                <td class="mono">2d ago</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h3>Activity</h3>
+            <span class="meta mono">live</span>
+            <div class="right">
+              <button class="iconbtn" title="Filter"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 4h12M4 8h8M6 12h4"/></svg></button>
+            </div>
+          </div>
+          <div class="feed">
+            <div class="row">
+              <div class="when">09:14:02</div>
+              <div class="what">
+                <span class="pill">deal.move</span>
+                <b>Maple &amp; Finch</b> <span class="scope">→</span> stage: <code>legal_review</code><br>
+                <span class="scope">actor:</span> <span class="av-tiny a">MO</span> maya.o
+              </div>
+            </div>
+            <div class="row">
+              <div class="when">08:42:11</div>
+              <div class="what">
+                <span class="pill">deal.update</span>
+                <b>Cedar Robotics</b> · amount: <code>$86k</code> → <code>$96.5k</code><br>
+                <span class="scope">actor:</span> <span class="av-tiny c">RO</span> r.okafor · note: "added 4 seats"
+              </div>
+            </div>
+            <div class="row">
+              <div class="when">08:11:48</div>
+              <div class="what">
+                <span class="pill">deal.pause</span>
+                <b>Halberd Logistics</b> · reason: <code>champion_unavailable</code><br>
+                <span class="scope">next action:</span> follow up Jul 2
+              </div>
+            </div>
+            <div class="row">
+              <div class="when">07:50:00</div>
+              <div class="what">
+                <span class="pill">billing.run</span>
+                auto-billed <b>14 accounts</b> for Q3 · <code>$46,820 MRR</code><br>
+                <span class="scope">exit:</span> success · 14/14 · receipts mailed
+              </div>
+            </div>
+            <div class="row">
+              <div class="when">Yest 17:23</div>
+              <div class="what">
+                <span class="pill">account.upgrade</span>
+                <b>Soren Press</b> · plan: <code>starter</code> → <code>growth</code> · seats: 3 → 11<br>
+                <span class="scope">mrr delta:</span> <span style="color:#4ade80">+$1,420</span>
+              </div>
+            </div>
+            <div class="row">
+              <div class="when">Yest 11:08</div>
+              <div class="what">
+                <span class="pill">lead.created</span>
+                2 new leads from <code>partner:northwind-reseller</code><br>
+                <span class="scope">routed to:</span> <span class="av-tiny b">RT</span> l.tanaka, <span class="av-tiny a">PA</span> p.adler
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+
+</body>
+</html>

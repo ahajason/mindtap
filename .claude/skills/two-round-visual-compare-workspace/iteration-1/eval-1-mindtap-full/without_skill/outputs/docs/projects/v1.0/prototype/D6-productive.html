@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Round 2 · D6 · Heavy + Strict · 工作台</title>
+<style>
+  :root {
+    --bg: #15171b;
+    --bg-2: #1d2026;
+    --bg-3: #262a32;
+    --ink: #e8e9eb;
+    --ink-2: #9aa0aa;
+    --ink-3: #5d6371;
+    --line: #2f333a;
+    --accent: #6e8cff;
+    --success: #5fb88a;
+    --warn: #d99858;
+    --glass-tint: rgba(255,255,255,0.04);
+    --glass-border: rgba(255,255,255,0.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 1440px;
+    height: 900px;
+    font-family: -apple-system, "SF Pro Display", "SF Mono", "PingFang SC", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    overflow: hidden;
+  }
+  .stage { position: relative; width: 100%; height: 100%; }
+  body::before {
+    content: "";
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at 85% 5%, #2a2f3a 0%, transparent 45%);
+    pointer-events: none;
+  }
+  .meta { position: absolute; top: 24px; left: 32px; z-index: 30; color: var(--ink-3); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; }
+  .meta .h { font-weight: 600; color: var(--ink); }
+
+  /* Window chrome (heavy = real window with title bar) */
+  .win {
+    position: absolute;
+    top: 64px; left: 80px;
+    width: 1280px; height: 780px;
+    border-radius: 14px;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.60);
+    overflow: hidden;
+  }
+  .titlebar {
+    height: 36px;
+    background: rgba(21,23,27,0.85);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; padding: 0 14px;
+  }
+  .traffic { display: flex; gap: 7px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot.r { background: #ff5f57; }
+  .dot.y { background: #febc2e; }
+  .dot.g { background: #28c840; }
+  .tname { margin-left: 14px; font-size: 11.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+
+  /* Body grid: sidebar | content | inspector */
+  .body { display: grid; grid-template-columns: 220px 1fr 280px; height: 744px; }
+  .sidebar {
+    background: rgba(255,255,255,0.02);
+    border-right: 1px solid var(--line);
+    padding: 14px 10px;
+  }
+  .brand { font-size: 13px; font-weight: 600; padding: 4px 8px 14px; letter-spacing: -0.01em; display: flex; align-items: center; gap: 6px; }
+  .brand .badge { font-size: 9px; padding: 2px 6px; border-radius: 3px; background: rgba(110,140,255,0.20); color: var(--accent); }
+  .sec { font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); padding: 12px 8px 5px; }
+  .nav { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 5px; color: var(--ink); font-size: 12.5px; }
+  .nav.active { background: rgba(110,140,255,0.14); color: var(--accent); }
+  .nav .ic { width: 14px; text-align: center; opacity: 0.7; font-size: 11px; }
+  .nav .cnt { margin-left: auto; font-size: 10.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+
+  /* Content */
+  .content { padding: 18px 24px; overflow: hidden; display: flex; flex-direction: column; }
+  .head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+  .h1 .sm { font-size: 11.5px; color: var(--ink-2); font-weight: 400; margin-left: 8px; }
+  .head .right { display: flex; gap: 6px; align-items: center; }
+  .btn {
+    height: 26px; padding: 0 10px; border-radius: 5px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--line);
+    color: var(--ink-2); font-size: 11.5px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .btn.primary { background: rgba(110,140,255,0.18); border-color: rgba(110,140,255,0.40); color: var(--accent); }
+  .seg { display: flex; background: rgba(255,255,255,0.04); border: 1px solid var(--line); border-radius: 5px; padding: 2px; }
+  .seg-i { padding: 4px 10px; font-size: 11px; border-radius: 3px; color: var(--ink-2); }
+  .seg-i.active { background: rgba(110,140,255,0.18); color: var(--accent); }
+
+  /* Glass toolbar above table */
+  .tool {
+    background: rgba(255,255,255,0.04);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    padding: 7px 10px;
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 10px;
+  }
+  .chip-f {
+    font-size: 11px; padding: 4px 10px; border-radius: 5px;
+    background: rgba(255,255,255,0.04); color: var(--ink-2);
+  }
+  .chip-f.active { background: rgba(110,140,255,0.16); color: var(--accent); }
+  .tool .search {
+    margin-left: auto;
+    height: 24px; width: 200px;
+    border-radius: 5px;
+    background: rgba(0,0,0,0.25);
+    border: 1px solid var(--line);
+    display: flex; align-items: center; padding: 0 9px;
+    color: var(--ink-2); font-size: 11px;
+  }
+
+  /* Stats row */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+  .stat {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .stat .l { font-size: 10px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.10em; }
+  .stat .v { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .stat .d { font-size: 10.5px; color: var(--success); margin-top: 2px; }
+  .stat .d.dn { color: var(--warn); }
+
+  /* Table */
+  table.t { width: 100%; border-collapse: collapse; font-size: 12px; }
+  table.t thead th {
+    text-align: left;
+    font-weight: 500;
+    color: var(--ink-3);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.10em;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--line);
+  }
+  table.t tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); }
+  table.t tbody tr:hover { background: rgba(255,255,255,0.025); }
+  table.t tbody tr.active { background: rgba(110,140,255,0.06); }
+  table.t td { padding: 9px 10px; vertical-align: middle; }
+  table.t td.t { width: 138px; color: var(--ink-2); font-variant-numeric: tabular-nums; font-size: 11px; }
+  table.t td.title { font-weight: 500; }
+  table.t td.preview { color: var(--ink-2); font-size: 11.5px; }
+  table.t td.tags { width: 180px; }
+  .tag { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 3px; background: rgba(255,255,255,0.06); color: var(--ink-2); margin-right: 4px; }
+  .tag.insp { background: rgba(217,152,88,0.18); color: var(--warn); }
+  .tag.check { background: rgba(95,184,138,0.18); color: var(--success); }
+  .tag.todo { background: rgba(110,140,255,0.18); color: var(--accent); }
+  .dot-status { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+
+  /* Inspector */
+  .inspector {
+    background: rgba(255,255,255,0.02);
+    border-left: 1px solid var(--line);
+    padding: 16px 14px;
+  }
+  .inspector h3 { font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); margin: 12px 0 8px; }
+  .inspector h3:first-child { margin-top: 0; }
+  .row { display: flex; justify-content: space-between; align-items: baseline; padding: 7px 10px; border-radius: 5px; background: rgba(255,255,255,0.03); border: 1px solid var(--line); margin-bottom: 5px; font-size: 11.5px; }
+  .row .l { color: var(--ink-2); }
+  .row .v { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .bar { height: 5px; border-radius: 3px; background: rgba(255,255,255,0.06); margin: 3px 0 7px; overflow: hidden; }
+  .bar > i { display: block; height: 100%; background: var(--accent); border-radius: 3px; }
+  .kv { font-size: 11px; line-height: 1.6; color: var(--ink-2); }
+  .kv b { color: var(--ink); font-weight: 500; }
+
+  /* FAB */
+  .fab {
+    position: absolute;
+    right: 100px; bottom: 80px;
+    width: 40px; height: 40px;
+    border-radius: 9px;
+    background: rgba(110,140,255,0.20);
+    backdrop-filter: blur(20px) saturate(200%);
+    -webkit-backdrop-filter: blur(20px) saturate(200%);
+    border: 1px solid rgba(110,140,255,0.40);
+    box-shadow: 0 8px 20px rgba(110,140,255,0.25);
+    display: grid; place-items: center;
+    font-size: 19px; color: var(--ink);
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="meta">
+    <span class="h">D6 · Heavy + Strict · 工作台</span> &nbsp;·&nbsp; 1440×900 · 深色 + 高密度表格 + 操作栏玻璃
+  </div>
+
+  <div class="win">
+    <div class="titlebar">
+      <div class="traffic"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+      <div class="tname">mindtap · 全部记录 · 06-14 09:42 saved</div>
+    </div>
+
+    <div class="body">
+      <aside class="sidebar">
+        <div class="brand">mindtap <span class="badge">v0.1</span></div>
+        <div class="sec">库</div>
+        <div class="nav active"><span class="ic">▣</span>全部 <span class="cnt">142</span></div>
+        <div class="nav"><span class="ic">✎</span>灵感 <span class="cnt">38</span></div>
+        <div class="nav"><span class="ic">◉</span>打卡 <span class="cnt">56</span></div>
+        <div class="nav"><span class="ic">▢</span>待办 <span class="cnt">22</span></div>
+        <div class="nav"><span class="ic">⌗</span>归档 <span class="cnt">26</span></div>
+        <div class="sec">标签</div>
+        <div class="nav"><span class="ic">#</span>灵感 <span class="cnt">38</span></div>
+        <div class="nav"><span class="ic">#</span>阅读 <span class="cnt">18</span></div>
+        <div class="nav"><span class="ic">#</span>随笔 <span class="cnt">24</span></div>
+        <div class="nav"><span class="ic">#</span>运动 <span class="cnt">9</span></div>
+        <div class="sec">存储</div>
+        <div class="nav"><span class="ic">⌥</span>本地 <span class="cnt">142</span></div>
+        <div class="nav"><span class="ic">⇪</span>iCloud <span class="cnt">—</span></div>
+      </aside>
+
+      <main class="content">
+        <div class="head">
+          <div class="h1">全部记录<span class="sm">142 · 本周 6 · 今日 1</span></div>
+          <div class="right">
+            <div class="seg">
+              <div class="seg-i active">列表</div>
+              <div class="seg-i">网格</div>
+              <div class="seg-i">日历</div>
+              <div class="seg-i">关系</div>
+            </div>
+            <div class="btn">⇣ 导出</div>
+            <div class="btn primary">＋ 新建</div>
+          </div>
+        </div>
+
+        <div class="stats">
+          <div class="stat"><div class="l">本周记录</div><div class="v">6</div><div class="d">+1 vs 上周</div></div>
+          <div class="stat"><div class="l">最长连续</div><div class="v">14<span style="font-size:11px;color:var(--ink-3);font-weight:400;margin-left:3px">天</span></div><div class="d">进行中</div></div>
+          <div class="stat"><div class="l">未完成</div><div class="v">3</div><div class="d dn">较紧</div></div>
+          <div class="stat"><div class="l">存储</div><div class="v">2.4<span style="font-size:11px;color:var(--ink-3);font-weight:400;margin-left:3px">MB</span></div><div class="d">本地</div></div>
+        </div>
+
+        <div class="tool">
+          <span class="chip-f active">全部</span>
+          <span class="chip-f">灵感</span>
+          <span class="chip-f">打卡</span>
+          <span class="chip-f">待办</span>
+          <span class="chip-f">本周</span>
+          <span class="chip-f">未完成</span>
+          <div class="search">⌘K  搜索标题、标签…</div>
+        </div>
+
+        <table class="t">
+          <thead>
+            <tr>
+              <th>时间</th><th>标题</th><th>摘要</th><th>状态</th><th>标签</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="active">
+              <td class="t">2026-06-14 09:42</td>
+              <td class="title">读到「留白也是一种表达」</td>
+              <td class="preview">雨天的咖啡馆很安静，墙上那幅画的留白让人觉得舒服…</td>
+              <td><span class="dot-status" style="background:var(--warn)"></span>灵感</td>
+              <td class="tags"><span class="tag insp">灵感</span><span class="tag">随笔</span></td>
+            </tr>
+            <tr>
+              <td class="t">2026-06-13 22:15</td>
+              <td class="title">连续第 14 天 · 早起 30 分钟</td>
+              <td class="preview">今天读了半章《活法》。窗外的天色是那种刚刚亮起来的浅蓝…</td>
+              <td><span class="dot-status" style="background:var(--success)"></span>已完成</td>
+              <td class="tags"><span class="tag check">打卡</span><span class="tag">阅读</span></td>
+            </tr>
+            <tr>
+              <td class="t">2026-06-13 18:08</td>
+              <td class="title">周末想去那个陶艺市集</td>
+              <td class="preview">记得带相机。</td>
+              <td><span class="dot-status" style="background:var(--accent)"></span>待办</td>
+              <td class="tags"><span class="tag todo">待办</span></td>
+            </tr>
+            <tr>
+              <td class="t">2026-06-12 21:30</td>
+              <td class="title">读完《献给阿尔吉侬的花束》</td>
+              <td class="preview">结尾那段让我沉默了很久。一本书让我重新理解了「记得」…</td>
+              <td><span class="dot-status" style="background:var(--warn)"></span>灵感</td>
+              <td class="tags"><span class="tag insp">灵感</span><span class="tag">阅读</span></td>
+            </tr>
+            <tr>
+              <td class="t">2026-06-12 07:55</td>
+              <td class="title">昨晚做了一个奇怪的梦</td>
+              <td class="preview">在一栋没有电梯的老楼里走，找不到出口…</td>
+              <td><span class="dot-status" style="background:var(--warn)"></span>灵感</td>
+              <td class="tags"><span class="tag insp">灵感</span><span class="tag">随笔</span></td>
+            </tr>
+            <tr>
+              <td class="t">2026-06-11 14:20</td>
+              <td class="title">今天的天空很好看</td>
+              <td class="preview">——拍了三张。</td>
+              <td><span class="dot-status" style="background:var(--warn)"></span>灵感</td>
+              <td class="tags"><span class="tag insp">灵感</span></td>
+            </tr>
+            <tr>
+              <td class="t">2026-06-10 19:00</td>
+              <td class="title">跑步 5 公里</td>
+              <td class="preview">腿有点酸但是精神好。</td>
+              <td><span class="dot-status" style="background:var(--success)"></span>已完成</td>
+              <td class="tags"><span class="tag check">打卡</span><span class="tag">运动</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </main>
+
+      <aside class="inspector">
+        <h3>本周统计</h3>
+        <div class="row"><span class="l">记录数</span><span class="v">6</span></div>
+        <div class="row"><span class="l">灵感</span><span class="v">3</span></div>
+        <div class="bar"><i style="width:50%"></i></div>
+        <div class="row"><span class="l">打卡</span><span class="v">2</span></div>
+        <div class="bar"><i style="width:33%"></i></div>
+        <div class="row"><span class="l">待办</span><span class="v">1</span></div>
+        <div class="bar"><i style="width:17%"></i></div>
+
+        <h3>状态</h3>
+        <div class="kv">
+          <div><b>存储</b> · 本地（自动）</div>
+          <div><b>同步</b> · 离线</div>
+          <div><b>导出</b> · JSON / Markdown</div>
+        </div>
+
+        <h3>当前选中</h3>
+        <div class="kv">
+          <div><b>标题</b> · 读到「留白也是一种表达」</div>
+          <div><b>类型</b> · 灵感</div>
+          <div><b>字数</b> · 86</div>
+          <div><b>关联</b> · 阅读 ×2</div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <div class="fab">＋</div>
+</div>
+</body>
+</html>

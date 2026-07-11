@@ -1,0 +1,13 @@
+{
+  "eval_id": 3,
+  "eval_name": "saas-dashboard",
+  "prompt": "我做的一个 SaaS dashboard 之前是紫粉渐变 + 居中毛玻璃卡片 + 28px 标题，AI 味很重。用户说「这不是设计，这是模板」。我要重新选方向。用两轮对比方法：V1 帮我看玻璃密度，V2 帮我看 4 个不同语境（macOS 26 / 暗色工具 / 编辑杂志 / 工程文档），用真实内容（不是占位文案），产 HTML 让我能在浏览器里全屏对比。",
+  "assertions": [
+    "两轮都产出：V1 4×4 + V2 4 方向 + 目录页 + docs 沉淀",
+    "V2 4 个方向都包含 dashboard 真实组件（KPI / 表格 / 筛选器 / 任务流），不是通用占位",
+    "4 个 v2-*.html 互不共享 CSS（每个文件自包含）",
+    "至少 2 个方向的字体是 serif 或 mono（避免全部用同一种 sans）",
+    "compare-method.md 中显式列出反 AI 味 4 条硬约束",
+    "README 或 docs 里有写为什么 V1 → V2 是必要的（密度 vs 语境）"
+  ]
+}

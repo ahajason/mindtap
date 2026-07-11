@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=480,initial-scale=1">
+<title>Q4 · Heavy · Strict</title>
+<style>
+  /* ===== Q4: Heavy + Strict =====
+     玻璃：厚、模糊重、暗调；正方形对齐、严格几何。
+     适合：金融、数据、专业工具。
+  */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 480px; height: 360px; overflow: hidden; font-family: -apple-system, "SF Pro Text", sans-serif; }
+  body {
+    background:
+      radial-gradient(70% 50% at 30% 20%, #1a2530 0%, transparent 60%),
+      radial-gradient(70% 50% at 80% 80%, #182030 0%, transparent 60%),
+      #0d141c;
+    color: #e8edf2;
+  }
+  /* 内容层：暗色数据卡片 */
+  .panel {
+    position: absolute;
+    inset: 56px 24px 56px 24px;
+    background: #131c26;
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 4px;
+    padding: 14px 16px;
+  }
+  .panel .title {
+    font-size: 11px; font-weight: 600; letter-spacing: .14em;
+    color: #8a99ad; text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .panel .stat {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 10px;
+  }
+  .panel .stat .v {
+    font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .panel .stat .delta { font-size: 11px; color: #34d399; font-weight: 600; }
+  .panel .bars { display: flex; gap: 4px; align-items: flex-end; height: 50px; margin-top: 8px; }
+  .panel .bars div {
+    flex: 1;
+    background: linear-gradient(180deg, #5a8de0, #1e3a5f);
+    border-radius: 1px 1px 0 0;
+  }
+  /* 厚玻璃顶栏（暗、严格） */
+  .topbar-glass {
+    position: absolute;
+    top: 12px; left: 24px; right: 24px; height: 34px;
+    background: rgba(13, 20, 28, 0.55);
+    backdrop-filter: saturate(140%) blur(22px);
+    -webkit-backdrop-filter: saturate(140%) blur(22px);
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,.08);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.1),
+      inset 0 -1px 0 rgba(0,0,0,.3);
+    display: flex; align-items: center; padding: 0 12px; gap: 10px;
+  }
+  .topbar-glass .label {
+    font-size: 10.5px; font-weight: 700; color: #fff; letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+  .topbar-glass .badge {
+    font-size: 9.5px; padding: 2px 6px; border-radius: 3px;
+    background: rgba(52, 211, 153, .15); color: #34d399;
+    font-weight: 600; letter-spacing: .04em;
+  }
+  .topbar-glass .spacer { flex: 1; }
+  .topbar-glass .ico {
+    width: 22px; height: 22px; border-radius: 4px;
+    background: rgba(255,255,255,.06);
+    display: grid; place-items: center;
+    font-size: 11px; color: #cfd8e3;
+  }
+  /* 厚玻璃浮动按钮（正方形感） */
+  .fab-glass {
+    position: absolute; right: 24px; bottom: 14px;
+    width: 38px; height: 38px; border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: saturate(140%) blur(22px);
+    -webkit-backdrop-filter: saturate(140%) blur(22px);
+    border: 1px solid rgba(255,255,255,.14);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.18),
+      0 6px 14px -4px rgba(0,0,0,.5);
+    display: grid; place-items: center;
+    font-size: 18px; font-weight: 400; color: #fff;
+  }
+  .label-q {
+    position: absolute; bottom: 18px; left: 24px;
+    font-size: 10px; letter-spacing: .14em; color: #6b7a8f;
+  }
+</style>
+</head>
+<body>
+  <!-- 控制层：厚玻璃顶栏（暗、严格） -->
+  <div class="topbar-glass">
+    <div class="label">MINDTAP / V1</div>
+    <div class="badge">LIVE</div>
+    <div class="spacer"></div>
+    <div class="ico">⌘</div>
+    <div class="ico">+</div>
+  </div>
+
+  <!-- 内容层：数据面板 -->
+  <div class="panel">
+    <div class="title">WEEK · 24 of 2026</div>
+    <div class="stat">
+      <div class="v">142</div>
+      <div class="delta">+18.4%</div>
+    </div>
+    <div class="bars">
+      <div style="height:30%"></div>
+      <div style="height:45%"></div>
+      <div style="height:35%"></div>
+      <div style="height:60%"></div>
+      <div style="height:50%"></div>
+      <div style="height:75%"></div>
+      <div style="height:65%"></div>
+      <div style="height:90%"></div>
+      <div style="height:55%"></div>
+      <div style="height:70%"></div>
+      <div style="height:85%"></div>
+      <div style="height:95%"></div>
+    </div>
+  </div>
+
+  <!-- 控制层：浮动玻璃按钮 -->
+  <div class="fab-glass">+</div>
+
+  <div class="label-q">Q4 · HEAVY · STRICT</div>
+</body>
+</html>

@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>V2-B — Developer-tool dark (Linear / Raycast)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    width: 1280px; min-height: 800px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif;
+    background: #0a0a0c;
+    color: #e4e4e7;
+    overflow-x: hidden;
+    position: relative;
+  }
+  /* Subtle glass on near-black for side/top bars (Linear style) */
+  .sidebar {
+    position: absolute; left: 0; top: 0; bottom: 0; width: 56px;
+    background: rgba(20, 20, 24, 0.6);
+    backdrop-filter: blur(20px) saturate(1.1);
+    -webkit-backdrop-filter: blur(20px) saturate(1.1);
+    border-right: 1px solid rgba(255,255,255,0.05);
+    box-shadow: inset 1px 0 0 rgba(255,255,255,0.04);
+    display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 6px;
+  }
+  .sidebar .logo { width: 28px; height: 28px; border-radius: 7px; background: linear-gradient(135deg, #5e6ad2, #3b48b0); display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 700; }
+  .sidebar .ic { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; color: #71717a; font-size: 13px; }
+  .sidebar .ic.on { background: rgba(255,255,255,0.06); color: #e4e4e7; }
+  .sidebar .ic:hover { background: rgba(255,255,255,0.05); }
+  .sidebar .spacer { flex: 1; }
+  .sidebar .avatar { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg,#f4a87a,#c95a2a); }
+
+  /* Left secondary rail: workspace + filters */
+  .rail2 {
+    position: absolute; left: 56px; top: 0; bottom: 0; width: 220px;
+    background: #0e0e10;
+    border-right: 1px solid #1a1a1e;
+    padding: 14px 10px;
+    font-size: 13px;
+  }
+  .rail2 .ws { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px; }
+  .rail2 .ws .avatar { width: 22px; height: 22px; border-radius: 5px; background: linear-gradient(135deg,#5e6ad2,#3b48b0); }
+  .rail2 .ws .name { font-size: 13px; font-weight: 600; }
+  .rail2 .ws .caret { margin-left: auto; color: #71717a; }
+  .rail2 .group { margin-top: 18px; }
+  .rail2 .group h3 { font-size: 10px; text-transform: uppercase; color: #52525b; font-weight: 600; letter-spacing: 0.08em; padding: 0 8px 4px; }
+  .rail2 .item { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 5px; color: #a1a1aa; font-size: 13px; }
+  .rail2 .item:hover { background: #18181b; color: #e4e4e7; }
+  .rail2 .item.on { background: #18181b; color: #e4e4e7; }
+  .rail2 .item .ic { width: 12px; height: 12px; border-radius: 2px; background: #52525b; }
+  .rail2 .item .ic.g { background: #5fd2a4; }
+  .rail2 .item .ic.p { background: #9a8cff; }
+  .rail2 .item .ic.o { background: #f4a87a; }
+  .rail2 .item .ic.r { background: #e879a8; }
+  .rail2 .item .count { margin-left: auto; font-size: 11px; color: #52525b; font-variant-numeric: tabular-nums; }
+
+  /* Top bar */
+  .topbar {
+    position: absolute; left: 276px; right: 0; top: 0; height: 48px;
+    background: rgba(14, 14, 16, 0.7);
+    backdrop-filter: blur(20px) saturate(1.1);
+    -webkit-backdrop-filter: blur(20px) saturate(1.1);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    box-shadow: inset 0 -1px 0 rgba(0,0,0,0.4);
+    display: flex; align-items: center; padding: 0 16px; gap: 10px;
+  }
+  .topbar .crumb { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #a1a1aa; }
+  .topbar .crumb b { color: #e4e4e7; font-weight: 600; }
+  .topbar .sep { color: #3f3f46; }
+  .topbar .search { margin-left: 8px; width: 320px; height: 28px; border-radius: 6px; background: #18181b; border: 1px solid #27272a; display: flex; align-items: center; padding: 0 10px; color: #71717a; font-size: 12.5px; }
+  .topbar .search .kbd { margin-left: auto; font-family: "SF Mono", ui-monospace, monospace; font-size: 10.5px; color: #71717a; background: #0e0e10; border: 1px solid #27272a; padding: 1px 5px; border-radius: 3px; }
+  .topbar .ic-btn { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #a1a1aa; font-size: 13px; }
+  .topbar .ic-btn:hover { background: #18181b; color: #e4e4e7; }
+  .topbar .btn { height: 28px; padding: 0 10px; border-radius: 6px; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; color: #a1a1aa; border: 1px solid #27272a; }
+  .topbar .btn.primary { background: #5e6ad2; color: white; border-color: #5e6ad2; }
+
+  /* Main: dense task flow / command palette / status */
+  .main { position: absolute; left: 276px; right: 0; top: 48px; bottom: 0; padding: 16px 24px; overflow: hidden; }
+  .page-title { display: flex; align-items: baseline; margin-bottom: 14px; }
+  .page-title h1 { font-size: 18px; font-weight: 600; }
+  .page-title .crumb { color: #52525b; font-size: 13px; }
+  .page-title .right { margin-left: auto; display: flex; gap: 6px; }
+
+  .filter-chips { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 5px;
+    background: #18181b; border: 1px solid #27272a; color: #a1a1aa; font-size: 12px; font-weight: 500;
+  }
+  .chip.on { background: rgba(94, 106, 210, 0.15); border-color: #5e6ad2; color: #c7cbf5; }
+  .chip .x { color: #52525b; }
+
+  /* Task list — dense, real */
+  .list { background: #0e0e10; border: 1px solid #1a1a1e; border-radius: 8px; overflow: hidden; }
+  .list .gh, .list .row { display: grid; grid-template-columns: 24px 22px 1fr 80px 90px 70px 100px; align-items: center; gap: 10px; padding: 6px 12px; font-size: 12.5px; }
+  .list .gh { background: #111114; color: #52525b; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; border-bottom: 1px solid #1a1a1e; }
+  .list .row { border-bottom: 1px solid #161618; cursor: default; }
+  .list .row:last-child { border-bottom: 0; }
+  .list .row:hover { background: #131316; }
+  .list .row .id { font-family: "SF Mono", ui-monospace, monospace; font-size: 11px; color: #52525b; }
+  .list .row .ic { width: 14px; height: 14px; border-radius: 3px; border: 1.5px solid #3f3f46; }
+  .list .row .ic.filled { background: #5e6ad2; border-color: #5e6ad2; }
+  .list .row .ic.dot { border-radius: 50%; }
+  .list .row .ic.p { border-color: #5fd2a4; background: #5fd2a4; }
+  .list .row .ic.y { border-color: #fbbf24; background: #fbbf24; }
+  .list .row .ic.r { border-color: #e879a8; background: #e879a8; }
+  .list .row .title { display: flex; align-items: center; gap: 8px; }
+  .list .row .title .tag { font-family: "SF Mono", ui-monospace, monospace; font-size: 10.5px; color: #71717a; background: #18181b; border: 1px solid #27272a; padding: 0 4px; border-radius: 3px; }
+  .list .row .title .priority { width: 4px; height: 14px; border-radius: 2px; background: #5e6ad2; }
+  .list .row .status { font-size: 11px; color: #a1a1aa; }
+  .list .row .status .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 5px; }
+  .list .row .assignee { display: flex; align-items: center; gap: 5px; }
+  .list .row .assignee .av { width: 18px; height: 18px; border-radius: 50%; }
+  .list .row .date { font-size: 11px; color: #71717a; font-variant-numeric: tabular-nums; }
+  .list .row .date.warn { color: #fbbf24; }
+  .list .row .date.due { color: #e879a8; }
+
+  /* Right inspector panel — glass on the right side */
+  .inspector {
+    position: absolute; right: 16px; top: 16px; bottom: 16px; width: 320px;
+    border-radius: 12px;
+    background: rgba(20, 20, 24, 0.6);
+    backdrop-filter: blur(24px) saturate(1.15);
+    -webkit-backdrop-filter: blur(24px) saturate(1.15);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 8px 24px -8px rgba(0,0,0,0.5);
+    padding: 14px 14px;
+    font-size: 12.5px;
+  }
+  .inspector h3 { font-size: 11px; text-transform: uppercase; color: #71717a; letter-spacing: 0.06em; font-weight: 600; margin: 8px 0 6px; }
+  .inspector h3:first-child { margin-top: 0; }
+  .inspector .prop { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 12.5px; color: #d4d4d8; }
+  .inspector .prop .l { color: #71717a; font-size: 11.5px; min-width: 70px; }
+  .inspector .prop .v { display: flex; align-items: center; gap: 5px; }
+  .inspector .prop .pill { font-size: 10.5px; padding: 1px 6px; border-radius: 3px; background: rgba(94, 106, 210, 0.15); color: #c7cbf5; }
+  .inspector .prop .pill.g { background: rgba(95, 210, 164, 0.15); color: #5fd2a4; }
+  .inspector .prop .pill.y { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+  .inspector .prop .av { width: 16px; height: 16px; border-radius: 50%; }
+  .inspector .desc { color: #a1a1aa; line-height: 1.5; font-size: 12px; padding: 4px 0 8px; border-bottom: 1px solid #1a1a1e; }
+  .inspector .timeline { padding: 4px 0; }
+  .inspector .tl { display: flex; gap: 8px; padding: 3px 0; }
+  .inspector .tl .av { width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; }
+  .inspector .tl .body { font-size: 11.5px; color: #a1a1aa; line-height: 1.45; }
+  .inspector .tl .body b { color: #e4e4e7; font-weight: 600; }
+  .inspector .tl .body .when { color: #52525b; font-size: 10.5px; }
+
+  /* Bottom status bar */
+  .statusbar {
+    position: absolute; left: 276px; right: 0; bottom: 0; height: 24px;
+    background: rgba(14, 14, 16, 0.7);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-top: 1px solid #1a1a1e;
+    display: flex; align-items: center; padding: 0 16px; gap: 16px;
+    font-family: "SF Mono", ui-monospace, monospace; font-size: 10.5px; color: #71717a;
+  }
+  .statusbar .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+  .statusbar .dot.g { background: #5fd2a4; }
+  .statusbar .dot.y { background: #fbbf24; }
+  .statusbar .right { margin-left: auto; display: flex; gap: 14px; }
+
+  .tag { position: absolute; top: 12px; right: 12px; padding: 4px 8px; border-radius: 6px; background: rgba(94, 106, 210, 0.85); color: white; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; z-index: 3; }
+</style>
+</head>
+<body>
+  <div class="tag">B · DEV-TOOL DARK</div>
+
+  <nav class="sidebar">
+    <div class="logo">N</div>
+    <div class="ic on">▦</div>
+    <div class="ic">◇</div>
+    <div class="ic">⌕</div>
+    <div class="ic">⌗</div>
+    <div class="ic">◌</div>
+    <div class="spacer"></div>
+    <div class="ic">?</div>
+    <div class="avatar"></div>
+  </nav>
+
+  <aside class="rail2">
+    <div class="ws">
+      <div class="avatar"></div>
+      <span class="name">Northwind</span>
+      <span class="caret">▾</span>
+    </div>
+    <div class="group">
+      <h3>Views</h3>
+      <div class="item on"><span class="ic" style="background:#5e6ad2"></span>Inbox<span class="count">14</span></div>
+      <div class="item"><span class="ic" style="background:#5fd2a4"></span>My issues<span class="count">8</span></div>
+      <div class="item"><span class="ic p"></span>Roadmap<span class="count">23</span></div>
+      <div class="item"><span class="ic o"></span>Backlog<span class="count">142</span></div>
+      <div class="item"><span class="ic r"></span>Changelog<span class="count">7</span></div>
+    </div>
+    <div class="group">
+      <h3>Workspace</h3>
+      <div class="item"><span class="ic" style="background:#9a8cff"></span>Billing</div>
+      <div class="item"><span class="ic" style="background:#e879a8"></span>Members<span class="count">38</span></div>
+      <div class="item"><span class="ic" style="background:#f4a87a"></span>Integrations</div>
+    </div>
+  </aside>
+
+  <header class="topbar">
+    <div class="crumb"><b>Northwind</b> <span class="sep">/</span> Inbox</div>
+    <div class="search">⌘K  Jump to issue, project, doc… <span class="kbd">⌘K</span></div>
+    <div class="ic-btn">⚙</div>
+    <div class="ic-btn">⌗</div>
+    <div class="btn">+ Add issue <span style="color:#52525b;margin-left:4px">⌘I</span></div>
+  </header>
+
+  <main class="main">
+    <div class="page-title">
+      <span class="crumb">Northwind</span> &nbsp; <h1>Inbox</h1>
+      <div class="right">
+        <span class="btn">Filter</span>
+        <span class="btn">Sort ▾</span>
+        <span class="btn">Display ▾</span>
+      </div>
+    </div>
+    <div class="filter-chips">
+      <span class="chip on">All issues <span class="x">×</span></span>
+      <span class="chip">Status: Triage <span class="x">×</span></span>
+      <span class="chip">Assignee: me <span class="x">×</span></span>
+      <span class="chip">Priority: Urgent, High <span class="x">×</span></span>
+      <span class="chip">+ Add filter</span>
+    </div>
+
+    <div class="list">
+      <div class="gh"><div></div><div></div><div>Title</div><div>Status</div><div>Priority</div><div>Assignee</div><div>Due</div></div>
+      <div class="row">
+        <div class="ic filled"></div><div class="id">NW-418</div>
+        <div class="title"><span class="priority" style="background:#e879a8"></span>Refund INV-2026-0418 — duplicate charge for Northwind Labs <span class="tag">billing</span></div>
+        <div><span class="status"><span class="dot" style="background:#fbbf24"></span>Triage</span></div>
+        <div><span class="pill" style="background:rgba(232,121,168,0.15);color:#e879a8">Urgent</span></div>
+        <div class="assignee"><div class="av" style="background:linear-gradient(135deg,#f4a87a,#c95a2a)"></div>Maya</div>
+        <div class="date due">Today</div>
+      </div>
+      <div class="row">
+        <div class="ic filled"></div><div class="id">NW-417</div>
+        <div class="title"><span class="priority" style="background:#fbbf24"></span>Webhook <code>invoice.paid</code> retry storm — investigate 3 retries on Cardinal Freight <span class="tag">webhooks</span></div>
+        <div><span class="status"><span class="dot" style="background:#5e6ad2"></span>In progress</span></div>
+        <div><span class="pill" style="background:rgba(251,191,36,0.15);color:#fbbf24">High</span></div>
+        <div class="assignee"><div class="av" style="background:linear-gradient(135deg,#7cb1ff,#2a5fa8)"></div>Jin</div>
+        <div class="date warn">Tomorrow</div>
+      </div>
+      <div class="row">
+        <div></div><div class="id">NW-416</div>
+        <div class="title"><span class="priority" style="background:#5e6ad2"></span>Add seat-based proration to invoice generator <span class="tag">billing</span></div>
+        <div><span class="status"><span class="dot" style="background:#71717a"></span>Backlog</span></div>
+        <div><span class="pill" style="background:rgba(94,106,210,0.15);color:#c7cbf5">Medium</span></div>
+        <div class="assignee"><div class="av" style="background:linear-gradient(135deg,#5fd2a4,#2c7a3d)"></div>Sara</div>
+        <div class="date">Jun 22</div>
+      </div>
+      <div class="row">
+        <div></div><div class="id">NW-415</div>
+        <div class="title"><span class="priority" style="background:#71717a"></span>Empty state for "no customers" — design review <span class="tag">design</span></div>
+        <div><span class="status"><span class="dot" style="background:#5fd2a4"></span>Done</span></div>
+        <div><span class="pill" style="background:rgba(113,113,122,0.15);color:#a1a1aa">Low</span></div>
+        <div class="assignee"><div class="av" style="background:linear-gradient(135deg,#9a8cff,#5a4ab8)"></div>Priya</div>
+        <div class="date">Jun 18</div>
+      </div>
+      <div class="row">
+        <div class="ic filled"></div><div class="id">NW-414</div>
+        <div class="title"><span class="priority" style="background:#5e6ad2"></span>Pinecrest Studio — convert trial to paid: send offer email <span class="tag">growth</span></div>
+        <div><span class="status"><span class="dot" style="background:#fbbf24"></span>Triage</span></div>
+        <div><span class="pill" style="background:rgba(94,106,210,0.15);color:#c7cbf5">Medium</span></div>
+        <div class="assignee"><div class="av" style="background:linear-gradient(135deg,#f4a87a,#c95a2a)"></div>Maya</div>
+        <div class="date warn">Jun 16</div>
+      </div>
+      <div class="row">
+        <div></div><div class="id">NW-413</div>
+        <div class="title"><span class="priority" style="background:#5e6ad2"></span>Stripe Tax integration — phase 2 (US-only → EU) <span class="tag">billing</span></div>
+        <div><span class="status"><span class="dot" style="background:#5e6ad2"></span>In progress</span></div>
+        <div><span class="pill" style="background:rgba(94,106,210,0.15);color:#c7cbf5">Medium</span></div>
+        <div class="assignee"><div class="av" style="background:linear-gradient(135deg,#7cb1ff,#2a5fa8)"></div>Jin</div>
+        <div class="date">Jun 28</div>
+      </div>
+      <div class="row">
+        <div></div><div class="id">NW-412</div>
+        <div class="title"><span class="priority" style="background:#71717a"></span>Add CSV export to invoices table — Q2 ask from CFO <span class="tag">billing</span></div>
+        <div><span class="status"><span class="dot" style="background:#71717a"></span>Backlog</span></div>
+        <div><span class="pill" style="background:rgba(113,113,122,0.15);color:#a1a1aa">Low</span></div>
+        <div class="assignee"><div class="av" style="background:linear-gradient(135deg,#5fd2a4,#2c7a3d)"></div>Sara</div>
+        <div class="date">Jul 05</div>
+      </div>
+      <div class="row">
+        <div></div><div class="id">NW-411</div>
+        <div class="title"><span class="priority" style="background:#5e6ad2"></span>Update dunning copy for past-due invoices (3rd email of sequence) <span class="tag">growth</span></div>
+        <div><span class="status"><span class="dot" style="background:#5fd2a4"></span>Done</span></div>
+        <div><span class="pill" style="background:rgba(113,113,122,0.15);color:#a1a1aa">Low</span></div>
+        <div class="assignee"><div class="av" style="background:linear-gradient(135deg,#e879a8,#9a3a6a)"></div>Theo</div>
+        <div class="date">Jun 12</div>
+      </div>
+    </div>
+  </main>
+
+  <aside class="inspector">
+    <h3>NW-418 · Refund INV-2026-0418</h3>
+    <div class="desc">Customer Northwind Labs was charged twice for invoice INV-2026-0418 ($2,400). Original charge posted 4 days ago, second posted today. Process full refund and apply $2,400 credit to next cycle.</div>
+    <h3>Properties</h3>
+    <div class="prop"><span class="l">Status</span><span class="v"><span class="pill" style="background:rgba(251,191,36,0.15);color:#fbbf24">Triage</span></span></div>
+    <div class="prop"><span class="l">Priority</span><span class="v"><span class="pill" style="background:rgba(232,121,168,0.15);color:#e879a8">Urgent</span></span></div>
+    <div class="prop"><span class="l">Assignee</span><span class="v"><span class="av" style="background:linear-gradient(135deg,#f4a87a,#c95a2a);width:16px;height:16px;border-radius:50%"></span>Maya H.</span></div>
+    <div class="prop"><span class="l">Customer</span><span class="v">Northwind Labs</span></div>
+    <div class="prop"><span class="l">Amount</span><span class="v">$2,400.00</span></div>
+    <div class="prop"><span class="l">Label</span><span class="v"><span class="pill">billing</span> <span class="pill" style="background:rgba(95,210,164,0.15);color:#5fd2a4">refund</span></span></div>
+    <h3>Activity</h3>
+    <div class="timeline">
+      <div class="tl"><span class="av" style="background:linear-gradient(135deg,#7cb1ff,#2a5fa8)"></span><span class="body"><b>Jin</b> marked In progress → Triage <span class="when">22 min ago</span></span></div>
+      <div class="tl"><span class="av" style="background:linear-gradient(135deg,#e879a8,#9a3a6a)"></span><span class="body"><b>Stripe</b> detected duplicate charge <code>ch_3MtLqA…</code> <span class="when">28 min ago</span></span></div>
+      <div class="tl"><span class="av" style="background:linear-gradient(135deg,#f4a87a,#c95a2a)"></span><span class="body"><b>Northwind Labs</b> opened ticket via support@northwind.io <span class="when">31 min ago</span></span></div>
+      <div class="tl"><span class="av" style="background:linear-gradient(135deg,#5fd2a4,#2c7a3d)"></span><span class="body"><b>Maya</b> created issue <span class="when">32 min ago</span></span></div>
+    </div>
+  </aside>
+
+  <footer class="statusbar">
+    <span><span class="dot g"></span>api.northwind.io 200</span>
+    <span><span class="dot g"></span>stripe webhook 142ms</span>
+    <span><span class="dot y"></span>2 past due</span>
+    <div class="right">
+      <span>Updated 12s ago</span>
+      <span>Branch main · 0c41a8f</span>
+      <span>UTF-8 · LF</span>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1280,initial-scale=1">
+<title>V2-B · Developer-tool Dark · Mindtap</title>
+<style>
+  /* =====================================================
+     V2-B: Developer-tool Dark (Linear / Vercel / Raycast)
+     - 微妙玻璃漂浮在近黑色背景上
+     - 密集信息 + 单色 + 等宽数字 + 键盘提示
+     - 等宽字体强调工具感
+  */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 1280px; min-height: 800px;
+    font-family: -apple-system, "SF Pro Text", "Inter", sans-serif;
+    color: #e6e6e6;
+    background: #08080a;
+    -webkit-font-smoothing: antialiased;
+  }
+  /* 底层栅格 */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,.012) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.012) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none;
+  }
+  /* ========== 顶栏 ========== */
+  .topbar {
+    position: absolute; top: 0; left: 0; right: 0; height: 44px;
+    background: rgba(15, 15, 18, 0.7);
+    backdrop-filter: saturate(160%) blur(20px);
+    -webkit-backdrop-filter: saturate(160%) blur(20px);
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+    display: flex; align-items: center; padding: 0 14px; gap: 10px;
+    z-index: 20;
+  }
+  .topbar .brand {
+    font-size: 13px; font-weight: 700; color: #fff;
+    letter-spacing: -.01em;
+    padding-right: 14px;
+    border-right: 1px solid rgba(255,255,255,.06);
+  }
+  .topbar .crumb {
+    font-size: 12px; color: #6e6e73;
+    display: flex; gap: 6px; align-items: center;
+  }
+  .topbar .crumb .sep { color: #38383c; }
+  .topbar .crumb .now { color: #e6e6e6; }
+  .topbar .spacer { flex: 1; }
+  .topbar .cmd {
+    display: flex; align-items: center; gap: 6px;
+    padding: 4px 10px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 6px;
+    font-size: 11.5px; color: #aeaeb2;
+    font-family: "SF Mono", ui-monospace, monospace;
+  }
+  .topbar .cmd kbd {
+    font-family: inherit; font-size: 10px;
+    background: rgba(255,255,255,.08);
+    padding: 1px 5px; border-radius: 3px;
+    color: #fff;
+  }
+  .topbar .ic {
+    width: 26px; height: 26px; border-radius: 6px;
+    display: grid; place-items: center;
+    font-size: 13px; color: #aeaeb2;
+    cursor: pointer;
+  }
+  .topbar .ic:hover { background: rgba(255,255,255,.06); color: #fff; }
+  .topbar .ic.alert { position: relative; }
+  .topbar .ic.alert::after {
+    content: ''; position: absolute; top: 5px; right: 5px;
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #f97316;
+  }
+
+  /* ========== 侧栏 ========== */
+  .sidebar {
+    position: absolute; top: 44px; left: 0; bottom: 0;
+    width: 220px;
+    background: rgba(12, 12, 14, 0.55);
+    backdrop-filter: saturate(160%) blur(20px);
+    -webkit-backdrop-filter: saturate(160%) blur(20px);
+    border-right: 1px solid rgba(255,255,255,.06);
+    box-shadow: inset 1px 0 0 rgba(255,255,255,.03);
+    padding: 14px 8px;
+    overflow-y: auto;
+    z-index: 10;
+  }
+  .sidebar .label {
+    font-size: 10px; font-weight: 600; color: #5e5e63;
+    text-transform: uppercase; letter-spacing: .1em;
+    padding: 6px 10px 4px;
+    display: flex; justify-content: space-between;
+  }
+  .sidebar .nav {
+    display: flex; align-items: center; gap: 10px;
+    padding: 5px 10px; border-radius: 5px;
+    font-size: 12.5px; color: #aeaeb2;
+    cursor: pointer;
+  }
+  .sidebar .nav:hover { background: rgba(255,255,255,.04); color: #fff; }
+  .sidebar .nav.active { background: rgba(255,255,255,.06); color: #fff; }
+  .sidebar .nav .ic {
+    width: 16px; height: 16px; display: grid; place-items: center;
+    color: #5e5e63; font-size: 12px;
+  }
+  .sidebar .nav.active .ic { color: #8b8bf0; }
+  .sidebar .nav .count {
+    margin-left: auto;
+    font-family: "SF Mono", monospace;
+    font-size: 11px;
+    color: #5e5e63;
+    font-variant-numeric: tabular-nums;
+  }
+  .sidebar .nav .kbd {
+    margin-left: auto;
+    font-family: "SF Mono", monospace;
+    font-size: 10px;
+    color: #38383c;
+  }
+  .sidebar .ws {
+    margin-top: 14px; padding: 8px 10px;
+    border-top: 1px solid rgba(255,255,255,.04);
+  }
+  .sidebar .ws .ws-name {
+    font-size: 11px; font-weight: 600; color: #fff;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .sidebar .ws .ws-name .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #22c55e;
+  }
+  .sidebar .ws .ws-meta {
+    font-family: "SF Mono", monospace;
+    font-size: 10.5px; color: #5e5e63;
+    margin-top: 2px;
+  }
+
+  /* ========== 主区 ========== */
+  .main {
+    position: absolute;
+    top: 44px; left: 220px; right: 0; bottom: 0;
+    display: flex; flex-direction: column;
+  }
+  /* 子顶栏（视图标题 + 排序） */
+  .subbar {
+    height: 38px; padding: 0 24px;
+    display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid rgba(255,255,255,.04);
+    background: rgba(8,8,10,.6);
+  }
+  .subbar .vt {
+    font-size: 13px; font-weight: 600; color: #fff;
+  }
+  .subbar .vt-meta {
+    font-family: "SF Mono", monospace;
+    font-size: 11px; color: #5e5e63;
+  }
+  .subbar .spacer { flex: 1; }
+  .subbar .pill {
+    font-size: 11px; padding: 3px 8px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 4px;
+    color: #aeaeb2;
+    font-family: "SF Mono", monospace;
+  }
+
+  /* 内容区：密集列表（不玻璃） */
+  .content {
+    flex: 1;
+    padding: 14px 24px;
+    overflow-y: auto;
+  }
+  /* 关键数字面板 */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .stat {
+    background: rgba(255,255,255,.02);
+    border: 1px solid rgba(255,255,255,.05);
+    border-radius: 6px;
+    padding: 10px 12px;
+  }
+  .stat .l {
+    font-size: 10.5px; color: #5e5e63;
+    font-family: "SF Mono", monospace;
+    text-transform: uppercase; letter-spacing: .06em;
+  }
+  .stat .v {
+    font-family: "SF Mono", monospace;
+    font-size: 22px; font-weight: 600; color: #fff;
+    margin-top: 2px;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat .d {
+    font-family: "SF Mono", monospace;
+    font-size: 10.5px;
+    color: #22c55e;
+    margin-top: 2px;
+  }
+  .stat .d.down { color: #ef4444; }
+
+  /* 表格 */
+  .table-head, .row {
+    display: grid;
+    grid-template-columns: 32px 1fr 90px 80px 60px 90px;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+  .table-head {
+    font-family: "SF Mono", monospace;
+    font-size: 10px;
+    color: #5e5e63;
+    text-transform: uppercase; letter-spacing: .08em;
+    padding: 6px 8px;
+    border-bottom: 1px solid rgba(255,255,255,.05);
+  }
+  .row {
+    border-bottom: 1px solid rgba(255,255,255,.03);
+    color: #e6e6e6;
+    cursor: pointer;
+  }
+  .row:hover { background: rgba(255,255,255,.02); }
+  .row .id {
+    font-family: "SF Mono", monospace;
+    font-size: 11px;
+    color: #5e5e63;
+  }
+  .row .title {
+    color: #fff;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .row .title .tag {
+    font-family: "SF Mono", monospace;
+    font-size: 10px;
+    color: #8b8bf0;
+    background: rgba(139, 139, 240, .1);
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-right: 6px;
+  }
+  .row .meta {
+    font-family: "SF Mono", monospace;
+    font-size: 11px;
+    color: #5e5e63;
+  }
+  .row .num {
+    font-family: "SF Mono", monospace;
+    font-size: 11px;
+    color: #aeaeb2;
+    font-variant-numeric: tabular-nums;
+  }
+  .row .status {
+    font-family: "SF Mono", monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    padding: 2px 6px;
+    border-radius: 3px;
+    display: inline-block;
+  }
+  .row .status.s-done { background: rgba(34, 197, 94, .12); color: #22c55e; }
+  .row .status.s-wip { background: rgba(139, 139, 240, .12); color: #8b8bf0; }
+  .row .status.s-draft { background: rgba(120, 120, 130, .12); color: #aeaeb2; }
+  .row .status.s-bloc { background: rgba(239, 68, 68, .12); color: #ef4444; }
+
+  /* Command palette 提示 */
+  .palette {
+    position: absolute;
+    left: 50%; top: 110px; transform: translateX(-50%);
+    width: 540px;
+    background: rgba(20, 20, 22, 0.85);
+    backdrop-filter: saturate(160%) blur(28px);
+    -webkit-backdrop-filter: saturate(160%) blur(28px);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 10px;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.06),
+      0 20px 50px -10px rgba(0,0,0,.6);
+    z-index: 30;
+  }
+  .palette .search {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+  }
+  .palette .search input {
+    flex: 1; background: transparent; border: none;
+    color: #fff; font-size: 14px; outline: none;
+    font-family: inherit;
+  }
+  .palette .search input::placeholder { color: #5e5e63; }
+  .palette .search .kbd {
+    font-family: "SF Mono", monospace;
+    font-size: 10px;
+    padding: 2px 6px;
+    background: rgba(255,255,255,.06);
+    border-radius: 3px;
+    color: #aeaeb2;
+  }
+  .palette .results {
+    padding: 6px;
+  }
+  .palette .results .hint {
+    font-size: 10px; color: #5e5e63;
+    text-transform: uppercase; letter-spacing: .1em;
+    padding: 8px 10px 4px;
+  }
+  .palette .results .item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 10px; border-radius: 5px;
+    font-size: 13px; color: #e6e6e6;
+  }
+  .palette .results .item .ic {
+    width: 18px; height: 18px;
+    display: grid; place-items: center;
+    color: #8b8bf0; font-size: 12px;
+  }
+  .palette .results .item .hint-text {
+    margin-left: auto; font-size: 11px; color: #5e5e63;
+  }
+  .palette .results .item.active {
+    background: #8b8bf0; color: #fff;
+  }
+  .palette .results .item.active .ic,
+  .palette .results .item.active .hint-text {
+    color: #fff;
+  }
+
+  /* 水印 */
+  .watermark {
+    position: absolute; bottom: 10px; right: 14px;
+    font-family: "SF Mono", monospace;
+    font-size: 9.5px; letter-spacing: .14em;
+    color: #38383c;
+  }
+</style>
+</head>
+<body>
+
+<!-- 顶栏 -->
+<div class="topbar">
+  <div class="brand">mindtap</div>
+  <div class="crumb">
+    <span>workspace</span>
+    <span class="sep">/</span>
+    <span class="now">all-records</span>
+    <span class="sep">/</span>
+    <span class="now">issue-list</span>
+  </div>
+  <div class="spacer"></div>
+  <div class="cmd">Quick search <kbd>⌘K</kbd></div>
+  <div class="ic">⌃</div>
+  <div class="ic alert">⌫</div>
+  <div class="ic">⚙</div>
+</div>
+
+<!-- 侧栏 -->
+<aside class="sidebar">
+  <div class="label">Views <span>+</span></div>
+  <div class="nav active"><span class="ic">▦</span><span>Inbox</span><span class="count">14</span></div>
+  <div class="nav"><span class="ic">✎</span><span>Inspiration</span><span class="count">38</span></div>
+  <div class="nav"><span class="ic">✓</span><span>Check-in</span><span class="count">52</span></div>
+  <div class="nav"><span class="ic">☆</span><span>Todo</span><span class="count">29</span></div>
+  <div class="nav"><span class="ic">⏚</span><span>Archive</span><span class="count">210</span></div>
+
+  <div class="label">Saved <span>+</span></div>
+  <div class="nav"><span class="ic">★</span><span>This week</span><span class="kbd">⌘1</span></div>
+  <div class="nav"><span class="ic">⌖</span><span>Today</span><span class="kbd">⌘2</span></div>
+  <div class="nav"><span class="ic">↻</span><span>Recent</span><span class="kbd">⌘3</span></div>
+
+  <div class="label">Tags</div>
+  <div class="nav"><span class="ic">#</span><span>design</span><span class="count">22</span></div>
+  <div class="nav"><span class="ic">#</span><span>reading</span><span class="count">17</span></div>
+  <div class="nav"><span class="ic">#</span><span>walking</span><span class="count">9</span></div>
+
+  <div class="ws">
+    <div class="ws-name"><div class="dot"></div>jason's space</div>
+    <div class="ws-meta">local · 1.4 MB · 142 records</div>
+  </div>
+</aside>
+
+<!-- 主区 -->
+<main class="main">
+  <!-- 子顶栏 -->
+  <div class="subbar">
+    <div class="vt">Inbox</div>
+    <div class="vt-meta">14 UNREAD · UPDATED 14:09</div>
+    <div class="spacer"></div>
+    <div class="pill">Sort: created ↓</div>
+    <div class="pill">Filter: all</div>
+    <div class="pill">View: table</div>
+  </div>
+
+  <!-- 内容 -->
+  <div class="content">
+    <!-- 数字面板 -->
+    <div class="stats">
+      <div class="stat">
+        <div class="l">Total</div>
+        <div class="v">142</div>
+        <div class="d">+18 this week</div>
+      </div>
+      <div class="stat">
+        <div class="l">Inspiration</div>
+        <div class="v">38</div>
+        <div class="d">+6 this week</div>
+      </div>
+      <div class="stat">
+        <div class="l">Check-in streak</div>
+        <div class="v">7d</div>
+        <div class="d">+1 today</div>
+      </div>
+      <div class="stat">
+        <div class="l">Open todo</div>
+        <div class="v">12</div>
+        <div class="d down">-3 this week</div>
+      </div>
+    </div>
+
+    <!-- 表格 -->
+    <div class="table-head">
+      <div></div>
+      <div>Title</div>
+      <div>Type</div>
+      <div>Status</div>
+      <div>Words</div>
+      <div>Created</div>
+    </div>
+    <div class="row">
+      <div class="id">0142</div>
+      <div class="title"><span class="tag">INSP</span>玻璃不承载内容，承载我们看内容的方式</div>
+      <div class="meta">inspiration</div>
+      <div><span class="status s-wip">draft</span></div>
+      <div class="num">128</div>
+      <div class="num">14:09 today</div>
+    </div>
+    <div class="row">
+      <div class="id">0141</div>
+      <div class="title"><span class="tag">INSP</span>巷子里的光</div>
+      <div class="meta">inspiration</div>
+      <div><span class="status s-done">done</span></div>
+      <div class="num">42</div>
+      <div class="num">19:42 yesterday</div>
+    </div>
+    <div class="row">
+      <div class="id">0140</div>
+      <div class="title"><span class="tag">TODO</span>回信 · 张老师</div>
+      <div class="meta">todo</div>
+      <div><span class="status s-bloc">due</span></div>
+      <div class="num">—</div>
+      <div class="num">14:00 today</div>
+    </div>
+    <div class="row">
+      <div class="id">0139</div>
+      <div class="title"><span class="tag">CHECK</span>晨间复盘</div>
+      <div class="meta">check-in</div>
+      <div><span class="status s-done">done</span></div>
+      <div class="num">89</div>
+      <div class="num">07:20 today</div>
+    </div>
+    <div class="row">
+      <div class="id">0138</div>
+      <div class="title"><span class="tag">TODO</span>周末徒步准备</div>
+      <div class="meta">todo</div>
+      <div><span class="status s-wip">wip</span></div>
+      <div class="num">—</div>
+      <div class="num">21:00 yesterday</div>
+    </div>
+    <div class="row">
+      <div class="id">0137</div>
+      <div class="title"><span class="tag">INSP</span>读《玻璃之下》第 4 章</div>
+      <div class="meta">inspiration</div>
+      <div><span class="status s-draft">draft</span></div>
+      <div class="num">215</div>
+      <div class="num">22:10 yesterday</div>
+    </div>
+    <div class="row">
+      <div class="id">0136</div>
+      <div class="title"><span class="tag">TODO</span>Mindtap 视觉方向决策 · V2</div>
+      <div class="meta">todo</div>
+      <div><span class="status s-wip">wip</span></div>
+      <div class="num">—</div>
+      <div class="num">11:30 yesterday</div>
+    </div>
+    <div class="row">
+      <div class="id">0135</div>
+      <div class="title"><span class="tag">CHECK</span>3/5 · 连续 7 天</div>
+      <div class="meta">check-in</div>
+      <div><span class="status s-done">done</span></div>
+      <div class="num">31</div>
+      <div class="num">09:00 yesterday</div>
+    </div>
+  </div>
+
+  <!-- Command palette 浮层（玻璃） -->
+  <div class="palette">
+    <div class="search">
+      <span style="color:#5e5e63">⌕</span>
+      <input placeholder="搜索记录、标签、命令…" />
+      <span class="kbd">ESC</span>
+    </div>
+    <div class="results">
+      <div class="hint">RECENT</div>
+      <div class="item active">
+        <span class="ic">▦</span>新建记录
+        <span class="hint-text">⌘ N</span>
+      </div>
+      <div class="item">
+        <span class="ic">⌕</span>全局搜索
+        <span class="hint-text">⌘ K</span>
+      </div>
+      <div class="item">
+        <span class="ic">⌖</span>跳转到今日
+        <span class="hint-text">⌘ 2</span>
+      </div>
+      <div class="hint">NAVIGATION</div>
+      <div class="item">
+        <span class="ic">✎</span>查看灵感库
+        <span class="hint-text">→</span>
+      </div>
+      <div class="item">
+        <span class="ic">☆</span>查看待办
+        <span class="hint-text">→</span>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="watermark">V2-B · DEVELOPER-TOOL · DARK</div>
+
+</body>
+</html>

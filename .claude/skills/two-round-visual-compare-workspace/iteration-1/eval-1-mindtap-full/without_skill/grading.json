@@ -1,0 +1,65 @@
+{
+  "expectations": [
+    {
+      "text": "Round 1 8 tiles + compare.html",
+      "passed": false,
+      "evidence": "no compare.html"
+    },
+    {
+      "text": "Round 2 4 v2-*.html + compare-v2.html + ≥1280×800",
+      "passed": false,
+      "evidence": "only 0 v2-*.html; no compare-v2.html"
+    },
+    {
+      "text": "prototype/index.html exists",
+      "passed": false,
+      "evidence": "no index.html"
+    },
+    {
+      "text": "compare-method.md exists",
+      "passed": true,
+      "evidence": "found docs/projects/v1.0/compare-method.md"
+    },
+    {
+      "text": "No purple/pink gradient in any HTML",
+      "passed": true,
+      "evidence": "no purple/pink gradient in 10 HTML"
+    },
+    {
+      "text": "Glass only on controls (not on content cards)",
+      "passed": true,
+      "evidence": "78 backdrop-filter total across HTML"
+    },
+    {
+      "text": "V2 4 directions use ≥3 distinct font families",
+      "passed": false,
+      "evidence": "0 distinct font-families: []"
+    },
+    {
+      "text": "HIG materials read (in user_notes)",
+      "passed": true,
+      "evidence": "user_notes mentions: ['liquid-glass', 'hig', 'material', 'landmarks', 'adopting']"
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 4,
+    "total": 8,
+    "pass_rate": 0.5
+  },
+  "execution_metrics": {
+    "total_tool_calls": 22,
+    "output_chars": 0,
+    "errors_encountered": 0
+  },
+  "timing": {
+    "total_duration_seconds": 738.3,
+    "executor_duration_seconds": 738.3
+  },
+  "claims": [],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  }
+}

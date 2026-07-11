@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>D8 — Expressive (typographic / brand)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    width: 480px; height: 360px;
+    font-family: "Charter", "Iowan Old Style", "Georgia", "Times New Roman", serif;
+    background:
+      radial-gradient(90% 70% at 20% 0%, #f5ede0 0%, #e8dcc4 60%, #d4c4a8 100%);
+    color: #2a1f0f;
+    overflow: hidden;
+    position: relative;
+  }
+  /* Expressive: serif, large display, restrained but with brand voice */
+  .body { position: absolute; inset: 0; padding: 60px 18px 14px; }
+  .eyebrow { font-size: 9px; color: #8a6f3a; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600; }
+  .display { font-size: 36px; font-weight: 700; line-height: 1.05; margin-top: 4px; letter-spacing: -0.02em; }
+  .display em { font-style: italic; color: #8a3a1a; }
+  .lede { font-size: 12px; color: #4a3a20; margin-top: 6px; line-height: 1.45; max-width: 340px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; }
+  .stat { background: rgba(255, 250, 240, 0.5); border: 1px solid #e6d6b3; border-radius: 8px; padding: 6px 8px; }
+  .stat .l { font-size: 9px; color: #6a5320; font-weight: 600; }
+  .stat .v { font-size: 18px; font-weight: 700; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .stat .d { font-size: 9px; color: #2c7a3d; font-weight: 600; }
+  /* Expressive glass: warm, delicate, mirror highlight, never on content */
+  .glass {
+    position: absolute; left: 10px; right: 10px; top: 10px; height: 42px;
+    border-radius: 12px;
+    background: rgba(255, 250, 240, 0.5);
+    backdrop-filter: blur(20px) saturate(1.1);
+    -webkit-backdrop-filter: blur(20px) saturate(1.1);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.85),
+      inset 0 -1px 0 rgba(120, 90, 30, 0.10);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    display: flex; align-items: center; padding: 0 12px; gap: 8px;
+    font-size: 11px; font-weight: 600;
+  }
+  .glass .logo { width: 16px; height: 16px; border-radius: 4px; background: #2a1f0f; display: flex; align-items: center; justify-content: center; color: #fef7e6; font-family: serif; font-size: 11px; font-weight: 700; }
+  .glass .crumb { color: #6a5320; font-size: 10.5px; }
+  .glass .crumb b { color: #2a1f0f; }
+  .glass .search {
+    margin-left: auto; flex: 1; max-width: 200px; height: 22px; border-radius: 8px;
+    background: rgba(255, 250, 240, 0.55);
+    border: 1px solid rgba(180, 150, 100, 0.25);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+    display: flex; align-items: center; padding: 0 8px;
+    color: #6a5320; font-weight: 500; font-size: 9.5px;
+  }
+  .glass .avatar { width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(135deg, #c97b3a, #8a3a1a); }
+  .tag {
+    position: absolute; top: 10px; left: 10px;
+    padding: 2px 6px; border-radius: 4px;
+    background: rgba(42, 31, 15, 0.78); color: #fef7e6;
+    font-size: 8.5px; font-weight: 700; letter-spacing: 0.05em; z-index: 2;
+  }
+</style>
+</head>
+<body>
+  <div class="tag">D8 · EXPRESSIVE</div>
+  <div class="glass">
+    <span class="logo">N</span>
+    <span class="crumb">Northwind <b>/ Revenue</b></span>
+    <span class="search">⌘K  Find invoices…</span>
+    <span class="avatar"></span>
+  </div>
+  <div class="body">
+    <div class="eyebrow">Q2 · 2026</div>
+    <div class="display">$184,210 <em>MRR</em></div>
+    <div class="lede">Quarter closed up 6.2% on the strength of three enterprise expansions and a 38-seat net add at Atlas Brewing Co.</div>
+    <div class="grid">
+      <div class="stat"><div class="l">Active</div><div class="v">2,419</div><div class="d">+38 wk</div></div>
+      <div class="stat"><div class="l">Churn</div><div class="v">2.1%</div><div class="d" style="color:#9a3a1a">+0.3pt</div></div>
+      <div class="stat"><div class="l">Trials</div><div class="v">147</div><div class="d">+12</div></div>
+    </div>
+  </div>
+</body>
+</html>

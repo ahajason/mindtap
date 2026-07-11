@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Mindtap · Direction A — macOS 26 Tahoe</title>
+<style>
+  :root {
+    --bg-deep: #ECEFF4;
+    --bg-canvas: #F4F4F7;
+    --sidebar-tint: #E8ECF1;
+    --accent: #007AFF;
+    --accent-warm: #FF9F0A;
+    --accent-pink: #FF375F;
+    --ink-1: #1C1C1E;
+    --ink-2: #3A3A3C;
+    --ink-3: #6E6E73;
+    --ink-4: #9A9AA0;
+    --divider: #D6D6DB;
+    --glass-stroke: rgba(255,255,255,0.55);
+    --glass-shadow: 0 1px 0 rgba(255,255,255,0.65) inset, 0 -1px 0 rgba(0,0,0,0.06) inset, 0 8px 24px rgba(15,20,30,0.08);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg-canvas); color: var(--ink-1); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+  body { font-size: 14px; line-height: 1.45; }
+  .stage { width: 1440px; height: 900px; display: grid; grid-template-columns: 280px 1fr 320px; grid-template-rows: 56px 1fr 28px; grid-template-areas: "top top top" "side main right" "foot foot foot"; background: var(--bg-canvas); }
+
+  /* ---- TOPBAR (heavy glass) ---- */
+  .topbar { grid-area: top; display: flex; align-items: center; gap: 12px; padding: 0 18px; background: rgba(255,255,255,0.62); backdrop-filter: saturate(180%) blur(40px); -webkit-backdrop-filter: saturate(180%) blur(40px); border-bottom: 1px solid rgba(0,0,0,0.08); box-shadow: var(--glass-shadow); }
+  .traffic { display: flex; gap: 8px; }
+  .traffic span { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+  .traffic .r { background: #FF5F57; }
+  .traffic .y { background: #FEBC2E; }
+  .traffic .g { background: #28C840; }
+  .app-mark { width: 22px; height: 22px; border-radius: 6px; background: linear-gradient(135deg, #4FC3F7, #007AFF); display: inline-flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 13px; box-shadow: 0 1px 0 rgba(255,255,255,0.6) inset, 0 1px 2px rgba(0,0,0,0.15); }
+  .crumb { font-size: 13px; color: var(--ink-3); font-weight: 500; }
+  .crumb strong { color: var(--ink-1); font-weight: 600; }
+  .crumb .sep { margin: 0 6px; color: var(--ink-4); }
+  .topbar .search { flex: 1; max-width: 460px; margin: 0 16px; padding: 6px 10px; background: rgba(0,0,0,0.06); border-radius: 8px; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-3); }
+  .topbar .search .kbd { font-size: 11px; padding: 1px 5px; border-radius: 4px; background: rgba(255,255,255,0.6); color: var(--ink-2); border: 1px solid rgba(0,0,0,0.08); font-family: "SF Mono", Menlo, monospace; }
+  .topbar .pill { padding: 5px 10px; border-radius: 999px; background: rgba(0,0,0,0.05); font-size: 12px; color: var(--ink-2); font-weight: 500; }
+  .topbar .pill.primary { background: var(--accent); color: #fff; box-shadow: 0 1px 0 rgba(255,255,255,0.4) inset; }
+
+  /* ---- SIDEBAR (heavy glass over content) ---- */
+  .sidebar { grid-area: side; background: rgba(232,236,241,0.78); backdrop-filter: saturate(180%) blur(30px); -webkit-backdrop-filter: saturate(180%) blur(30px); border-right: 1px solid rgba(0,0,0,0.07); padding: 14px 10px; overflow: hidden; }
+  .side-section-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3); font-weight: 600; padding: 10px 10px 6px; }
+  .side-item { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-radius: 7px; font-size: 13px; color: var(--ink-2); font-weight: 500; }
+  .side-item .ic { width: 18px; height: 18px; flex: none; color: var(--ink-3); }
+  .side-item .count { margin-left: auto; font-size: 11px; color: var(--ink-3); }
+  .side-item.active { background: var(--accent); color: #fff; }
+  .side-item.active .ic, .side-item.active .count { color: rgba(255,255,255,0.9); }
+  .side-group { padding: 4px 0; }
+  .side-note { display: flex; flex-direction: column; padding: 6px 10px; border-radius: 6px; font-size: 12.5px; color: var(--ink-2); }
+  .side-note .n-title { font-weight: 500; }
+  .side-note .n-meta { color: var(--ink-3); font-size: 11px; margin-top: 1px; }
+  .side-note:hover { background: rgba(0,0,0,0.04); }
+  .side-note.selected { background: rgba(0,122,255,0.12); }
+
+  /* ---- MAIN ---- */
+  .main { grid-area: main; padding: 0; overflow: hidden; display: flex; flex-direction: column; }
+  .toolbar { height: 44px; display: flex; align-items: center; gap: 6px; padding: 0 18px; background: rgba(255,255,255,0.55); backdrop-filter: saturate(180%) blur(30px); -webkit-backdrop-filter: saturate(180%) blur(30px); border-bottom: 1px solid rgba(0,0,0,0.07); }
+  .tb-btn { padding: 4px 9px; border-radius: 6px; font-size: 12.5px; color: var(--ink-2); font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
+  .tb-btn:hover { background: rgba(0,0,0,0.05); }
+  .tb-btn.primary { background: var(--accent); color: #fff; }
+  .tb-divider { width: 1px; height: 20px; background: var(--divider); margin: 0 4px; }
+  .tb-spacer { flex: 1; }
+  .tb-status { font-size: 12px; color: var(--ink-3); }
+
+  .doc { padding: 28px 56px 80px; flex: 1; overflow: hidden; }
+  .doc .eyebrow { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  .doc h1 { font-size: 42px; line-height: 1.08; letter-spacing: -0.022em; font-weight: 700; color: var(--ink-1); margin: 8px 0 6px; font-feature-settings: "ss01"; }
+  .doc .subtitle { font-size: 17px; color: var(--ink-2); max-width: 760px; margin: 0 0 22px; line-height: 1.45; }
+  .doc .meta-row { display: flex; gap: 16px; font-size: 12.5px; color: var(--ink-3); margin-bottom: 24px; }
+  .doc .meta-row .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--ink-4); align-self: center; }
+
+  .lead-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 28px; }
+  .prose p { font-size: 15.5px; line-height: 1.62; color: var(--ink-1); margin: 0 0 14px; }
+  .prose .pull { font-size: 22px; line-height: 1.4; color: var(--ink-1); font-weight: 500; letter-spacing: -0.012em; padding-left: 16px; border-left: 3px solid var(--accent); margin: 18px 0; }
+  .callout { background: rgba(255,159,10,0.10); border: 1px solid rgba(255,159,10,0.35); border-radius: 10px; padding: 12px 14px; font-size: 13px; color: var(--ink-2); margin-top: 14px; }
+  .callout strong { color: var(--accent-warm); }
+
+  .panel { background: #FFFFFF; border: 1px solid var(--divider); border-radius: 14px; overflow: hidden; box-shadow: 0 1px 0 rgba(255,255,255,0.8) inset, 0 6px 18px rgba(15,20,30,0.05); }
+  .panel header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--divider); font-size: 12px; color: var(--ink-3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
+  .panel header .pulse { display: inline-flex; align-items: center; gap: 6px; }
+  .panel header .pulse::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #34C759; box-shadow: 0 0 0 3px rgba(52,199,89,0.18); }
+  .panel table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .panel th { text-align: left; font-weight: 500; color: var(--ink-3); padding: 8px 14px; border-bottom: 1px solid var(--divider); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .panel td { padding: 10px 14px; border-top: 1px solid rgba(0,0,0,0.04); color: var(--ink-2); }
+  .panel tr:first-child td { border-top: 0; }
+  .panel td.num { font-family: "SF Mono", Menlo, monospace; color: var(--ink-1); font-variant-numeric: tabular-nums; }
+  .trend-up { color: #34C759; font-weight: 600; }
+  .trend-down { color: #FF3B30; font-weight: 600; }
+
+  /* ---- RIGHT INSPECTOR (heavy glass) ---- */
+  .right { grid-area: right; background: rgba(255,255,255,0.70); backdrop-filter: saturate(180%) blur(40px); -webkit-backdrop-filter: saturate(180%) blur(40px); border-left: 1px solid rgba(0,0,0,0.07); padding: 14px 14px; overflow: hidden; display: flex; flex-direction: column; gap: 12px; }
+  .right h3 { font-size: 11px; letter-spacing: 0.10em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; margin: 0 0 6px; }
+  .tag-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { font-size: 11.5px; padding: 3px 8px; border-radius: 999px; background: rgba(0,122,255,0.10); color: var(--accent); font-weight: 500; }
+  .tag.gray { background: rgba(0,0,0,0.06); color: var(--ink-2); }
+  .link-card { display: flex; gap: 10px; padding: 8px; border-radius: 8px; background: rgba(0,0,0,0.03); }
+  .link-card .swatch { width: 4px; border-radius: 4px; background: var(--accent); }
+  .link-card .lt { font-size: 12.5px; color: var(--ink-1); font-weight: 500; }
+  .link-card .lm { font-size: 11px; color: var(--ink-3); }
+  .avatar-row { display: flex; align-items: center; gap: -4px; }
+  .avatar { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #fff; margin-left: -6px; display: inline-flex; align-items: center; justify-content: center; color: #fff; font-size: 10px; font-weight: 600; }
+  .av1 { background: #007AFF; }
+  .av2 { background: #FF9F0A; }
+  .av3 { background: #FF375F; margin-left: 0; }
+
+  /* ---- FOOTBAR (glass) ---- */
+  .footbar { grid-area: foot; display: flex; align-items: center; gap: 14px; padding: 0 18px; background: rgba(28,28,30,0.92); color: rgba(255,255,255,0.86); font-size: 11.5px; font-family: "SF Mono", Menlo, monospace; }
+  .footbar .seg { display: inline-flex; align-items: center; gap: 6px; }
+  .footbar .dot { width: 6px; height: 6px; border-radius: 50%; background: #34C759; }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="traffic"><span class="r"></span><span class="y"></span><span class="g"></span></div>
+    <div class="app-mark">M</div>
+    <div class="crumb"><strong>Mindtap</strong><span class="sep">›</span>Inbox<span class="sep">›</span>Capture cost optimization</div>
+    <div class="search"><span style="opacity:.6;">⌕</span> Search 1,284 notes<span style="margin-left:auto;"><span class="kbd">⌘</span><span class="kbd">K</span></span></div>
+    <div class="pill">All changes saved · 2s ago</div>
+    <div class="pill primary">+ New Note</div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="side-section-title">Library</div>
+    <div class="side-group">
+      <div class="side-item active"><span class="ic">⌂</span> Inbox <span class="count">12</span></div>
+      <div class="side-item"><span class="ic">★</span> Pinned <span class="count">4</span></div>
+      <div class="side-item"><span class="ic">⏱</span> Today <span class="count">7</span></div>
+      <div class="side-item"><span class="ic">☷</span> Archive <span class="count">1,261</span></div>
+    </div>
+    <div class="side-section-title">Notebooks</div>
+    <div class="side-group">
+      <div class="side-item"><span class="ic" style="color:#007AFF;">●</span> Capture cost <span class="count">23</span></div>
+      <div class="side-item"><span class="ic" style="color:#FF9F0A;">●</span> Onboarding v1.2 <span class="count">41</span></div>
+      <div class="side-item"><span class="ic" style="color:#FF375F;">●</span> Liquid Glass tests <span class="count">17</span></div>
+      <div class="side-item"><span class="ic" style="color:#34C759;">●</span> Reading log <span class="count">88</span></div>
+      <div class="side-item"><span class="ic" style="color:#5856D6;">●</span> Personal <span class="count">9</span></div>
+    </div>
+    <div class="side-section-title">Inbox · recent</div>
+    <div class="side-note selected">
+      <div class="n-title">Capture cost optimization</div>
+      <div class="n-meta">Today · 14:08 · 312 words</div>
+    </div>
+    <div class="side-note">
+      <div class="n-title">Tar archive excluding .DS_Store</div>
+      <div class="n-meta">Today · 11:42</div>
+    </div>
+    <div class="side-note">
+      <div class="n-title">WWDC25 §3 transcript — glass on controls</div>
+      <div class="n-meta">Yesterday</div>
+    </div>
+    <div class="side-note">
+      <div class="n-title">Lighthouse on v1.1 build</div>
+      <div class="n-meta">Yesterday</div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="toolbar">
+      <div class="tb-btn"><span>B</span> Backlinks</div>
+      <div class="tb-btn">Outline</div>
+      <div class="tb-btn">Word count</div>
+      <div class="tb-divider"></div>
+      <div class="tb-btn">H1</div>
+      <div class="tb-btn"><strong>B</strong></div>
+      <div class="tb-btn"><em>I</em></div>
+      <div class="tb-btn"><span style="text-decoration:underline;">U</span></div>
+      <div class="tb-divider"></div>
+      <div class="tb-btn">Insert link</div>
+      <div class="tb-btn">Insert date</div>
+      <div class="tb-spacer"></div>
+      <div class="tb-status">Auto-saving · 312 words · last edit 14:08</div>
+    </div>
+
+    <div class="doc">
+      <div class="eyebrow">Notebook · Capture cost</div>
+      <h1>Capture cost optimization</h1>
+      <div class="subtitle">On-device tokenization pushed ingest from 340&nbsp;ms to 41&nbsp;ms median, but the OCR pre-pass still dominates on longer notes. Track three more lanes before the v1.2 sprint review.</div>
+      <div class="meta-row">
+        <span>Updated 14:08</span><span class="dot"></span>
+        <span>312 words · ~1.9 min read</span><span class="dot"></span>
+        <span>Linked to 4 notes</span><span class="dot"></span>
+        <span>Shared with Mei, Devon</span>
+      </div>
+
+      <div class="lead-grid">
+        <div class="prose">
+          <p>The v1.1 capture pipeline spends 78% of wall time in the OCR pre-pass. Pushing tokenization onto-device took the ingest path from 340 ms to 41 ms median — a 8.3× win on warm cache — but every note longer than 1,200 characters still pays a 220 ms tax before the LLM even sees the prompt.</p>
+          <div class="pull">Treat OCR like an optional pre-flight, not a hard gate. Defer it behind the tap-to-open action, not the type-to-capture action.</div>
+          <p>We have three lanes left. First, batch OCR per notebook window: a 30-second window collapsed 19 separate calls into 2 with no quality regression on the validation set. Second, swap the on-device tokenizer to the 32k BPE built last month — same accuracy, 14% fewer tokens, which trims the LLM cost line directly. Third, retire the per-keystroke preview render; users only read the final card.</p>
+          <div class="callout"><strong>Blocker:</strong> the on-device tokenizer doesn't ship in EU builds until the 26.2 entitlement lands. Plan to land lanes 1 and 3 by sprint 4, hold lane 2 for the post-release window.</div>
+        </div>
+
+        <div>
+          <div class="panel">
+            <header><div class="pulse">Live</div>Cost per 1k notes</header>
+            <table>
+              <thead>
+                <tr><th>Lane</th><th>Before</th><th>After</th><th>Δ</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>OCR batched (30s)</td><td class="num">$0.84</td><td class="num">$0.21</td><td class="num trend-up">-75%</td></tr>
+                <tr><td>Tokenizer 32k BPE</td><td class="num">$0.21</td><td class="num">$0.18</td><td class="num trend-up">-14%</td></tr>
+                <tr><td>Drop keystroke preview</td><td class="num">$0.18</td><td class="num">$0.13</td><td class="num trend-up">-28%</td></tr>
+                <tr><td>Cold-start skip</td><td class="num">$0.13</td><td class="num">$0.11</td><td class="num trend-up">-15%</td></tr>
+                <tr><td><strong>Combined</strong></td><td class="num">$0.84</td><td class="num"><strong>$0.11</strong></td><td class="num trend-up"><strong>-87%</strong></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT INSPECTOR -->
+  <div class="right">
+    <div>
+      <h3>Tags</h3>
+      <div class="tag-row">
+        <span class="tag">capture</span>
+        <span class="tag">cost</span>
+        <span class="tag">ocr</span>
+        <span class="tag gray">sprint-4</span>
+        <span class="tag gray">needs-review</span>
+      </div>
+    </div>
+    <div>
+      <h3>Backlinks · 4</h3>
+      <div class="link-card"><div class="swatch"></div><div><div class="lt">On-device tokenizer, the trade</div><div class="lm">Capture cost · 03 Jun</div></div></div>
+      <div class="link-card" style="margin-top:6px;"><div class="swatch" style="background:#FF9F0A;"></div><div><div class="lt">OCR batch window design</div><div class="lm">Engineering log · 31 May</div></div></div>
+      <div class="link-card" style="margin-top:6px;"><div class="swatch" style="background:#34C759;"></div><div><div class="lt">v1.2 sprint plan, lane 2</div><div class="lm">Sprint · 28 May</div></div></div>
+    </div>
+    <div>
+      <h3>Activity</h3>
+      <div style="font-size:12.5px; color:var(--ink-2); line-height:1.55;">
+        <div>14:08 — Devon added the OCR batching note.</div>
+        <div>13:50 — Mei linked from <em>Onboarding v1.2</em>.</div>
+        <div>09:12 — You created this note from a voice memo.</div>
+      </div>
+    </div>
+    <div>
+      <h3>Shared with</h3>
+      <div class="avatar-row">
+        <span class="avatar av1">JS</span>
+        <span class="avatar av2">ML</span>
+        <span class="avatar av3">DK</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTBAR -->
+  <div class="footbar">
+    <div class="seg"><span class="dot"></span> synced · iCloud Drive · 1.2 MB of 5 GB</div>
+    <div class="seg">⌘1 Inbox · ⌘2 Capture · ⌘3 Onboarding · ⌘4 Reading</div>
+    <div class="seg" style="margin-left:auto;">line 47 · col 18 · UTF-8 · Markdown</div>
+  </div>
+
+</div>
+</body>
+</html>

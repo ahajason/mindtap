@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>A · macOS 26 Tahoe · Liquid Glass · V2</title>
+<style>
+  /* ============================================================
+     A · macOS 26 Tahoe · Liquid Glass
+     灵感：NSVisualEffectView / GlassEffectContainer / 漂浮导航
+     实现：CSS backdrop-filter + layered translucency + concentric radii
+     ============================================================ */
+  *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg-base: #0e0f12;
+    --bg-wash-1: radial-gradient(at 30% 20%, #5b3aa6 0%, transparent 55%),
+                 radial-gradient(at 80% 70%, #1f6dd9 0%, transparent 50%),
+                 radial-gradient(at 50% 90%, #c43d8a 0%, transparent 55%),
+                 #0e0f12;
+    --glass-fill: rgba(255,255,255,0.10);
+    --glass-fill-strong: rgba(255,255,255,0.18);
+    --glass-stroke: rgba(255,255,255,0.22);
+    --glass-stroke-soft: rgba(255,255,255,0.10);
+    --text: #fff;
+    --text-2: rgba(255,255,255,0.78);
+    --text-3: rgba(255,255,255,0.55);
+    --accent: #5ac8fa;          /* systemBlue light */
+    --accent-2: #ff7a3d;        /* systemOrange */
+    --radius-window: 18px;       /* concentric */
+    --radius-bar: 12px;
+    --radius-control: 8px;
+    --row-h: 36px;
+    --tool-h: 52px;
+    --side-w: 240px;
+    --inspector-w: 280px;
+  }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg-wash-1);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
+    font-size: 13px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  /* ---------- window chrome (Tahoe-style: traffic lights float on glass) ---------- */
+  .label {
+    position: fixed; top: 12px; right: 16px; z-index: 99;
+    padding: 6px 10px; background: rgba(0,0,0,.55); border-radius: 6px;
+    font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+  }
+  .window {
+    width: 1280px; height: 800px;
+    border-radius: var(--radius-window);
+    background: rgba(20,22,28,0.55);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border: 1px solid var(--glass-stroke);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.10) inset,        /* top highlight */
+      0 30px 80px rgba(0,0,0,0.55),
+      0 0 0 0.5px rgba(0,0,0,0.30);
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: var(--tool-h) 1fr;
+    grid-template-columns: var(--side-w) 1fr var(--inspector-w);
+    grid-template-areas:
+      "title title title"
+      "side  main  inspect";
+    position: relative;
+  }
+  /* colorful ambient leak behind window — sells the glass */
+  .window::before {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(circle at 18% 25%, rgba(255,122,61,0.55), transparent 38%),
+      radial-gradient(circle at 78% 80%, rgba(196,61,138,0.45), transparent 42%),
+      radial-gradient(circle at 50% 50%, rgba(90,200,250,0.18), transparent 50%);
+    z-index: 0; pointer-events: none;
+  }
+  /* ---------- title bar / toolbar ---------- */
+  .titlebar {
+    grid-area: title;
+    display: flex; align-items: center;
+    padding: 0 14px 0 80px;       /* space for traffic lights */
+    border-bottom: 1px solid var(--glass-stroke-soft);
+    background: rgba(255,255,255,0.04);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    position: relative; z-index: 3;
+  }
+  .traffic {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    display: flex; gap: 8px;
+  }
+  .traffic span {
+    width: 12px; height: 12px; border-radius: 50%;
+    box-shadow: 0 0 0 0.5px rgba(0,0,0,0.4);
+  }
+  .traffic .r { background: #ff5f57; }
+  .traffic .y { background: #febc2e; }
+  .traffic .g { background: #28c840; }
+  .title-text {
+    font-weight: 600; font-size: 13px;
+    letter-spacing: .01em;
+    color: var(--text);
+    flex: 1; text-align: center;
+    opacity: .92;
+  }
+  .title-actions {
+    display: flex; gap: 6px; align-items: center;
+  }
+  .icon-btn {
+    width: 30px; height: 30px; border-radius: var(--radius-control);
+    display: grid; place-items: center;
+    background: transparent;
+    color: var(--text-2);
+    cursor: pointer;
+    transition: background .15s ease;
+  }
+  .icon-btn:hover { background: rgba(255,255,255,0.10); color: var(--text); }
+  .toolbar-group {
+    display: flex; align-items: center; gap: 4px;
+    padding: 0 10px;
+    border-right: 1px solid var(--glass-stroke-soft);
+  }
+  .toolbar-group:last-child { border-right: none; }
+  .tool-btn {
+    height: 28px; padding: 0 10px; border-radius: var(--radius-control);
+    display: inline-flex; align-items: center; gap: 6px;
+    background: transparent; color: var(--text-2); font-size: 12px;
+    cursor: pointer;
+  }
+  .tool-btn:hover { background: rgba(255,255,255,0.10); color: var(--text); }
+  .tool-btn.primary {
+    background: var(--accent); color: #04243a; font-weight: 600;
+  }
+  .tool-btn.primary:hover { background: #7ad5ff; }
+  .seg {
+    display: inline-flex; background: rgba(0,0,0,0.30);
+    border-radius: 8px; padding: 2px; gap: 0;
+  }
+  .seg button {
+    border: none; background: transparent; color: var(--text-2);
+    font-size: 12px; padding: 4px 10px; border-radius: 6px;
+    cursor: pointer;
+  }
+  .seg button.on { background: rgba(255,255,255,0.18); color: var(--text); }
+
+  /* ---------- sidebar (translucent, floating) ---------- */
+  .sidebar {
+    grid-area: side;
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    border-right: 1px solid var(--glass-stroke-soft);
+    padding: 14px 10px;
+    overflow-y: auto;
+    position: relative; z-index: 2;
+  }
+  .side-section { margin-bottom: 18px; }
+  .side-label {
+    font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--text-3); padding: 0 8px 6px;
+  }
+  .side-item {
+    display: flex; align-items: center; gap: 8px;
+    height: var(--row-h); padding: 0 8px; border-radius: var(--radius-control);
+    color: var(--text-2); cursor: pointer; font-size: 13px;
+  }
+  .side-item:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+  .side-item.on {
+    background: rgba(90,200,250,0.22); color: var(--text); font-weight: 500;
+    box-shadow: 0 0 0 1px rgba(90,200,250,0.35) inset;
+  }
+  .side-item .pill {
+    margin-left: auto; font-size: 10px;
+    background: rgba(255,255,255,0.10); padding: 1px 6px; border-radius: 8px;
+    color: var(--text-3);
+  }
+  .side-item .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent-2);
+    margin-left: auto;
+  }
+
+  /* ---------- main / content (the note) ---------- */
+  .main {
+    grid-area: main;
+    overflow-y: auto;
+    padding: 28px 44px 64px;
+    position: relative; z-index: 1;
+  }
+  .crumb {
+    font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--text-3); margin-bottom: 10px;
+  }
+  .note-title {
+    font-size: 34px; font-weight: 700; letter-spacing: -.02em;
+    margin-bottom: 8px;
+    background: linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.7) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .note-meta {
+    display: flex; gap: 14px; align-items: center;
+    color: var(--text-3); font-size: 12px; margin-bottom: 26px;
+  }
+  .note-meta .tag {
+    background: rgba(255,255,255,0.10); padding: 3px 10px; border-radius: 20px;
+    color: var(--text-2); font-size: 11px;
+  }
+  .note-body { font-size: 14px; line-height: 1.65; color: var(--text); max-width: 720px; }
+  .note-body p { margin-bottom: 14px; color: var(--text-2); }
+  .note-body h2 {
+    font-size: 18px; font-weight: 600; color: var(--text);
+    margin: 28px 0 10px;
+  }
+  .note-body blockquote {
+    border-left: 2px solid var(--accent);
+    padding: 4px 0 4px 14px; margin: 16px 0;
+    color: var(--text-2); font-style: italic;
+  }
+  /* "card" — small glass tile for inline content */
+  .card {
+    background: var(--glass-fill);
+    border: 1px solid var(--glass-stroke-soft);
+    border-radius: var(--radius-bar);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 14px 16px; margin: 16px 0;
+  }
+  .checklist { list-style: none; }
+  .checklist li {
+    display: flex; align-items: center; gap: 10px;
+    padding: 4px 0; color: var(--text-2); font-size: 13px;
+  }
+  .checklist li::before {
+    content: ""; width: 16px; height: 16px; border-radius: 50%;
+    background: rgba(90,200,250,0.30); border: 1px solid var(--accent);
+    flex-shrink: 0;
+  }
+  .checklist li.done { color: var(--text-3); text-decoration: line-through; }
+  .checklist li.done::before { background: var(--accent); }
+  /* ---------- inspector (right pane) ---------- */
+  .inspector {
+    grid-area: inspect;
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border-left: 1px solid var(--glass-stroke-soft);
+    padding: 16px;
+    overflow-y: auto;
+    position: relative; z-index: 2;
+  }
+  .insp-h {
+    font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--text-3); margin: 0 0 10px;
+  }
+  .insp-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--glass-stroke-soft);
+    border-radius: var(--radius-bar);
+    padding: 12px; margin-bottom: 14px;
+  }
+  .insp-row { display: flex; justify-content: space-between; font-size: 12px; padding: 4px 0; color: var(--text-2); }
+  .insp-row .k { color: var(--text-3); }
+  .swatch-row { display: flex; gap: 6px; margin-top: 6px; }
+  .swatch-row span {
+    width: 22px; height: 22px; border-radius: 6px;
+    border: 1px solid var(--glass-stroke-soft);
+  }
+  .link-list a {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 6px 0; color: var(--text-2); font-size: 12px;
+    text-decoration: none; border-top: 1px solid var(--glass-stroke-soft);
+  }
+  .link-list a:first-child { border-top: none; }
+  .link-list a .arrow { color: var(--text-3); }
+
+  /* liquid glass floating "compose" button (concentric big radius) */
+  .compose {
+    position: absolute; right: calc(var(--inspector-w) + 18px); bottom: 22px;
+    width: 48px; height: 48px; border-radius: 50%;
+    background: var(--glass-fill-strong);
+    border: 1px solid var(--glass-stroke);
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35), 0 1px 0 rgba(255,255,255,0.20) inset;
+    display: grid; place-items: center;
+    color: #fff; font-size: 22px; cursor: pointer;
+    z-index: 5;
+  }
+  /* "scroll edge effect" — content fades under toolbar */
+  .main { mask-image: linear-gradient(180deg, #000 calc(100% - 24px), transparent); }
+  /* tiny scrollbars */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.18); border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.28); }
+</style>
+</head>
+<body>
+<div class="label">A · macOS 26 Tahoe · Liquid Glass</div>
+<div class="window">
+  <!-- Title bar / unified toolbar -->
+  <header class="titlebar">
+    <div class="traffic"><span class="r"></span><span class="y"></span><span class="g"></span></div>
+    <div class="toolbar-group">
+      <button class="tool-btn">←</button>
+      <button class="tool-btn">→</button>
+    </div>
+    <div class="toolbar-group">
+      <div class="seg">
+        <button class="on">编辑</button>
+        <button>预览</button>
+        <button>分屏</button>
+      </div>
+    </div>
+    <div class="toolbar-group">
+      <button class="tool-btn">B</button>
+      <button class="tool-btn">I</button>
+      <button class="tool-btn">U</button>
+      <button class="tool-btn">S</button>
+    </div>
+    <div class="toolbar-group">
+      <button class="tool-btn">⌘F</button>
+      <button class="tool-btn">链接</button>
+      <button class="tool-btn">图片</button>
+    </div>
+    <div class="title-text">色彩与光线 · 14.06</div>
+    <div class="title-actions">
+      <button class="icon-btn">⌕</button>
+      <button class="icon-btn">⇪</button>
+      <button class="tool-btn primary">发布</button>
+    </div>
+  </header>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="side-section">
+      <div class="side-label">空间</div>
+      <div class="side-item on">灵感<span class="pill">14</span></div>
+      <div class="side-item">日志<span class="pill">128</span></div>
+      <div class="side-item">项目<span class="pill">6</span></div>
+      <div class="side-item">阅读</div>
+    </div>
+    <div class="side-section">
+      <div class="side-label">灵感 / 最近</div>
+      <div class="side-item"><span class="dot"></span>色彩与光线</div>
+      <div class="side-item">雨后路面</div>
+      <div class="side-item">地铁反光</div>
+      <div class="side-item">咖啡杯边</div>
+      <div class="side-item">便利店冷光</div>
+      <div class="side-item">凌晨三点的窗</div>
+      <div class="side-item">晨雾</div>
+    </div>
+    <div class="side-section">
+      <div class="side-label">标签</div>
+      <div class="side-item">#颜色</div>
+      <div class="side-item">#城市</div>
+      <div class="side-item">#光</div>
+      <div class="side-item">#碎片</div>
+    </div>
+  </aside>
+
+  <!-- Main note -->
+  <main class="main">
+    <div class="crumb">灵感 · 14.06 · 周日下午</div>
+    <h1 class="note-title">色彩与光线</h1>
+    <div class="note-meta">
+      <span>更新于 17:42</span>
+      <span>·</span>
+      <span>248 字</span>
+      <span>·</span>
+      <span class="tag">#颜色</span>
+      <span class="tag">#光</span>
+      <span class="tag">#碎片</span>
+    </div>
+    <article class="note-body">
+      <p>今天路过便利店，玻璃门打开的那一瞬间，冷气与暖色灯光同时扑到脸上。我站在那里多看了几秒——这就是我要写的东西：边界处的颜色。</p>
+
+      <h2>四种看见</h2>
+      <p>雨后路面是深灰偏紫，地铁反光是冷青里带一点钴蓝，咖啡杯边是奶油色被蒸汽打断，便利店冷光是带荧光的惨白。它们之间没有过渡，只有切换。</p>
+
+      <blockquote>颜色其实是边界。两种光相遇的地方，颜色才真正存在。</blockquote>
+
+      <div class="card">
+        <div class="insp-h" style="margin-bottom:8px;">本周颜色切片</div>
+        <ul class="checklist">
+          <li class="done">周一 · 地铁口 · 钴蓝 + 暖白</li>
+          <li class="done">周二 · 早餐摊 · 鸡蛋黄 + 不锈钢</li>
+          <li>周三 · 雨后 · 深灰偏紫</li>
+          <li>周四 · 便利店 · 荧光惨白</li>
+          <li>周五 · 回家路上 · 路灯暖橙</li>
+        </ul>
+      </div>
+
+      <h2>下一步</h2>
+      <p>把它们做成小色卡，每张只有一种颜色 + 一句话描述。再看看一周下来，能不能拼出我自己的一天。</p>
+    </article>
+  </main>
+
+  <!-- Inspector -->
+  <aside class="inspector">
+    <div class="insp-h">检查器</div>
+    <div class="insp-card">
+      <div class="insp-row"><span class="k">空间</span><span>灵感</span></div>
+      <div class="insp-row"><span class="k">字数</span><span>248</span></div>
+      <div class="insp-row"><span class="k">阅读</span><span>~ 1 分钟</span></div>
+      <div class="insp-row"><span class="k">链接</span><span>3</span></div>
+    </div>
+
+    <div class="insp-h">主色</div>
+    <div class="insp-card">
+      <div class="swatch-row">
+        <span style="background:#ff7a3d"></span>
+        <span style="background:#5ac8fa"></span>
+        <span style="background:#c43d8a"></span>
+        <span style="background:#f0c33b"></span>
+        <span style="background:#1a4fb8"></span>
+      </div>
+      <div class="insp-row" style="margin-top:8px"><span class="k">来源</span><span>雨后 · 地铁 · 便利店</span></div>
+    </div>
+
+    <div class="insp-h">相关</div>
+    <div class="insp-card link-list">
+      <a href="#">雨后路面 <span class="arrow">→</span></a>
+      <a href="#">地铁反光 <span class="arrow">→</span></a>
+      <a href="#">咖啡杯边 <span class="arrow">→</span></a>
+      <a href="#">便利店冷光 <span class="arrow">→</span></a>
+    </div>
+
+    <div class="insp-h">活动</div>
+    <div class="insp-card" style="font-size:12px;color:var(--text-2)">
+      <div style="padding:4px 0;color:var(--text-3);">14:02 · 创建</div>
+      <div style="padding:4px 0;color:var(--text-3);">14:18 · 加入 #颜色</div>
+      <div style="padding:4px 0;color:var(--text-3);">17:42 · 编辑</div>
+    </div>
+  </aside>
+
+  <div class="compose">+</div>
+</div>
+</body>
+</html>

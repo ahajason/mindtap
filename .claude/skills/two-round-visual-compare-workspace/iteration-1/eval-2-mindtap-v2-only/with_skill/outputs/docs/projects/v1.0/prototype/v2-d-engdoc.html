@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Mindtap · Direction D — Engineering doc</title>
+<style>
+  :root {
+    --bg: #0E1116;
+    --bg-1: #14181F;
+    --bg-2: #1A1F27;
+    --bg-3: #232932;
+    --line: rgba(255,255,255,0.07);
+    --line-2: rgba(255,255,255,0.12);
+    --ink-1: #E6E8EC;
+    --ink-2: #B6BBC4;
+    --ink-3: #7A8290;
+    --ink-4: #555B67;
+    --accent: #79B8FF;
+    --accent-2: #FFAB70;
+    --ok: #7ECF8B;
+    --warn: #F2C97D;
+    --err: #FF7B72;
+    --kw: #FF7B72;
+    --fn: #D2A8FF;
+    --str: #7ECF8B;
+    --num: #79B8FF;
+    --com: #555B67;
+    --mono: "JetBrains Mono", "Fira Code", "IBM Plex Mono", "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink-1); font-family: var(--mono); -webkit-font-smoothing: antialiased; font-size: 13px; line-height: 1.55; }
+  .stage { width: 1440px; height: 900px; display: grid; grid-template-columns: 260px 1fr 320px; grid-template-rows: 44px 32px 1fr 24px; grid-template-areas: "top top top" "subbar subbar subbar" "side main right" "foot foot foot"; }
+
+  /* ---- TOPBAR (sparse glass on dark) ---- */
+  .topbar { grid-area: top; display: flex; align-items: center; gap: 12px; padding: 0 14px; background: rgba(14,17,22,0.78); backdrop-filter: saturate(160%) blur(20px); -webkit-backdrop-filter: saturate(160%) blur(20px); border-bottom: 1px solid var(--line); }
+  .logo { font-family: var(--mono); color: var(--accent); font-weight: 700; font-size: 14px; }
+  .logo::before { content: "$ "; color: var(--ink-4); }
+  .crumbs { display: flex; gap: 6px; align-items: center; font-size: 12px; color: var(--ink-3); }
+  .crumbs .sep { color: var(--ink-4); }
+  .crumbs .cur { color: var(--ink-1); }
+  .crumbs .ver { color: var(--ink-4); margin-left: 8px; }
+  .topbar .search { flex: 1; max-width: 520px; margin: 0 12px; padding: 5px 10px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 5px; display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 12px; color: var(--ink-3); }
+  .topbar .kbd { font-family: var(--mono); font-size: 10.5px; padding: 1px 5px; border-radius: 3px; background: var(--bg-3); border: 1px solid var(--line-2); color: var(--ink-2); }
+  .topbar .tool-grp { display: flex; gap: 4px; align-items: center; }
+  .tool-btn { padding: 4px 8px; font-family: var(--mono); font-size: 11.5px; color: var(--ink-2); background: var(--bg-2); border: 1px solid var(--line); border-radius: 4px; }
+  .tool-btn:hover { color: var(--ink-1); background: var(--bg-3); }
+  .tool-btn.primary { background: var(--accent); color: #0E1116; border-color: var(--accent); font-weight: 700; }
+
+  /* ---- DENSE SUB-TOOLBAR (engineer's secondary bar) ---- */
+  .subbar { grid-area: subbar; display: flex; align-items: center; gap: 0; padding: 0 14px; background: var(--bg-1); border-bottom: 1px solid var(--line); overflow: hidden; }
+  .subtab { padding: 6px 12px; font-family: var(--mono); font-size: 11.5px; color: var(--ink-3); border-right: 1px solid var(--line); }
+  .subtab.active { color: var(--ink-1); background: var(--bg-2); box-shadow: inset 0 -2px 0 var(--accent); }
+  .subtab .ic { color: var(--ink-4); margin-right: 6px; }
+  .subtab .cnt { color: var(--ink-4); margin-left: 4px; font-size: 10.5px; }
+  .subbar .meta { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--ink-3); display: flex; gap: 14px; }
+  .subbar .meta .ok { color: var(--ok); }
+  .subbar .meta .warn { color: var(--warn); }
+
+  /* ---- SIDEBAR (glass on dark) ---- */
+  .sidebar { grid-area: side; background: rgba(20,24,31,0.85); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-right: 1px solid var(--line); padding: 10px 0; overflow: hidden; font-family: var(--mono); font-size: 12px; }
+  .toc-title { padding: 8px 14px 4px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.10em; color: var(--ink-4); font-weight: 700; }
+  .toc { padding: 0; margin: 0; list-style: none; }
+  .toc li { padding: 3px 14px; color: var(--ink-3); font-size: 12px; cursor: default; }
+  .toc li .l { color: var(--ink-4); margin-right: 8px; }
+  .toc li.head { padding: 6px 14px 2px; color: var(--ink-2); font-size: 11px; text-transform: uppercase; letter-spacing: 0.10em; font-weight: 600; margin-top: 6px; }
+  .toc li.cur { background: var(--bg-2); color: var(--ink-1); border-left: 2px solid var(--accent); padding-left: 12px; }
+  .toc li:hover { color: var(--ink-2); }
+
+  /* ---- MAIN (docs) ---- */
+  .main { grid-area: main; padding: 0; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); }
+  .doc-head { padding: 18px 28px 12px; border-bottom: 1px solid var(--line); display: flex; gap: 18px; align-items: baseline; }
+  .doc-head .h1 { font-family: var(--mono); font-size: 22px; color: var(--ink-1); font-weight: 700; letter-spacing: -0.005em; }
+  .doc-head .h1 .ns { color: var(--accent); }
+  .doc-head .h1 .id { color: var(--fn); }
+  .doc-head .stamp { margin-left: auto; display: flex; gap: 10px; font-family: var(--mono); font-size: 11px; color: var(--ink-4); }
+  .doc-head .stamp .ok { color: var(--ok); }
+  .doc-head .stamp .warn { color: var(--warn); }
+
+  .doc-body { display: grid; grid-template-columns: 1fr 280px; gap: 24px; padding: 18px 28px; flex: 1; overflow: hidden; }
+  .prose { font-family: var(--mono); font-size: 13px; line-height: 1.65; color: var(--ink-2); max-width: 760px; }
+  .prose h2 { font-family: var(--mono); font-size: 15px; color: var(--ink-1); font-weight: 700; margin: 20px 0 8px; padding-bottom: 4px; border-bottom: 1px solid var(--line); }
+  .prose h2::before { content: "## "; color: var(--ink-4); }
+  .prose h3 { font-family: var(--mono); font-size: 13.5px; color: var(--ink-1); font-weight: 600; margin: 14px 0 6px; }
+  .prose h3::before { content: "### "; color: var(--ink-4); }
+  .prose p { margin: 0 0 10px; }
+  .prose .lead { color: var(--ink-1); font-size: 13.5px; }
+  .prose code { background: var(--bg-2); border: 1px solid var(--line); padding: 1px 5px; border-radius: 3px; font-family: var(--mono); font-size: 12px; color: var(--ink-1); }
+  .prose code.k { color: var(--kw); }
+  .prose code.fn { color: var(--fn); }
+  .prose code.s { color: var(--str); }
+  .prose code.n { color: var(--num); }
+  .prose a { color: var(--accent); text-decoration: none; border-bottom: 1px dotted var(--accent); }
+  .prose ul { padding-left: 22px; margin: 0 0 12px; }
+  .prose ul li { margin-bottom: 4px; }
+  .prose ul li::marker { color: var(--ink-4); }
+
+  .pre { background: var(--bg-1); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; overflow: hidden; font-family: var(--mono); font-size: 12.5px; line-height: 1.55; color: var(--ink-2); margin: 10px 0 14px; }
+  .pre .row { display: grid; grid-template-columns: 36px 1fr; gap: 12px; }
+  .pre .ln { color: var(--ink-4); text-align: right; user-select: none; }
+  .pre .kw { color: var(--kw); }
+  .pre .fn { color: var(--fn); }
+  .pre .str { color: var(--str); }
+  .pre .num { color: var(--num); }
+  .pre .com { color: var(--com); font-style: italic; }
+  .pre .typ { color: var(--accent-2); }
+  .pre .op { color: var(--ink-3); }
+
+  .prop-table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 12px; margin: 10px 0 14px; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .prop-table th, .prop-table td { padding: 7px 12px; text-align: left; border-bottom: 1px solid var(--line); }
+  .prop-table tr:last-child td { border-bottom: 0; }
+  .prop-table th { background: var(--bg-1); color: var(--ink-3); font-size: 11px; text-transform: uppercase; letter-spacing: 0.10em; font-weight: 600; }
+  .prop-table td .name { color: var(--accent); }
+  .prop-table td .typ { color: var(--accent-2); }
+  .prop-table td .req { color: var(--err); font-size: 11px; }
+  .prop-table td .def { color: var(--str); }
+  .prop-table td .desc { color: var(--ink-2); }
+
+  .ascii-tree { font-family: var(--mono); font-size: 12px; color: var(--ink-3); background: var(--bg-1); border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; line-height: 1.5; margin: 10px 0 14px; white-space: pre; }
+
+  .aside { display: flex; flex-direction: column; gap: 12px; }
+  .meta-box { background: var(--bg-1); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; font-family: var(--mono); font-size: 12px; }
+  .meta-box h4 { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.10em; color: var(--ink-4); margin: 0 0 8px; font-weight: 700; }
+  .meta-box .kv { display: grid; grid-template-columns: 100px 1fr; gap: 4px 12px; }
+  .meta-box .kv .k { color: var(--ink-4); }
+  .meta-box .kv .v { color: var(--ink-1); }
+  .meta-box .kv .v.dim { color: var(--ink-3); }
+
+  /* ---- RIGHT (sparse glass on dark) ---- */
+  .right { grid-area: right; background: rgba(20,24,31,0.82); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-left: 1px solid var(--line); padding: 12px 14px; overflow: hidden; font-family: var(--mono); font-size: 12px; color: var(--ink-2); display: flex; flex-direction: column; gap: 12px; }
+  .right h4 { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.10em; color: var(--ink-4); font-weight: 700; margin: 0 0 8px; }
+  .call-list { display: flex; flex-direction: column; gap: 4px; }
+  .call { padding: 6px 8px; border-radius: 4px; background: var(--bg-2); }
+  .call .sig { color: var(--accent); font-size: 12px; }
+  .call .ret { color: var(--accent-2); font-size: 11px; }
+  .call .sum { color: var(--ink-3); font-size: 11.5px; margin-top: 2px; }
+
+  /* ---- FOOTBAR ---- */
+  .footbar { grid-area: foot; display: flex; align-items: center; gap: 14px; padding: 0 14px; background: var(--bg-1); border-top: 1px solid var(--line); font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); }
+  .footbar .seg { display: inline-flex; align-items: center; gap: 6px; }
+  .footbar .ok { color: var(--ok); }
+  .footbar .err { color: var(--err); }
+  .footbar .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <div class="topbar">
+    <div class="logo">mindtap</div>
+    <div class="crumbs">
+      <span>docs</span><span class="sep">/</span>
+      <span>v1.2</span><span class="sep">/</span>
+      <span>capture</span><span class="sep">/</span>
+      <span class="cur">pipeline.runOcrBatch()</span>
+      <span class="ver">@1.2.0-rc.4</span>
+    </div>
+    <div class="search"><span style="color:var(--ink-4);">/</span> search docs, types, methods… <span style="margin-left:auto;"><span class="kbd">⌘</span><span class="kbd">/</span></span></div>
+    <div class="tool-grp">
+      <div class="tool-btn">edit</div>
+      <div class="tool-btn">history</div>
+      <div class="tool-btn">raw</div>
+      <div class="tool-btn primary">copy</div>
+    </div>
+  </div>
+
+  <div class="subbar">
+    <div class="subtab active"><span class="ic">≡</span>overview<span class="cnt">7</span></div>
+    <div class="subtab"><span class="ic">⌘</span>api<span class="cnt">23</span></div>
+    <div class="subtab"><span class="ic">{ }</span>types<span class="cnt">14</span></div>
+    <div class="subtab"><span class="ic">▶</span>examples<span class="cnt">9</span></div>
+    <div class="subtab"><span class="ic">⊟</span>props<span class="cnt">11</span></div>
+    <div class="subtab"><span class="ic">⊕</span>changelog<span class="cnt">28</span></div>
+    <div class="subtab"><span class="ic">⚠</span>issues<span class="cnt">3</span></div>
+    <div class="meta">
+      <span class="ok">● build green</span>
+      <span>last deploy 14:02</span>
+      <span class="warn">EU gate · 26.2 pending</span>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="toc-title">capture / pipeline</div>
+    <ul class="toc">
+      <li class="head">Overview</li>
+      <li>Why batch OCR</li>
+      <li class="cur"><span class="l">▸</span>runOcrBatch()</li>
+      <li><span class="l">·</span>groupByWindow()</li>
+      <li><span class="l">·</span>dropPreviewRender()</li>
+      <li><span class="l">·</span>swapTokenizer()</li>
+      <li class="head">Types</li>
+      <li>Note</li>
+      <li>OcrBatch</li>
+      <li>CaptureWindow</li>
+      <li>Tokenizer32k</li>
+      <li class="head">Errors</li>
+      <li>OcrTimeoutError</li>
+      <li>WindowCollapseError</li>
+      <li class="head">Examples</li>
+      <li>basic-batching.ts</li>
+      <li>with-callback.ts</li>
+      <li>with-cancel.ts</li>
+    </ul>
+  </div>
+
+  <div class="main">
+    <div class="doc-head">
+      <div class="h1"><span class="ns">capture.pipeline.</span><span class="id">runOcrBatch</span>(notes<span class="typ">: Note[]</span>, opts<span class="typ">?: BatchOpts</span>) <span style="color:var(--ink-4);">→</span> <span class="typ">Promise&lt;OcrResult[]&gt;</span></div>
+      <div class="stamp">
+        <span class="ok">● stable</span>
+        <span>since v1.1.0</span>
+        <span class="warn">2 open issues</span>
+      </div>
+    </div>
+
+    <div class="doc-body">
+      <div class="prose">
+        <p class="lead">Batch a list of notes through the OCR pre-pass, collapsing calls that arrive within the same <code class="n">30s</code> window into a single job. Drops wall-time on bursty capture sessions by 4–8× with no regression on the validation set.</p>
+
+        <h2>Signature</h2>
+        <div class="pre"><div class="row"><div class="ln">1</div><div><span class="kw">export async function</span> <span class="fn">runOcrBatch</span>(</div></div><div class="row"><div class="ln">2</div><div>  notes: <span class="typ">Note[]</span>,</div></div><div class="row"><div class="ln">3</div><div>  opts: <span class="typ">BatchOpts</span> = { <span class="kw">window</span>: <span class="str">"30s"</span>, <span class="kw">concurrency</span>: <span class="num">2</span> }</div></div><div class="row"><div class="ln">4</div><div>): <span class="typ">Promise&lt;OcrResult[]&gt;</span>;</div></div></div>
+
+        <h2>Parameters</h2>
+        <table class="prop-table">
+          <thead><tr><th>name</th><th>type</th><th>default</th><th>description</th></tr></thead>
+          <tbody>
+            <tr><td class="name">notes</td><td class="typ">Note[]</td><td class="req">required</td><td class="desc">Notes pending OCR. Order is preserved in the result.</td></tr>
+            <tr><td class="name">opts.window</td><td class="typ">"10s" | "30s" | "60s"</td><td class="def">"30s"</td><td class="desc">Window size for collapsing calls. Smaller = more jobs, lower latency.</td></tr>
+            <tr><td class="name">opts.concurrency</td><td class="typ">number</td><td class="def">2</td><td class="desc">Max concurrent batch jobs. Bounded by the OS scheduler.</td></tr>
+            <tr><td class="name">opts.onProgress</td><td class="typ">(p: number) => void</td><td class="def">undefined</td><td class="desc">Called between jobs with a 0–1 progress fraction.</td></tr>
+            <tr><td class="name">opts.signal</td><td class="typ">AbortSignal</td><td class="def">undefined</td><td class="desc">Cancel a batch in flight. The promise rejects with <code class="fn">OcrTimeoutError</code>.</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Returns</h2>
+        <p>An <code class="typ">OcrResult[]</code> aligned with the input <code>notes</code>. Each result carries the recognised text, the confidence, and a <code class="n">windowId</code> useful for telemetry.</p>
+
+        <h2>Tree</h2>
+        <div class="ascii-tree">mindtap/
+└── src/
+    └── capture/
+        ├── pipeline.ts          <span style="color:var(--accent);">← runOcrBatch lives here</span>
+        ├── groupByWindow.ts
+        ├── ocr.ts               <span style="color:var(--ink-4);">// single-note pre-pass</span>
+        └── types.ts             <span style="color:var(--ink-4);">// Note, OcrResult, BatchOpts</span></div>
+
+        <h2>Example</h2>
+        <div class="pre"><div class="row"><div class="ln">1</div><div><span class="kw">import</span> { <span class="fn">runOcrBatch</span> } <span class="kw">from</span> <span class="str">"@mindtap/capture"</span>;</div></div><div class="row"><div class="ln">2</div><div></div></div><div class="row"><div class="ln">3</div><div><span class="kw">const</span> pending = <span class="kw">await</span> store.<span class="fn">pendingNotes</span>();</div></div><div class="row"><div class="ln">4</div><div></div></div><div class="row"><div class="ln">5</div><div><span class="kw">const</span> results = <span class="kw">await</span> <span class="fn">runOcrBatch</span>(pending, {</div></div><div class="row"><div class="ln">6</div><div>  <span class="kw">window</span>: <span class="str">"30s"</span>,</div></div><div class="row"><div class="ln">7</div><div>  <span class="kw">concurrency</span>: <span class="num">4</span>,</div></div><div class="row"><div class="ln">8</div><div>  <span class="kw">onProgress</span>: p =&gt; ui.<span class="fn">setProgress</span>(p),</div></div><div class="row"><div class="ln">9</div><div>  <span class="kw">signal</span>: ctrl.<span class="fn">signal</span>,</div></div><div class="row"><div class="ln">10</div><div>});</div></div><div class="row"><div class="ln">11</div><div></div></div><div class="row"><div class="ln">12</div><div><span class="com">// results[i] corresponds to pending[i]</span></div></div><div class="row"><div class="ln">13</div><div><span class="kw">for</span> (<span class="kw">const</span> r <span class="kw">of</span> results) <span class="fn">ingest</span>(r);</div></div></div>
+
+        <h2>Caveats</h2>
+        <ul>
+          <li>EU builds gate the 32k tokenizer behind <code class="fn">hasEntitlement("tokenizer-32k")</code>. Use <code class="fn">swapTokenizer()</code> only after the 26.2 entitlement lands.</li>
+          <li>The 30s window is an <em>advisory</em> boundary — backpressure from the OS scheduler may push it to 31s in practice.</li>
+          <li>Don't combine <code class="fn">runOcrBatch</code> with the per-keystroke preview render; the latter is retired in v1.1.</li>
+        </ul>
+
+        <h2>See also</h2>
+        <ul>
+          <li><a href="#">groupByWindow()</a> — the grouping primitive <code class="fn">runOcrBatch</code> uses internally.</li>
+          <li><a href="#">swapTokenizer()</a> — second lane of the cost-reduction plan.</li>
+          <li><a href="#">dropPreviewRender()</a> — third lane, ships in v1.1.</li>
+        </ul>
+      </div>
+
+      <div class="aside">
+        <div class="meta-box">
+          <h4>At a glance</h4>
+          <div class="kv">
+            <div class="k">added</div><div class="v">v1.1.0</div>
+            <div class="k">stable</div><div class="v">v1.2.0-rc.4</div>
+            <div class="k">package</div><div class="v">@mindtap/capture</div>
+            <div class="k">runtime</div><div class="v">Tauri 2 · React 19</div>
+            <div class="k">license</div><div class="v dim">MIT</div>
+            <div class="k">source</div><div class="v">src/capture/pipeline.ts</div>
+            <div class="k">tests</div><div class="v">14 pass · 2 skip</div>
+            <div class="k">coverage</div><div class="v">94.1%</div>
+            <div class="k">benchmark</div><div class="v">41 ms · p95 88 ms</div>
+          </div>
+        </div>
+        <div class="meta-box">
+          <h4>Related calls</h4>
+          <div class="call-list">
+            <div class="call"><div class="sig">groupByWindow(notes, "30s")</div><div class="ret">→ CaptureWindow[]</div><div class="sum">collapses notes inside the same time window</div></div>
+            <div class="call"><div class="sig">swapTokenizer("32k")</div><div class="ret">→ Tokenizer32k</div><div class="sum">drops 14% tokens, EU gated behind 26.2</div></div>
+            <div class="call"><div class="sig">dropPreviewRender()</div><div class="ret">→ void</div><div class="sum">retires per-keystroke preview, -28% cost</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="right">
+    <div>
+      <h4>On this page</h4>
+      <div style="display:flex;flex-direction:column;gap:3px;color:var(--ink-3);">
+        <div style="color:var(--ink-1);">▸ Signature</div>
+        <div>&nbsp;&nbsp;Parameters</div>
+        <div>&nbsp;&nbsp;Returns</div>
+        <div>&nbsp;&nbsp;Tree</div>
+        <div>&nbsp;&nbsp;Example</div>
+        <div>&nbsp;&nbsp;Caveats</div>
+        <div>&nbsp;&nbsp;See also</div>
+      </div>
+    </div>
+    <div>
+      <h4>Open issues · 2</h4>
+      <div class="call-list">
+        <div class="call"><div class="sig" style="color:var(--warn);">#284 — window collapse on cold start</div><div class="ret">→ returns 0 jobs when notes &lt; 3</div><div class="sum">opened 02 Jun · assignee JS</div></div>
+        <div class="call"><div class="sig" style="color:var(--warn);">#291 — EU entitlement gate</div><div class="ret">→ tokenizer 32k unavailable</div><div class="sum">opened 09 Jun · pending 26.2</div></div>
+      </div>
+    </div>
+    <div>
+      <h4>Last 3 builds</h4>
+      <div style="display:flex;flex-direction:column;gap:3px;">
+        <div><span class="ok" style="color:var(--ok);">●</span> 14:02 · <span style="color:var(--ink-1);">pass</span> · 4m12s</div>
+        <div><span class="ok" style="color:var(--ok);">●</span> 13:01 · <span style="color:var(--ink-1);">pass</span> · 3m58s</div>
+        <div><span class="err" style="color:var(--err);">●</span> 11:48 · <span style="color:var(--ink-1);">fail</span> · MIN-204 qa-pending</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footbar">
+    <div class="seg"><span class="dot"></span> feat/capture-cost · 3↑ 0↓</div>
+    <div class="seg">⌘P quick file · ⌘⇧P command · ⌘/ search</div>
+    <div class="seg" style="margin-left:auto;">line 87 · col 4 · utf-8 · LF · monospace</div>
+  </div>
+
+</div>
+</body>
+</html>

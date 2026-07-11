@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Stackdesk · Visual Direction · Two-Round Comparison</title>
+<style>
+  *,*::before,*::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "SF Pro Text", "Inter", "Helvetica Neue", system-ui, sans-serif;
+    color: #1a1a1a; background: #ececec;
+    -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+    min-width: 1280px;
+  }
+  a { color: inherit; text-decoration: none; }
+  header {
+    background: #0e0e0e; color: #f5f5f5; padding: 14px 28px;
+    display: flex; align-items: center; gap: 20px;
+    border-bottom: 1px solid #1f1f1f;
+  }
+  header h1 { font-size: 12px; font-weight: 600; margin: 0; letter-spacing: .08em; text-transform: uppercase; }
+  header .meta { font-size: 12px; opacity: .55; }
+  header .right { margin-left: auto; font-size: 12px; opacity: .7; }
+
+  .wrap { max-width: 1320px; margin: 0 auto; padding: 48px 28px 80px; }
+  .kicker { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #6a6a6a; font-weight: 600; }
+  h2 { font-size: 36px; font-weight: 700; letter-spacing: -0.02em; margin: 6px 0 8px; }
+  p.lead { font-size: 16px; line-height: 1.55; color: #3a3a3a; max-width: 70ch; margin: 0 0 40px; }
+
+  .round { display: grid; grid-template-columns: 220px 1fr; gap: 28px; padding: 28px 0; border-top: 1px solid rgba(0,0,0,.15); }
+  .round .meta-col .label { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #6a6a6a; font-weight: 600; }
+  .round .meta-col h3 { font-size: 22px; font-weight: 700; margin: 4px 0 6px; letter-spacing: -0.015em; }
+  .round .meta-col p { font-size: 13px; color: #5a5a5a; line-height: 1.55; margin: 0 0 14px; }
+  .round .meta-col a.open {
+    display: inline-block; padding: 8px 14px; border-radius: 8px;
+    background: #1a1a1a; color: #fff; font-size: 12.5px; font-weight: 500;
+  }
+
+  .preview-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .preview {
+    background: #fff; border: 1px solid rgba(0,0,0,.1);
+    border-radius: 10px; overflow: hidden;
+    aspect-ratio: 16/9;
+    position: relative;
+  }
+  .preview iframe { width: 200%; height: 200%; border: 0; transform: scale(0.5); transform-origin: 0 0; pointer-events: none; }
+  .preview .tag {
+    position: absolute; top: 10px; left: 10px;
+    background: rgba(0,0,0,.78); color: #fff;
+    font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase;
+    padding: 4px 8px; border-radius: 999px; font-weight: 600;
+  }
+  .preview .a, .preview .b, .preview .c, .preview .d { display: block; }
+
+  .files {
+    margin-top: 16px;
+    font-family: "SF Mono", "JetBrains Mono", ui-monospace, monospace;
+    font-size: 12px; color: #4a4a4a;
+    background: #fff; border: 1px solid rgba(0,0,0,.1); border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .files b { color: #1a1a1a; font-weight: 600; }
+  .files div { padding: 2px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Stackdesk · Visual Direction</h1>
+  <span class="meta">Two-round comparison · V1 = glass density · V2 = 4 context directions</span>
+  <span class="right">No skill · hand-built</span>
+</header>
+
+<div class="wrap">
+  <div class="kicker">SaaS dashboard redesign</div>
+  <h2>From purple-pink glass template to four real directions</h2>
+  <p class="lead">
+    The previous design was 28px headlines, a centered frosted card, and a purple-to-pink gradient — the AI-slop default.
+    This folder contains two rounds of comparison built to actually <em>decide</em>, not to perform design: first, how much glass
+    (4 density variants of the same dashboard over the same warm background); then, four context directions (macOS 26,
+    Linear-style dark, editorial magazine, engineering doc) using the same real pipeline data.
+  </p>
+
+  <!-- V1 -->
+  <section class="round">
+    <div class="meta-col">
+      <div class="label">Round 1</div>
+      <h3>Glass density</h3>
+      <p>Four variants of the same dashboard over the same warm sunset background. The comparison axis is <em>how much</em> glass — not what kind. Pick the level that lets the chrome float without sacrificing legibility.</p>
+      <a class="open" href="v1-glass-density/compare.html" target="_blank">Open V1 comparison ↗</a>
+    </div>
+    <div>
+      <div class="preview-grid">
+        <div class="preview"><div class="tag">A · Ultra-thin · 6% / 6px</div><iframe src="v1-glass-density/compare.html" scrolling="no"></iframe></div>
+        <div class="preview"><div class="tag">B · Regular · 55% / 20px</div><iframe src="v1-glass-density/compare.html" scrolling="no"></iframe></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- V2 -->
+  <section class="round">
+    <div class="meta-col">
+      <div class="label">Round 2</div>
+      <h3>Context directions</h3>
+      <p>Four full 1280×800+ pages, each in its own tab, with the same KPI / pipeline / activity data underneath. Glass only on controls, never on content. Distinct fonts per direction. Open all four side-by-side to feel the difference.</p>
+      <a class="open" href="v2-contexts/compare-v2.html" target="_blank">Open V2 comparison ↗</a>
+    </div>
+    <div>
+      <div class="preview-grid">
+        <div class="preview"><div class="tag">A · macOS 26</div><iframe src="v2-contexts/v2-a-macos26.html" scrolling="no"></iframe></div>
+        <div class="preview"><div class="tag">B · Linear / Vercel dark</div><iframe src="v2-contexts/v2-b-linear.html" scrolling="no"></iframe></div>
+        <div class="preview"><div class="tag">C · Editorial</div><iframe src="v2-contexts/v2-c-editorial.html" scrolling="no"></iframe></div>
+        <div class="preview"><div class="tag">D · Engineering doc</div><iframe src="v2-contexts/v2-d-engdoc.html" scrolling="no"></iframe></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="files">
+    <div><b>outputs/</b></div>
+    <div>&nbsp;&nbsp;index.html <span style="color:#888">— this directory</span></div>
+    <div>&nbsp;&nbsp;<b>v1-glass-density/</b></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;compare.html <span style="color:#888">— V1, 4 density variants in a 2×2 grid</span></div>
+    <div>&nbsp;&nbsp;<b>v2-contexts/</b></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;compare-v2.html <span style="color:#888">— V2 overview + thumbnails</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;v2-a-macos26.html <span style="color:#888">— system-native, heavy glass on warm wallpaper</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;v2-b-linear.html <span style="color:#888">— developer-tool dark, subtle glass, dense info</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;v2-c-editorial.html <span style="color:#888">— magazine layout, serif, drop cap, pull quote</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;v2-d-engdoc.html <span style="color:#888">— operator reference, monospace, code, ASCII tree</span></div>
+    <div>&nbsp;&nbsp;metrics.json <span style="color:#888">— file inventory + sizes</span></div>
+    <div>&nbsp;&nbsp;user_notes.md <span style="color:#888">— adaptation notes</span></div>
+  </div>
+</div>
+
+</body>
+</html>

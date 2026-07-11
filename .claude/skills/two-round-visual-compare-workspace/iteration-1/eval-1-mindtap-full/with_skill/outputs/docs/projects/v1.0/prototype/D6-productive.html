@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=480,initial-scale=1">
+<title>D6 · Productive</title>
+<style>
+  /* ===== D6: Productive =====
+     生产力工具：密集信息、紧凑玻璃、专注效率。
+     适合：每日任务、习惯追踪。
+  */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 480px; height: 360px; overflow: hidden; font-family: -apple-system, "SF Pro Text", sans-serif; }
+  body {
+    background:
+      linear-gradient(180deg, #fafafa 0%, #f0f0f2 100%);
+    color: #1d1d1f;
+  }
+  /* 内容层：紧凑列表（不玻璃） */
+  .list {
+    position: absolute;
+    top: 50px; left: 12px; right: 12px; bottom: 70px;
+    background: #ffffff;
+    border: 1px solid #e2e2e5;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .list .h {
+    padding: 8px 12px;
+    font-size: 10px; font-weight: 700; letter-spacing: .1em;
+    color: #6e6e73; text-transform: uppercase;
+    border-bottom: 1px solid #ececef;
+    background: #fafafa;
+    display: flex; justify-content: space-between;
+  }
+  .list .row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 12px;
+    border-bottom: 1px solid #f4f4f6;
+    font-size: 11.5px;
+  }
+  .list .row:last-child { border-bottom: none; }
+  .list .row .chk {
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 1.5px solid #c7c7cc;
+    flex-shrink: 0;
+  }
+  .list .row.done .chk {
+    background: #34c759; border-color: #34c759;
+  }
+  .list .row.done .t {
+    color: #aeaeb2; text-decoration: line-through;
+  }
+  .list .row .t { flex: 1; }
+  .list .row .time {
+    font-family: "SF Mono", monospace;
+    font-size: 10px; color: #8e8e93;
+  }
+  /* 紧凑玻璃顶栏（信息密度高） */
+  .topbar-glass {
+    position: absolute;
+    top: 10px; left: 12px; right: 12px; height: 32px;
+    background: rgba(250, 250, 250, 0.6);
+    backdrop-filter: saturate(150%) blur(16px);
+    -webkit-backdrop-filter: saturate(150%) blur(16px);
+    border-radius: 8px;
+    border: 1px solid rgba(0,0,0,.06);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.7),
+      0 1px 2px rgba(0,0,0,.04);
+    display: flex; align-items: center; padding: 0 8px; gap: 4px;
+  }
+  .topbar-glass .seg {
+    font-size: 11px; font-weight: 500; color: #6e6e73;
+    padding: 4px 10px; border-radius: 6px;
+  }
+  .topbar-glass .seg.on {
+    background: #1d1d1f; color: #fff;
+  }
+  .topbar-glass .spacer { flex: 1; }
+  .topbar-glass .ic {
+    width: 22px; height: 22px; border-radius: 5px;
+    display: grid; place-items: center;
+    font-size: 11px; color: #1d1d1f;
+  }
+  /* 紧凑浮动按钮 */
+  .fab-glass {
+    position: absolute; right: 16px; bottom: 14px;
+    width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(255,255,255,.7);
+    backdrop-filter: saturate(150%) blur(16px);
+    -webkit-backdrop-filter: saturate(150%) blur(16px);
+    border: 1px solid rgba(0,0,0,.08);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.9),
+      0 4px 10px -2px rgba(0,0,0,.15);
+    display: grid; place-items: center;
+    font-size: 16px; font-weight: 400; color: #1d1d1f;
+  }
+  .label-q {
+    position: absolute; bottom: 22px; left: 16px;
+    font-size: 10px; letter-spacing: .12em; color: #8e8e93;
+  }
+</style>
+</head>
+<body>
+  <!-- 控制层：紧凑玻璃顶栏（带 segment） -->
+  <div class="topbar-glass">
+    <div class="seg on">TODAY</div>
+    <div class="seg">WEEK</div>
+    <div class="seg">ALL</div>
+    <div class="spacer"></div>
+    <div class="ic">⌕</div>
+    <div class="ic">≡</div>
+  </div>
+
+  <!-- 内容层：紧凑任务列表 -->
+  <div class="list">
+    <div class="h"><span>TODAY · 14 JUN</span><span>3/5 DONE</span></div>
+    <div class="row done"><div class="chk"></div><div class="t">晨间复盘</div><div class="time">07:20</div></div>
+    <div class="row done"><div class="chk"></div><div class="t">回信 · 张老师</div><div class="time">09:45</div></div>
+    <div class="row done"><div class="chk"></div><div class="t">写设计文档</div><div class="time">11:00</div></div>
+    <div class="row"><div class="chk"></div><div class="t">周末徒步准备</div><div class="time">16:30</div></div>
+    <div class="row"><div class="chk"></div><div class="t">读《玻璃之下》</div><div class="time">21:00</div></div>
+  </div>
+
+  <!-- 控制层：浮动按钮 -->
+  <div class="fab-glass">+</div>
+
+  <div class="label-q">D6 · PRODUCTIVE</div>
+</body>
+</html>

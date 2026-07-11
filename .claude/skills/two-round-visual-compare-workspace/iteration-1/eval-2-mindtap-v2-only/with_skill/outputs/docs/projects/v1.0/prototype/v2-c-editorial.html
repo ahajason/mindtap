@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Mindtap · Direction C — Editorial / Magazine</title>
+<style>
+  :root {
+    --paper: #F4ECDF;
+    --paper-2: #EBE0CF;
+    --paper-3: #E2D4BD;
+    --ink: #1F1A14;
+    --ink-2: #4A3F30;
+    --ink-3: #7C6E58;
+    --rule: rgba(31,26,20,0.14);
+    --accent: #B2341B;
+    --accent-2: #6E5B2E;
+    --serif: "Charter", "Iowan Old Style", "Source Serif Pro", "PT Serif", Georgia, "Times New Roman", serif;
+    --serif-display: "Fraunces", "Playfair Display", "Charter", Georgia, serif;
+    --sans: "Inter", -apple-system, "SF Pro Text", system-ui, sans-serif;
+    --mono: "JetBrains Mono", "IBM Plex Mono", Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: var(--serif); -webkit-font-smoothing: antialiased; font-size: 16px; line-height: 1.6; }
+  .stage { width: 1440px; height: 900px; display: grid; grid-template-columns: 240px 1fr 280px; grid-template-rows: 64px 1fr 36px; grid-template-areas: "top top top" "side main right" "foot foot foot"; }
+
+  /* ---- TOPBAR (delicate glass on warm) ---- */
+  .topbar { grid-area: top; display: flex; align-items: center; gap: 14px; padding: 0 22px; background: rgba(244,236,223,0.55); backdrop-filter: saturate(140%) blur(30px); -webkit-backdrop-filter: saturate(140%) blur(30px); border-bottom: 1px solid var(--rule); }
+  .mast { font-family: var(--serif-display); font-weight: 700; font-size: 22px; letter-spacing: -0.01em; }
+  .mast .dot { color: var(--accent); }
+  .issue-tag { font-family: var(--sans); font-size: 11px; text-transform: uppercase; letter-spacing: 0.16em; color: var(--ink-3); padding: 4px 10px; border: 1px solid var(--rule); border-radius: 999px; }
+  .topbar nav { display: flex; gap: 18px; font-family: var(--sans); font-size: 13px; color: var(--ink-2); }
+  .topbar nav .active { color: var(--ink); font-weight: 600; }
+  .topbar .search { margin-left: auto; font-family: var(--sans); font-size: 12.5px; color: var(--ink-3); display: inline-flex; align-items: center; gap: 8px; }
+  .topbar .search input { background: rgba(31,26,20,0.06); border: 0; padding: 5px 10px; border-radius: 6px; font-family: var(--sans); font-size: 12.5px; color: var(--ink); width: 180px; }
+
+  /* ---- SIDEBAR (delicate glass) ---- */
+  .sidebar { grid-area: side; background: rgba(235,224,207,0.65); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-right: 1px solid var(--rule); padding: 18px 18px; overflow: hidden; }
+  .side-section { font-family: var(--sans); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.16em; color: var(--ink-3); font-weight: 600; margin: 0 0 10px; }
+  .side-entry { display: block; padding: 10px 0; border-bottom: 1px dotted var(--rule); }
+  .side-entry:last-child { border-bottom: 0; }
+  .side-entry .n { font-family: var(--serif-display); font-size: 16px; color: var(--ink); line-height: 1.25; }
+  .side-entry .m { font-family: var(--sans); font-size: 11px; color: var(--ink-3); margin-top: 2px; }
+  .side-entry.cur .n { color: var(--accent); }
+  .side-entry.cur { border-left: 2px solid var(--accent); padding-left: 10px; margin-left: -12px; }
+  .side-quote { font-family: var(--serif-display); font-size: 14px; font-style: italic; color: var(--ink-2); padding: 14px 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); line-height: 1.5; margin-top: 14px; }
+
+  /* ---- MAIN ---- */
+  .main { grid-area: main; padding: 36px 64px; overflow: hidden; display: flex; flex-direction: column; }
+  .kicker { font-family: var(--sans); font-size: 11px; text-transform: uppercase; letter-spacing: 0.20em; color: var(--accent); font-weight: 600; }
+  h1.headline { font-family: var(--serif-display); font-size: 56px; line-height: 1.04; letter-spacing: -0.018em; color: var(--ink); margin: 6px 0 14px; font-weight: 700; }
+  .standfirst { font-family: var(--serif); font-size: 19px; line-height: 1.5; color: var(--ink-2); max-width: 680px; font-style: italic; margin: 0 0 18px; }
+  .byline { font-family: var(--sans); font-size: 12px; color: var(--ink-3); display: flex; gap: 14px; align-items: center; padding-bottom: 16px; border-bottom: 1px solid var(--rule); }
+  .byline .author { font-weight: 600; color: var(--ink); }
+  .byline .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--ink-3); }
+
+  .article { display: grid; grid-template-columns: 1fr 280px; gap: 36px; padding-top: 22px; flex: 1; overflow: hidden; }
+  .prose { font-family: var(--serif); font-size: 16.5px; line-height: 1.72; color: var(--ink); }
+  .prose p { margin: 0 0 14px; }
+  .prose p:first-of-type::first-letter { font-family: var(--serif-display); float: left; font-size: 64px; line-height: 0.9; padding: 6px 10px 0 0; color: var(--accent); font-weight: 700; }
+  .prose .pullquote { font-family: var(--serif-display); font-size: 26px; line-height: 1.32; color: var(--ink); padding: 16px 0 16px 18px; border-left: 3px solid var(--accent); margin: 18px 0; font-style: italic; }
+  .prose .pullquote .attr { display: block; font-family: var(--sans); font-size: 11.5px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.10em; margin-top: 8px; font-style: normal; }
+
+  .aside { font-family: var(--sans); }
+  .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 6px; padding: 14px 16px; }
+  .card h4 { font-family: var(--sans); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.16em; color: var(--ink-3); margin: 0 0 8px; font-weight: 600; }
+  .figure { margin-bottom: 14px; }
+  .figure .frame { height: 120px; background: var(--paper-3); border-radius: 4px; position: relative; overflow: hidden; }
+  .figure .frame svg { display: block; }
+  .figure .cap { font-family: var(--serif); font-style: italic; font-size: 12px; color: var(--ink-3); margin-top: 6px; line-height: 1.4; }
+  .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .stat { font-family: var(--sans); }
+  .stat .big { font-family: var(--serif-display); font-size: 32px; font-weight: 700; color: var(--ink); line-height: 1; }
+  .stat .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.10em; color: var(--ink-3); margin-top: 4px; }
+
+  /* ---- RIGHT GLASS COLUMN ---- */
+  .right { grid-area: right; background: rgba(244,236,223,0.55); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border-left: 1px solid var(--rule); padding: 18px 18px; overflow: hidden; }
+  .right .label { font-family: var(--sans); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.16em; color: var(--ink-3); font-weight: 600; margin-bottom: 10px; }
+  .toc a { display: block; font-family: var(--serif); font-size: 14px; color: var(--ink-2); padding: 6px 0; border-bottom: 1px dotted var(--rule); text-decoration: none; }
+  .toc a.cur { color: var(--accent); }
+  .toc a .num { color: var(--ink-3); font-family: var(--sans); font-size: 11px; margin-right: 8px; }
+  .ed-note { font-family: var(--serif); font-style: italic; font-size: 14px; color: var(--ink-2); padding: 14px 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); margin-top: 14px; }
+  .ed-note .sig { display: block; font-style: normal; font-family: var(--sans); font-size: 11px; color: var(--ink-3); margin-top: 8px; }
+
+  /* ---- FOOTBAR ---- */
+  .footbar { grid-area: foot; display: flex; align-items: center; gap: 16px; padding: 0 22px; background: rgba(31,26,20,0.94); color: rgba(244,236,223,0.78); font-family: var(--sans); font-size: 11px; }
+  .footbar .vol { font-family: var(--serif-display); font-style: italic; font-size: 13px; color: rgba(244,236,223,0.92); }
+  .footbar .seg { display: inline-flex; gap: 6px; align-items: center; }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <div class="topbar">
+    <div class="mast">Mindtap<span class="dot">.</span></div>
+    <div class="issue-tag">No. 17 · June 2026</div>
+    <nav>
+      <span class="active">Reading</span>
+      <span>Notes</span>
+      <span>Notebooks</span>
+      <span>Daily</span>
+      <span>Settings</span>
+    </nav>
+    <div class="search">
+      <span style="opacity:.5;">⌕</span>
+      <input placeholder="Search the archive…" />
+      <span style="font-size:10.5px;color:var(--ink-3);">⌘K</span>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="side-section">In this issue</div>
+    <div class="side-entry cur">
+      <div class="n">On the cost of a thought</div>
+      <div class="m">Capture · 14 min read</div>
+    </div>
+    <div class="side-entry">
+      <div class="n">A glass that knows its place</div>
+      <div class="m">Design · 9 min read</div>
+    </div>
+    <div class="side-entry">
+      <div class="n">Notes from a quiet build</div>
+      <div class="m">Engineering · 22 min read</div>
+    </div>
+    <div class="side-entry">
+      <div class="n">The library, kept light</div>
+      <div class="m">Craft · 7 min read</div>
+    </div>
+    <div class="side-entry">
+      <div class="n">Field notes · June</div>
+      <div class="m">Monthly · 5 entries</div>
+    </div>
+
+    <div class="side-quote">"The best tools disappear into the hand; the second-best tools disappear into the page."</div>
+  </div>
+
+  <div class="main">
+    <div class="kicker">Feature · Capture &amp; Cost</div>
+    <h1 class="headline">On the cost of a thought</h1>
+    <p class="standfirst">A capture pipeline is a small thing — ink into a box. Yet every step along the way takes its cut. The v1.1 build at Mindtap spent eighty-seven cents to keep a thousand notes. Here is what we did about it, and what we are still doing.</p>
+    <div class="byline">
+      <span class="author">By J. Soto</span>
+      <span class="dot"></span>
+      <span>14 June 2026</span>
+      <span class="dot"></span>
+      <span>14 min read</span>
+      <span class="dot"></span>
+      <span>From the Engineering notebook</span>
+    </div>
+
+    <div class="article">
+      <div class="prose">
+        <p>The first thing to admit about a capture pipeline is that it is, at heart, a small and humble thing. Ink goes in, a note comes out. We have done this since the Romans did it, and the design problem has not changed. What has changed is the cost of every step in between, and the cost is now something the user pays — not in cents, exactly, but in latency, in battery, in the small erosion of trust that comes from a thing that does not feel quite ready.</p>
+
+        <p>For Mindtap's v1.1 build, the wall-time profile was not flattering. The OCR pre-pass ate seventy-eight percent of every capture, and the per-keystroke preview render paid its own tax in jank and attention. The LLM behind the summariser was, ironically, the cheapest part. We treated OCR like a hard gate when it should have been an optional pre-flight; we treated preview as a courtesy when it was, in fact, a leak.</p>
+
+        <div class="pullquote">Treat OCR like an optional pre-flight, not a hard gate. Defer it behind the tap-to-open action, not the type-to-capture action.<span class="attr">— Engineering log, 31 May</span></div>
+
+        <p>The first lane was the obvious one. We batched OCR calls into a thirty-second window, collapsing nineteen separate calls into two with no regression on the validation set. The second lane was the quieter one. Swapping the on-device tokenizer to the 32k BPE built last month saved fourteen percent on tokens, which trimmed the LLM cost line directly — same accuracy, fewer syllables. The third was the easiest to ship and the hardest to defend: we retired the per-keystroke preview render. Users only read the final card.</p>
+
+        <p>What remains, as of this writing, is the cold-start skip for empty notebooks and the EU entitlement gate that holds the tokenizer swap until the 26.2 build. The combined picture is a drop from eighty-four cents to eleven cents per thousand notes — an eighty-seven percent reduction — without any loss in the felt quality of the editor. We are tempted, on a quiet day, to call that finished. We are not, on a louder day.</p>
+      </div>
+
+      <div class="aside">
+        <div class="card">
+          <h4>By the numbers</h4>
+          <div class="stat-row">
+            <div class="stat"><div class="big">87%</div><div class="lbl">cost reduction</div></div>
+            <div class="stat"><div class="big">41<span style="font-size:18px;">ms</span></div><div class="lbl">ingest median</div></div>
+          </div>
+          <div class="stat-row">
+            <div class="stat"><div class="big">8.3<span style="font-size:18px;">×</span></div><div class="lbl">ingest speed-up</div></div>
+            <div class="stat"><div class="big">$0.11</div><div class="lbl">per 1k notes</div></div>
+          </div>
+        </div>
+
+        <div class="figure" style="margin-top:14px;">
+          <div class="frame">
+            <svg viewBox="0 0 240 120" width="100%" height="120" preserveAspectRatio="none">
+              <rect x="0" y="0" width="240" height="120" fill="#E2D4BD"/>
+              <line x1="20" y1="100" x2="220" y2="100" stroke="#7C6E58" stroke-width="0.8"/>
+              <line x1="20" y1="20" x2="20" y2="100" stroke="#7C6E58" stroke-width="0.8"/>
+              <rect x="40" y="22" width="20" height="78" fill="#B2341B"/>
+              <rect x="70" y="60" width="20" height="40" fill="#6E5B2E"/>
+              <rect x="100" y="74" width="20" height="26" fill="#6E5B2E"/>
+              <rect x="130" y="82" width="20" height="18" fill="#6E5B2E"/>
+              <rect x="160" y="88" width="20" height="12" fill="#6E5B2E"/>
+              <text x="40" y="112" font-family="Inter,sans-serif" font-size="9" fill="#7C6E58">v1.0</text>
+              <text x="70" y="112" font-family="Inter,sans-serif" font-size="9" fill="#7C6E58">v1.1</text>
+              <text x="100" y="112" font-family="Inter,sans-serif" font-size="9" fill="#7C6E58">v1.1a</text>
+              <text x="130" y="112" font-family="Inter,sans-serif" font-size="9" fill="#7C6E58">v1.1b</text>
+              <text x="160" y="112" font-family="Inter,sans-serif" font-size="9" fill="#7C6E58">v1.2</text>
+              <text x="20" y="14" font-family="Inter,sans-serif" font-size="9" fill="#7C6E58">$ / 1k</text>
+            </svg>
+          </div>
+          <div class="cap">Cost per thousand notes, by release. The v1.2 figure is a projection.</div>
+        </div>
+
+        <div class="card" style="margin-top:14px; background:transparent; border:0; padding:0;">
+          <h4>Read alongside</h4>
+          <div style="font-family:var(--serif); font-size:14px; line-height:1.5; color:var(--ink-2);">
+            <div style="padding:6px 0; border-bottom:1px dotted var(--rule);">A glass that knows its place — on controls, not on content</div>
+            <div style="padding:6px 0; border-bottom:1px dotted var(--rule);">Notes from a quiet build — Sprint 4 retrospective</div>
+            <div style="padding:6px 0;">The library, kept light — on minimalist tools</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="label">Contents</div>
+    <div class="toc">
+      <a href="#" class="cur"><span class="num">I</span>On the cost of a thought</a>
+      <a href="#"><span class="num">II</span>The pipeline, named</a>
+      <a href="#"><span class="num">III</span>Three lanes, one sprint</a>
+      <a href="#"><span class="num">IV</span>What we did not ship</a>
+      <a href="#"><span class="num">V</span>A note on what remains</a>
+      <a href="#"><span class="num">VI</span>Field notes · June</a>
+    </div>
+
+    <div class="ed-note">"This is the kind of piece I wanted Mindtap to be a place for — long enough to mean something, short enough to finish in a sitting."<span class="sig">— Editor's note, No. 17</span></div>
+
+    <div style="margin-top:18px;">
+      <div class="label">From the author</div>
+      <div style="font-family:var(--serif); font-size:14px; color:var(--ink-2); line-height:1.55;">
+        J. Soto writes the Engineering notebook at Mindtap. Previous: <em>Notes from a quiet build</em>, <em>The library, kept light</em>.
+      </div>
+    </div>
+  </div>
+
+  <div class="footbar">
+    <span class="vol">Mindtap Quarterly · No. 17</span>
+    <span class="seg">·</span>
+    <span class="seg">June 2026</span>
+    <span class="seg" style="margin-left:auto;">set in Charter &amp; Fraunces</span>
+    <span class="seg">printed locally · synced via iCloud</span>
+  </div>
+
+</div>
+</body>
+</html>

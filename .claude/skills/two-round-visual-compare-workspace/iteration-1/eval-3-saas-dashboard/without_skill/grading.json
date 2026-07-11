@@ -1,0 +1,55 @@
+{
+  "expectations": [
+    {
+      "text": "V1 + V2 + directory + docs all produced",
+      "passed": false,
+      "evidence": "V1: Q=0, D=0, compare=1; no compare-method.md"
+    },
+    {
+      "text": "V2 4 directions contain dashboard real components",
+      "passed": true,
+      "evidence": "v2-b-linear.html=7(kpi,table); v2-a-macos26.html=8(kpi,table); v2-d-engdoc.html=9(kpi,table); v2-c-editorial.html=8(kpi,table)"
+    },
+    {
+      "text": "4 v2-*.html self-contained (no @import or external link)",
+      "passed": true,
+      "evidence": "all v2-*.html self-contained"
+    },
+    {
+      "text": "≥2 V2 directions use serif or mono fonts",
+      "passed": true,
+      "evidence": "4 v2 files use serif or mono"
+    },
+    {
+      "text": "compare-method.md lists 4 anti-AI-slop rules",
+      "passed": false,
+      "evidence": "no method doc"
+    },
+    {
+      "text": "Docs explain why V1→V2 (density vs context)",
+      "passed": true,
+      "evidence": "rationale found in user_notes.md"
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 2,
+    "total": 6,
+    "pass_rate": 0.6667
+  },
+  "execution_metrics": {
+    "total_tool_calls": 0,
+    "output_chars": 0,
+    "errors_encountered": 0
+  },
+  "timing": {
+    "total_duration_seconds": 883.6,
+    "executor_duration_seconds": 883.6
+  },
+  "claims": [],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  }
+}

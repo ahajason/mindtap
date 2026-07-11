@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>V2 Compare · 4 Context Directions · Stackdesk</title>
+<style>
+  *,*::before,*::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "SF Pro Text", "Inter", "Helvetica Neue", system-ui, sans-serif;
+    color: #1a1a1a; background: #ececec;
+    -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+    min-width: 1280px;
+  }
+  a { color: inherit; text-decoration: none; }
+  header {
+    background: #0e0e0e; color: #f5f5f5; padding: 12px 28px;
+    display: flex; align-items: center; gap: 24px;
+    border-bottom: 1px solid #1f1f1f;
+    position: sticky; top: 0; z-index: 50;
+  }
+  header h1 { font-size: 12px; font-weight: 600; margin: 0; letter-spacing: .08em; text-transform: uppercase; }
+  header .meta { font-size: 12px; opacity: .55; }
+  header .right { margin-left: auto; opacity: .7; font-size: 12px; }
+
+  .wrap { max-width: 1320px; margin: 0 auto; padding: 36px 28px 60px; }
+  .lead { font-size: 22px; line-height: 1.45; color: #1a1a1a; max-width: 60ch; margin: 0 0 8px; }
+  .sub { font-size: 14px; color: #5a5a5a; max-width: 70ch; margin: 0 0 32px; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .card {
+    background: #fff; border: 1px solid rgba(0,0,0,.1);
+    border-radius: 12px; overflow: hidden;
+    display: flex; flex-direction: column;
+    transition: transform .12s, box-shadow .12s;
+  }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 12px 30px -10px rgba(0,0,0,.2); }
+  .card .head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 16px; border-bottom: 1px solid rgba(0,0,0,.08);
+  }
+  .card .head .letter {
+    width: 28px; height: 28px; border-radius: 7px;
+    display: grid; place-items: center;
+    font-weight: 700; font-size: 14px; color: #fff;
+  }
+  .card.a .head .letter { background: linear-gradient(135deg, #5e7adb, #2d3a8c); }
+  .card.b .head .letter { background: linear-gradient(135deg, #5e6ad2, #2d3a8c); }
+  .card.c .head .letter { background: linear-gradient(135deg, #a07040, #6a4520); }
+  .card.d .head .letter { background: linear-gradient(135deg, #4a4a4a, #1a1a1a); }
+  .card .head h2 { margin: 0; font-size: 15px; font-weight: 600; }
+  .card .head .sub { font-size: 11.5px; color: #6a6a6a; margin: 0; }
+  .card .head .open { margin-left: auto; font-size: 12px; color: #007aff; }
+
+  .thumb {
+    aspect-ratio: 16 / 10; overflow: hidden; position: relative;
+  }
+  .thumb iframe { width: 200%; height: 200%; border: 0; transform: scale(0.5); transform-origin: 0 0; pointer-events: none; }
+  /* Override: scale to fit width-1280, with crop to 16:10 */
+  .thumb .label {
+    position: absolute; top: 10px; left: 10px;
+    background: rgba(0,0,0,.7); color: #fff;
+    font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase;
+    padding: 4px 8px; border-radius: 999px; font-weight: 600;
+    z-index: 5;
+  }
+
+  .body { padding: 14px 16px 16px; }
+  .body p { font-size: 13px; line-height: 1.5; color: #2a2a2a; margin: 0 0 10px; }
+  .body .props { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .body .props span {
+    font-size: 10.5px; padding: 2px 7px; border-radius: 3px;
+    background: rgba(0,0,0,.06); color: #4a4a4a;
+  }
+  .body .props span.glass { background: rgba(0,122,255,.12); color: #0050b3; }
+  .body .props span.font { background: rgba(94,106,210,.12); color: #3a3a8a; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>V2 · 4 Context Directions</h1>
+  <span class="meta">Stackdesk · same product, same data · 1280×800+ · open each in its own tab</span>
+  <span class="right">No skill methodology · hand-built judgment</span>
+</header>
+
+<div class="wrap">
+  <p class="lead">Four context directions for a SaaS dashboard. Each uses real pipeline data, real component shapes, and glass only on the chrome.</p>
+  <p class="sub">The dashboard sits in the lower-left, surrounded by 3,200px of page so you can see how it actually behaves in each context — not as a centered card on a gradient.</p>
+
+  <div class="grid">
+
+    <a class="card a" href="v2-a-macos26.html" target="_blank">
+      <div class="head">
+        <div class="letter">A</div>
+        <div>
+          <h2>System-native · macOS 26 Tahoe</h2>
+          <div class="sub">Heavy glass on warm system colors · big system type · SF</div>
+        </div>
+        <span class="open">Open ↗</span>
+      </div>
+      <div class="thumb"><div class="label">Preview</div><iframe src="v2-a-macos26.html" scrolling="no"></iframe></div>
+      <div class="body">
+        <p>Sidebar, topbar, search and the floating command palette are all glass over a warm sunset wallpaper. Content cards are solid. This is the Apple HIG pattern, executed honestly. Feels like a first-party Apple product.</p>
+        <div class="props">
+          <span class="glass">glass: regular, 40px blur, 78% tint</span>
+          <span class="font">font: SF Pro Display + SF Pro Text</span>
+          <span>controls: sidebar, topbar, search, command palette</span>
+          <span>background: warm sunset (peach/coral/sage)</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="card b" href="v2-b-linear.html" target="_blank">
+      <div class="head">
+        <div class="letter">B</div>
+        <div>
+          <h2>Developer-tool dark · Linear / Vercel</h2>
+          <div class="sub">Subtle glass on near-black · dense info · keyboard-first · monospace accents</div>
+        </div>
+        <span class="open">Open ↗</span>
+      </div>
+      <div class="thumb"><div class="label">Preview</div><iframe src="v2-b-linear.html" scrolling="no"></iframe></div>
+      <div class="body">
+        <p>Icon rail + sidebar + topbar with thin glass blur. Content panels are flat dark cards. Activity feed reads like a build log. The team that lives in Slack and Arc will feel at home. Not warm — but not grim either.</p>
+        <div class="props">
+          <span class="glass">glass: thin, 24px blur, 65% tint</span>
+          <span class="font">font: Inter + JetBrains Mono</span>
+          <span>controls: topbar, command search, status pill</span>
+          <span>background: near-black, no wallpaper</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="card c" href="v2-c-editorial.html" target="_blank">
+      <div class="head">
+        <div class="letter">C</div>
+        <div>
+          <h2>Editorial · The Stackdesk Review</h2>
+          <div class="sub">Delicate glass on warm paper · serif · drop cap · pull quote · SVG chart</div>
+        </div>
+        <span class="open">Open ↗</span>
+      </div>
+      <div class="thumb"><div class="label">Preview</div><iframe src="v2-c-editorial.html" scrolling="no"></iframe></div>
+      <div class="body">
+        <p>The dashboard is a daily auto-generated business review. KPI strip is a typographic table, the deal list is a print-style ledger, the activity feed is roman-numbered. Glass is just the masthead. Feels like a printed broadside, not a web app.</p>
+        <div class="props">
+          <span class="glass">glass: masthead only, 24px blur, 70% tint</span>
+          <span class="font">font: Charter / Iowan Old Style + SF Pro Text for UI chrome</span>
+          <span>controls: top masthead, no other chrome</span>
+          <span>background: warm paper (beige → tan gradient)</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="card d" href="v2-d-engdoc.html" target="_blank">
+      <div class="head">
+        <div class="letter">D</div>
+        <div>
+          <h2>Engineering doc · operator reference</h2>
+          <div class="sub">Sparse glass on warm white · monospace · code blocks · ASCII tree · CLI</div>
+        </div>
+        <span class="open">Open ↗</span>
+      </div>
+      <div class="thumb"><div class="label">Preview</div><iframe src="v2-d-engdoc.html" scrolling="no"></iframe></div>
+      <div class="body">
+        <p>The dashboard is the live snapshot inside a doc page. Monospace everywhere. KPI strip, table, prop API, ASCII resource tree, terminal output, and a "stable" notice. Glass is the left nav and topbar only. Looks like Stripe Docs or a changelog.</p>
+        <div class="props">
+          <span class="glass">glass: rail + topbar, 20px blur, 78% tint</span>
+          <span class="font">font: JetBrains Mono only</span>
+          <span>controls: left rail, topbar search, status pills</span>
+          <span>background: warm white paper (#f7f4ec)</span>
+        </div>
+      </div>
+    </a>
+
+  </div>
+
+  <p class="sub" style="margin-top:32px">
+    All four use identical data: 4 KPIs, 6 deals in the pipeline table, 6 activity events, the same Maple &amp; Finch / Cedar Robotics / Halberd / Soren Press narrative. Differences are direction, not content.
+  </p>
+</div>
+
+</body>
+</html>

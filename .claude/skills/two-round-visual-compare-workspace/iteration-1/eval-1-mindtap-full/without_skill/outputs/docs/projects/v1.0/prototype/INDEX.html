@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>mindtap · 视觉方向对比 · 目录</title>
+<style>
+  :root {
+    --bg: #fafafa;
+    --ink: #1c1c1e;
+    --ink-2: #6e6e73;
+    --ink-3: #a1a1a6;
+    --line: #e5e5e7;
+    --accent: #2a6e6c;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "SF Pro Display", "PingFang SC", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    padding: 56px 80px 80px;
+    min-height: 100vh;
+  }
+  header { margin-bottom: 40px; max-width: 880px; }
+  header .eyebrow { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 8px; }
+  header h1 { font-size: 40px; font-weight: 600; letter-spacing: -0.025em; line-height: 1.15; }
+  header p { font-size: 15px; color: var(--ink-2); margin-top: 12px; line-height: 1.65; }
+
+  section { margin-top: 56px; }
+  section .label { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 12px; }
+  section h2 { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 16px; }
+
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .card {
+    display: block;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 20px 24px;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(0,0,0,0.06); }
+  .card .meta { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+  .card .pill { font-size: 10px; padding: 3px 9px; border-radius: 99px; background: rgba(42,110,108,0.10); color: var(--accent); letter-spacing: 0.04em; text-transform: uppercase; }
+  .card .pill.light { background: rgba(0,0,0,0.05); color: var(--ink-2); }
+  .card h3 { font-size: 17px; font-weight: 600; letter-spacing: -0.015em; margin-bottom: 4px; }
+  .card .desc { font-size: 13px; color: var(--ink-2); line-height: 1.55; }
+  .card .arrow { margin-top: 14px; font-size: 12px; color: var(--accent); font-weight: 500; }
+
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+
+  .method {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 24px 28px;
+    max-width: 880px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--ink);
+  }
+  .method h3 { font-size: 16px; font-weight: 600; margin: 18px 0 8px; }
+  .method h3:first-child { margin-top: 0; }
+  .method ol, .method ul { padding-left: 22px; }
+  .method li { margin-bottom: 6px; }
+  .method code { background: rgba(0,0,0,0.05); padding: 1px 6px; border-radius: 3px; font-size: 12.5px; }
+
+  footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--line); font-size: 12px; color: var(--ink-3); }
+</style>
+</head>
+<body>
+<header>
+  <div class="eyebrow">mindtap · Prototype Directory</div>
+  <h1>视觉方向对比 · 两轮 HTML</h1>
+  <p>这是 mindtap V1.0 视觉方向的对比原型。Liquid Glass 是既定的设计语言，本页用两轮对比来定位具体的<b>轻重</b>和<b>编辑性</b>。点击任一文件即可在浏览器中打开。</p>
+</header>
+
+<section>
+  <div class="label">Round 1 · 4×4 矩阵（密度 / 编辑性 2 轴）</div>
+  <h2>一轮：方向定位</h2>
+  <div class="grid-4">
+    <a class="card" href="M1-round1-matrix.html">
+      <div class="meta"><span class="pill">M1</span><span class="pill light">1280×800</span></div>
+      <h3>4×4 矩阵总览</h3>
+      <div class="desc">点击进入 4 象限总览。</div>
+      <div class="arrow">打开 →</div>
+    </a>
+    <a class="card" href="Q1-light-creative.html">
+      <div class="meta"><span class="pill">Q1</span><span class="pill light">1440×900</span></div>
+      <h3>Light + Creative</h3>
+      <div class="desc">暖色 · 卡片 · clear 玻璃 · 个人灵感向。</div>
+      <div class="arrow">打开 →</div>
+    </a>
+    <a class="card" href="Q2-light-strict.html">
+      <div class="meta"><span class="pill">Q2</span><span class="pill light">1440×900</span></div>
+      <h3>Light + Strict</h3>
+      <div class="desc">中性 · 表格 · 轻玻璃 · 工具向。</div>
+      <div class="arrow">打开 →</div>
+    </a>
+    <a class="card" href="Q3-heavy-creative.html">
+      <div class="meta"><span class="pill">Q3</span><span class="pill light">1440×900</span></div>
+      <h3>Heavy + Creative</h3>
+      <div class="desc">深色 · aurora · 大玻璃 · 沉浸叙事。</div>
+      <div class="arrow">打开 →</div>
+    </a>
+    <a class="card" href="Q4-heavy-strict.html">
+      <div class="meta"><span class="pill">Q4</span><span class="pill light">1440×900</span></div>
+      <h3>Heavy + Strict</h3>
+      <div class="desc">深色 · 表格 · 操作栏玻璃 · power-user。</div>
+      <div class="arrow">打开 →</div>
+    </a>
+  </div>
+</section>
+
+<section>
+  <div class="label">Round 2 · 4 个完整方向页（1280×800+ · 真实内容）</div>
+  <h2>二轮：方向落地</h2>
+  <div class="grid">
+    <a class="card" href="D5-immersive.html">
+      <div class="meta"><span class="pill">D5</span><span class="pill light">Heavy + Creative · 沉浸式</span></div>
+      <h3>沉浸式</h3>
+      <div class="desc">单篇叙事 · aurora 大背景 · 大玻璃卡片 · prominent 浮动 [+] · 适合晚间反思时段。</div>
+      <div class="arrow">打开 →</div>
+    </a>
+    <a class="card" href="D6-productive.html">
+      <div class="meta"><span class="pill">D6</span><span class="pill light">Heavy + Strict · 工作台</span></div>
+      <h3>工作台</h3>
+      <div class="desc">表格 + 状态列 + KPI · 操作栏玻璃 · 紧凑工具栏 · 适合管理大量记录 / 复盘。</div>
+      <div class="arrow">打开 →</div>
+    </a>
+    <a class="card" href="D7-adaptive.html">
+      <div class="meta"><span class="pill">D7</span><span class="pill light">Light + Creative · 自适应</span></div>
+      <h3>自适应</h3>
+      <div class="desc">暖色 + clear 玻璃 · 卡片呼吸 · dock + 浮动按钮 · 适合晨间灵感与日常记录。</div>
+      <div class="arrow">打开 →</div>
+    </a>
+    <a class="card" href="D8-expressive.html">
+      <div class="meta"><span class="pill">D8</span><span class="pill light">Light + Strict · 表达式</span></div>
+      <h3>表达式</h3>
+      <div class="desc">中性灰 · 编辑器居中 · 玻璃格式化栏 · 侧栏文档元信息 · 适合长文写作场景。</div>
+      <div class="arrow">打开 →</div>
+    </a>
+  </div>
+</section>
+
+<section>
+  <div class="label">方法</div>
+  <h2>对比方法</h2>
+  <div class="method">
+    <h3>两轮的意义</h3>
+    <ul>
+      <li><b>Round 1（4 象限）</b>：从「密度」与「编辑性」两轴出发，用最少的视觉成本定位整体感觉。不展示完整页面，只展示风格签名。</li>
+      <li><b>Round 2（4 落地）</b>：把选定的方向做成完整的 1440×900 页面，使用真实的内容（同一组笔记样本）来对比，避免风格只是审美而不可用。</li>
+    </ul>
+    <h3>约束</h3>
+    <ul>
+      <li>Liquid Glass <b>只在控件层和导航层</b>使用（侧栏 / 工具栏 / 浮动按钮 / 搜索框）。内容层（笔记卡、表格行、编辑画布）不施加玻璃，以保可读性。</li>
+      <li>不使用紫色渐变 / 不使用过度发光的「AI 套路」配色。每个方向有自己的色彩个性（暖 / 中 / 深）。</li>
+      <li>同一组数据：4 条笔记样本（灵感 / 打卡 / 待办 / 阅读），4 个方向共用，便于比较。</li>
+      <li>视口统一 1440×900；macOS 窗口装饰统一，避免窗口本身干扰判断。</li>
+    </ul>
+    <h3>判据</h3>
+    <ol>
+      <li><b>Glass for controls, not for content</b> — 内容是否呼吸得开？</li>
+      <li><b>真实 5 秒</b> — 想象打开后 5 秒，看到的第一信息是什么？是否符合「极简记录」？</li>
+      <li><b>跨平台一致性</b> — 同一页能否平移到 iPad / iPhone？</li>
+      <li><b>本地存储的体感</b> — 数据感是否「在你的机器上」，而不是「在云端」？</li>
+    </ol>
+  </div>
+  <p style="margin-top:14px;font-size:13px;color:var(--ink-2)">
+    详细方法见 <code>docs/projects/v1.0/compare-method.md</code>。
+  </p>
+</section>
+
+<footer>
+  共 9 个 HTML · 全部 1440×900 · 文件位置：<code>docs/projects/v1.0/prototype/</code>
+</footer>
+</body>
+</html>

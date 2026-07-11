@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>C · Paper Zine · Tactile · V2</title>
+<style>
+  /* ============================================================
+     C · Paper Zine · Tactile / Handcrafted
+     灵感：Risograph print / 笔记本手账 / 美术馆图录 / 暖色纸本
+     形态：暖米底 + 手写感字体 + 涂鸦 / 印章 / 胶带 / 撕边
+     与 A（科技玻璃）和 D（极客工程）正相反
+     ============================================================ */
+  *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --paper: #f3ead2;          /* aged cream */
+    --paper-2: #ebe0c2;
+    --paper-3: #dccd9e;        /* kraft */
+    --ink: #2a2419;
+    --ink-2: #5a4a32;
+    --ink-3: #8a7553;
+    --ink-red: #b8432f;
+    --ink-blue: #2c5d7e;
+    --ink-green: #4a6e3a;
+    --mustard: #c89a3a;
+    --pink: #d68a8a;
+    --mint: #a8c8a3;
+    --tape-yellow: rgba(232,210,90,0.85);
+    --tape-blue: rgba(120,170,200,0.80);
+    --tape-pink: rgba(220,150,160,0.80);
+    --hand: "Caveat", "Marker Felt", "Bradley Hand", "Comic Sans MS", "PingFang SC", "Songti SC", cursive;
+    --type: "Caveat", "Bradley Hand", "Marker Felt", "Songti SC", "Georgia", serif;
+    --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  }
+  html, body { height: 100%; }
+  body {
+    background:
+      radial-gradient(at 20% 30%, rgba(0,0,0,0.03) 0%, transparent 40%),
+      radial-gradient(at 80% 70%, rgba(0,0,0,0.04) 0%, transparent 40%),
+      var(--paper);
+    background-attachment: fixed;
+    color: var(--ink);
+    font-family: var(--type);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    min-height: 100vh;
+    padding: 32px;
+  }
+  .label {
+    position: fixed; top: 12px; right: 16px; z-index: 99;
+    padding: 6px 10px; background: rgba(0,0,0,.55); color: #fff;
+    border-radius: 6px; font-size: 11px; letter-spacing: .12em;
+    text-transform: uppercase;
+    font-family: var(--sans);
+  }
+  /* notebook has torn paper feel + spiral on top */
+  .notebook {
+    max-width: 1280px;
+    margin: 0 auto;
+    background: var(--paper);
+    border-radius: 4px;
+    position: relative;
+    box-shadow:
+      0 2px 0 rgba(0,0,0,0.04),
+      0 30px 60px rgba(60,40,20,0.25),
+      0 1px 0 var(--paper-3) inset;
+    /* ruled paper lines */
+    background-image:
+      linear-gradient(transparent 31px, rgba(120,100,70,0.18) 32px, transparent 32px),
+      linear-gradient(90deg, transparent 79px, rgba(180,80,80,0.25) 80px, transparent 80px);
+    background-size: 100% 32px, 100% 100%;
+    background-position: 0 0, 0 0;
+  }
+  /* spiral binding */
+  .notebook::before {
+    content: "";
+    position: absolute;
+    top: -18px; left: 0; right: 0;
+    height: 24px;
+    background:
+      radial-gradient(circle at 30px 14px, #888 6px, transparent 7px),
+      radial-gradient(circle at 70px 14px, #888 6px, transparent 7px),
+      radial-gradient(circle at 110px 14px, #888 6px, transparent 7px),
+      linear-gradient(180deg, #555, #333);
+    border-radius: 2px;
+  }
+  /* ---------- top toolbar (stickers + tape) ---------- */
+  .top {
+    padding: 20px 60px 8px;
+    display: flex; align-items: center; gap: 14px;
+    font-family: var(--sans); font-size: 12px;
+    color: var(--ink-3);
+    position: relative;
+  }
+  .top .date {
+    background: var(--paper-2);
+    border: 1.5px dashed var(--ink-3);
+    padding: 6px 12px; border-radius: 3px;
+    font-family: var(--hand); font-size: 18px;
+    color: var(--ink); transform: rotate(-1.5deg);
+  }
+  .top .stamp {
+    border: 2px solid var(--ink-red);
+    color: var(--ink-red);
+    padding: 4px 10px; border-radius: 50%;
+    font-family: var(--hand); font-size: 14px;
+    transform: rotate(8deg);
+    text-align: center; line-height: 1.1;
+    opacity: .75;
+    font-weight: 700;
+  }
+  .top .menu {
+    margin-left: auto;
+    display: flex; gap: 6px; align-items: center;
+  }
+  .top .menu button {
+    background: transparent; border: none;
+    font-family: var(--hand); font-size: 16px; color: var(--ink-2);
+    cursor: pointer; padding: 4px 8px;
+    border-bottom: 2px dotted transparent;
+  }
+  .top .menu button:hover { border-bottom-color: var(--ink-red); color: var(--ink-red); }
+  .top .menu button.on { color: var(--ink-red); border-bottom: 2px dotted var(--ink-red); }
+  /* tape stickers (positioned absolute on corners) */
+  .tape {
+    position: absolute;
+    width: 110px; height: 28px;
+    display: grid; place-items: center;
+    font-family: var(--sans); font-size: 10px;
+    letter-spacing: .14em; text-transform: uppercase;
+    color: var(--ink); font-weight: 600;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.10);
+    transform: rotate(-6deg);
+  }
+  .tape.t1 { top: 28px; right: 80px; background: var(--tape-yellow); transform: rotate(-4deg); }
+  .tape.t2 { top: 80px; left: 40px; background: var(--tape-blue); transform: rotate(7deg); color: #fff; }
+  .tape.t3 { bottom: 110px; right: 60px; background: var(--tape-pink); transform: rotate(-3deg); }
+
+  /* ---------- big hand title ---------- */
+  .title-block {
+    padding: 50px 100px 20px;
+    text-align: center;
+    position: relative;
+  }
+  .title-block .eyebrow {
+    font-family: var(--sans);
+    font-size: 11px; letter-spacing: .3em;
+    text-transform: uppercase; color: var(--ink-3);
+    margin-bottom: 16px;
+  }
+  .title-block h1 {
+    font-family: var(--hand);
+    font-size: 92px;
+    line-height: .9;
+    color: var(--ink);
+    transform: rotate(-1.5deg);
+    margin-bottom: 14px;
+  }
+  .title-block h1 .s1 { color: var(--ink-red); }
+  .title-block h1 .s2 { color: var(--ink-blue); }
+  .title-block .deck {
+    font-family: var(--hand);
+    font-size: 24px; color: var(--ink-2);
+    transform: rotate(.8deg);
+    display: inline-block;
+  }
+  /* underline scribble */
+  .scribble {
+    display: inline-block;
+    border-bottom: 3px solid var(--ink-red);
+    border-radius: 50%;
+    transform: rotate(-1deg);
+    padding: 0 8px;
+  }
+  /* ---------- 2-column layout ---------- */
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    padding: 40px 100px 30px;
+  }
+  /* a note card (looks like a torn card pasted onto the page) */
+  .card {
+    background: #fff;
+    border: 1px solid var(--ink-3);
+    padding: 18px 22px;
+    box-shadow: 2px 4px 0 rgba(0,0,0,0.08);
+    position: relative;
+    font-family: var(--hand);
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+  .card.tape-top::before {
+    content: "";
+    position: absolute;
+    top: -10px; left: 30%; width: 80px; height: 18px;
+    background: var(--tape-yellow);
+    transform: rotate(-4deg);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.10);
+  }
+  .card .marker {
+    background: var(--mustard);
+    color: var(--ink);
+    padding: 0 4px;
+  }
+  .card .marker-blue { background: #b3d8e8; color: var(--ink); padding: 0 4px; }
+  .card .marker-pink { background: var(--pink); color: var(--ink); padding: 0 4px; }
+  .card h3 {
+    font-family: var(--hand);
+    font-size: 24px; margin-bottom: 8px;
+    border-bottom: 2px dashed var(--ink-3);
+    padding-bottom: 4px;
+  }
+  .card .pin {
+    position: absolute;
+    top: -8px; right: 14px;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #ff7070, #b8432f 60%, #6a1818);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.30);
+  }
+  /* polaroid style card */
+  .polaroid {
+    background: #fff;
+    padding: 12px 12px 30px;
+    box-shadow: 3px 5px 0 rgba(0,0,0,0.08);
+    transform: rotate(2deg);
+    font-family: var(--hand);
+  }
+  .polaroid .img {
+    background: linear-gradient(135deg, var(--mint), var(--mustard));
+    aspect-ratio: 4/3;
+    display: grid; place-items: center;
+    color: var(--ink); font-size: 14px;
+    letter-spacing: .14em; text-transform: uppercase;
+  }
+  .polaroid .cap {
+    text-align: center; padding: 8px;
+    font-size: 16px; color: var(--ink);
+  }
+  /* sticky note (smaller, square, offset) */
+  .sticky {
+    background: #f8d768;
+    color: var(--ink);
+    width: 220px;
+    padding: 14px 16px;
+    box-shadow: 3px 4px 0 rgba(0,0,0,0.10);
+    transform: rotate(-3deg);
+    font-family: var(--hand);
+    font-size: 17px;
+    line-height: 1.45;
+    position: relative;
+  }
+  .sticky.blue { background: #a8c8e0; transform: rotate(2deg); }
+  .sticky.pink { background: var(--pink); transform: rotate(-1deg); }
+  .sticky.green { background: var(--mint); transform: rotate(4deg); }
+  /* check list with hand circles */
+  .hand-list { list-style: none; padding: 0; }
+  .hand-list li {
+    padding: 4px 0 4px 32px;
+    position: relative;
+    font-family: var(--hand);
+    font-size: 19px;
+    color: var(--ink);
+  }
+  .hand-list li::before {
+    content: "";
+    position: absolute; left: 0; top: 6px;
+    width: 20px; height: 20px;
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+  }
+  .hand-list li.done::before {
+    background: var(--ink);
+    box-shadow: 0 0 0 4px var(--ink-red) inset;
+  }
+  .hand-list li.done span {
+    text-decoration: line-through;
+    color: var(--ink-3);
+  }
+  /* "page number" handwritten in corner */
+  .pg-num {
+    position: absolute;
+    bottom: 24px; right: 40px;
+    font-family: var(--hand); font-size: 18px;
+    color: var(--ink-3);
+    transform: rotate(-2deg);
+  }
+  /* doodle */
+  .doodle {
+    position: absolute;
+    font-family: var(--hand); color: var(--ink-blue);
+    pointer-events: none;
+  }
+  /* swatches - sticker color squares */
+  .swatch-strip {
+    display: flex; gap: 0;
+    margin: 14px 0;
+  }
+  .swatch-strip span {
+    flex: 1; height: 50px;
+    display: grid; place-items: center;
+    font-family: var(--sans); font-size: 10px;
+    color: rgba(0,0,0,0.65); font-weight: 700;
+    letter-spacing: .14em; text-transform: uppercase;
+  }
+
+  /* footer */
+  .footer {
+    padding: 16px 100px 60px;
+    text-align: center;
+    font-family: var(--sans);
+    font-size: 12px; color: var(--ink-3);
+    border-top: 1px dashed var(--ink-3);
+  }
+  .footer .sig {
+    font-family: var(--hand); font-size: 24px; color: var(--ink);
+    transform: rotate(-2deg); display: inline-block;
+    margin-bottom: 4px;
+  }
+</style>
+</head>
+<body>
+<div class="label">C · Paper Zine · Tactile / Hand</div>
+
+<div class="notebook">
+  <!-- top: date + stamp + menu -->
+  <header class="top">
+    <div class="date">周日 · 14 · 06 · 2026</div>
+    <div class="stamp">NO.24<br>碎片集</div>
+    <div class="menu">
+      <button class="on">灵感</button>
+      <button>日志</button>
+      <button>涂鸦</button>
+      <button>色卡</button>
+      <button>导出</button>
+    </div>
+    <div class="tape t1">碎片 24 期</div>
+    <div class="tape t2">手账本</div>
+    <div class="tape t3">本周色卡</div>
+  </header>
+
+  <!-- big handwritten title -->
+  <section class="title-block">
+    <div class="eyebrow">第 24 期 · 关于光 & 边界</div>
+    <h1><span class="s1">边界处的</span><br><span class="s2">颜色</span>!</h1>
+    <div class="deck"><span class="scribble">我的一周，被颜色串起来</span></div>
+  </section>
+
+  <!-- 2-col cards -->
+  <div class="layout">
+    <!-- LEFT column -->
+    <div>
+      <div class="card tape-top" style="transform: rotate(-1deg);">
+        <div class="pin"></div>
+        <h3>雨后路面 🟣</h3>
+        <p>周一下了 20 分钟的雨。雨停之后，<span class="marker">路面反射着天空的紫灰</span>。我特意绕了远路。这种颜色没有名字——它不是紫，也不是灰，更像一种"刚刚下过"的氛围。</p>
+        <p style="margin-top:8px;color:var(--ink-3);font-size:14px;">↳ 19:42 · 国贸桥下</p>
+      </div>
+
+      <div style="height:24px"></div>
+
+      <div class="card" style="transform: rotate(1.2deg); background: #fffceb;">
+        <h3>地铁反光 🔵</h3>
+        <p>周二早高峰，车厢连接处的<span class="marker-blue">金属条反着站台灯光</span>。冷青、钴蓝、暖白挤在一条 8cm 宽的金属条上。我盯着它看了三站。</p>
+        <ul class="hand-list" style="margin-top:10px">
+          <li class="done"><span>冷青色打底</span></li>
+          <li class="done"><span>钴蓝压在上层</span></li>
+          <li><span>暖白来自对面</span></li>
+        </ul>
+      </div>
+
+      <div style="height:30px"></div>
+
+      <div class="sticky">
+        ✏️ 小记<br><br>
+        颜色不是物体的属性，<br>是物体与光之间的<br><b>事件</b>。
+      </div>
+    </div>
+
+    <!-- RIGHT column -->
+    <div>
+      <div class="polaroid" style="transform: rotate(-2deg);">
+        <div class="img">便利店 · 22:14</div>
+        <div class="cap">荧光 + 暖色反射<br>三种光在玻璃门上</div>
+      </div>
+
+      <div style="height:24px"></div>
+
+      <div class="card" style="transform: rotate(-.8deg);">
+        <h3>咖啡杯边 ☕</h3>
+        <p>奶油色的咖啡被蒸汽打断，杯沿出现一圈极淡的橙。这圈橙不是来自咖啡，<span class="marker-pink">而是来自对面暖光灯的反射</span>。照片里没有那种"被打断"的感觉。</p>
+        <div class="swatch-strip">
+          <span style="background:#f0c33b">黄</span>
+          <span style="background:#fff3d6">奶</span>
+          <span style="background:#d68f00">橙</span>
+          <span style="background:#7a5a30">咖</span>
+        </div>
+      </div>
+
+      <div style="height:24px"></div>
+
+      <div class="sticky blue">
+        📌 任务<br><br>
+        → 做小色卡<br>
+        → 拼一周地图<br>
+        → 写下来
+      </div>
+
+      <div style="height:14px"></div>
+
+      <div class="sticky pink" style="margin-left:30px; width:200px;">
+        🌈 下一期<br>声音<br>(6.21)
+      </div>
+    </div>
+  </div>
+
+  <!-- doodles -->
+  <div class="doodle" style="top:120px; left:40px; font-size:42px; transform: rotate(-8deg);">↘</div>
+  <div class="doodle" style="bottom:80px; left:50%; font-size:38px; transform: rotate(5deg); color:var(--ink-red);">✦</div>
+  <div class="doodle" style="top:300px; right:30px; font-size:34px; transform: rotate(-12deg); color:var(--mustard);">~</div>
+
+  <!-- page number -->
+  <div class="pg-num">— 24 —</div>
+
+  <!-- footer -->
+  <footer class="footer">
+    <div class="sig">— JI · 2026.06.14 —</div>
+    <br>
+    mindtap · 碎片系列 · CC BY-NC · 手账本 #24
+  </footer>
+</div>
+</body>
+</html>
