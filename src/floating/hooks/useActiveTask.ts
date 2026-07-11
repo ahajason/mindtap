@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { api } from "../../lib/tauri-bridge";
-import type { TimerSession } from "../types/timer";
+import { api, type TimerSession } from "../../lib/tauri-bridge";
 
 type UseActiveTaskResult = {
   session: TimerSession | null;
