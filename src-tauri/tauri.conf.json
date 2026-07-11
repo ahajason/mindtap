@@ -13,7 +13,9 @@
     "macOSPrivateApi": true,
     "windows": [
       {
+        "label": "main",
         "title": "轻念 · Mindtap",
+        "url": "index.html",
         "width": 800,
         "height": 600,
         "resizable": true,
@@ -22,6 +24,20 @@
         "decorations": true,
         "titleBarStyle": "Overlay",
         "hiddenTitle": true
+      },
+      {
+        "label": "floating",
+        "title": "Mindtap 计时",
+        "url": "floating.html",
+        "width": 320,
+        "height": 36,
+        "resizable": false,
+        "fullscreen": false,
+        "transparent": true,
+        "decorations": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "focus": false
       }
     ],
     "security": {

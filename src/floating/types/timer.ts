@@ -1,0 +1,1 @@
+export type TimerStatus = "active" | "paused" | "completed";
