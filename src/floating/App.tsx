@@ -25,9 +25,11 @@ export function FloatingApp() {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     const win = getCurrentWindow();
     (async () => {
       try {
+        if (cancelled) return;
         if (expanded) {
           const pos = await win.outerPosition();
           const size = await win.outerSize();
@@ -38,13 +40,18 @@ export function FloatingApp() {
               pos.y - (EXPANDED_H - FOLDED_H),
             ),
           );
+          await win.setFocusable(true);
         } else {
           await win.setSize(new LogicalSize(FOLDED_W, FOLDED_H));
+          await win.setFocusable(false);
         }
       } catch (err) {
-        console.error("[resize] failed", err);
+        console.error("[resize/focus] failed", err);
       }
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [expanded]);
 
   async function handleStart() {
