@@ -4,8 +4,45 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mindtap 计时</title>
+    <script>
+      // Dev/Tauri-runtime polyfill: 仅在 __TAURI_INTERNALS__ 未注入时 (vite dev / 普通浏览器)
+      // 提供 stub, 让 React 组件不 throw, dev 实测可 mount
+      if (!window.__TAURI_INTERNALS__) {
+        window.__TAURI_INTERNALS__ = {
+          metadata: {
+            currentWindow: { label: "floating" },
+            currentWebview: { label: "floating", windowLabel: "floating" },
+          },
+          invoke: async (cmd) => {
+            if (cmd === "plugin:window|getCurrentWindow") return { label: "floating" };
+            if (cmd === "plugin:webview|getCurrentWebviewWindow") return { label: "floating" };
+            if (cmd === "plugin:window|set_focus") return null;
+            if (cmd === "plugin:window|set_focusable") return null;
+            if (cmd === "plugin:window|set_size") return null;
+            if (cmd === "plugin:window|set_position") return null;
+            if (cmd === "plugin:window|outer_position") return { x: 100, y: 60 };
+            if (cmd === "plugin:window|outer_size") return { width: 320, height: 36 };
+            if (cmd === "plugin:window|start_dragging") return null;
+            if (cmd === "plugin:window|available_monitors") return [{
+              position: { x: 0, y: 0 }, size: { width: 1920, height: 1080 }, scaleFactor: 1, name: "primary"
+            }];
+            if (cmd === "plugin:event|listen") return 1;
+            if (cmd === "plugin:event|unlisten") return null;
+            if (cmd.startsWith("plugin:event|")) return null;
+            if (cmd === "timer_session_get_active") return null;
+            if (cmd === "timer_session_create") return { id: 1, task_title: "test", status: "active", started_at: null, paused_at: null, completed_at: null, focus_ms: 0, created_at: Date.now(), updated_at: Date.now() };
+            if (cmd === "timer_session_update_focus_ms") return null;
+            if (cmd === "timer_session_pause") return { id: 1, status: "paused", task_title: "test", started_at: null, paused_at: null, completed_at: null, focus_ms: 0, created_at: Date.now(), updated_at: Date.now() };
+            if (cmd === "timer_session_resume") return { id: 1, status: "active", task_title: "test", started_at: null, paused_at: null, completed_at: null, focus_ms: 0, created_at: Date.now(), updated_at: Date.now() };
+            if (cmd === "timer_session_complete") return { id: 1, status: "completed", task_title: "test", started_at: null, paused_at: null, completed_at: null, focus_ms: 0, created_at: Date.now(), updated_at: Date.now() };
+            if (cmd === "app_exit") return null;
+            return null;
+          },
+        };
+      }
+    </script>
   </head>
-  <body class="floating-root">
+  <body>
     <div id="root"></div>
     <script type="module" src="/src/floating/main.tsx"></script>
   </body>
