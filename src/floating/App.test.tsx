@@ -1,34 +1,7 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { FloatingApp } from "./App";
-
-vi.mock("@tauri-apps/api/window", () => ({
-  getCurrentWindow: () => ({
-    setSize: vi.fn().mockResolvedValue(undefined),
-    setPosition: vi.fn().mockResolvedValue(undefined),
-    outerPosition: vi.fn().mockResolvedValue({ x: 0, y: 0 }),
-    outerSize: vi.fn().mockResolvedValue({ width: 320, height: 36 }),
-  }),
-  LogicalSize: class {},
-  PhysicalPosition: class {},
-}));
-
-vi.mock("../../lib/tauri-bridge", () => ({
-  api: {
-    timerSession: {
-      getActive: vi.fn().mockResolvedValue(null),
-      create: vi.fn().mockResolvedValue({}),
-      updateFocusMs: vi.fn().mockResolvedValue(undefined),
-      pause: vi.fn().mockResolvedValue({}),
-      resume: vi.fn().mockResolvedValue({}),
-      complete: vi.fn().mockResolvedValue({}),
-    },
-    app: {
-      exit: vi.fn().mockResolvedValue(undefined),
-    },
-  },
-}));
 
 describe("FloatingApp 根 div 挂 .floating-root 类（V0.2 修 V1.5 漏挂 bug）", () => {
   it("折叠态根 div className 含 'floating-root folded'", async () => {
