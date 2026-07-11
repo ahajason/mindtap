@@ -38,7 +38,7 @@ async function expandUpward() {
 export function FloatingApp() {
   const { session, refresh } = useActiveTask();
   useTick(1000);
-  useFocusTicker(session?.id ?? null, 1000);
+  const liveFocusMs = useFocusTicker(session, 1000);
 
   const [expanded, setExpanded] = useState(false);
   const [taskTitle, setTaskTitle] = useState("");
@@ -101,7 +101,7 @@ export function FloatingApp() {
         <StatusDot status={session?.status ?? null} />
         <FoldedBar
           taskTitle={session?.task_title ?? ""}
-          focusMs={session?.focus_ms ?? 0}
+          focusMs={liveFocusMs}
           status={session ? session.status : "empty"}
           onClick={() => setExpanded(true)}
         />
