@@ -38,6 +38,12 @@ fn row_to_session(row: &Row<'_>) -> rusqlite::Result<TimerSession> {
     })
 }
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct TaskTitleRec {
+    pub task_title: String,
+    pub last_used: i64,
+}
+
 pub fn create(conn: &Connection, task_title: String) -> Result<TimerSession, AppError> {
     let now = now_ms();
     conn.execute(
@@ -124,6 +130,28 @@ pub fn complete(conn: &Connection, id: i64) -> Result<TimerSession, AppError> {
         )));
     }
     get_by_id(conn, id)?.ok_or_else(|| AppError(format!("session {id} not found")))
+}
+
+pub fn list_recent_task_titles(
+    conn: &Connection,
+    limit: i64,
+) -> Result<Vec<TaskTitleRec>, AppError> {
+    let mut stmt = conn.prepare(
+        "SELECT task_title, MAX(completed_at) AS last_used
+         FROM timer_session
+         WHERE status = 'completed'
+         GROUP BY task_title
+         ORDER BY last_used DESC
+         LIMIT ?1",
+    )?;
+    let rows = stmt.query_map(params![limit], |row| {
+        Ok(TaskTitleRec {
+            task_title: row.get(0)?,
+            last_used: row.get(1)?,
+        })
+    })?;
+    rows.collect::<rusqlite::Result<Vec<_>>>()
+        .map_err(AppError::from)
 }
 
 #[cfg(test)]
@@ -229,5 +257,38 @@ mod tests {
         let s = create(&conn, "X".into()).unwrap();
         pause(&conn, s.id).unwrap();
         assert!(pause(&conn, s.id).is_err());
+    }
+
+    #[test]
+    fn list_recent_task_titles_empty_db() {
+        let conn = fresh_db();
+        let recs = list_recent_task_titles(&conn, 5).unwrap();
+        assert_eq!(recs.len(), 0);
+    }
+
+    #[test]
+    fn list_recent_task_titles_dedup_by_task_title() {
+        let conn = fresh_db();
+        let s1 = create(&conn, "写周报".into()).unwrap();
+        complete(&conn, s1.id).unwrap();
+        let s2 = create(&conn, "写周报".into()).unwrap();
+        complete(&conn, s2.id).unwrap();
+        let recs = list_recent_task_titles(&conn, 5).unwrap();
+        assert_eq!(recs.len(), 1);
+        assert_eq!(recs[0].task_title, "写周报");
+    }
+
+    #[test]
+    fn list_recent_task_titles_order_by_last_used_desc() {
+        let conn = fresh_db();
+        let s1 = create(&conn, "task A".into()).unwrap();
+        complete(&conn, s1.id).unwrap();
+        std::thread::sleep(std::time::Duration::from_millis(5));
+        let s2 = create(&conn, "task B".into()).unwrap();
+        complete(&conn, s2.id).unwrap();
+        let recs = list_recent_task_titles(&conn, 5).unwrap();
+        assert_eq!(recs.len(), 2);
+        assert_eq!(recs[0].task_title, "task B");
+        assert_eq!(recs[1].task_title, "task A");
     }
 }
