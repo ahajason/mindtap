@@ -2,9 +2,22 @@
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
 
-# 本地 skill 与 worktree（每个开发者不同，不进 git）
-.claude/skills/
+# worktree（每个开发者本地路径不同，不进 git）
 .claude/worktrees/
+
+# 隐私文件 / key 过滤（防止误 commit API key / token / 密码）
+.env
+.env.*
+*.env
+**/.env
+**/.env.*
+**/*.key
+**/*.pem
+**/credentials*
+**/secrets*
+**/*secret*
+**/id_rsa*
+**/id_ed25519*
 
 # Working memory(本地 planning files,不进 git)
 task_plan.md
