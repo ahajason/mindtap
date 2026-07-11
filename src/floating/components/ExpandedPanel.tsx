@@ -1,9 +1,12 @@
 import { useEffect, useRef } from "react";
 
 import type { TimerSession } from "../../lib/tauri-bridge";
+import { useRecentTaskTitles } from "../hooks/useRecentTaskTitles";
 import { ControlRow } from "./ControlRow";
+import { EmptyHistoryHint } from "./EmptyHistoryHint";
 import { InputBar } from "./InputBar";
 import { StatusDot } from "./StatusDot";
+import { SwitchDropdownSection } from "./SwitchDropdownSection";
 
 type ExpandedPanelProps = {
   taskTitle: string;
@@ -35,6 +38,8 @@ export function ExpandedPanel(props: ExpandedPanelProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const submittingRef = useRef(submitting);
   submittingRef.current = submitting;
+
+  const { recs, loading } = useRecentTaskTitles();
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -80,6 +85,15 @@ export function ExpandedPanel(props: ExpandedPanelProps) {
 
   return (
     <div className="floating-root expanded glass-l3 flex h-full flex-col gap-2 rounded-2xl p-3 text-[12px]">
+      {!activeSession && !loading && recs !== null && (
+        <div className="px-1 pb-2">
+          {recs.length === 0 ? (
+            <EmptyHistoryHint onClickCreate={() => inputRef.current?.focus()} />
+          ) : (
+            <SwitchDropdownSection onSelect={onTaskTitleChange} />
+          )}
+        </div>
+      )}
       <InputBar
         value={taskTitle}
         onChange={onTaskTitleChange}
