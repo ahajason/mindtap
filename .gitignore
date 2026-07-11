@@ -48,6 +48,7 @@ Thumbs.db
 
 # WSL 元数据（如果项目被软链到 Windows）
 .wslconfig
+workspace.lnk
 
 # Claude Code 插件运行时数据(2026-06-21 起已归档到 .archive/.superpowers/)
 .superpowers/
