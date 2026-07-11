@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { api } from "../lib/tauri-bridge";
 import { useActiveTask } from "./hooks/useActiveTask";
 import { useFocusTicker } from "./hooks/useFocusTicker";
 import { useTick } from "./hooks/useTick";
@@ -66,7 +67,6 @@ export function FloatingApp() {
     if (!title || submitting) return;
     setSubmitting(true);
     try {
-      const { api } = await import("../../lib/tauri-bridge");
       await api.timerSession.create(title);
       setTaskTitle("");
       setExpanded(false);
@@ -133,19 +133,16 @@ export function FloatingApp() {
         activeSession={session}
         onPause={async () => {
           if (!session) return;
-          const { api } = await import("../../lib/tauri-bridge");
           await api.timerSession.pause(session.id);
           await refresh();
         }}
         onResume={async () => {
           if (!session) return;
-          const { api } = await import("../../lib/tauri-bridge");
           await api.timerSession.resume(session.id);
           await refresh();
         }}
         onComplete={async () => {
           if (!session) return;
-          const { api } = await import("../../lib/tauri-bridge");
           await api.timerSession.complete(session.id);
           await refresh();
         }}
