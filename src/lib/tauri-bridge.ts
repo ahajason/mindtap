@@ -24,6 +24,7 @@ async function invoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T
 export const api = {
   app: {
     exit: () => invoke<void>("app_exit"),
+    showMainWindow: () => invoke<void>("app_show_main_window"),
   },
   timerSession: {
     getActive: () => invoke<TimerSession | null>("timer_session_get_active"),

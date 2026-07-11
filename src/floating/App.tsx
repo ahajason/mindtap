@@ -52,12 +52,11 @@ export function FloatingApp() {
         if (cancelled) return;
         if (expanded) {
           const pos = await win.outerPosition();
-          const size = await win.outerSize();
           await win.setSize(new LogicalSize(EXPANDED_W, EXPANDED_H));
           await win.setPosition(
             new PhysicalPosition(
-              pos.x + Math.round((size.width - EXPANDED_W) / 2),
-              pos.y - (EXPANDED_H - FOLDED_H),
+              pos.x + Math.round((FOLDED_W - EXPANDED_W) / 2),
+              pos.y,
             ),
           );
         } else {
@@ -101,8 +100,8 @@ export function FloatingApp() {
         }
         win!.setPosition(
           new PhysicalPosition(
-            primary.position.x + primary.size.width - FRAME_W - 32,
-            primary.position.y + primary.size.height - FRAME_H - 100,
+            primary.position.x + primary.size.width - FRAME_W - POS_MARGIN,
+            primary.position.y + POS_MARGIN,
           ),
         );
       } catch {
@@ -170,11 +169,18 @@ export function FloatingApp() {
       }
       dragRef.current = null;
     };
+    const onContextMenuCapture = (e: MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setContextMenu({ x: e.clientX, y: e.clientY });
+    };
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", onMouseUp);
+    document.addEventListener("contextmenu", onContextMenuCapture, { capture: true });
     return () => {
       document.removeEventListener("mousemove", onMouseMove);
       document.removeEventListener("mouseup", onMouseUp);
+      document.removeEventListener("contextmenu", onContextMenuCapture, { capture: true } as EventListenerOptions);
     };
   }, []);
 
@@ -205,11 +211,14 @@ export function FloatingApp() {
     return (
       <div
         data-testid="floating-root-folded"
-        data-tauri-drag-region="deep"
         className="floating-root folded flex items-center gap-2 px-2 py-1"
         onMouseDown={handleMouseDown}
       >
-        <StatusDot status={session?.status ?? null} />
+        <StatusDot
+          status={session?.status ?? "empty"}
+          size="sm"
+          position="absolute"
+        />
         <FoldedBar
           taskTitle={session?.task_title ?? ""}
           focusMs={liveFocusMs}

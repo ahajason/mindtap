@@ -117,6 +117,7 @@ pub fn run() {
             commands::timer_session::timer_session_complete,
             commands::timer_session::timer_session_list_recent_task_titles,
             commands::app::app_exit,
+            commands::app::app_show_main_window,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

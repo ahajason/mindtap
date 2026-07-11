@@ -19,6 +19,15 @@ export function ContextMenu({ x, y, onClose }: ContextMenuProps) {
     return () => window.removeEventListener("keydown", handleKey);
   }, [onClose]);
 
+  async function handleShowMain() {
+    try {
+      await api.app.showMainWindow();
+    } catch (err) {
+      console.error("[showMainWindow] failed", err);
+    }
+    onClose();
+  }
+
   async function handleExit() {
     try {
       await api.app.exit();
@@ -34,13 +43,22 @@ export function ContextMenu({ x, y, onClose }: ContextMenuProps) {
       aria-label="浮窗右键菜单"
       data-no-expand
       data-tauri-drag-region="false"
-      className="glass-l3 fixed z-50 min-w-[120px] rounded-xl border border-white/40 p-1 text-[12px] text-text-1 shadow-lg"
+      className="glass-l3 fixed z-50 min-w-[140px] rounded-xl border border-white/40 p-1 text-[12px] text-text-1 shadow-lg"
       style={{
-        left: Math.max(4, Math.min(x - 60, window.innerWidth - 124)),
-        top: y + 8,
+        left: Math.max(4, Math.min(x - 70, (typeof window !== "undefined" ? window.innerWidth : 1024) - 144)),
+        top: Math.min(y + 8, (typeof window !== "undefined" ? window.innerHeight : 768) - 120),
       }}
       onClick={(e) => e.stopPropagation()}
     >
+      <button
+        type="button"
+        role="menuitem"
+        data-no-expand
+        className="block w-full rounded-lg px-3 py-1.5 text-left hover:bg-white/40"
+        onClick={handleShowMain}
+      >
+        显示主窗
+      </button>
       <button
         type="button"
         role="menuitem"
