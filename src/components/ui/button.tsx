@@ -1,4 +1,4 @@
-import { forwardRef, type ButtonHTMLAttributes } from 'react';
+import type { ButtonHTMLAttributes } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
@@ -9,22 +9,16 @@ const buttonVariants = cva(
       variant: {
         primary:
           'bg-gradient-to-b from-primary to-primary-hover text-white shadow-[0_4px_12px_var(--color-primary-glow)] hover:from-primary-hover hover:to-primary-active hover:shadow-[0_6px_16px_var(--color-primary-glow)] active:scale-[0.97]',
-        secondary:
-          'glass-l1 text-text-1 hover:bg-white/45',
-        ghost:
-          'bg-transparent text-text-2 hover:glass-l1',
-        icon:
-          'glass-l1 rounded-[var(--radius-button)] text-text-1 hover:bg-white/45',
+        secondary: 'glass-l1 text-text-1 hover:bg-white/45',
+        ghost: 'bg-transparent text-text-2 hover:glass-l1',
+        icon: 'glass-l1 rounded-[var(--radius-button)] text-text-1 hover:bg-white/45',
       },
       size: {
         sm: 'h-8 px-3 text-sm rounded-[var(--radius-button)]',
         md: 'h-10 px-4 text-sm rounded-[var(--radius-button)]',
       },
     },
-    defaultVariants: {
-      variant: 'primary',
-      size: 'md',
-    },
+    defaultVariants: { variant: 'primary', size: 'md' },
   }
 );
 
@@ -37,14 +31,12 @@ export interface ButtonProps
   size?: ButtonSize;
 }
 
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, type = 'button', ...props }, ref) => (
+export function Button({ className, variant, size, type = 'button', ...props }: ButtonProps) {
+  return (
     <button
-      ref={ref}
       type={type}
       className={cn(buttonVariants({ variant, size }), className)}
       {...props}
     />
-  )
-);
-Button.displayName = 'Button';
+  );
+}

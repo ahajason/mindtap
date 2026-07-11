@@ -1,28 +1,9 @@
 import { NavLink as RouterNavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import type { ReactNode } from 'react';
+import type { NavItem } from '@/lib/nav-order';
 
-interface SidebarNavLinkProps {
-  to: string;
-  icon: ReactNode;
-  label: string;
-  end?: boolean;
-}
-
-/**
- * SidebarNavLink — 统一 Sidebar 导航链接实现
- *
- * 3 层状态视觉(spec: 1-design/10-focus-state-spec.md §四 + §五):
- * - Layer 2 (Navigation active): aria-current="page" + bg-primary + text-white + font-semibold + border-l-2 brand
- * - Layer 3 (Keyboard focus): :focus-visible ring-2 brand offset-2(WCAG 1.4.11 ≥ 3:1)
- * - Layer 3 (Hover): bg-black/[0.04] + text-text-1
- *
- * 关键设计:
- * - :focus-visible 而非 :focus(避免鼠标点击后 ring 残留)
- * - active 同时有 inset left border(色盲友好,WCAG 1.4.1)
- * - hover 跟 focus 不冲突(ring 在 hover 背景之上)
- */
-export function SidebarNavLink({ to, icon, label, end }: SidebarNavLinkProps) {
+export function SidebarNavLink({ item }: { item: NavItem }) {
+  const { to, icon: Icon, label, end } = item;
   const { pathname } = useLocation();
   const isActive = end
     ? pathname === to
@@ -42,7 +23,7 @@ export function SidebarNavLink({ to, icon, label, end }: SidebarNavLinkProps) {
           : 'text-text-2 hover:bg-black/[0.04] hover:text-text-1'
       )}
     >
-      {icon}
+      <Icon className="w-4 h-4 shrink-0" aria-hidden />
       <span>{label}</span>
     </RouterNavLink>
   );

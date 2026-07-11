@@ -7,7 +7,7 @@ import StateSwitcher, { type State } from '@/components/style-guide/StateSwitche
 import { TabsRoot, TabsList, TabsTrigger, TabsPanel } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { contentContainer } from '@/lib/styles';
+
 
 const variants = ['primary', 'secondary', 'ghost', 'icon'] as const;
 const sizes = ['sm', 'md'] as const;
@@ -29,7 +29,7 @@ export default function ButtonRoute() {
         title="Button"
         description="4 变体 (primary / secondary / ghost / icon) × 2 尺寸 (sm / md)"
       />
-      <section className={contentContainer}>
+      <section className="rounded-[var(--radius-card)] bg-white/95 p-[var(--spacing-4)] space-y-[var(--spacing-4)]">
         <StateSwitcher value={state} onChange={setState} />
         <TabsRoot defaultValue="preview">
           <TabsList>

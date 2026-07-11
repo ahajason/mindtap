@@ -58,7 +58,6 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             commands::timer_session::timer_session_get_active,
-            commands::timer_session::timer_session_get_by_id,
             commands::timer_session::timer_session_create,
             commands::timer_session::timer_session_update_focus_ms,
             commands::timer_session::timer_session_pause,

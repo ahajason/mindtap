@@ -5,7 +5,7 @@ import { TabsRoot, TabsList, TabsTrigger, TabsPanel } from '@/components/ui/tabs
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { contentContainer } from '@/lib/styles';
+
 
 export default function InputRoute() {
   return (
@@ -14,7 +14,7 @@ export default function InputRoute() {
         title="Input / Textarea / Label"
         description="表单输入三件套"
       />
-      <section className={contentContainer}>
+      <section className="rounded-[var(--radius-card)] bg-white/95 p-[var(--spacing-4)] space-y-[var(--spacing-4)]">
         <TabsRoot defaultValue="preview">
           <TabsList>
             <TabsTrigger value="preview">预览</TabsTrigger>

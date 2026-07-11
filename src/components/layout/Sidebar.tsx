@@ -22,13 +22,7 @@ export default function Sidebar() {
 
       <nav data-tauri-drag-region="false" className="flex flex-col gap-1">
         {navOrder.map((item) => (
-          <SidebarNavLink
-            key={item.to}
-            to={item.to}
-            icon={<item.icon className="w-4 h-4 shrink-0" aria-hidden />}
-            label={item.label}
-            end={item.end}
-          />
+          <SidebarNavLink key={item.to} item={item} />
         ))}
       </nav>
     </aside>

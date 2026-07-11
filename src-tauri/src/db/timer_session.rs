@@ -46,7 +46,7 @@ pub fn create(conn: &Connection, task_title: String) -> Result<TimerSession, App
         params![task_title, now],
     )?;
     let id = conn.last_insert_rowid();
-    get_by_id(conn, id)?.ok_or_else(|| AppError::NotFound("just-created session".into()))
+    get_by_id(conn, id)?.ok_or_else(|| AppError("just-created session not found".into()))
 }
 
 pub fn get_active(conn: &Connection) -> Result<Option<TimerSession>, AppError> {
@@ -89,11 +89,11 @@ pub fn pause(conn: &Connection, id: i64) -> Result<TimerSession, AppError> {
         params![now, id],
     )?;
     if changed == 0 {
-        return Err(AppError::InvalidState(format!(
+        return Err(AppError(format!(
             "session {id} is not active, cannot pause"
         )));
     }
-    get_by_id(conn, id)?.ok_or_else(|| AppError::NotFound(id.to_string()))
+    get_by_id(conn, id)?.ok_or_else(|| AppError(format!("session {id} not found")))
 }
 
 pub fn resume(conn: &Connection, id: i64) -> Result<TimerSession, AppError> {
@@ -104,11 +104,11 @@ pub fn resume(conn: &Connection, id: i64) -> Result<TimerSession, AppError> {
         params![now, id],
     )?;
     if changed == 0 {
-        return Err(AppError::InvalidState(format!(
+        return Err(AppError(format!(
             "session {id} is not paused, cannot resume"
         )));
     }
-    get_by_id(conn, id)?.ok_or_else(|| AppError::NotFound(id.to_string()))
+    get_by_id(conn, id)?.ok_or_else(|| AppError(format!("session {id} not found")))
 }
 
 pub fn complete(conn: &Connection, id: i64) -> Result<TimerSession, AppError> {
@@ -119,11 +119,11 @@ pub fn complete(conn: &Connection, id: i64) -> Result<TimerSession, AppError> {
         params![now, id],
     )?;
     if changed == 0 {
-        return Err(AppError::InvalidState(format!(
+        return Err(AppError(format!(
             "session {id} is already completed or not active/paused"
         )));
     }
-    get_by_id(conn, id)?.ok_or_else(|| AppError::NotFound(id.to_string()))
+    get_by_id(conn, id)?.ok_or_else(|| AppError(format!("session {id} not found")))
 }
 
 #[cfg(test)]

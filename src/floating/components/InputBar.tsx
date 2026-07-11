@@ -1,5 +1,3 @@
-import { forwardRef } from "react";
-
 type InputBarProps = {
   value: string;
   onChange: (v: string) => void;
@@ -9,14 +7,18 @@ type InputBarProps = {
   submitting: boolean;
 };
 
-export const InputBar = forwardRef<HTMLInputElement, InputBarProps>(function InputBar(
-  { value, onChange, onKeyDown, inputRef, maxLength, submitting },
-  ref,
-) {
+export function InputBar({
+  value,
+  onChange,
+  onKeyDown,
+  inputRef,
+  maxLength,
+  submitting,
+}: InputBarProps) {
   return (
     <div className="flex flex-col gap-1">
       <input
-        ref={inputRef ?? ref}
+        ref={inputRef}
         type="text"
         className="w-full rounded-md bg-white/10 px-2 py-1 text-[12px] text-white outline-none placeholder:text-white/40 focus:bg-white/20"
         placeholder="我现在在做什么…（回车开始）"
@@ -32,4 +34,4 @@ export const InputBar = forwardRef<HTMLInputElement, InputBarProps>(function Inp
       </span>
     </div>
   );
-});
+}

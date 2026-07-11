@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
+import { getCurrentWindow, LogicalSize, PhysicalPosition } from "@tauri-apps/api/window";
 
 import { api } from "../lib/tauri-bridge";
 import { useActiveTask } from "./hooks/useActiveTask";
 import { useFocusTicker } from "./hooks/useFocusTicker";
-import { useTick } from "./hooks/useTick";
 import { ContextMenu } from "./components/ContextMenu";
 import { ExpandedPanel } from "./components/ExpandedPanel";
 import { FoldedBar } from "./components/FoldedBar";
@@ -15,30 +15,8 @@ const EXPANDED_W = 360;
 const EXPANDED_H = 280;
 const TASK_TITLE_MAX = 50;
 
-async function resizeFolded() {
-  const { getCurrentWindow } = await import("@tauri-apps/api/window");
-  const { LogicalSize } = await import("@tauri-apps/api/window");
-  await getCurrentWindow().setSize(new LogicalSize(FOLDED_W, FOLDED_H));
-}
-
-async function expandUpward() {
-  const { getCurrentWindow } = await import("@tauri-apps/api/window");
-  const { LogicalSize, PhysicalPosition } = await import("@tauri-apps/api/window");
-  const win = getCurrentWindow();
-  const pos = await win.outerPosition();
-  const size = await win.outerSize();
-  await win.setSize(new LogicalSize(EXPANDED_W, EXPANDED_H));
-  await win.setPosition(
-    new PhysicalPosition(
-      pos.x + Math.round((size.width - EXPANDED_W) / 2),
-      pos.y - (EXPANDED_H - FOLDED_H),
-    ),
-  );
-}
-
 export function FloatingApp() {
   const { session, refresh, setSession } = useActiveTask();
-  useTick(1000);
   const liveFocusMs = useFocusTicker(session, 1000);
 
   const [expanded, setExpanded] = useState(false);
@@ -47,19 +25,26 @@ export function FloatingApp() {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
+    const win = getCurrentWindow();
     (async () => {
       try {
-        if (cancelled) return;
-        if (expanded) await expandUpward();
-        else await resizeFolded();
+        if (expanded) {
+          const pos = await win.outerPosition();
+          const size = await win.outerSize();
+          await win.setSize(new LogicalSize(EXPANDED_W, EXPANDED_H));
+          await win.setPosition(
+            new PhysicalPosition(
+              pos.x + Math.round((size.width - EXPANDED_W) / 2),
+              pos.y - (EXPANDED_H - FOLDED_H),
+            ),
+          );
+        } else {
+          await win.setSize(new LogicalSize(FOLDED_W, FOLDED_H));
+        }
       } catch (err) {
         console.error("[resize] failed", err);
       }
     })();
-    return () => {
-      cancelled = true;
-    };
   }, [expanded]);
 
   async function handleStart() {
@@ -85,9 +70,7 @@ export function FloatingApp() {
 
   useEffect(() => {
     if (!contextMenu) return;
-    function handleClick() {
-      setContextMenu(null);
-    }
+    const handleClick = () => setContextMenu(null);
     window.addEventListener("click", handleClick);
     return () => window.removeEventListener("click", handleClick);
   }, [contextMenu]);
@@ -118,6 +101,13 @@ export function FloatingApp() {
     );
   }
 
+  async function act(action: "pause" | "resume" | "complete") {
+    if (!session) return;
+    const updated = await api.timerSession[action](session.id);
+    setSession(updated);
+    if (action === "complete") setExpanded(false);
+  }
+
   return (
     <ExpandedPanel
       taskTitle={taskTitle}
@@ -130,22 +120,9 @@ export function FloatingApp() {
       maxLength={TASK_TITLE_MAX}
       submitting={submitting}
       activeSession={session}
-      onPause={async () => {
-        if (!session) return;
-        const updated = await api.timerSession.pause(session.id);
-        setSession(updated);
-      }}
-      onResume={async () => {
-        if (!session) return;
-        const updated = await api.timerSession.resume(session.id);
-        setSession(updated);
-      }}
-      onComplete={async () => {
-        if (!session) return;
-        const updated = await api.timerSession.complete(session.id);
-        setSession(updated);
-        setExpanded(false);
-      }}
+      onPause={() => act("pause")}
+      onResume={() => act("resume")}
+      onComplete={() => act("complete")}
     />
   );
 }

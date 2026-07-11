@@ -11,7 +11,7 @@ pub fn timer_session_get_active(
     let conn = state
         .0
         .lock()
-        .map_err(|e| AppError::InvalidState(e.to_string()))?;
+        .map_err(|e| AppError(e.to_string()))?;
     timer_session::get_active(&conn)
 }
 
@@ -23,7 +23,7 @@ pub fn timer_session_get_by_id(
     let conn = state
         .0
         .lock()
-        .map_err(|e| AppError::InvalidState(e.to_string()))?;
+        .map_err(|e| AppError(e.to_string()))?;
     timer_session::get_by_id(&conn, id)
 }
 
@@ -35,7 +35,7 @@ pub fn timer_session_create(
     let conn = state
         .0
         .lock()
-        .map_err(|e| AppError::InvalidState(e.to_string()))?;
+        .map_err(|e| AppError(e.to_string()))?;
     timer_session::create(&conn, task_title)
 }
 
@@ -48,7 +48,7 @@ pub fn timer_session_update_focus_ms(
     let conn = state
         .0
         .lock()
-        .map_err(|e| AppError::InvalidState(e.to_string()))?;
+        .map_err(|e| AppError(e.to_string()))?;
     timer_session::update_focus_ms(&conn, id, focus_ms)
 }
 
@@ -60,7 +60,7 @@ pub fn timer_session_pause(
     let conn = state
         .0
         .lock()
-        .map_err(|e| AppError::InvalidState(e.to_string()))?;
+        .map_err(|e| AppError(e.to_string()))?;
     timer_session::pause(&conn, id)
 }
 
@@ -72,7 +72,7 @@ pub fn timer_session_resume(
     let conn = state
         .0
         .lock()
-        .map_err(|e| AppError::InvalidState(e.to_string()))?;
+        .map_err(|e| AppError(e.to_string()))?;
     timer_session::resume(&conn, id)
 }
 
@@ -84,6 +84,6 @@ pub fn timer_session_complete(
     let conn = state
         .0
         .lock()
-        .map_err(|e| AppError::InvalidState(e.to_string()))?;
+        .map_err(|e| AppError(e.to_string()))?;
     timer_session::complete(&conn, id)
 }

@@ -1,9 +1,10 @@
 import { Tooltip } from '@base-ui/react/tooltip';
 import { cn } from '@/lib/utils';
 
-export function TooltipProvider({ delay = 200, ...props }: React.ComponentProps<typeof Tooltip.Provider>) {
-  return <Tooltip.Provider delay={delay} {...props} />;
-}
+export const TooltipProvider = ({
+  delay = 200,
+  ...props
+}: React.ComponentProps<typeof Tooltip.Provider>) => <Tooltip.Provider delay={delay} {...props} />;
 
 interface TooltipWrapperProps {
   content: React.ReactNode;

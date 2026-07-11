@@ -18,7 +18,6 @@ vi.mock("../../lib/tauri-bridge", () => ({
   api: {
     timerSession: {
       getActive: vi.fn().mockResolvedValue(null),
-      getById: vi.fn().mockResolvedValue(null),
       create: vi.fn().mockResolvedValue({}),
       updateFocusMs: vi.fn().mockResolvedValue(undefined),
       pause: vi.fn().mockResolvedValue({}),

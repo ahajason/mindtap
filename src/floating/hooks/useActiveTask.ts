@@ -2,24 +2,16 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { api, type TimerSession } from "../../lib/tauri-bridge";
 
-type UseActiveTaskResult = {
-  session: TimerSession | null;
-  loading: boolean;
-  refresh: () => Promise<void>;
-  setSession: (s: TimerSession | null) => void;
-};
-
-export function useActiveTask(): UseActiveTaskResult {
+export function useActiveTask() {
   const [session, setSession] = useState<TimerSession | null>(null);
-  const [loading, setLoading] = useState(true);
   const aliveRef = useRef(true);
 
   const refresh = useCallback(async () => {
     try {
       const next = await api.timerSession.getActive();
       if (aliveRef.current) setSession(next);
-    } finally {
-      if (aliveRef.current) setLoading(false);
+    } catch (err) {
+      console.error("[active-task] refresh failed", err);
     }
   }, []);
 
@@ -31,5 +23,5 @@ export function useActiveTask(): UseActiveTaskResult {
     };
   }, [refresh]);
 
-  return { session, loading, refresh, setSession };
+  return { session, refresh, setSession };
 }
