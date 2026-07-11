@@ -1,10 +1,9 @@
-import { LogicalSize, PhysicalPosition, getCurrentWindow } from "@tauri-apps/api/window";
 import { useEffect, useState } from "react";
 
-import { api } from "../../lib/tauri-bridge";
 import { useActiveTask } from "./hooks/useActiveTask";
 import { useFocusTicker } from "./hooks/useFocusTicker";
 import { useTick } from "./hooks/useTick";
+import { ContextMenu } from "./components/ContextMenu";
 import { ExpandedPanel } from "./components/ExpandedPanel";
 import { FoldedBar } from "./components/FoldedBar";
 import { StatusDot } from "./components/StatusDot";
@@ -16,11 +15,14 @@ const EXPANDED_H = 280;
 const TASK_TITLE_MAX = 50;
 
 async function resizeFolded() {
-  const win = getCurrentWindow();
-  await win.setSize(new LogicalSize(FOLDED_W, FOLDED_H));
+  const { getCurrentWindow } = await import("@tauri-apps/api/window");
+  const { LogicalSize } = await import("@tauri-apps/api/window");
+  await getCurrentWindow().setSize(new LogicalSize(FOLDED_W, FOLDED_H));
 }
 
 async function expandUpward() {
+  const { getCurrentWindow } = await import("@tauri-apps/api/window");
+  const { LogicalSize, PhysicalPosition } = await import("@tauri-apps/api/window");
   const win = getCurrentWindow();
   const pos = await win.outerPosition();
   const size = await win.outerSize();
@@ -41,6 +43,7 @@ export function FloatingApp() {
   const [expanded, setExpanded] = useState(false);
   const [taskTitle, setTaskTitle] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -63,6 +66,7 @@ export function FloatingApp() {
     if (!title || submitting) return;
     setSubmitting(true);
     try {
+      const { api } = await import("../../lib/tauri-bridge");
       await api.timerSession.create(title);
       setTaskTitle("");
       setExpanded(false);
@@ -74,9 +78,26 @@ export function FloatingApp() {
     }
   }
 
+  function handleContextMenu(e: React.MouseEvent) {
+    e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY });
+  }
+
+  useEffect(() => {
+    if (!contextMenu) return;
+    function handleClick() {
+      setContextMenu(null);
+    }
+    window.addEventListener("click", handleClick);
+    return () => window.removeEventListener("click", handleClick);
+  }, [contextMenu]);
+
   if (!expanded) {
     return (
-      <div className="flex items-center gap-2 px-2 py-1">
+      <div
+        className="flex items-center gap-2 px-2 py-1"
+        onContextMenu={handleContextMenu}
+      >
         <StatusDot status={session?.status ?? null} />
         <FoldedBar
           taskTitle={session?.task_title ?? ""}
@@ -84,6 +105,13 @@ export function FloatingApp() {
           status={session ? session.status : "empty"}
           onClick={() => setExpanded(true)}
         />
+        {contextMenu && (
+          <ContextMenu
+            x={contextMenu.x}
+            y={contextMenu.y}
+            onClose={() => setContextMenu(null)}
+          />
+        )}
       </div>
     );
   }
@@ -102,16 +130,19 @@ export function FloatingApp() {
       activeSession={session}
       onPause={async () => {
         if (!session) return;
+        const { api } = await import("../../lib/tauri-bridge");
         await api.timerSession.pause(session.id);
         await refresh();
       }}
       onResume={async () => {
         if (!session) return;
+        const { api } = await import("../../lib/tauri-bridge");
         await api.timerSession.resume(session.id);
         await refresh();
       }}
       onComplete={async () => {
         if (!session) return;
+        const { api } = await import("../../lib/tauri-bridge");
         await api.timerSession.complete(session.id);
         await refresh();
       }}
