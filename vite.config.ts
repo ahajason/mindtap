@@ -39,5 +39,14 @@ export default defineConfig(async () => ({
       process.env.TAURI_ENV_PLATFORM == "windows" ? "chrome105" : "safari13",
     minify: !process.env.TAURI_ENV_DEBUG ? "esbuild" : false,
     sourcemap: !!process.env.TAURI_ENV_DEBUG,
+    // V0.2 Windows QA 实测 P0-2 修复: Vite 7 不会自动发现多 HTML 入口,
+    // 必须显式声明 rollupOptions.input 才能产出 dist/floating.html。
+    // V0.2 retro 反模式 9 已记录: 此前 commit ac0beca 误以为 Vite 自动处理。
+    rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, "index.html"),
+        floating: path.resolve(__dirname, "floating.html"),
+      },
+    },
   },
 }));

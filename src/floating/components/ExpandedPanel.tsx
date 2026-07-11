@@ -63,7 +63,7 @@ export function ExpandedPanel(props: ExpandedPanelProps) {
 
   if (activeSession) {
     return (
-      <div className="glass-l3 flex h-full flex-col gap-2 rounded-2xl p-3 text-[12px]">
+      <div className="floating-root expanded glass-l3 flex h-full flex-col gap-2 rounded-2xl p-3 text-[12px]">
         <div className="flex items-center gap-2">
           <StatusDot status={activeSession.status} />
           <span className="truncate font-medium">{activeSession.task_title}</span>
@@ -79,7 +79,7 @@ export function ExpandedPanel(props: ExpandedPanelProps) {
   }
 
   return (
-    <div className="glass-l3 flex h-full flex-col gap-2 rounded-2xl p-3 text-[12px]">
+    <div className="floating-root expanded glass-l3 flex h-full flex-col gap-2 rounded-2xl p-3 text-[12px]">
       <InputBar
         value={taskTitle}
         onChange={onTaskTitleChange}

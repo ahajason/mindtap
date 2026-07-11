@@ -19,47 +19,26 @@ body {
   background: transparent;
 }
 
-/* === 浮窗根容器 === */
-
-/* R3 兜底:不依赖外层高度,显式尺寸 320x36 (V0.2 spec §3.1 折叠态);
-   即使 React 没挂上,折叠态仍有 36px 可见。
-   .archive/ V1.5 教训:FloatShell 漏挂 .floating-root 类,折叠态不可见,
-   V0.2 spec v1.1 §3.1 折叠态折叠 320x36 必须显式声明。 */
 .floating-root {
   display: flex;
   align-items: center;
   width: 320px;
   height: 36px;
   min-width: 240px;
-  min-height: 36px;
   border-radius: 14px;
   overflow: hidden;
   box-sizing: border-box;
-  /* Liquid Glass 兜底:用 V0.1.6 Style Guide @theme 的 glass tokens;
-     R1 fallback:token 未生效时 fallback 值保证 webview 仍可见 */
-  background: var(--glass-bg, rgba(255, 255, 255, 0.7));
-  -webkit-backdrop-filter: var(
-    --glass-blur,
-    blur(20px) saturate(180%)
-  );
-  backdrop-filter: var(--glass-blur, blur(20px) saturate(180%));
-  border: 0.5px solid var(--glass-border, rgba(255, 255, 255, 0.65));
-  box-shadow: 0 18px 44px -18px var(--glass-shadow-color, rgba(15, 17, 22, 0.4));
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: rgba(255, 255, 255, 0.7);
+  border: 0.5px solid rgba(255, 255, 255, 0.65);
+  box-shadow: 0 18px 44px -18px rgba(15, 17, 22, 0.4);
 }
 
-/* === 折叠态 === */
-.floating-root.folded {
-  user-select: none;
-  /* V0.2 spec v1.1 §3.7 + V0.1.6 retro lesson 5:macOS HIG drag 光标保持普通箭头,
-     故意不复用 .archive/ 的 cursor: grab (反 HIG 反模式) */
-}
-
-/* === 展开态 === */
 .floating-root.expanded {
   width: 360px;
   height: 280px;
   min-width: 360px;
-  min-height: 280px;
   border-radius: 18px;
   user-select: none;
   -webkit-user-select: none;
