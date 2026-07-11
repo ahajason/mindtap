@@ -1,0 +1,16 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "floating-capability",
+  "description": "floating window 单独 capability (含 core:window:allow-start-dragging 让 data-tauri-drag-region 在浮窗 webview 生效)",
+  "windows": [
+    "floating"
+  ],
+  "permissions": [
+    "core:default",
+    "core:window:allow-start-dragging",
+    "core:window:allow-set-position",
+    "core:window:allow-set-size",
+    "core:window:allow-set-focus",
+    "core:window:allow-start-dragging"
+  ]
+}

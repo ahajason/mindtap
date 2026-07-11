@@ -29,6 +29,8 @@
         "label": "floating",
         "title": "Mindtap 计时",
         "url": "floating.html",
+        "x": 1500,
+        "y": 920,
         "width": 320,
         "height": 36,
         "resizable": false,

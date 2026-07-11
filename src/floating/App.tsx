@@ -27,7 +27,6 @@ const DEFAULT_X = 100;
 const DEFAULT_Y = 60;
 const POS_KEY = "floating-position";
 const DRAG_THRESHOLD_PX = 4;
-const LONG_PRESS_MS = 300;
 
 export function FloatingApp() {
   const { session, refresh, setSession } = useActiveTask();
@@ -43,7 +42,6 @@ export function FloatingApp() {
     startY: number;
     isDragging: boolean;
     dragStarted: boolean;
-    timerId: number | null;
   } | null>(null);
 
   useEffect(() => {
@@ -96,18 +94,22 @@ export function FloatingApp() {
     };
 
     const setDefaultAtRightBottom = async () => {
-      const monitors = await availableMonitors();
-      const primary = monitors.find((m) => m.position.x === 0) ?? monitors[0];
-      if (!primary) {
+      try {
+        const monitors = await availableMonitors();
+        const primary = monitors.find((m) => m.position.x === 0) ?? monitors[0];
+        if (!primary) {
+          win!.setPosition(new PhysicalPosition(DEFAULT_X, DEFAULT_Y));
+          return;
+        }
+        win!.setPosition(
+          new PhysicalPosition(
+            primary.position.x + primary.size.width - FRAME_W - 32,
+            primary.position.y + primary.size.height - FRAME_H - 100,
+          ),
+        );
+      } catch {
         win!.setPosition(new PhysicalPosition(DEFAULT_X, DEFAULT_Y));
-        return;
       }
-      win!.setPosition(
-        new PhysicalPosition(
-          primary.position.x + primary.size.width - FRAME_W - 32,
-          primary.position.y + primary.size.height - FRAME_H - 100,
-        ),
-      );
     };
 
     const saved = localStorage.getItem(POS_KEY);
@@ -121,6 +123,9 @@ export function FloatingApp() {
             localStorage.removeItem(POS_KEY);
             void setDefaultAtRightBottom();
           }
+        }).catch(() => {
+          localStorage.removeItem(POS_KEY);
+          void setDefaultAtRightBottom();
         });
       } catch {
         localStorage.removeItem(POS_KEY);
@@ -150,17 +155,7 @@ export function FloatingApp() {
       startY: e.clientY,
       isDragging: true,
       dragStarted: false,
-      timerId: null,
     };
-    const timerId = window.setTimeout(async () => {
-      try {
-        await getCurrentWindow().startDragging();
-        if (dragRef.current) dragRef.current.dragStarted = true;
-      } catch (err) {
-        console.warn("[startDragging] failed", err);
-      }
-    }, LONG_PRESS_MS);
-    if (dragRef.current) dragRef.current.timerId = timerId;
   }
 
   useEffect(() => {
@@ -172,9 +167,6 @@ export function FloatingApp() {
     }
     function handleUp() {
       if (!dragRef.current) return;
-      if (dragRef.current.timerId !== null) {
-        window.clearTimeout(dragRef.current.timerId);
-      }
       if (!dragRef.current.dragStarted) {
         setExpanded(true);
       }
@@ -220,6 +212,7 @@ export function FloatingApp() {
     return (
       <div
         data-testid="floating-root-folded"
+        data-tauri-drag-region="deep"
         className="floating-root folded flex items-center gap-2 px-2 py-1"
         onMouseDown={handleMouseDown}
         onContextMenu={handleContextMenu}

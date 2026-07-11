@@ -17,10 +17,10 @@ describe("FloatingApp 折叠态根 div 挂 .floating-root 类（V0.2 修 V1.5 �
     expect(foldedRoot.className).not.toContain("cursor-grab");
   });
 
-  it("折叠态根 div 自实现 onMouseDown handler（不依赖 data-tauri-drag-region attribute, 沿用 V1.0 FloatShell 模式）", async () => {
+  it("折叠态根 div data-tauri-drag-region='deep' (V0.1.6 sidebar 模式 + floating capability windows 数组含 'floating')", async () => {
     render(<FloatingApp />);
     const foldedRoot = await screen.findByTestId("floating-root-folded");
-    expect(foldedRoot.getAttribute("data-tauri-drag-region")).toBeNull();
+    expect(foldedRoot.getAttribute("data-tauri-drag-region")).toBe("deep");
   });
 });
 
