@@ -1,9 +1,9 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { FloatingApp } from "./App";
 
-describe("FloatingApp 根 div 挂 .floating-root 类（V0.2 修 V1.5 漏挂 bug）", () => {
+describe("FloatingApp 折叠态根 div 挂 .floating-root 类（V0.2 修 V1.5 漏挂 bug）", () => {
   it("折叠态根 div className 含 'floating-root folded'", async () => {
     render(<FloatingApp />);
     const foldedRoot = await screen.findByTestId("floating-root-folded");
@@ -17,9 +17,28 @@ describe("FloatingApp 根 div 挂 .floating-root 类（V0.2 修 V1.5 漏挂 bug�
     expect(foldedRoot.className).not.toContain("cursor-grab");
   });
 
-  it("折叠态根 div data-tauri-drag-region=\"deep\" (V0.1.6 sidebar 模式, Tauri 自动拖动)", async () => {
+  it("折叠态根 div 自实现 onMouseDown handler（不依赖 data-tauri-drag-region attribute, 沿用 V1.0 FloatShell 模式）", async () => {
     render(<FloatingApp />);
     const foldedRoot = await screen.findByTestId("floating-root-folded");
-    expect(foldedRoot.getAttribute("data-tauri-drag-region")).toBe("deep");
+    expect(foldedRoot.getAttribute("data-tauri-drag-region")).toBeNull();
+  });
+});
+
+describe("FloatingApp 折叠态 drag vs click 冲突（沿用 V1.0 FloatShell.test.tsx 4px threshold 模式）", () => {
+  it("折叠态短按触发展开（onMouseDown + onMouseUp 无位移）", async () => {
+    render(<FloatingApp />);
+    const foldedRoot = await screen.findByTestId("floating-root-folded");
+    fireEvent.mouseDown(foldedRoot, { clientX: 10, clientY: 10 });
+    fireEvent.mouseUp(foldedRoot, { clientX: 10, clientY: 10 });
+    expect(document.querySelector(".floating-root.expanded")).toBeTruthy();
+  });
+
+  it("折叠态拖动超 4px 不触发展开（drag-started 状态保留）", async () => {
+    render(<FloatingApp />);
+    const foldedRoot = await screen.findByTestId("floating-root-folded");
+    fireEvent.mouseDown(foldedRoot, { clientX: 10, clientY: 10 });
+    fireEvent.mouseMove(foldedRoot, { clientX: 20, clientY: 15 });
+    fireEvent.mouseUp(foldedRoot, { clientX: 20, clientY: 15 });
+    expect(document.querySelector(".floating-root.expanded")).toBeNull();
   });
 });
