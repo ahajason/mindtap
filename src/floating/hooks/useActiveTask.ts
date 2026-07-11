@@ -6,6 +6,7 @@ type UseActiveTaskResult = {
   session: TimerSession | null;
   loading: boolean;
   refresh: () => Promise<void>;
+  setSession: (s: TimerSession | null) => void;
 };
 
 export function useActiveTask(): UseActiveTaskResult {
@@ -30,5 +31,5 @@ export function useActiveTask(): UseActiveTaskResult {
     };
   }, [refresh]);
 
-  return { session, loading, refresh };
+  return { session, loading, refresh, setSession };
 }

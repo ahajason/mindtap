@@ -37,7 +37,7 @@ async function expandUpward() {
 }
 
 export function FloatingApp() {
-  const { session, refresh } = useActiveTask();
+  const { session, refresh, setSession } = useActiveTask();
   useTick(1000);
   const liveFocusMs = useFocusTicker(session, 1000);
 
@@ -119,34 +119,32 @@ export function FloatingApp() {
   }
 
   return (
-    <div className="floating-root expanded" data-testid="floating-root-expanded">
-      <ExpandedPanel
-        taskTitle={taskTitle}
-        onTaskTitleChange={setTaskTitle}
-        onStart={handleStart}
-        onCancel={() => {
-          setTaskTitle("");
-          setExpanded(false);
-        }}
-        maxLength={TASK_TITLE_MAX}
-        submitting={submitting}
-        activeSession={session}
-        onPause={async () => {
-          if (!session) return;
-          await api.timerSession.pause(session.id);
-          await refresh();
-        }}
-        onResume={async () => {
-          if (!session) return;
-          await api.timerSession.resume(session.id);
-          await refresh();
-        }}
-        onComplete={async () => {
-          if (!session) return;
-          await api.timerSession.complete(session.id);
-          await refresh();
-        }}
-      />
-    </div>
+    <ExpandedPanel
+      taskTitle={taskTitle}
+      onTaskTitleChange={setTaskTitle}
+      onStart={handleStart}
+      onCancel={() => {
+        setTaskTitle("");
+        setExpanded(false);
+      }}
+      maxLength={TASK_TITLE_MAX}
+      submitting={submitting}
+      activeSession={session}
+      onPause={async () => {
+        if (!session) return;
+        const updated = await api.timerSession.pause(session.id);
+        setSession(updated);
+      }}
+      onResume={async () => {
+        if (!session) return;
+        const updated = await api.timerSession.resume(session.id);
+        setSession(updated);
+      }}
+      onComplete={async () => {
+        if (!session) return;
+        const updated = await api.timerSession.complete(session.id);
+        setSession(updated);
+      }}
+    />
   );
 }
