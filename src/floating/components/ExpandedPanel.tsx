@@ -91,14 +91,16 @@ export function ExpandedPanel(props: ExpandedPanelProps) {
       <div className="flex items-center justify-end gap-2">
         <button
           type="button"
-          className="rounded-full px-3 py-1 text-[11px] text-white/70 hover:bg-white/10"
+          data-no-expand
+          className="rounded-full px-3 py-1 text-[11px] text-text-2 hover:bg-white/40"
           onClick={onCancel}
         >
           取消
         </button>
         <button
           type="button"
-          className="rounded-full bg-white/20 px-3 py-1 text-[11px] font-medium hover:bg-white/30 disabled:opacity-50"
+          data-no-expand
+          className="rounded-full bg-white/40 px-3 py-1 text-[11px] font-medium text-text-1 hover:bg-white/60 disabled:opacity-50"
           onClick={onStart}
           disabled={taskTitle.trim().length === 0 || submitting}
         >

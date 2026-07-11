@@ -95,7 +95,6 @@
 }
 
 :root {
-  color-scheme: dark;
   font-family: system-ui, sans-serif;
   background: transparent;
 }
@@ -105,6 +104,7 @@ body {
   padding: 0;
   background: transparent;
   overflow: hidden;
+  color: var(--color-text-1);
 }
 
 #root {

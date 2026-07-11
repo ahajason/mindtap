@@ -40,7 +40,8 @@ export function ContextMenu({ x, y, onClose }: ContextMenuProps) {
       <button
         type="button"
         role="menuitem"
-        className="block w-full rounded-lg px-3 py-1.5 text-left text-white hover:bg-white/15"
+        data-no-expand
+        className="block w-full rounded-lg px-3 py-1.5 text-left text-text-1 hover:bg-white/40"
         onClick={handleExit}
       >
         退出
