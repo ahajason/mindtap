@@ -1,4 +1,5 @@
 use tauri::Manager;
+use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 
 pub mod commands;
 pub mod db;
@@ -15,6 +16,29 @@ pub fn run() {
             .build(),
         )?;
       }
+
+      let toggle_shortcut = Shortcut::new(
+        Some(Modifiers::CONTROL | Modifiers::SHIFT),
+        Code::Space,
+      );
+      app.handle()
+        .plugin(
+          tauri_plugin_global_shortcut::Builder::new()
+            .with_handler(move |app, _shortcut, event| {
+              if event.state() == ShortcutState::Pressed {
+                if let Some(floating) = app.get_webview_window("floating") {
+                  let visible = floating.is_visible().unwrap_or(false);
+                  if visible {
+                    let _ = floating.hide();
+                  } else {
+                    let _ = floating.show();
+                  }
+                }
+              }
+            })
+            .build(),
+        )?;
+      app.global_shortcut().register(toggle_shortcut)?;
 
       let db_state = db::init(&app.handle())
         .map_err(|e| format!("db init failed: {e}"))?;
