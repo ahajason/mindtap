@@ -11,17 +11,18 @@ export function useFocusTicker(session: TimerSession | null, intervalMs = 1000):
       return;
     }
     const startMs = session.focus_ms;
-    const initialDelta = session.status === "active" ? Date.now() : 0;
     setDisplayMs(startMs);
 
+    if (session.status !== "active") return;
+
+    const baseAt = Date.now();
     const id = setInterval(() => {
-      if (session.status !== "active") return;
-      const next = startMs + (Date.now() - initialDelta);
+      const next = startMs + (Date.now() - baseAt);
       setDisplayMs(next);
       void api.timerSession.updateFocusMs(session.id, next);
     }, intervalMs);
     return () => clearInterval(id);
-  }, [session?.id, session?.status]);
+  }, [session?.id, session?.status, session?.focus_ms]);
 
   return displayMs;
 }
