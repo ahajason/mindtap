@@ -28,13 +28,15 @@ export function ControlRow({ status, onPause, onResume, onComplete }: ControlRow
           恢复
         </button>
       )}
-      <button
-        type="button"
-        onClick={onComplete}
-        className="rounded-full bg-white/20 px-3 py-1 text-[11px] font-medium hover:bg-white/30"
-      >
-        完成
-      </button>
+      {status !== "completed" && (
+        <button
+          type="button"
+          onClick={onComplete}
+          className="rounded-full bg-white/20 px-3 py-1 text-[11px] font-medium hover:bg-white/30"
+        >
+          完成
+        </button>
+      )}
     </div>
   );
 }

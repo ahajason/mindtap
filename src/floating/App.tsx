@@ -112,7 +112,10 @@ export function FloatingApp() {
     if (!session) return;
     const updated = await api.timerSession[action](session.id);
     setSession(updated);
-    if (action === "complete") setExpanded(false);
+    if (action === "complete") {
+      setExpanded(false);
+      void refresh();
+    }
   }
 
   return (
