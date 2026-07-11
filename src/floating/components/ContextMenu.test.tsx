@@ -11,6 +11,12 @@ describe("ContextMenu", () => {
     expect(screen.getByRole("menuitem", { name: "退出" })).toBeInTheDocument();
   });
 
+  it("data-tauri-drag-region=\"false\" (V0.1.6 sidebar nav 模式, 菜单可点不被拖)", () => {
+    render(<ContextMenu x={10} y={20} onClose={() => {}} />);
+    const menu = screen.getByRole("menu");
+    expect(menu.getAttribute("data-tauri-drag-region")).toBe("false");
+  });
+
   it("点击 menu item 触发 onClose (点击透传到外层 onClick)", () => {
     const onClose = vi.fn();
     render(<ContextMenu x={10} y={20} onClose={onClose} />);

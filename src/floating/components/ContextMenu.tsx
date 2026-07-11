@@ -32,6 +32,7 @@ export function ContextMenu({ x, y, onClose }: ContextMenuProps) {
       ref={ref}
       role="menu"
       aria-label="浮窗右键菜单"
+      data-tauri-drag-region="false"
       className="glass-l3 fixed z-50 min-w-[120px] rounded-xl border border-white/10 p-1 text-[12px] shadow-lg"
       style={{ left: x, top: y }}
       onClick={(e) => e.stopPropagation()}

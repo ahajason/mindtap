@@ -96,6 +96,7 @@ export function FloatingApp() {
     return (
       <div
         data-testid="floating-root-folded"
+        data-tauri-drag-region="deep"
         className="floating-root folded flex items-center gap-2 px-2 py-1"
         onContextMenu={handleContextMenu}
       >
