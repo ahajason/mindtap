@@ -45,6 +45,11 @@ const PANEL_STYLE: React.CSSProperties = {
   backdropFilter: "blur(28px) saturate(120%)",
   WebkitBackdropFilter: "blur(28px) saturate(120%)",
   boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 8px 32px rgba(0, 30, 80, 0.08)",
+  // V0.2.0.15 PATCH E-2 fix: pointer-events: none 让 wrapper 上的 backdrop-filter 不阻挡 root 的 hit-test.
+  // WebView2 transparent + backdrop-filter 组合让 root div 在 GPU 层不响应 mousedown, 折叠态拖动失效.
+  // 修法: PANEL_STYLE (含 backdrop-filter) 移到 root 内 wrapper, wrapper 加 pointer-events: none,
+  // 点击穿透到 root (root 没有 backdrop-filter, 响应 hit-test), onMouseDown 触发, 4px 阈值后 win.startDragging().
+  pointerEvents: "none",
 };
 
 export function FloatingApp() {
@@ -359,44 +364,54 @@ export function FloatingApp() {
   //   - FoldedBar: always
   //   - active session: ControlRow (在 FoldedBar 下方, 折叠态浮窗第二行)
   //   - !active && expanded: ExpandedPanel (input + 按钮, 展开态)
+  //
+  // V0.2.0.15 PATCH E-2 fix: PANEL_STYLE 从 root 移到内层 wrapper, wrapper 加 pointer-events: none.
+  // 旧版 PANEL_STYLE 在 root + backdrop-filter 让 root 在 WebView2 transparent 模式下 hit-test 失效,
+  // 折叠态 mousedown 走不到 handleMouseDown → dragRef 未设置 → 4px 阈值到不了 win.startDragging().
+  // 修法: root 拿掉 PANEL_STYLE (无 backdrop-filter, hit-testable), 内层 wrapper 拿 PANEL_STYLE.
+  // wrapper 的 pointer-events: none 让点击穿透到 root (root.onMouseDown 触发); wrapper 内 children
+  // (FoldedBar/ControlRow/ExpandedPanel) 默认 pointer-events: auto, 自己的 onClick/按钮不受影响.
+  // 单一 root div 仍保留 (test A-2 锁住 className 含 rounded-2xl + p-3 + flex-col + gap-2).
   return (
     <div
       ref={panelRef}
       data-testid="floating-root"
       className="floating-root flex h-full w-full flex-col gap-2 overflow-hidden rounded-2xl p-3 text-[12px]"
-      style={PANEL_STYLE}
       onMouseDown={handleMouseDown}
     >
-      {/* FoldedBar: always — 圆点 + 标题 + 时间 */}
-      <FoldedBar
-        taskTitle={session?.task_title ?? ""}
-        focusMs={liveFocusMs}
-        status={session ? session.status : "empty"}
-        onClick={() => {
-          // 仅无 active session 且折叠态 click 触发展开; active 时折叠是常态不展开.
-          if (!expanded && !session) setExpanded(true);
-        }}
-      />
-      {/* active session: 折叠态第二行显示 ControlRow (暂停/继续/完成) */}
-      {session && (
-        <ControlRow
-          status={session.status}
-          onPause={() => act("pause")}
-          onResume={() => act("resume")}
-          onComplete={() => act("complete")}
+      {/* V0.2.0.15 E-2: 内层 wrapper 拿 PANEL_STYLE (含 backdrop-filter), pointer-events: none 透传到 root */}
+      <div style={PANEL_STYLE} className="flex flex-1 flex-col gap-2">
+        {/* FoldedBar: always — 圆点 + 标题 + 时间 */}
+        <FoldedBar
+          taskTitle={session?.task_title ?? ""}
+          focusMs={liveFocusMs}
+          status={session ? session.status : "empty"}
+          onClick={() => {
+            // 仅无 active session 且折叠态 click 触发展开; active 时折叠是常态不展开.
+            if (!expanded && !session) setExpanded(true);
+          }}
         />
-      )}
-      {/* 无 active session 且 expanded: 显示 ExpandedPanel (input + 开始/取消) */}
-      {!session && expanded && (
-        <ExpandedPanel
-          taskTitle={taskTitle}
-          onTaskTitleChange={setTaskTitle}
-          onStart={handleStart}
-          onClearAndDismiss={handleClearAndDismiss}
-          maxLength={TASK_TITLE_MAX}
-          submitting={submitting}
-        />
-      )}
+        {/* active session: 折叠态第二行显示 ControlRow (暂停/继续/完成) */}
+        {session && (
+          <ControlRow
+            status={session.status}
+            onPause={() => act("pause")}
+            onResume={() => act("resume")}
+            onComplete={() => act("complete")}
+          />
+        )}
+        {/* 无 active session 且 expanded: 显示 ExpandedPanel (input + 开始/取消) */}
+        {!session && expanded && (
+          <ExpandedPanel
+            taskTitle={taskTitle}
+            onTaskTitleChange={setTaskTitle}
+            onStart={handleStart}
+            onClearAndDismiss={handleClearAndDismiss}
+            maxLength={TASK_TITLE_MAX}
+            submitting={submitting}
+          />
+        )}
+      </div>
     </div>
   );
 }
