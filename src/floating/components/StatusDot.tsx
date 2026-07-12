@@ -18,9 +18,12 @@ const SIZE_CLASS: Record<"sm" | "md", string> = {
   md: "size-2.5",
 };
 
+// V0.2.8 Issue B fix: 8x8 dot 推 -top-0.5 -right-0.5 (各 -2px) 会超出父容器, 被
+// .floating-root { overflow: hidden } 裁掉右上半圆; animate-pulse-dot scale(1.15)
+// 让跳动残影明显。改 top-1 right-1 (+4px 内) 整在父容器内, 不溢出不被裁。
 const POSITION_CLASS: Record<"inline" | "absolute", string> = {
   inline: "",
-  absolute: "absolute -top-0.5 -right-0.5",
+  absolute: "absolute top-1 right-1",
 };
 
 export function StatusDot({ status, size = "sm", position = "inline" }: StatusDotProps) {
