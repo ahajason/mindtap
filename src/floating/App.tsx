@@ -264,13 +264,13 @@ export function FloatingApp() {
     return () => document.removeEventListener("mousedown", onDocMouseDown);
   }, [handleDismiss]);
 
-  // V0.2.0.14 PATCH C-4: active session 变化时自动折叠 (user L3 改主意 — 期望 "折叠 + 控制行 active").
-  // V0.2.0.13 PATCH 让 active session 时保持展开 (假设 user 想无缝开下一个 task),
-  // 但 user L3 实测发现: active task 时浮窗保持展开会遮挡内容, 期望控制行直接在折叠态显示,
-  // 让折叠态仍是常态, 展开态仅用于 "开新任务".
-  useEffect(() => {
-    if (session) setExpanded(false);
-  }, [session?.id]);
+  // V0.2.0.15 PATCH C-4: 不再用 useEffect[session?.id] 监听自动折叠 —
+  //   V0.2.0.14 PATCH 该 useEffect 在 handleStart 后 session 从 null → newSession,
+  //   useEffect 触发 setExpanded(false) → useEffect[expanded] 跑(true → false)
+  //   → setSize(FOLDED_W, FOLDED_H). 但 user 此时 expanded=true (开新 task 展开态),
+  //   期望 360×280 展开, 实际变 320×36 折叠 — 即 V0.2.0.15 PATCH 修的 resize bug.
+  // 反模式 14 防御: 不用 useEffect, 直接回到 V0.2.0.13 之前的显式路径
+  // (handleStart 末尾 + act('complete') 末尾 setExpanded(false)).
 
   async function handleStart() {
     const title = taskTitle.trim();
@@ -278,9 +278,10 @@ export function FloatingApp() {
     setSubmitting(true);
     try {
       await api.timerSession.create(title);
-      // V0.2.0.14 PATCH C-4: 不在 handleStart 里 setExpanded(false), useEffect 监听 active session 变化自动折叠.
       setTaskTitle("");
       await refresh();
+      // V0.2.0.15 PATCH C-4: 显式折叠 (不再依赖 useEffect[session?.id], 同根因)
+      setExpanded(false);
     } catch (err) {
       console.error("[start] failed", err);
     } finally {
@@ -294,8 +295,9 @@ export function FloatingApp() {
       const updated = await api.timerSession[action](session.id);
       setSession(updated);
       if (action === "complete") {
-        // V0.2.0.14 PATCH C-4: complete 后由 useEffect 监听 session 变化 (变 null) 自动折叠回 empty 态.
         void refresh();
+        // V0.2.0.15 PATCH C-4: complete 后显式折叠 (不再依赖 useEffect[session?.id], 同 handleStart 根因)
+        setExpanded(false);
       }
     } catch (err) {
       // 防御闪退: Tauri 2 unhandled promise rejection → React error boundary → tree unmount

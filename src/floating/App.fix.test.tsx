@@ -623,15 +623,28 @@ describe("V0.2.0.14 PATCH — User L3 V0.2.0.13 重测 4 deviation 重构锁住 
     expect(handleDismissMatch![1]).toMatch(/setExpanded\s*\(\s*false\s*\)/);
   });
 
-  it("C-4 App.tsx useEffect 监听 session 变化自动 setExpanded(false) (active session 时折叠 + ControlRow)", () => {
+  it("C-4 V0.2.0.15 PATCH — 显式 setExpanded(false) 在 handleStart / act('complete') 末尾 (不再 useEffect[session?.id])", () => {
+    // V0.2.0.14 PATCH 用 useEffect(() => { if (session) setExpanded(false); }, [session?.id]) 自动折叠,
+    // 但 handleStart 后 session 从 null → newSession, useEffect 触发 setExpanded(false) →
+    // useEffect[expanded] 跑(true → false) → setSize(FOLDED_W, FOLDED_H), user 此时期望 360×280 展开
+    // 却被折叠到 320×36 — 即 V0.2.0.15 PATCH 修的 resize bug.
+    // 修复: 删 useEffect, 在 handleStart 末尾 + act('complete') 末尾显式 setExpanded(false).
     const src = readFileSync("src/floating/App.tsx", "utf-8");
     const codeOnly = src
       .split("\n")
       .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
       .join("\n");
-    // useEffect 必须监听 session?.id, 自动 setExpanded(false)
-    expect(codeOnly).toMatch(/useEffect\(\s*\(\s*\)\s*=>\s*\{[\s\S]*?if\s*\(\s*session\s*\)\s*setExpanded\s*\(\s*false\s*\)/);
-    // active session 时 App.tsx 渲染 ControlRow (在 FoldedBar 后, 不渲染 ExpandedPanel)
+    // 反模式 15 防御: V0.2.0.14 PATCH 的 useEffect[session?.id] 自动折叠必须已删
+    expect(codeOnly).not.toMatch(/useEffect\(\s*\(\s*\)\s*=>\s*\{[\s\S]*?if\s*\(\s*session\s*\)\s*setExpanded\s*\(\s*false\s*\)/);
+    // V0.2.0.15 PATCH: handleStart 函数体内含 setExpanded(false) (显式折叠)
+    const handleStartMatch = codeOnly.match(/async\s+function\s+handleStart\s*\(\s*\)\s*\{[\s\S]*?\n\s{2}\}/);
+    expect(handleStartMatch).toBeTruthy();
+    expect(handleStartMatch![0]).toMatch(/setExpanded\s*\(\s*false\s*\)/);
+    // V0.2.0.15 PATCH: act('complete') 路径含 setExpanded(false) (显式折叠)
+    const actMatch = codeOnly.match(/async\s+function\s+act\s*\([^)]*\)\s*\{[\s\S]*?\n\s{2}\}/);
+    expect(actMatch).toBeTruthy();
+    expect(actMatch![0]).toMatch(/setExpanded\s*\(\s*false\s*\)/);
+    // 保留 V0.2.0.14 PATCH 的 JSX 形态 (active session 折叠 + ControlRow / !session && expanded → ExpandedPanel)
     expect(codeOnly).toMatch(/\{session\s*&&\s*\([\s\S]*?<ControlRow\s/);
     expect(codeOnly).toMatch(/\{!session\s*&&\s*expanded\s*&&\s*\([\s\S]*?<ExpandedPanel\s/);
   });
