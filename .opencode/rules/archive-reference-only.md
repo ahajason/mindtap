@@ -50,7 +50,7 @@
 4. 非事实 → 停下来问用户:
    "我在 .archive/ 看到 X。V0.2 立项时 (2026-07-11) 未确认。
     V0.2 是否沿用 X? 还是有新的口径?"
-5. 用户确认 → 记到 CONTEXT.md / docs/projects/v0.2/adr/ 落地
+5. 用户确认 → 记到 `docs/domain/v0.2-domain-model.md` 续段 / `docs/domain/adr/<NNN>-<topic>.md` ADR 落地(V0.2 `docs/projects/v0.2/` 已于 2026-07-13 整体迁移到 prd/domain 后废弃该路径)
 6. 未确认 → 不引用,标记 "候选" 或 "待 V0.2 立项时确认"
 ```
 
@@ -79,7 +79,7 @@
 
 - `docs/reports/v0.1.6-retrospective.md` — V0.1.6 retro 沉淀的 "反向症状消失 ≠ 修复生效" 教训 (本规则同源)
 - `.archive/docs/projects/v1.0/prd-v1.2.md` — V1.0 时代产品宪法，已归档
-- `docs/projects/v0.2/README.md` — V0.2 立项文档，本规则首次应用场景
+- `docs/prd/v0.2.0-floating-window-prd.md` (基线 spec, 内容散拆自原 `docs/projects/v0.2/README.md`) — V0.2 立项文档，本规则首次应用场景
 - `AGENTS.md` § "项目" 段当前描述的是 `.archive/` V1.0 状态，与 develop 失同步 (本规则适用)
 
 ## 首次应用案例
