@@ -1,6 +1,6 @@
 [package]
 name = "mindtap"
-version = "0.2.0.12"
+version = "0.2.0-12"
 description = "极简记录 APP · 跨平台桌面"
 authors = ["AhaJason <Jason-c1@outlook.com>"]
 license = "MIT"
