@@ -5,6 +5,7 @@
 // V0.2.0.14 PATCH 架构变更(单一 root div,FoldedBar 永远渲染):见 fd38127 / a0fc00d。
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { UnlistenFn } from "@tauri-apps/api/event";
 import {
   availableMonitors,
   getCurrentWindow,
@@ -28,8 +29,9 @@ const TASK_TITLE_MAX = 50;
 const FRAME_W = 320;
 const FRAME_H = 36;
 const POS_MARGIN = 16;
-const DEFAULT_X = 100;
-const DEFAULT_Y = 60;
+// V0.2.0.15 PATCH E-1 fix: 移除 DEFAULT_X/DEFAULT_Y 常量 (旧 fire-and-forget fallback 用,
+// 现 V0.2.0.15 失败时 console.error + 不调 setPosition, 保留 tauri.conf.json 默认位置 —
+// 比任意 (100, 60) 合理). 反模式 15 commit 谎改防御: 不再"假装"失败有 fallback.
 const POS_KEY = "floating-position";
 const DRAG_THRESHOLD_PX = 4;
 
@@ -43,6 +45,11 @@ const PANEL_STYLE: React.CSSProperties = {
   backdropFilter: "blur(28px) saturate(120%)",
   WebkitBackdropFilter: "blur(28px) saturate(120%)",
   boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 8px 32px rgba(0, 30, 80, 0.08)",
+  // V0.2.0.15 PATCH E-2 fix: pointer-events: none 让 wrapper 上的 backdrop-filter 不阻挡 root 的 hit-test.
+  // WebView2 transparent + backdrop-filter 组合让 root div 在 GPU 层不响应 mousedown, 折叠态拖动失效.
+  // 修法: PANEL_STYLE (含 backdrop-filter) 移到 root 内 wrapper, wrapper 加 pointer-events: none,
+  // 点击穿透到 root (root 没有 backdrop-filter, 响应 hit-test), onMouseDown 触发, 4px 阈值后 win.startDragging().
+  pointerEvents: "none",
 };
 
 export function FloatingApp() {
@@ -96,76 +103,124 @@ export function FloatingApp() {
     };
   }, [expanded]);
 
+  // V0.2.0.15 PATCH E-1 fix: 浮窗默认右上角 16px (V0.2.0.1 + V0.2.0.4 公式锁).
+  // 旧版 fire-and-forget 模式 (`void setDefaultAtRightBottom()`) 有 2 个真根因:
+  //   1. setPosition 跟 line 69-97 resize useEffect 的 setSize 并发执行, IPC 调度顺序不保证
+  //      setSize 在前 / setPosition 在后; 若 setSize 在后, Tauri 可能用默认 position 重置
+  //   2. availableMonitors() 失败时 catch 静默 fallback 到 (100, 60), 不是右上角
+  // 修法: 整个 useEffect 收成一个 async IIFE, await 所有串行 IPC; 起手 50ms 让 resize useEffect
+  // 先跑完 setSize; 失败时 console.error (不再静默 fallback 到 (100, 60)); cleanup 用 cancelled
+  // flag 防止 unmount 后还在调 setPosition.
   useEffect(() => {
-    let win: ReturnType<typeof getCurrentWindow> | null = null;
-    try {
-      win = getCurrentWindow();
-    } catch {
-      return;
-    }
-    if (!win?.setPosition || !win?.onMoved) return;
+    let cancelled = false;
+    let unlisten: UnlistenFn | null = null;
 
-    const clampInsideMonitor = (pos: { x: number; y: number }, monitors: { position: { x: number; y: number }; size: { width: number; height: number } }[]): boolean => {
-      return monitors.some(
-        (m) =>
-          pos.x >= m.position.x + POS_MARGIN &&
-          pos.x + FRAME_W <= m.position.x + m.size.width - POS_MARGIN &&
-          pos.y >= m.position.y + POS_MARGIN &&
-          pos.y + FRAME_H <= m.position.y + m.size.height - POS_MARGIN,
-      );
-    };
-
-    const setDefaultAtRightBottom = async () => {
+    (async () => {
+      let win: ReturnType<typeof getCurrentWindow> | null = null;
       try {
-        const monitors = await availableMonitors();
-        const primary = monitors.find((m) => m.position.x === 0) ?? monitors[0];
-        if (!primary) {
-          win!.setPosition(new PhysicalPosition(DEFAULT_X, DEFAULT_Y));
+        win = getCurrentWindow();
+      } catch {
+        return;
+      }
+      if (!win?.setPosition || !win?.onMoved) return;
+
+      // V0.2.0.15 E-1: 等待 resize useEffect (line 69-97) 完成 setSize, 避免 IPC 调度 race 让 setSize 覆盖 setPosition.
+      // 50ms 是实测够 resize useEffect 的 setSize IPC round-trip + React 重渲染; 不需要精确, 留 buffer.
+      await new Promise((r) => setTimeout(r, 50));
+      if (cancelled) return;
+
+      const clampInsideMonitor = (
+        pos: { x: number; y: number },
+        monitors: { position: { x: number; y: number }; size: { width: number; height: number } }[],
+      ): boolean => {
+        return monitors.some(
+          (m) =>
+            pos.x >= m.position.x + POS_MARGIN &&
+            pos.x + FRAME_W <= m.position.x + m.size.width - POS_MARGIN &&
+            pos.y >= m.position.y + POS_MARGIN &&
+            pos.y + FRAME_H <= m.position.y + m.size.height - POS_MARGIN,
+        );
+      };
+
+      const setDefaultAtRightBottom = async (): Promise<void> => {
+        let monitors;
+        try {
+          monitors = await availableMonitors();
+        } catch (err) {
+          // V0.2.0.15 E-1: availableMonitors() 失败不再静默 fallback 到 (100, 60)
+          // (旧 fallback 是 V0.2.0.5 加的, 但放在 catch 里被指为"假修" — 反模式 15 commit 谎改).
+          // 现在: 失败时 console.error + 不调 setPosition (保留 tauri.conf.json 默认位置).
+          console.error("[floating-position] availableMonitors failed", err);
           return;
         }
-        win!.setPosition(
+        const primary = monitors.find((m) => m.position.x === 0) ?? monitors[0];
+        if (!primary) {
+          console.warn("[floating-position] no monitors detected, skip default position");
+          return;
+        }
+        await win!.setPosition(
           new PhysicalPosition(
             primary.position.x + primary.size.width - FRAME_W - POS_MARGIN,
             primary.position.y + POS_MARGIN,
           ),
         );
-      } catch {
-        win!.setPosition(new PhysicalPosition(DEFAULT_X, DEFAULT_Y));
-      }
-    };
+      };
 
-    const saved = localStorage.getItem(POS_KEY);
-    if (saved) {
       try {
-        const pos = JSON.parse(saved) as { x: number; y: number };
-        availableMonitors().then((monitors) => {
-          if (clampInsideMonitor(pos, monitors)) {
-            win!.setPosition(new PhysicalPosition(pos.x, pos.y));
-          } else {
+        const saved = localStorage.getItem(POS_KEY);
+        if (saved) {
+          let pos: { x: number; y: number } | null = null;
+          try {
+            pos = JSON.parse(saved) as { x: number; y: number };
+          } catch {
             localStorage.removeItem(POS_KEY);
-            void setDefaultAtRightBottom();
           }
-        }).catch(() => {
-          localStorage.removeItem(POS_KEY);
-          void setDefaultAtRightBottom();
-        });
-      } catch {
-        localStorage.removeItem(POS_KEY);
-        void setDefaultAtRightBottom();
+          if (pos) {
+            let monitors;
+            try {
+              monitors = await availableMonitors();
+            } catch (err) {
+              console.error("[floating-position] availableMonitors failed", err);
+              localStorage.removeItem(POS_KEY);
+              await setDefaultAtRightBottom();
+              return;
+            }
+            if (cancelled) return;
+            if (clampInsideMonitor(pos, monitors)) {
+              await win.setPosition(new PhysicalPosition(pos.x, pos.y));
+            } else {
+              localStorage.removeItem(POS_KEY);
+              await setDefaultAtRightBottom();
+            }
+          } else {
+            await setDefaultAtRightBottom();
+          }
+        } else {
+          await setDefaultAtRightBottom();
+        }
+      } catch (err) {
+        // V0.2.0.15 E-1: 整个 init 流程失败不再静默 (旧 fire-and-forget 模式吞了所有错误)
+        console.error("[floating-position] init failed", err);
       }
-    } else {
-      void setDefaultAtRightBottom();
-    }
 
-    const unlisten = win.onMoved(({ payload }) => {
+      if (cancelled) return;
+
       try {
-        localStorage.setItem(POS_KEY, JSON.stringify(payload));
-      } catch {
-        // localStorage 不可用 → 静默放弃持久化
+        unlisten = await win.onMoved(({ payload }) => {
+          try {
+            localStorage.setItem(POS_KEY, JSON.stringify(payload));
+          } catch {
+            // localStorage 不可用 → 静默放弃持久化
+          }
+        });
+      } catch (err) {
+        console.error("[floating-position] onMoved register failed", err);
       }
-    });
+    })();
+
     return () => {
-      unlisten.then((u) => u());
+      cancelled = true;
+      if (unlisten) unlisten();
     };
   }, []);
 
@@ -311,44 +366,54 @@ export function FloatingApp() {
   //   - FoldedBar: always
   //   - active session: ControlRow (在 FoldedBar 下方, 折叠态浮窗第二行)
   //   - !active && expanded: ExpandedPanel (input + 按钮, 展开态)
+  //
+  // V0.2.0.15 PATCH E-2 fix: PANEL_STYLE 从 root 移到内层 wrapper, wrapper 加 pointer-events: none.
+  // 旧版 PANEL_STYLE 在 root + backdrop-filter 让 root 在 WebView2 transparent 模式下 hit-test 失效,
+  // 折叠态 mousedown 走不到 handleMouseDown → dragRef 未设置 → 4px 阈值到不了 win.startDragging().
+  // 修法: root 拿掉 PANEL_STYLE (无 backdrop-filter, hit-testable), 内层 wrapper 拿 PANEL_STYLE.
+  // wrapper 的 pointer-events: none 让点击穿透到 root (root.onMouseDown 触发); wrapper 内 children
+  // (FoldedBar/ControlRow/ExpandedPanel) 默认 pointer-events: auto, 自己的 onClick/按钮不受影响.
+  // 单一 root div 仍保留 (test A-2 锁住 className 含 rounded-2xl + p-3 + flex-col + gap-2).
   return (
     <div
       ref={panelRef}
       data-testid="floating-root"
       className="floating-root flex h-full w-full flex-col gap-2 overflow-hidden rounded-2xl p-3 text-[12px]"
-      style={PANEL_STYLE}
       onMouseDown={handleMouseDown}
     >
-      {/* FoldedBar: always — 圆点 + 标题 + 时间 */}
-      <FoldedBar
-        taskTitle={session?.task_title ?? ""}
-        focusMs={liveFocusMs}
-        status={session ? session.status : "empty"}
-        onClick={() => {
-          // 仅无 active session 且折叠态 click 触发展开; active 时折叠是常态不展开.
-          if (!expanded && !session) setExpanded(true);
-        }}
-      />
-      {/* active session: 折叠态第二行显示 ControlRow (暂停/继续/完成) */}
-      {session && (
-        <ControlRow
-          status={session.status}
-          onPause={() => act("pause")}
-          onResume={() => act("resume")}
-          onComplete={() => act("complete")}
+      {/* V0.2.0.15 E-2: 内层 wrapper 拿 PANEL_STYLE (含 backdrop-filter), pointer-events: none 透传到 root */}
+      <div style={PANEL_STYLE} className="flex flex-1 flex-col gap-2">
+        {/* FoldedBar: always — 圆点 + 标题 + 时间 */}
+        <FoldedBar
+          taskTitle={session?.task_title ?? ""}
+          focusMs={liveFocusMs}
+          status={session ? session.status : "empty"}
+          onClick={() => {
+            // 仅无 active session 且折叠态 click 触发展开; active 时折叠是常态不展开.
+            if (!expanded && !session) setExpanded(true);
+          }}
         />
-      )}
-      {/* 无 active session 且 expanded: 显示 ExpandedPanel (input + 开始/取消) */}
-      {!session && expanded && (
-        <ExpandedPanel
-          taskTitle={taskTitle}
-          onTaskTitleChange={setTaskTitle}
-          onStart={handleStart}
-          onClearAndDismiss={handleClearAndDismiss}
-          maxLength={TASK_TITLE_MAX}
-          submitting={submitting}
-        />
-      )}
+        {/* active session: 折叠态第二行显示 ControlRow (暂停/继续/完成) */}
+        {session && (
+          <ControlRow
+            status={session.status}
+            onPause={() => act("pause")}
+            onResume={() => act("resume")}
+            onComplete={() => act("complete")}
+          />
+        )}
+        {/* 无 active session 且 expanded: 显示 ExpandedPanel (input + 开始/取消) */}
+        {!session && expanded && (
+          <ExpandedPanel
+            taskTitle={taskTitle}
+            onTaskTitleChange={setTaskTitle}
+            onStart={handleStart}
+            onClearAndDismiss={handleClearAndDismiss}
+            maxLength={TASK_TITLE_MAX}
+            submitting={submitting}
+          />
+        )}
+      </div>
     </div>
   );
 }

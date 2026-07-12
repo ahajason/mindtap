@@ -649,3 +649,155 @@ describe("V0.2.0.14 PATCH — User L3 V0.2.0.13 重测 4 deviation 重构锁住 
     expect(codeOnly).toMatch(/\{!session\s*&&\s*expanded\s*&&\s*\([\s\S]*?<ExpandedPanel\s/);
   });
 });
+
+describe("V0.2.0.15 PATCH — E-1 fix: 浮窗默认右上角 16px (V0.2.0.1 + V0.2.0.4 公式锁 + IPC 调度 race 修)", () => {
+  // V0.2.0.15 E-1 真根因:
+  //   1. 旧版 position useEffect (旧 line 99-170) 用 fire-and-forget (`void setDefaultAtRightBottom()`),
+  //      跟 resize useEffect (line 69-97) 的 setSize 并发跑 — IPC 调度顺序不保证 setSize 在前,
+  //      若 setSize 在后, Tauri 可能用默认 position 重置, 公式没生效
+  //   2. availableMonitors() 失败时 catch 静默 fallback 到 (100, 60), 不是右上角 (反模式 15 谎改)
+  // 修法: 整个 useEffect 收成单个 async IIFE, 起手 50ms 让 resize useEffect 先跑完 setSize,
+  //       失败时 console.error (不再静默 fallback); cleanup 用 cancelled flag.
+
+  it("App.tsx position useEffect 收成单个 async IIFE (无 void setDefaultAtRightBottom() fire-and-forget, 反模式 14/15 防御)", () => {
+    const src = readFileSync("src/floating/App.tsx", "utf-8");
+    // 旧 fire-and-forget 模式必须移除
+    expect(src).not.toMatch(/void\s+setDefaultAtRightBottom\s*\(\s*\)\s*;/);
+    // 新 async IIFE 模式存在
+    expect(src).toMatch(/\(async\s*\(\s*\)\s*=>\s*\{[\s\S]*?await\s+new\s+Promise/);
+    // await 所有串行 IPC (不并发)
+    expect(src).toMatch(/await\s+win\.setPosition\s*\(/);
+  });
+
+  it("App.tsx setDefaultAtRightBottom 失败时不再 fallback 到 DEFAULT_X/DEFAULT_Y (V0.2.0.15 E-1 fix)", () => {
+    const src = readFileSync("src/floating/App.tsx", "utf-8");
+    // 反模式 16 防御: 剥注释行后再 grep
+    const codeOnly = src
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
+      .join("\n");
+    // 旧 catch fallback 到 (100, 60) 必须移除
+    // V0.2.0.15 fix: 失败时不再用任意 (DEFAULT_X, DEFAULT_Y) fallback
+    // (旧版 line 123/133 有 win!.setPosition(new PhysicalPosition(DEFAULT_X, DEFAULT_Y)) 静默 fallback,
+    //  现 V0.2.0.15 改成 console.error + 不调 setPosition — 让 tauri.conf.json 默认位置生效).
+    // 测试: 源码不应再含 `new PhysicalPosition(DEFAULT_X, DEFAULT_Y)` 调用
+    // (DEFAULT_X/DEFAULT_Y 常量本身已删除, 所以 regex 0 匹配 = 测试通过).
+    const matches = codeOnly.match(/new\s+PhysicalPosition\s*\(\s*DEFAULT_X\s*,\s*DEFAULT_Y\s*\)/g) || [];
+    expect(matches.length).toBe(0);
+  });
+
+  it("App.tsx setDefaultAtRightBottom 公式仍含 primary.size.width - FRAME_W - POS_MARGIN (V0.2.0.1 + V0.2.0.4 spec 锁, 反模式 14 防御: 防回归改公式)", () => {
+    const src = readFileSync("src/floating/App.tsx", "utf-8");
+    expect(src).toMatch(/primary\.size\.width - FRAME_W - POS_MARGIN/);
+    expect(src).not.toMatch(/primary\.size\.width - FRAME_W - 32/);
+  });
+
+  it("App.tsx position useEffect 含 cancelled flag 防 unmount 后 setPosition (防御 IPC race, 反模式 15 防御)", () => {
+    const src = readFileSync("src/floating/App.tsx", "utf-8");
+    const codeOnly = src
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
+      .join("\n");
+    // position useEffect 必须含 cancelled flag
+    expect(codeOnly).toMatch(/let\s+cancelled\s*=\s*false/);
+    expect(codeOnly).toMatch(/if\s*\(\s*cancelled\s*\)\s*return/);
+    // cleanup 必须设 cancelled = true
+    expect(codeOnly).toMatch(/cancelled\s*=\s*true/);
+  });
+});
+
+describe("V0.2.0.15 PATCH — E-2 fix: 折叠态拖动 win.startDragging() 调用 (根因: PANEL_STYLE backdrop-filter 让 root 在 WebView2 transparent hit-test 失效)", () => {
+  // V0.2.0.15 E-2 真根因: V0.2.0.14 PANEL_STYLE inline style 含 backdropFilter: blur(28px) saturate(120%),
+  // 应用在 root div. WebView2 transparent 模式下, backdrop-filter 创建 GPU 层, 命中测试可能漏,
+  // 导致 root.onMouseDown 不触发, dragRef 未设置, 4px 阈值到不了 win.startDragging().
+  //
+  // 修法: PANEL_STYLE 从 root 移到内层 wrapper, root 拿掉 PANEL_STYLE (无 backdrop-filter, hit-testable);
+  //       wrapper 加 pointer-events: none 让点击穿透到 root (root.onMouseDown 触发).
+  //       wrapper 内 children (FoldedBar/ControlRow/ExpandedPanel) 默认 pointer-events: auto 不受影响.
+  //
+  // 现有 test App.test.tsx:109-117 锁住 "折叠态拖动超 4px 不触发展开" 行为, 但**没锁住 win.startDragging() 调用**
+  // (test line 32-33 标 "e2e 测试需拦截但本套单元测试不覆盖"). V0.2.0.15 PATCH 补这个测试盲区:
+  // - 用 fireEvent.mouseDown + mouseMove + 真实事件序列 (反模式 16 防御: 不字面断言)
+  // - 验证 win.startDragging IPC 真的被调 (旧版 V0.2.0.5 patch 反复修都漏的真根因之一, 反模式 15)
+
+  it("App.tsx PANEL_STYLE 含 pointerEvents: 'none' (V0.2.0.15 E-2 fix: 让 wrapper 透传到 root)", () => {
+    const src = readFileSync("src/floating/App.tsx", "utf-8");
+    expect(src).toMatch(/pointerEvents\s*:\s*["']none["']/);
+  });
+
+  it("App.tsx root div 不再直接挂 style={PANEL_STYLE} (V0.2.0.15 E-2 fix: PANEL_STYLE 移到内层 wrapper)", () => {
+    const src = readFileSync("src/floating/App.tsx", "utf-8");
+    const codeOnly = src
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
+      .join("\n");
+    // 匹配 root div 的 opening tag (从 <div 到第一个 >), 检查它不含 style={PANEL_STYLE}
+    // 反模式 16 防御: 精确匹配 div element 而不是跨多 element
+    const rootDivMatch = codeOnly.match(/<div\s+ref=\{panelRef\}[\s\S]*?>/);
+    expect(rootDivMatch).toBeTruthy();
+    expect(rootDivMatch![0]).not.toMatch(/style=\{PANEL_STYLE\}/);
+    // PANEL_STYLE 必须仍存在 (test A-2 锁住 backdropFilter: "blur(28px) saturate(120%)")
+    expect(codeOnly).toMatch(/backdropFilter\s*:\s*["']blur\(28px\)\s+saturate\(120%\)/);
+  });
+
+  it("App.tsx root div 含内层 wrapper 挂 PANEL_STYLE (V0.2.0.15 E-2 fix: PANEL_STYLE 在 wrapper)", () => {
+    const src = readFileSync("src/floating/App.tsx", "utf-8");
+    const codeOnly = src
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
+      .join("\n");
+    // 内层 wrapper 必须挂 PANEL_STYLE
+    expect(codeOnly).toMatch(/<div\s+style=\{PANEL_STYLE\}[\s\S]*?>/);
+  });
+
+  it("App.tsx root div 仍含 ref={panelRef} + onMouseDown={handleMouseDown} (V0.2.0.15 E-2 fix: 保留 root hit-test 入口)", () => {
+    const src = readFileSync("src/floating/App.tsx", "utf-8");
+    const codeOnly = src
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
+      .join("\n");
+    expect(codeOnly).toMatch(/ref=\{panelRef\}/);
+    expect(codeOnly).toMatch(/onMouseDown=\{handleMouseDown\}/);
+  });
+
+  it("折叠态 root mousedown 后 4px 阈值满足调 win.startDragging IPC (V0.2.0.15 E-2 fix 真根因验证, 反模式 16 行为断言)", async () => {
+    // 反模式 16 防御: 用真实事件序列 fireEvent.mouseDown + mouseMove, 不字面断言代码
+    // 验证: mousedown on root → handleMouseDown 设置 dragRef → mousemove 4px+ → document handler 调 win.startDragging()
+    // 这是 test App.test.tsx:109-117 没锁住的盲区 (line 32-33 标 e2e 需拦截)
+    const { getCurrentWindow } = await import("@tauri-apps/api/window");
+    const win = getCurrentWindow();
+    // mockWindow 是 vi.hoisted() 稳定 mock (setup.ts V0.2.0.15 fix), 跨调用同一引用
+    const startDragging = win.startDragging;
+    (startDragging as unknown as { mockClear: () => void }).mockClear();
+
+    render(<FloatingApp />);
+    const root = await screen.findByTestId("floating-root");
+
+    // 真实事件序列: mousedown on root → mousemove 5px (>= 4px threshold)
+    fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
+    fireEvent.mouseMove(document, { clientX: 15, clientY: 10 });
+
+    await waitFor(() => {
+      expect(startDragging).toHaveBeenCalled();
+    });
+  });
+
+  it("折叠态 root mousedown 后 4px 内移动不调 win.startDragging (V0.2.0.5 patch 阈值锁, V0.2.0.15 回归)", async () => {
+    // 反模式 16 防御: 真实事件序列, 验证阈值以下不触发 startDragging
+    const { getCurrentWindow } = await import("@tauri-apps/api/window");
+    const win = getCurrentWindow();
+    const startDragging = win.startDragging;
+    (startDragging as unknown as { mockClear: () => void }).mockClear();
+
+    render(<FloatingApp />);
+    const root = await screen.findByTestId("floating-root");
+
+    fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
+    // 移动 3px (< 4px 阈值), 不应触发 startDragging
+    fireEvent.mouseMove(document, { clientX: 13, clientY: 10 });
+
+    await new Promise((r) => setTimeout(r, 50));
+    expect(startDragging).not.toHaveBeenCalled();
+  });
+});
+
