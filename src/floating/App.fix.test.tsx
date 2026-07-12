@@ -426,3 +426,83 @@ describe("V0.2.8.1 follow-up: Issue C 真根因修复 — FoldedBar inline style
     }
   });
 });
+describe("V0.2.0.12 patch — Issue 2: 展开态右键不折叠 (panel pointerdown capture 守住)", () => {
+  // 真相: V0.2.0.6/0.11 既有 data-no-expand / e.button !== 0 守卫全在 mousedown / click 层,
+  // 不在 blur 层, 拦不住 ExpandedPanel useEffect 里 input 的 blur listener 同步调 onCancel.
+  // V0.2.0.12 修法 (Radix dismissable-layer 思路): panel 根 div 加 onPointerDownCapture,
+  // 在 mousedown/click 之前用 panelRef.contains(target) 设 dismissingRef, handleBlur 读它,
+  // panel 内 clicking → dismissingRef=false → blur 不 cancel. 右键 button=2 同样走 capture, 不被 button 守卫拦.
+
+  it("ExpandedPanel.tsx 声明 panelRef + dismissingRef (V0.2.0.12 新增)", () => {
+    const src = readFileSync("src/floating/components/ExpandedPanel.tsx", "utf-8");
+    const codeOnly = src
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
+      .join("\n");
+    expect(codeOnly).toMatch(/panelRef\s*=\s*useRef/);
+    expect(codeOnly).toMatch(/dismissingRef\s*=\s*useRef/);
+  });
+
+  it("ExpandedPanel.tsx panel 根 div 含 onPointerDownCapture (Radix pattern 落地)", () => {
+    const src = readFileSync("src/floating/components/ExpandedPanel.tsx", "utf-8");
+    // 反模式 16 防御: 剥注释行再断言, 防止 /*
+    const codeOnly = src
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
+      .join("\n");
+    // 必须含 onPointerDownCapture={(e) => { ... panelRef.current?.contains ... }}
+    expect(codeOnly).toMatch(/onPointerDownCapture=\{[\s\S]*?panelRef\.current\?\.contains/);
+  });
+
+  it("ExpandedPanel.tsx handleBlur 读取 dismissingRef 决定是否 cancel (取代原 if (!submittingRef.current) 直接 cancel)", () => {
+    const src = readFileSync("src/floating/components/ExpandedPanel.tsx", "utf-8");
+    const codeOnly = src
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
+      .join("\n");
+    // 行为断言: handleBlur 必须检查 dismissingRef.current 才调 onCancel
+    // 形态: if (submittingRef.current) return; if (dismissingRef.current) onCancel();
+    expect(codeOnly).toMatch(/function handleBlur[\s\S]*?if\s*\(\s*submittingRef\.current\s*\)\s*return/);
+    expect(codeOnly).toMatch(/function handleBlur[\s\S]*?if\s*\(\s*dismissingRef\.current\s*\)\s*onCancel\s*\(\s*\)/);
+  });
+});
+
+describe("V0.2.0.12 patch — Issue 4: 点 Start 不折叠 (panel 内 pointerdown 把 dismissingRef 拦下来)", () => {
+  // 真相: 用户点 "开始" 按钮时, pointerdown 在按钮上 → capture phase 把 dismissingRef 设 false →
+  // input blur 触发 handleBlur → 读 dismissingRef=false → 不 cancel → panel 不卸载 →
+  // 按钮 click 正常调 onStart, 后续 setExpanded(false) 才折叠.
+  // V0.2.0.6/0.11 都没拦住, 根因在 blur listener 不在 mousedown/click 层.
+
+  it("ExpandedPanel.tsx onPointerDownCapture 体内 panelRef.contains 决定 dismissingRef (panel 内 = false)", () => {
+    const src = readFileSync("src/floating/components/ExpandedPanel.tsx", "utf-8");
+    const codeOnly = src
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
+      .join("\n");
+    // 关键赋值: dismissingRef.current = !panelRef.current?.contains(e.target as Node);
+    expect(codeOnly).toMatch(/dismissingRef\.current\s*=\s*!panelRef\.current\?\.contains\([^)]*e\.target/);
+  });
+
+  it("ExpandedPanel.tsx panel 根 div 同时含 ref={panelRef} (Radix pattern 必备)", () => {
+    const src = readFileSync("src/floating/components/ExpandedPanel.tsx", "utf-8");
+    const codeOnly = src
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
+      .join("\n");
+    // panel 根 div 必须挂 ref={panelRef}, 否则 onPointerDownCapture 里 panelRef.current 是 null
+    expect(codeOnly).toMatch(/ref=\{panelRef\}/);
+  });
+
+  it("App.tsx onContextMenuCapture / data-no-expand / e.button 守卫未被本次 fix 删除 (反模式 14 防御: 防回归)", () => {
+    // V0.2.0.12 Issue 4 修在 ExpandedPanel 内, 不动 App.tsx 的右键守卫 — 那些守卫拦的是别的链路
+    const src = readFileSync("src/floating/App.tsx", "utf-8");
+    const codeOnly = src
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
+      .join("\n");
+    // 三个守卫都必须仍存在 (本次 PATCH 不能误删)
+    expect(codeOnly).toMatch(/data-no-expand/);
+    expect(codeOnly).toMatch(/onContextMenuCapture/);
+    expect(codeOnly).toMatch(/if\s*\(\s*e\.button\s*!==\s*0\s*\)/);
+  });
+});

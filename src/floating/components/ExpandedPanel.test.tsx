@@ -70,12 +70,55 @@ describe("ExpandedPanel", () => {
     expect(screen.queryByPlaceholderText(/我现在在做什么/)).toBeNull();
   });
 });
-describe("ExpandedPanel 折叠触发", () => {
-  it("失焦 (blur) 触发 onCancel (V0.2 spec §3.2 失焦 = 折叠)", () => {
+
+describe("V0.2.0.12 patch — Issue 2/4: panel pointerdown capture 守住 panel 内点击 (Radix 模式)", () => {
+  // 反模式 16 防御: 用 fireEvent.pointerDown(button) + fireEvent.blur(input) 真实模拟浏览器事件序列,
+  // 不用 regex 字面断言。V0.2.0.6/0.11 5 个 PATCH 都漏了这个根因 — input 的 blur 同步吞 onCancel → panel 卸载 → 按钮 click 失效。
+  // Radix UI dismissable-layer.tsx 用 onPointerDown capture 在 panel 根 div 上设 isPointerInsideReactTreeRef,
+  // 早于 blur 一拍, 在这里 dismiss inside 则不再 cancel。
+
+  it("panel 内点 Start 不折叠: pointerdown 设 dismissingRef=false, blur 不调 onCancel, click 调 onStart", () => {
+    const onStart = vi.fn();
+    const onCancel = vi.fn();
+    render(<ExpandedPanel {...baseProps} taskTitle="写代码" onStart={onStart} onCancel={onCancel} />);
+    const input = screen.getByPlaceholderText(/我现在在做什么/) as HTMLInputElement;
+    const startBtn = screen.getByRole("button", { name: "开始" });
+    // 真实事件序列: pointerdown 在 Start 按钮上 (capture phase 先于 blur), blur 在 input 上, click 在 Start 按钮上
+    fireEvent.pointerDown(startBtn, { button: 0 });
+    fireEvent.blur(input);
+    fireEvent.click(startBtn);
+    expect(onStart).toHaveBeenCalledTimes(1);
+    expect(onCancel).not.toHaveBeenCalled(); // V0.2.0.12 修: 不再因 blur 误触 cancel
+  });
+
+  it("panel 内 input 失焦不折叠: panel 内任意 pointerdown 后 blur 不调 onCancel", () => {
     const onCancel = vi.fn();
     render(<ExpandedPanel {...baseProps} onCancel={onCancel} />);
     const input = screen.getByPlaceholderText(/我现在在做什么/) as HTMLInputElement;
+    const cancelBtn = screen.getByRole("button", { name: "取消" });
+    // 在 panel 内(取消按钮)做 pointerdown capture, 再 blur input
+    fireEvent.pointerDown(cancelBtn, { button: 0 });
+    fireEvent.blur(input);
+    expect(onCancel).not.toHaveBeenCalled(); // panel 内 pointerdown 把 dismissingRef 设成 false
+  });
+
+  it("panel 外点 backdrop 折叠: 默认 dismissingRef=true, blur 仍调 onCancel (保留 spec §3.2 语义)", () => {
+    const onCancel = vi.fn();
+    render(<ExpandedPanel {...baseProps} onCancel={onCancel} />);
+    const input = screen.getByPlaceholderText(/我现在在做什么/) as HTMLInputElement;
+    // 模拟外部点击触发的 blur: 没有 panel 内 pointerdown 先发生, dismissingRef 保持默认 true
     fireEvent.blur(input);
     expect(onCancel).toHaveBeenCalledTimes(1);
+  });
+
+  it("展开态右键不折叠: panel 内右键 pointerdown capture 也设 dismissingRef=false (button!=0 不拦)", () => {
+    const onCancel = vi.fn();
+    render(<ExpandedPanel {...baseProps} onCancel={onCancel} />);
+    const input = screen.getByPlaceholderText(/我现在在做什么/) as HTMLInputElement;
+    const panelArea = screen.getByRole("button", { name: "取消" });
+    // 右键 (button: 2) 在 panel 内: capture phase 仍记录 dismissingRef=false
+    fireEvent.pointerDown(panelArea, { button: 2 });
+    fireEvent.blur(input);
+    expect(onCancel).not.toHaveBeenCalled();
   });
 });
