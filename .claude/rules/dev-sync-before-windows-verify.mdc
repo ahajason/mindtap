@@ -1,0 +1,58 @@
+---
+description: 改 Windows-side runtime 后(Tauri / WebView2 / 原生菜单 / transparent / overlay / Rust 后端),要跑 D:\ 端 dev 验证前,WSL commit 必须 push origin + /mnt/d/workspace/mindtap pull。WSL-only 验证(cargo check / vitest / tsc / 纯文档)不触发。
+alwaysApply: true
+---
+
+# 验证前同步:WSL → D:\
+
+## 反模式
+
+```text
+WSL 端 commit  →  ❌ 没 push  →  ❌ D:\ 没 pull  →  跑 scripts\dev.bat
+            ↓
+   WebView2 实际跑的是旧 commit
+            ↓
+   一晚上 debug 一个不存在的 bug
+```
+
+**dev.bat 在 D:\ 跑** = 它读 D:\ workspace 当前 working tree 的源码。D:\ 没拉最新 = 验证的不是当前 commit。
+
+## 触发:Windows-side 验证
+
+| 改动 | 是否同步 D:\ |
+|---|---|
+| Tauri config / `tauri.conf.json` / WebView2 | ✅ |
+| 原生菜单 / transparent / overlay / hiddenTitle / decorations | ✅ |
+| 浮窗 / IPC / `commands/*.rs` / `db/*.rs` | ✅ |
+| `Cargo.toml` / 会影响 Windows 构建的 `package.json` 依赖 | ✅ |
+| 仅 `npm run dev` / vitest / tsc / `cargo check` 验证 | ❌ |
+| 纯文档 / spec / plan / 规则 / 任务档改动 | ❌ |
+
+## 同步流程(从 WSL 内执行,3 步,1 分钟以内)
+
+```bash
+git -C /home/jason/workspace/mindtap add -A
+git -C /home/jason/workspace/mindtap commit -F - <<'EOF'
+type(scope): subject
+
+- why
+EOF
+git -C /home/jason/workspace/mindtap push origin develop
+git -C /mnt/d/workspace/mindtap pull --no-edit origin develop
+```
+
+完成后才能在 D:\ 端跑 `scripts\dev.bat` 或 `cargo tauri dev`。
+
+## 反模式(同人常犯)
+
+- ❌ WSL commit 后直接告诉用户"你 D:\ pull 一下" —— 这就是丢失同步状态的 root cause,不要让用户手工补
+- ❌ dev.bat 启动后行为不对,先怀疑 D:\ 是否拉到最新,不要直接怀疑代码(99% 是 sync 断了)
+- ❌ WSL 和 D:\ 两端各自独立 commit + push —— 会互相覆盖,违反 CLAUDE.md "单源真值 = origin/develop"
+
+## 跟其他规则关系
+
+- `dev-verify-before-commit` — 实测新机制本身在工作;**本规则是其前置 sync gate**(没同步就先验证 = 在错代码上空转)
+- `decision-method` L3 — 列 user-facing 副作用时,Windows-side 副作用触发本规则
+- `commit-style` — commit message 写法(`type(scope): subject` + 纯 why 段 body)
+- `first-step-research` — 如果不确定"现在该不该 sync",先查本规则触发表格
+- CLAUDE.md `## 双工作树 (WSL + D:\)` — 整体出处
