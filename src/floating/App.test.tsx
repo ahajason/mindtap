@@ -220,11 +220,11 @@ describe("V0.2.0.11 patch — Issue C fix: tauri.conf.json floating 段 transpar
     expect(floatMatch![0]).toMatch(/"backgroundColor"\s*:\s*"#00000000"/);
   });
 
-  it("tauri.conf.json floating resizable:true 保留 (V0.2.5 fix 沿用, 防回归)", () => {
+  it("tauri.conf.json floating resizable:false (V0.2.0.12 D fix, 原 resizable:true 已撤 — 防 non-client edge / resize grip 残留)", () => {
     const src = readFileSync("src-tauri/tauri.conf.json", "utf-8");
     const floatMatch = src.match(/"label":\s*"floating"[\s\S]*?\{[\s\S]*?\}/);
     expect(floatMatch).toBeTruthy();
-    expect(floatMatch![0]).toMatch(/"resizable":\s*true/);
+    expect(floatMatch![0]).toMatch(/"resizable":\s*false/);
   });
 });
 
