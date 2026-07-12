@@ -10,10 +10,26 @@
 |---|---|
 | 装前端依赖 | `npm install` |
 | 起 Vite 开发服务器 | `npm run dev` |
-| 起 Tauri 桌面应用 | `npm run tauri dev` |
+| 起 Tauri 桌面应用 | `npm run tauri dev`(WSL)/ `scripts\dev.bat`(Win 推荐) |
+| 同步 WSL → D:\ | WSL 内 `git push origin develop` + `git -C /mnt/d/workspace/mindtap pull` |
 | 验证 Rust 端 | `cd src-tauri && cargo check` |
 | 验证前端类型 | `npx tsc --noEmit` |
 | 看 git 状态 | `git status` / `git log --oneline` |
+
+## 双工作树 (WSL + D:\)
+
+代码在两个 fs 各放一份,共用 `origin/develop`(单源真值),不要两边各自 commit + push 互相覆盖:
+
+| 角色 | 路径 | 用法 |
+|---|---|---|
+| WSL 端 | `/home/jason/workspace/mindtap` | 代码 / 单测 / cargo check / Claude Code / OpenCode |
+| D:\ 端 | `D:\workspace\mindtap` | Tauri dev / WebView2 调试 / 视觉稿 QA |
+
+**同步流向**:WSL 内 `git commit` → `git push origin develop` → `git -C /mnt/d/workspace/mindtap pull`。
+
+**Tauri dev 必须在 Windows 侧**:`WebView2` 是 Windows 原生 COM 组件,WSL 启动它得绕 WSLg,debug 信号会断在 syscall 边界。WebView2 透明 / 原生菜单 / Overlay titleBar 这类 Windows-only bug,在 WSL 里复现不到——只能从 D:\ 端验证。
+
+`scripts/dev.bat` / `scripts/dev.ps1` 是 Windows 侧一键启动器:自动定位项目根、拒在 WSL 内误跑、`cargo tauri` 优先、`CARGO_TARGET_DIR` 自动切到 Windows fs。详见 [scripts/README.md](./scripts/README.md)。
 
 ## 设计语言
 
