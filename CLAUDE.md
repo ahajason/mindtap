@@ -113,6 +113,7 @@ mindtap/
 - **CSS 静态扫描 regex**: 写 `.floating-root[...]` 这类 selector 匹配时**先剥 `@media` / `@supports` / `@keyframes` 嵌套块**,否则后加的 @media 内嵌同名选择器会让测试误通过或 FAIL (反模式 18, 见 `memory/mindtap-v0.2.8-anti-patterns`)
 - **Background session 隔离**: 不能直接 `Edit`/`Write` 主 checkout 的 `develop` (harness `bgIsolation` 拦);改 develop 路径前先 `EnterWorktree` 或用 `Workflow` 的 `isolation: "worktree"`
 - **不主动用 Worktree(交互 session)**: 默认直接在主 checkout 工作;只有用户明确指示 (`EnterWorktree` / 写新 feature 分支) 或子 agent `isolation: "worktree"` 才进。只读 / 问答 / 文档任务一律不开 worktree。
+- **feature branch 用完即清**: push + merge 回 develop 后**立刻**清理三件套 —— `git worktree remove .claude/worktrees/<name>` + `git branch -d <branch>` + `git push origin --delete <branch>`,别留孤儿污染 `.claude/worktrees/` 和远端分支列表。
 
 ## 本地配置
 
