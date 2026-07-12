@@ -94,5 +94,3 @@ git log --all --oneline -- <业务代码路径>
 
 - **`docs/tasks/<slug>/`**: 任务正式档, git 跟踪
 - 版本发版时, 过程产物归档到 `docs/archive/<version>/`, 正式档迁到 `docs/tasks/<next-version>-<type>-<short-desc>/`
-
-> **V0.1.0 init 阶段**: 项目当前处于起步阶段, 任务正式档优先.

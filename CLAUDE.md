@@ -2,7 +2,7 @@
 
 轻念 · Mindtap — 极简记录桌面应用。Tauri 2 (Rust) + React 19 + TypeScript + Vite 7。本地 SQLite，无云同步。
 
-> **当前交付**: V0.2.6 浮窗(floating window)收口(WebView2 透明 / native context menu / Overlay titleBar 已 iterate);下一阶段看 `docs/governance/` + `docs/tech/v0.2.0-floating-window-tech.md`(V0.2.7/2.8 4 issue 待重命名 V0.2.0.x PATCH)。
+> **当前活跃版本** = 看 `docs/tasks/` 列表中在跑 task,和 `docs/reports/` 历史交付(V0.2.0.x PATCH 是浮窗回归阶段)。硬规范入口在 `docs/governance/` + `docs/tech/` + `.claude/rules/`(后两者每次 session 加载);本文件是入口上下文**不会被发版带过期**。
 
 ## 文档分层速查表
 
@@ -17,7 +17,6 @@
 | L4 Plan | `docs/plans/` | 实施步骤 + commit 计划 + DoD 勾选 | 业务规则/产品愿景 |
 | L5 Reports | `docs/reports/` | 验收 + retro + release notes | 设计意图(已归档) |
 | **治理** | `docs/governance/` | 跨版本规则(doc-layers / versioning-rule / l3-gating) | 项目细节 |
-| **入口** | `.claude/rules/doc-layer-discipline.mdc` | agent 强制流程入口 | — |
 
 ## Quick Start
 
@@ -84,36 +83,31 @@ mindtap/
 | 新功能「怎么做」 | `docs/plans/YYYY-MM-DD-<topic>.md` |
 | 阶段交付报告 | `docs/reports/` |
 | 已交付版本的完整沙盒 | `docs/archive/v<version>/` |
-| 任务正式档 | `docs/tasks/<version>-<type>-<short-desc>/task.md`（见 `.claude/rules/task-directory.mdc`） |
+| 任务正式档 | `docs/tasks/<version>-<type>-<short-desc>/task.md` |
 
 ## 规则文件
 
-`CLAUDE.md` 是 Claude Code session 的入口上下文; `.claude/rules/*.mdc` 是子规则专题.
+CLAUDE.md 是 session 入口上下文; 子规则放在 `.claude/rules/*.mdc`(Claude 自动加载 — `alwaysApply` 全局,带 `globs:` 的按文件路径触发); 跨 session 沉淀放在 `~/.claude/projects/.../memory/MEMORY.md` 索引的 memory 文件。
 
-修改 rules 前用 `/claude-md-management:claude-md-improver` 做评估.
+**不互相引用**: 不在 CLAUDE.md / rules / memory 里交叉列出文件名 — Claude 自动发现,列名反而成冗余。需要在 CLAUDE.md 表达"请遵守规则 X"时,直接讲**原则**(像下面"工作流铁律"段),不写"见 `.claude/rules/X.mdc`"。
 
-| 规则 | 何时参考 |
-|---|---|
-| `.claude/rules/decision-method.mdc` | **任何代码/文档改动前必查**(三层穷举 + 闭环复盘);**任何交付完成后必查**(走 `/retro`) |
-| `.claude/rules/commit-style.mdc` | 写 commit message 前 / 决定何时 commit（业务层粒度 + 完整性门槛） |
-| `.claude/rules/comment-style.mdc` | 写代码时（注释只写 why, 代码即注释） |
-| `.claude/rules/codegraph.mdc` | 跨文件结构查询时（vs grep） |
-| `memory/mindtap-v0.2.8-anti-patterns.md` | 反模式 17 (gh/MCP 滥用) + 18 (CSS regex 嵌套) — V0.2.8 4 fix 沉淀 |
-| `.claude/rules/task-directory.mdc` | 写任务正式档时（slug 命名 + 模板 + 跟 commit 关系） |
-| `.claude/rules/dev-sync-before-windows-verify.mdc` | 改 Windows-side runtime（Tauri / WebView2 / 原生菜单 / Rust 后端）后，D:\ 端 dev.bat 验证前必走（push origin + D:\ pull）;WSL-only 验证不触发 |
-| `.claude/rules/dev-verify-before-commit.mdc` | 改 system API / OS 集成 / 框架 runtime 后,commit 前必须 dev 实测新机制本身在工作 |
+新增 / 修改 rule 或 memory 前用 `/claude-md-management:claude-md-improver`,改完跑 `self-apply-after-write.mdc` 7 项。
 
-## 工作流铁律(贯穿所有任务)
+## 工作流铁律(贯穿所有任务 — 强约束,自动加载后不再需要"看 X 规则"提示)
 
 - **三层决策法**: 改前 L1 原始权威 / L2 统一设计 / L3 具体问题(主动枚举副作用);改后走 `/retro` 闭环
 - **避免决策疲劳**: 2-4 离散选项才用 AskUserQuestion;有 spec / convention / rule → 优先查
-- **穷举再下手**: 多个 root cause 不分散修(见 `memory/exhaust-layers-before-fix`)
-- **纯 git + ssh (本仓库约束)**: 默认 `git push origin develop` + D:\ `git pull`;**禁用 gh CLI** (无 auth) 和 **GitHub MCP `issue_write`/`create_pull_request`** (classifier 拦);要 PR 走 web (https://github.com/ahajason/mindtap/compare/develop...<branch>)
+- **穷举再下手**: 多个 root cause 不分散修(见反模式 14)
+- **纯 git + ssh (本仓库约束)**: 默认 `git push origin develop` + D:\ `git pull`;**禁用 gh CLI**(无 auth)和 **GitHub MCP `issue_write`/`create_pull_request`**(classifier 拦);要 PR 走 web (https://github.com/ahajason/mindtap/compare/develop...<branch>)
 - **多 issue 并行修**: 派 N 个 subagent, **每个 subagent 自己用 `Skill superpowers:using-git-worktrees` 起 worktree** (isolation);主 agent 留 develop, fetch + merge 集成;不要主 agent 串行跑多个 fix
-- **CSS 静态扫描 regex**: 写 `.floating-root[...]` 这类 selector 匹配时**先剥 `@media` / `@supports` / `@keyframes` 嵌套块**,否则后加的 @media 内嵌同名选择器会让测试误通过或 FAIL (反模式 18, 见 `memory/mindtap-v0.2.8-anti-patterns`)
-- **Background session 隔离**: 不能直接 `Edit`/`Write` 主 checkout 的 `develop` (harness `bgIsolation` 拦);改 develop 路径前先 `EnterWorktree` 或用 `Workflow` 的 `isolation: "worktree"`
-- **不主动用 Worktree(交互 session)**: 默认直接在主 checkout 工作;只有用户明确指示 (`EnterWorktree` / 写新 feature 分支) 或子 agent `isolation: "worktree"` 才进。只读 / 问答 / 文档任务一律不开 worktree。
-- **feature branch 用完即清**: push + merge 回 develop 后**立刻**清理三件套 —— `git worktree remove .claude/worktrees/<name>` + `git branch -d <branch>` + `git push origin --delete <branch>`,别留孤儿污染 `.claude/worktrees/` 和远端分支列表。
+- **CSS 静态扫描 regex**: 写 `.floating-root[...]` 这类 selector 匹配时**先剥 `@media` / `@supports` / `@keyframes` 嵌套块**,否则后加的 @media 内嵌同名选择器会让测试误通过或 FAIL(见反模式 18)
+
+### Worktree 治理(三种场景分开)
+
+- **Background session**(本 session): harness `bgIsolation` 拦直接改 develop checkout;改 develop 路径前先 `EnterWorktree` 或用 `Workflow` 的 `isolation: "worktree"`
+- **交互 session**: 默认直接在主 checkout 工作;用户明确指示(`EnterWorktree` / 写新 feature 分支)或子 agent `isolation: "worktree"` 才进;只读 / 问答 / 文档任务一律不开
+- **项目内 git worktree 不要放项目根 `.worktrees/`** —— 跟 harness worktree 目录(`.claude/worktrees/`)命名混淆;临时 worktree 用 `git worktree add /tmp/<name>-wt` 或 `.claude/worktrees/<name>`(前提是不跟 harness 撞)
+- **feature branch 用完即清**: push + merge 回 develop 后**立刻**清理三件套 —— `git worktree remove .claude/worktrees/<name>` + `git branch -d <branch>` + `git push origin --delete <branch>`,别留孤儿污染 `.claude/worktrees/` 和远端分支列表
 
 ## 本地配置
 
