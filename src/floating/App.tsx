@@ -9,10 +9,8 @@ import {
 import { api } from "../lib/tauri-bridge";
 import { useActiveTask } from "./hooks/useActiveTask";
 import { useFocusTicker } from "./hooks/useFocusTicker";
-import { ContextMenu } from "./components/ContextMenu";
 import { ExpandedPanel } from "./components/ExpandedPanel";
 import { FoldedBar } from "./components/FoldedBar";
-import { StatusDot } from "./components/StatusDot";
 
 const FOLDED_W = 320;
 const FOLDED_H = 36;
@@ -35,7 +33,6 @@ export function FloatingApp() {
   const [expanded, setExpanded] = useState(false);
   const [taskTitle, setTaskTitle] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
 
   const dragRef = useRef<{
     startX: number;
@@ -150,7 +147,7 @@ export function FloatingApp() {
 
   function handleMouseDown(e: React.MouseEvent<HTMLDivElement>) {
     if (expanded) return;
-    if (e.button !== 0) return; // V0.2.8 Issue A: 右键 (button=2) 走原生 contextmenu capture listener 弹 ContextMenu, 不走 drag/toggle 路径
+    if (e.button !== 0) return; // V0.2.8 Issue A: 右键 (button=2) 走原生 contextmenu capture listener 弹 Rust 原生 Menu, 不走 drag/toggle 路径
     if ((e.target as HTMLElement).closest("[data-no-expand], [data-close]")) return;
     // V0.2.7 修: mousedown 时捕获 win, 4px 阈值后调 startDragging 让 OS 开始拖窗
     // (V0.2.5/V0.2.6 反复声称"沿用 useDragLongPress.ts:49" 但代码里完全没调 IPC, 反模式 15 谎改)
@@ -167,6 +164,20 @@ export function FloatingApp() {
       dragStarted: false,
       win,
     };
+  }
+
+  // V0.2.0.12 PATCH: 右键调 Rust 原生 Menu IPC (popup_menu + OS HMENU, 独立浮窗外窗口)
+  // V0.2.6 / V0.2.0.11 误用 HTML React 组件 + viewport-clamp 逻辑都拦不住浮窗 viewport 裁剪
+  // (HTML 元素跑在 WebView2 内, 物理上不可能 "独立窗口")
+  async function onContextMenuCapture(e: MouseEvent) {
+    if (e.button !== 2) return;
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await api.app.showFloatingContextMenu();
+    } catch (err) {
+      console.error("[showFloatingContextMenu] failed", err);
+    }
   }
 
   useEffect(() => {
@@ -191,13 +202,6 @@ export function FloatingApp() {
         setExpanded(true);
       }
       dragRef.current = null;
-    };
-    const onContextMenuCapture = (e: MouseEvent) => {
-      // V0.2.0.11 Issue A fix: 右键 button=2 才弹 ContextMenu; e.button 守卫防止左/中键意外触发
-      if (e.button !== 2) return;
-      e.preventDefault();
-      e.stopPropagation();
-      setContextMenu({ x: e.clientX, y: e.clientY });
     };
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", onMouseUp);
@@ -225,41 +229,20 @@ export function FloatingApp() {
     }
   }
 
-  useEffect(() => {
-    if (!contextMenu) return;
-    const handleClick = () => setContextMenu(null);
-    window.addEventListener("click", handleClick);
-    return () => window.removeEventListener("click", handleClick);
-  }, [contextMenu]);
-
   if (!expanded) {
     return (
-      <>
-        <div
-          data-testid="floating-root-folded"
-          className="floating-root folded flex items-center gap-2 px-2 py-1"
-          onMouseDown={handleMouseDown}
-        >
-          <StatusDot
-            status={session?.status ?? "empty"}
-            size="sm"
-            position="absolute"
-          />
-          <FoldedBar
-            taskTitle={session?.task_title ?? ""}
-            focusMs={liveFocusMs}
-            status={session ? session.status : "empty"}
-            onClick={() => setExpanded(true)}
-          />
-        </div>
-        {contextMenu && (
-          <ContextMenu
-            x={contextMenu.x}
-            y={contextMenu.y}
-            onClose={() => setContextMenu(null)}
-          />
-        )}
-      </>
+      <div
+        data-testid="floating-root-folded"
+        className="floating-root folded flex items-center gap-2 px-2 py-1"
+        onMouseDown={handleMouseDown}
+      >
+        <FoldedBar
+          taskTitle={session?.task_title ?? ""}
+          focusMs={liveFocusMs}
+          status={session ? session.status : "empty"}
+          onClick={() => setExpanded(true)}
+        />
+      </div>
     );
   }
 
@@ -280,29 +263,20 @@ export function FloatingApp() {
   }
 
   return (
-    <>
-      <ExpandedPanel
-        taskTitle={taskTitle}
-        onTaskTitleChange={setTaskTitle}
-        onStart={handleStart}
-        onCancel={() => {
-          setTaskTitle("");
-          setExpanded(false);
-        }}
-        maxLength={TASK_TITLE_MAX}
-        submitting={submitting}
-        activeSession={session}
-        onPause={() => act("pause")}
-        onResume={() => act("resume")}
-        onComplete={() => act("complete")}
-      />
-      {contextMenu && (
-        <ContextMenu
-          x={contextMenu.x}
-          y={contextMenu.y}
-          onClose={() => setContextMenu(null)}
-        />
-      )}
-    </>
+    <ExpandedPanel
+      taskTitle={taskTitle}
+      onTaskTitleChange={setTaskTitle}
+      onStart={handleStart}
+      onCancel={() => {
+        setTaskTitle("");
+        setExpanded(false);
+      }}
+      maxLength={TASK_TITLE_MAX}
+      submitting={submitting}
+      activeSession={session}
+      onPause={() => act("pause")}
+      onResume={() => act("resume")}
+      onComplete={() => act("complete")}
+    />
   );
 }

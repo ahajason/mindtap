@@ -1,4 +1,5 @@
 import type { TimerStatus } from "../types/timer";
+import { StatusDot } from "./StatusDot";
 
 type FoldedBarProps = {
   taskTitle: string;
@@ -15,6 +16,8 @@ function formatFocusMs(ms: number): string {
   return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
 }
 
+// V0.2.0.12 PATCH: StatusDot 恢复 V1.0 archive 设计 (.archive/src/floating/FoldedBar.tsx:31)
+// 放在 .folded-bar-inner flex 容器第 1 child (最左, 跟 title 前面), 不再放外层 App.tsx absolute。
 export function FoldedBar({ taskTitle, focusMs, status, onClick }: FoldedBarProps) {
   const isEmpty = status === "empty";
   const title = isEmpty ? "未命名任务" : taskTitle;
@@ -36,6 +39,7 @@ export function FoldedBar({ taskTitle, focusMs, status, onClick }: FoldedBarProp
             : `当前任务 ${title}，已计时 ${formatFocusMs(focusMs)}`
         }
       >
+        <StatusDot status={status} size="sm" />
         <span
           className="min-w-0 max-w-[220px] flex-1 truncate text-[13px] font-medium"
           title={title}

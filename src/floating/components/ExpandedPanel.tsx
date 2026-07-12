@@ -90,7 +90,6 @@ export function ExpandedPanel(props: ExpandedPanelProps) {
           <StatusDot
             status={activeSession.status}
             size="md"
-            position="absolute"
           />
         </div>
         <ControlRow

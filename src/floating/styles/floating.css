@@ -9,7 +9,12 @@
    - 修复: floating.html body 不挂类, React div 自己挂 .floating-root (App.tsx)
    - glass-l1/l2/l3 utility 用 var(--glass-fill-1/2/3) 无 fallback, 浮窗 entry 没 main @theme,
      var(--glass-fill-1) undefined → background: rgba(255,255,255, undefined) = 透明
-   - 修复: 改 inline fallback var(--glass-fill-1, 22%) 沿用 V1.0 模式 */
+   - 修复: 改 inline fallback var(--glass-fill-1, 22%) 沿用 V1.0 模式
+
+   V0.2.0.12 PATCH:
+   - 删 .floating-root 锚点声明 (V0.2.0.11 B fix 加的, StatusDot 已回 V1.0 inline 不再需要)
+   - 加 V1.0 archive .dot flex item 样式 + @keyframes pulse (照搬 .archive/src/floating/styles/focus-block.css:71-88 + 163-171)
+*/
 
 @import "tailwindcss";
 
@@ -59,6 +64,38 @@
   animation: pulse-dot 1.6s ease-in-out infinite;
 }
 
+/* V0.2.0.12 PATCH: 照搬 V1.0 archive .archive/src/floating/styles/focus-block.css:71-88 + 163-171
+   .dot 是 flex item 8×8 圆点 + @keyframes pulse 1.6s 呼吸动画。
+   V0.2.x 的 pulse-dot / animate-pulse-dot 保留作为 active 状态触发器。 */
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  align-self: center;
+}
+.dot-active {
+  background: #34c759;
+  animation: pulse 1.6s ease-in-out infinite;
+}
+.dot-done {
+  background: #34c759;
+  opacity: 0.5;
+}
+.dot-empty {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(52, 199, 89, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(52, 199, 89, 0);
+  }
+}
+
 :root {
   font-family: system-ui, sans-serif;
   background: transparent;
@@ -79,11 +116,6 @@ body {
 }
 
 .floating-root {
-  /* V0.2.0.11 Issue B fix: 加 position: relative, 让 .floating-root 内的
-     StatusDot (position="absolute" top-1 right-1) 找这个根 div 作为 absolute 祖先,
-     不再穿透到 body 导致在 viewport 角落错位。
-     (V0.2.0.7 反复改 StatusDot 类名 / top-right 值, 真根因是 .floating-root 缺 relative) */
-  position: relative;
   display: flex;
   align-items: center;
   width: 320px;
@@ -100,7 +132,7 @@ body {
      WebView2 transparent 边缘 + rgba(245,249,255,0.95) 半透明底色 + 顶部白色高亮投影
      在某些 DPI 上合成出灰色描边, 用户感知为黑边。仅保留 drop shadow, 不动 .glass-l1/l2/l3。 */
   box-shadow: 0 8px 32px rgba(0, 30, 80, 0.08);
-  /* V0.2.0.11 Issue D 移除: 折叠→展开 width/height/border-radius 平滑过渡不在 V0.2.0 PRD §3.2 范围
+  /* V0.2.0.11 Issue D 移除: 折叠→展开 width/height/border-radius 平滑过渡不在 V2.0.0 PRD §3.2 范围
      (PRD §3.2 只提物理尺寸 360×280, 无 transition 要求; Tauri 2 用 win.setSize() 跳变即可,
      CSS transition 反而在 IPC 异步 setSize 时序下引起视觉抖动)。 */
 }

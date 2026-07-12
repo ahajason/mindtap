@@ -3,7 +3,6 @@ import type { TimerStatus } from "../types/timer";
 type StatusDotProps = {
   status: TimerStatus | "empty" | null | undefined;
   size?: "sm" | "md";
-  position?: "inline" | "absolute";
 };
 
 const DOT_COLOR: Record<TimerStatus | "empty", string> = {
@@ -18,29 +17,22 @@ const SIZE_CLASS: Record<"sm" | "md", string> = {
   md: "size-2.5",
 };
 
-// V0.2.0.11 Issue B fix 注释修正: V0.2.0.7 改 top-1 right-1 是必要但非充分条件。
-// 真正根因是 .floating-root 缺 position: relative (floating.css 已修)。
-// 之前 StatusDot absolute 穿透到 body 作为祖先, 跑 viewport 角落错位;
-// 现在 .floating-root 是 relative, top-1 right-1 才真正相对浮窗根 div 右上角。
-// V0.2.0.7 反复改 top-right 值 (top-0.5 right-0.5 → top-1 right-1) 都没修对,
-// 因为根 div 缺 relative 这一层完全漏了 (反模式 14 反复修 + 反模式 15 根因错位)。
-const POSITION_CLASS: Record<"inline" | "absolute", string> = {
-  inline: "",
-  absolute: "absolute top-1 right-1",
-};
-
-export function StatusDot({ status, size = "sm", position = "inline" }: StatusDotProps) {
+// V0.2.0.12 PATCH: 恢复 V1.0 archive inline-block span 设计 (见 .archive/src/floating/StatusDot.tsx)
+// 折叠态 StatusDot 是 flex 容器第 1 child (最左, 跟 title 前面), 不是右上角硬定位。
+// V0.2.0.7 / V0.2.0.11 B fix 的右上角硬定位 + .floating-root 单独锚点声明
+// 是基于误导 spec 反复修的产物, 不是 V1.0 真相。
+export function StatusDot({ status, size = "sm" }: StatusDotProps) {
   if (!status) return null;
   const key = status === "empty" ? "empty" : status;
   const isPulsing = status === "active";
   return (
     <span
+      data-no-expand
       aria-hidden="true"
       className={[
         "inline-block shrink-0 rounded-full ring-2 ring-white/40",
         DOT_COLOR[key],
         SIZE_CLASS[size],
-        POSITION_CLASS[position],
         isPulsing ? "animate-pulse-dot" : "",
       ].join(" ")}
     />
