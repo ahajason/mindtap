@@ -148,8 +148,10 @@ describe("V0.2.6 patch 回归测试 — 浮窗位置主屏右上角 -16px (V0.2.
 describe("V0.2.6 patch 回归测试 — 展开方向 (V0.2.3 改下拉 V0.2.6 修 App.tsx 公式)", () => {
   it("App.tsx 展开 setPosition pos.y 不变 (折叠态 y 保留, 向下展开非向上)", () => {
     const src = readFileSync("src/floating/App.tsx", "utf-8");
-    expect(src).toMatch(/pos\.x \+ Math\.round\(\(FOLDED_W - EXPANDED_W\) \/ 2\),\s*pos\.y,/);
-    expect(src).not.toMatch(/pos\.y - \(EXPANDED_H - FOLDED_H\)/);
+    // V0.2.6 修: pos.y 不变; V0.2.7 修: 不再用 Math.round((FOLDED_W-EXPANDED_W)/2) 偏移
+    // 公式必须是 new PhysicalPosition(pos.x, pos.y)
+    expect(src).toMatch(/new\s+PhysicalPosition\(\s*pos\.x\s*,\s*pos\.y\s*\)/);
+    expect(src).not.toMatch(/pos\.y\s*-\s*\(EXPANDED_H\s*-\s*FOLDED_H\)/);
   });
 });
 
@@ -183,7 +185,9 @@ describe("V0.2.6 patch 回归测试 — lib.rs app_show_main_window IPC (主窗�
 describe("V0.2.6 patch 回归测试 — 严禁调用 (V0.2.5 patch 修 Win11 WebView2 setFocusable(true) panic)", () => {
   it("App.tsx 不调用 setFocusable (V0.2.5 patch 删 沿用 V1.0 D15 focus:false 路径)", () => {
     const src = readFileSync("src/floating/App.tsx", "utf-8");
-    expect(src).not.toMatch(/setFocusable/);
+    // V0.2.5 修: Win11 WebView2 浮窗调 setFocusable(true) 会 panic, 必须严禁调用
+    // 注意: 注释里允许出现 "setFocusable" 字样 (反模式 13 沉淀), 只禁函数调用
+    expect(src).not.toMatch(/setFocusable\s*\(/);
   });
 
   it("App.tsx 折叠态根 div 无 onContextMenu React 合成 (P0-9 改原生 addEventListener capture phase 替代)", () => {
