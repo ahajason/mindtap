@@ -150,6 +150,7 @@ export function FloatingApp() {
 
   function handleMouseDown(e: React.MouseEvent<HTMLDivElement>) {
     if (expanded) return;
+    if (e.button !== 0) return; // V0.2.8 Issue A: 右键 (button=2) 走原生 contextmenu capture listener 弹 ContextMenu, 不走 drag/toggle 路径
     if ((e.target as HTMLElement).closest("[data-no-expand], [data-close]")) return;
     // V0.2.7 修: mousedown 时捕获 win, 4px 阈值后调 startDragging 让 OS 开始拖窗
     // (V0.2.5/V0.2.6 反复声称"沿用 useDragLongPress.ts:49" 但代码里完全没调 IPC, 反模式 15 谎改)
