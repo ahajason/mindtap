@@ -43,7 +43,9 @@ export function ExpandedPanel(props: ExpandedPanelProps) {
   } = props;
 
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
   const submittingRef = useRef(submitting);
+  const dismissingRef = useRef(true); // V0.2.0.12 Issue 2/4: 默认 panel 外才 cancel
   submittingRef.current = submitting;
 
   const { recs, loading } = useRecentTaskTitles();
@@ -54,9 +56,10 @@ export function ExpandedPanel(props: ExpandedPanelProps) {
 
   useEffect(() => {
     function handleBlur() {
-      if (!submittingRef.current) {
-        onCancel();
-      }
+      // V0.2.0.12 Issue 2/4: Radix pointerdown capture 模式 — panel 内点击(包括右键)触发 pointerdown
+      // 在 input blur 之前完成, 这里读到的 dismissingRef=false 表示 panel 内, 不应 cancel
+      if (submittingRef.current) return;
+      if (dismissingRef.current) onCancel();
     }
     const node = inputRef.current;
     if (!node) return;
@@ -105,6 +108,12 @@ export function ExpandedPanel(props: ExpandedPanelProps) {
 
   return (
     <div
+      ref={panelRef}
+      onPointerDownCapture={(e) => {
+        // V0.2.0.12 Issue 2/4: Radix pointerdown capture 模式 — 授权点击(e.button=0/2)都在 blur 之前设置 dismissingRef,
+        // panel 内则 dismissingRef=false (保持 blur 不 cancel), panel 外则 dismissingRef=true (灵敏地有点击后外移视窗也 cancel)
+        dismissingRef.current = !panelRef.current?.contains(e.target as Node);
+      }}
       className="relative flex h-full w-full flex-col gap-2 overflow-hidden rounded-2xl p-3 text-[12px]"
       style={PANEL_STYLE}
     >
