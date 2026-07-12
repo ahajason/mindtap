@@ -25,6 +25,9 @@ export const api = {
   app: {
     exit: () => invoke<void>("app_exit"),
     showMainWindow: () => invoke<void>("app_show_main_window"),
+    // V0.2.0.12 PATCH: 浮窗右键调 Rust 原生 Menu IPC (popup_menu + OS HMENU, 独立浮窗外窗口)
+    // V0.2.6 / V0.2.0.11 误用 HTML React 组件 (./components/ContextMenu) 物理上不可能"独立窗口"
+    showFloatingContextMenu: () => invoke<void>("show_floating_context_menu"),
   },
   timerSession: {
     getActive: () => invoke<TimerSession | null>("timer_session_get_active"),

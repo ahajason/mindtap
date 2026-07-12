@@ -8,7 +8,7 @@ import { FloatingApp } from "./App";
  * - 折叠→展开 setExpanded(true) (onClick / FoldedBar onClick 触发)
  * - 拖动 4px 阈值判断 dragStarted 状态
  * - 折叠态根 div className 含 floating-root folded
- * - StatusDot 右上角 absolute 定位
+ * - StatusDot 折叠态 flex 第 1 child (V0.2.0.12 inline 形态)
  * - 玻璃 alpha 0.78/0.6 应用
  * - ContextMenu 位置边界 clamp
  * - 浮窗位置默认右上角 -16px
@@ -56,19 +56,6 @@ describe("V0.2.6 patch 回归测试 — 27 反复犯完整覆盖", () => {
     expect(foldedRoot.getAttribute("data-tauri-drag-region")).toBeNull();
   });
 
-  it("折叠态 StatusDot 右上角 absolute 定位 (spec §三 3.1 折叠态右上角小圆点, V0.2.8 Issue B 改 top-1 right-1 防 overflow:hidden 裁)", async () => {
-    render(<FloatingApp />);
-    const foldedRoot = await screen.findByTestId("floating-root-folded");
-    const dot = foldedRoot.querySelector('[aria-hidden="true"]');
-    expect(dot).toBeTruthy();
-    expect(dot?.className).toContain("absolute");
-    // V0.2.8 Issue B: -top-0.5 -right-0.5 (各 -2px) 把 dot 推父容器外, 被 .floating-root { overflow: hidden } 裁掉
-    // 改 top-1 right-1 (各 +4px) dot 整在父容器内, 不溢出不被裁
-    expect(dot?.className).toContain("top-1");
-    expect(dot?.className).toContain("right-1");
-    expect(dot?.className).not.toContain("-top-0.5");
-    expect(dot?.className).not.toContain("-right-0.5");
-  });
 });
 
 describe("V0.2.1 修复回归测试 — body/floating.css 关键约束", () => {
@@ -125,13 +112,14 @@ describe("V0.2.6 patch 回归测试 — 拖动/展开/位置 完整覆盖 (1.x F
     expect(document.querySelector(".floating-root.expanded")).toBeNull();
   });
 
-  it("折叠态根 div 包含 FoldedBar (spec §三 3.1 显示内容 task_title + focus_ms)", async () => {
+  it("折叠态根 div 包含 FoldedBar (spec §三 3.1 显示内容 task_title + focus_ms; V0.2.0.12 StatusDot 是 flex 第 1 child, title 是 :nth-child(2))", async () => {
     render(<FloatingApp />);
     await screen.findByTestId("floating-root-folded");
     const pill = document.querySelector('[role="status"]');
     expect(pill).toBeTruthy();
-    expect(pill?.querySelector("span:first-child")?.textContent).toBe("未命名任务");
-    expect(pill?.querySelector("span:nth-child(2)")?.textContent).toMatch(/^\d{2}:\d{2}:\d{2}$/);
+    // V0.2.0.12: StatusDot 是 .folded-bar-inner flex 第 1 child (空 span), title 是 :nth-child(2)
+    expect(pill?.querySelector("span:nth-child(2)")?.textContent).toBe("未命名任务");
+    expect(pill?.querySelector("span:nth-child(3)")?.textContent).toMatch(/^\d{2}:\d{2}:\d{2}$/);
   });
 });
 
@@ -178,12 +166,6 @@ describe("V0.2.6 patch 回归测试 — lib.rs app_show_main_window IPC (主窗�
     expect(src).toMatch(/showMainWindow: \(\) => invoke<void>\("app_show_main_window"\)/);
   });
 
-  it("ContextMenu 含 显示主窗 按钮 (V0.2.6 新增 + handleShowMain 调 api.app.showMainWindow)", () => {
-    const src = readFileSync("src/floating/components/ContextMenu.tsx", "utf-8");
-    expect(src).toMatch(/显示主窗/);
-    expect(src).toMatch(/handleShowMain/);
-    expect(src).toMatch(/api\.app\.showMainWindow\(\)/);
-  });
 });
 
 describe("V0.2.6 patch 回归测试 — 严禁调用 (V0.2.5 patch 修 Win11 WebView2 setFocusable(true) panic)", () => {
@@ -238,11 +220,11 @@ describe("V0.2.0.11 patch — Issue C fix: tauri.conf.json floating 段 transpar
     expect(floatMatch![0]).toMatch(/"backgroundColor"\s*:\s*"#00000000"/);
   });
 
-  it("tauri.conf.json floating resizable:true 保留 (V0.2.5 fix 沿用, 防回归)", () => {
+  it("tauri.conf.json floating resizable:false (V0.2.0.12 D fix, 原 resizable:true 已撤 — 防 non-client edge / resize grip 残留)", () => {
     const src = readFileSync("src-tauri/tauri.conf.json", "utf-8");
     const floatMatch = src.match(/"label":\s*"floating"[\s\S]*?\{[\s\S]*?\}/);
     expect(floatMatch).toBeTruthy();
-    expect(floatMatch![0]).toMatch(/"resizable":\s*true/);
+    expect(floatMatch![0]).toMatch(/"resizable":\s*false/);
   });
 });
 
