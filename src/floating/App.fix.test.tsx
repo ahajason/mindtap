@@ -1,8 +1,10 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
+import { invoke } from "@tauri-apps/api/core";
 
 import { FloatingApp } from "./App";
+import { StatusDot as StatusDotFromComponents } from "./components/StatusDot";
 
 /**
  * V0.2.7 patch — 6 bug 真根因修复回归测试
@@ -13,6 +15,13 @@ import { FloatingApp } from "./App";
  * 本文件用静态检查 + 源码 grep 方式断言 fix 真的落在源码上, 不只是 commit message 上声称。
  *
  * e2e 验证仍需 Windows 真机 + WebView2 (playwright/tauri-driver 在 WSL 下无法测 Tauri 窗口 API)。
+ *
+ * V0.2.0.12 PATCH 更新:
+ * - 删 V0.2.0.11 Issue A fix describe (ContextMenu HTML 锁住, 已删旧 HTML ContextMenu)
+ * - 删 V0.2.0.11 Issue B fix describe (.floating-root position: relative, StatusDot 恢复 V1.0 inline 不再需要)
+ * - 加 V0.2.0.12 StatusDot 锁住 describe (3 it)
+ * - 加 V0.2.0.12 ContextMenu 锁住 describe (3 it)
+ * - V0.2.8 Issue A test 3 更新: HTML 渲染断言 → IPC 调用断言 (旧 HTML ContextMenu 已删)
  */
 
 describe("V0.2.7 patch — Bug 1: act() 函数必须 try/catch 包裹 await (闪退真根因)", () => {
@@ -151,19 +160,21 @@ describe("V0.2.8 patch — Issue A: 右键不被折叠态根 div 抢占 (P0-9 �
     expect(document.querySelector(".floating-root.expanded")).toBeNull();
   });
 
-  it("折叠态右键 contextmenu 事件触发 ContextMenu 渲染 (capture phase 原生 listener 行为)", async () => {
+  it("折叠态右键 contextmenu 事件触发 Rust 原生 Menu IPC (V0.2.0.12: popup_menu 替代 HTML 渲染)", async () => {
+    // V0.2.0.12 PATCH: 旧 HTML ContextMenu 已删, 右键调 api.app.showFloatingContextMenu() → invoke("show_floating_context_menu")
+    // 反模式 16 防御: 行为断言 IPC 被调, 不是 HTML 渲染
+    const invokeMock = vi.mocked(invoke);
+    invokeMock.mockClear();
     render(<FloatingApp />);
     await screen.findByTestId("floating-root-folded");
-    // 派发原生 contextmenu 事件 (document 级 capture phase listener 应当接到)
-    // V0.2.0.11 A fix: 必须传 button: 2, e.button !== 2 守卫过滤左/中键
     fireEvent.contextMenu(document, { button: 2, clientX: 50, clientY: 60 });
-    // 行为断言: ContextMenu 组件被渲染 (role=menu + aria-label)
     await waitFor(() => {
-      expect(screen.getByRole("menu", { name: "浮窗右键菜单" })).toBeTruthy();
+      expect(invokeMock).toHaveBeenCalledWith("show_floating_context_menu", undefined);
     });
-    // 且包含 "显示主窗" 按钮
-    expect(screen.getByText("显示主窗")).toBeTruthy();
-    expect(screen.getByText("退出")).toBeTruthy();
+    // HTML 菜单不再渲染 (旧 HTML ContextMenu 已删)
+    expect(screen.queryByRole("menu", { name: "浮窗右键菜单" })).toBeNull();
+    expect(screen.queryByText("显示主窗")).toBeNull();
+    expect(screen.queryByText("退出")).toBeNull();
   });
 
   it("左键短按仍触发展开 (回归: e.button !== 0 守卫不影响左键 toggle 路径)", async () => {
@@ -280,30 +291,6 @@ describe("V0.2.0.11 patch — Issue D 移除: 折叠展开 transition 不在 V0.
   });
 });
 
-describe("V0.2.0.11 patch — Issue B fix: .floating-root 加 position: relative 让 StatusDot absolute 找根 div", () => {
-  // V0.2.0.7 反复改 StatusDot 类名 / top-right 值 (top-0.5 right-0.5 → top-1 right-1),
-  // user 仍报"呼吸灯在 .floating-root folded 第一个子节点但不在 .folded-bar-inner 内"。
-  // 真根因: .floating-root 没有 position: relative, StatusDot absolute 穿透到 body
-  // 作为祖先, 在 viewport 角落错位。修法: .floating-root 加 position: relative。
-
-  it("floating.css .floating-root 块内含 position: relative (V0.2.0.11 B fix)", () => {
-    const css = readFileSync("src/floating/styles/floating.css", "utf-8");
-    const block = css.match(/\.floating-root\s*\{([\s\S]*?)\}/);
-    expect(block).toBeTruthy();
-    expect(block![0]).toMatch(/\bposition\s*:\s*relative\b/);
-  });
-
-  it("floating.css .floating-root.expanded 不受 B fix 影响 (展开态走 ExpandedPanel 自带 relative, 不依赖根 div)", () => {
-    const css = readFileSync("src/floating/styles/floating.css", "utf-8");
-    const block = css.match(/\.floating-root\.expanded\s*\{([\s\S]*?)\}/);
-    expect(block).toBeTruthy();
-    // .floating-root.expanded 块本身不需要 position: relative (继承自 .floating-root 顶层规则),
-    // 但绝不能误删 width/height/border-radius 数值层
-    expect(block![0]).toMatch(/\bwidth\s*:\s*360px\b/);
-    expect(block![0]).toMatch(/\bheight\s*:\s*280px\b/);
-  });
-});
-
 describe("V0.2.0.11 patch — Issue C fix: tauri.conf.json floating 段 transparent + backgroundColor", () => {
   // V0.2.0.6 / V0.2.0.8 反复改 .floating-root CSS / FoldedBar inline style 想消除黑边,
   // user 实测仍有黑边且点击聚焦后更明显。真根因在 tauri.conf.json: floating 段
@@ -336,44 +323,6 @@ describe("V0.2.0.11 patch — Issue C fix: tauri.conf.json floating 段 transpar
     const block = getFloatingWindowBlock(json);
     expect(block).toBeTruthy();
     expect(block!).not.toMatch(/"transparent"\s*:\s*false/);
-  });
-});
-
-describe("V0.2.0.11 patch — Issue A fix: ContextMenu viewport 双向 clamp + 右键 button guard", () => {
-  // V0.2.0.6 反复改 ContextMenu 事件捕获 (capture phase / e.preventDefault),
-  // user 实测菜单仍不弹 (HTML 显示 left:4 top:-84)。真根因: ContextMenu.tsx line 46-50
-  // 用 single Math.min 做 bottom clamp, 折叠态 window.innerHeight=36 时 innerHeight-120=-84,
-  // Math.min(y+8, -84) = -84, 菜单跑到 viewport 外看不见。修法:
-  // 1) ContextMenu.tsx 加 clampToViewport() 用 MENU_W/MENU_H 常数 + 双向 Math.max/Math.min
-  // 2) App.tsx onContextMenuCapture 加 e.button !== 2 守卫 (左/中键不该弹菜单)
-
-  it("ContextMenu.tsx 含 clampToViewport 函数 (V0.2.0.11 A fix)", () => {
-    const src = readFileSync("src/floating/components/ContextMenu.tsx", "utf-8");
-    // 反模式 16 防御: 剥注释行后再 grep
-    const codeOnly = src
-      .split("\n")
-      .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
-      .join("\n");
-    expect(codeOnly).toMatch(/function\s+clampToViewport/);
-  });
-
-  it("ContextMenu.tsx clampToViewport 双向 clamp: top 既有 Math.max 也有 Math.min", () => {
-    const src = readFileSync("src/floating/components/ContextMenu.tsx", "utf-8");
-    const codeOnly = src
-      .split("\n")
-      .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
-      .join("\n");
-    // top 必须 Math.max(VIEWPORT_MARGIN, Math.min(y, maxTop)) 双向
-    expect(codeOnly).toMatch(/top\s*:\s*Math\.max\s*\(\s*VIEWPORT_MARGIN\s*,\s*Math\.min\s*\(\s*y\s*,\s*maxTop\s*\)\s*\)/);
-  });
-
-  it("App.tsx onContextMenuCapture 含 e.button !== 2 守卫 (反模式 14 防御: 防止左/中键误触发)", () => {
-    const src = readFileSync("src/floating/App.tsx", "utf-8");
-    const codeOnly = src
-      .split("\n")
-      .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
-      .join("\n");
-    expect(codeOnly).toMatch(/onContextMenuCapture[\s\S]*?if\s*\(\s*e\.button\s*!==\s*2\s*\)\s*return/);
   });
 });
 
@@ -504,5 +453,85 @@ describe("V0.2.0.12 patch — Issue 4: 点 Start 不折叠 (panel 内 pointerdow
     expect(codeOnly).toMatch(/data-no-expand/);
     expect(codeOnly).toMatch(/onContextMenuCapture/);
     expect(codeOnly).toMatch(/if\s*\(\s*e\.button\s*!==\s*0\s*\)/);
+  });
+});
+
+describe("V0.2.0.12 PATCH — StatusDot 锁住: 恢复 V1.0 archive inline-block flex 第 1 child", () => {
+  // V0.2.0.7 / V0.2.0.11 反复改 StatusDot absolute + .floating-root position: relative 是误导 spec 反复修的产物。
+  // V0.2.0.12 恢复 V1.0 archive 真相 (.archive/src/floating/StatusDot.tsx + FoldedBar.tsx): StatusDot 是
+  // flex 容器第 1 child (最左, 跟 title 前面), 不是右上角 absolute。
+
+  it("StatusDot.tsx 渲染 inline-block span, 不挂 absolute / top-* / right-* (V0.2.0.12 inline 形态锁定)", () => {
+    const { render } = require("@testing-library/react");
+    const { container } = render(<StatusDotFromComponents status="active" />);
+    const dot = container.querySelector("span");
+    expect(dot).toBeTruthy();
+    expect(dot?.className).toContain("inline-block");
+    expect(dot?.className).not.toContain("absolute");
+    expect(dot?.className).not.toMatch(/\btop-/);
+    expect(dot?.className).not.toMatch(/\bright-/);
+  });
+
+  it("FoldedBar.tsx 内 StatusDot 是 .folded-bar-inner flex 容器第 1 child (V1.0 archive 形态锁定)", () => {
+    const src = readFileSync("src/floating/components/FoldedBar.tsx", "utf-8");
+    // 反模式 16 防御: 剥 JSX 注释 ({} 单行注释或 /* */ 多行), 排除注释行谎报
+    const lines = src.split("\n");
+    const codeLines = lines.filter((line) => {
+      const trimmed = line.trim();
+      if (trimmed.startsWith("//")) return false;
+      if (trimmed.startsWith("*")) return false;
+      return true;
+    });
+    const codeOnly = codeLines.join("\n");
+    // .folded-bar-inner div 内 StatusDot 必须是第 1 child JSX 元素
+    const foldedBarInnerMatch = codeOnly.match(/folded-bar-inner[^>]*>([\s\S]*?)<span/);
+    expect(foldedBarInnerMatch).toBeTruthy();
+    // StatusDot 必须在第 1 个 span 之前 (作为 flex 第 1 child)
+    expect(foldedBarInnerMatch![1]).toMatch(/<StatusDot/);
+  });
+
+  it("floating.css .floating-root 块不含 position: relative (V0.2.0.11 B fix 已撤, V1.0 inline 不需要)", () => {
+    const css = readFileSync("src/floating/styles/floating.css", "utf-8");
+    // 反模式 18 防御: 剥 @media 嵌套块 + CSS 注释
+    const noComments = css.replace(/\/\*[\s\S]*?\*\//g, "");
+    const noMedia = noComments.replace(/@media[^{]+\{[\s\S]*?\}\s*\}/g, "");
+    const block = noMedia.match(/\.floating-root\s*\{[^}]*\}/);
+    expect(block).toBeTruthy();
+    expect(block![0]).not.toMatch(/\bposition\s*:\s*relative\b/);
+  });
+});
+
+describe("V0.2.0.12 PATCH — ContextMenu 锁住: HTML React 组件已删, 改调 Rust 原生 Menu IPC", () => {
+  // V0.2.0.6 / V0.2.0.11 反复改 HTML ContextMenu (clampToViewport / e.button guard) 都拦不住
+  // 浮窗 viewport 裁剪 (HTML 元素跑在 WebView2 内, 物理上不可能"独立窗口")。
+  // V0.2.0.12 删旧 HTML ContextMenu + 改调 api.app.showFloatingContextMenu() → invoke("show_floating_context_menu")
+  // → Rust popup_menu + OS HMENU (独立浮窗外窗口, OS-level popup).
+
+  it("tauri-bridge.ts 含 showFloatingContextMenu wrapper (V0.2.0.12 IPC 入口)", () => {
+    const src = readFileSync("src/lib/tauri-bridge.ts", "utf-8");
+    expect(src).toMatch(/showFloatingContextMenu\s*:\s*\(\s*\)\s*=>\s*invoke<void>\(\s*"show_floating_context_menu"\s*\)/);
+  });
+
+  it("App.tsx onContextMenuCapture 调 showFloatingContextMenu IPC (替代 setContextMenu / <ContextMenu>)", () => {
+    const src = readFileSync("src/floating/App.tsx", "utf-8");
+    // 反模式 16 防御: 剥注释行后再 grep
+    const codeOnly = src
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
+      .join("\n");
+    expect(codeOnly).toMatch(/api\.app\.showFloatingContextMenu\s*\(\s*\)/);
+    // 旧的 HTML ContextMenu state / render / setContextMenu 调用都必须清空
+    expect(codeOnly).not.toMatch(/setContextMenu\s*\(/);
+    expect(codeOnly).not.toMatch(/<ContextMenu\b/);
+    expect(codeOnly).not.toMatch(/from\s+["']\.\/components\/ContextMenu["']/);
+  });
+
+  it("ContextMenu 文件不存在 (V0.2.0.12 删 HTML React 组件, 改 Rust 原生 Menu)", () => {
+    // fs.existsSync 检查: V0.2.x 误改产物已删
+    const { existsSync } = require("node:fs");
+    const path1 = "src/floating/components/ContextMenu" + ".tsx";
+    const path2 = "src/floating/components/ContextMenu" + ".test.tsx";
+    expect(existsSync(path1)).toBe(false);
+    expect(existsSync(path2)).toBe(false);
   });
 });
