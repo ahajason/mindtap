@@ -14,6 +14,7 @@ vi.mock("@tauri-apps/api/window", () => ({
     setSize: vi.fn(() => Promise.resolve()),
     setPosition: vi.fn(() => Promise.resolve()),
     setFocusable: vi.fn(() => Promise.resolve()),
+    startDragging: vi.fn(() => Promise.resolve()),
     outerPosition: vi.fn(() => Promise.resolve({ x: 0, y: 0 })),
     outerSize: vi.fn(() => Promise.resolve({ width: 320, height: 36 })),
     show: vi.fn(() => Promise.resolve()),
