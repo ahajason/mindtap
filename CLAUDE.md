@@ -2,7 +2,7 @@
 
 轻念 · Mindtap — 极简记录桌面应用。Tauri 2 (Rust) + React 19 + TypeScript + Vite 7。本地 SQLite，无云同步。
 
-> **当前阶段**: v0.1.0 起步——工作树是骨架, 业务代码待接入.
+> **当前交付**: V0.2.6 浮窗(floating window)收口(WebView2 透明 / native context menu / Overlay titleBar 已 iterate);下一阶段看 `docs/projects/v0.2/` 的任务档。
 
 ## Quick Start
 
@@ -14,6 +14,7 @@
 | 同步 WSL → D:\ | WSL 内 `git push origin develop` + `git -C /mnt/d/workspace/mindtap pull` |
 | 验证 Rust 端 | `cd src-tauri && cargo check` |
 | 验证前端类型 | `npx tsc --noEmit` |
+| 跑 vitest | `npm test`(单次)/ `npm run test:watch`(监听) |
 | 看 git 状态 | `git status` / `git log --oneline` |
 
 ## 双工作树 (WSL + D:\)
@@ -30,6 +31,25 @@
 **Tauri dev 必须在 Windows 侧**:`WebView2` 是 Windows 原生 COM 组件,WSL 启动它得绕 WSLg,debug 信号会断在 syscall 边界。WebView2 透明 / 原生菜单 / Overlay titleBar 这类 Windows-only bug,在 WSL 里复现不到——只能从 D:\ 端验证。
 
 `scripts/dev.bat` / `scripts/dev.ps1` 是 Windows 侧一键启动器:自动定位项目根、拒在 WSL 内误跑、`cargo tauri` 优先、`CARGO_TARGET_DIR` 自动切到 Windows fs。详见 [scripts/README.md](./scripts/README.md)。
+
+## 目录结构
+
+```
+mindtap/
+├── src/                # 主窗口（当前为 StyleGuide 路由）
+│   ├── lib/tauri-bridge.ts    # Rust ↔ JS 唯一 seam
+│   ├── floating/        # ⭐ 真正产品：浮窗（V0.2.6 收口）
+│   └── components/ routes/ hooks/
+├── src-tauri/src/      # ⭐ Rust 后端
+│   ├── lib.rs           # run() + 全局快捷键 + invoke_handler 注册
+│   ├── commands/        # timer_session + app 两组 command
+│   └── db/              # rusqlite + DbState(Mutex<Connection>)
+├── docs/                # design / specs / plans / reports / tasks
+├── scripts/             # Windows 侧 Tauri dev 启动器
+└── .claude/rules/       # 强制规则（每次 session 加载）
+```
+
+入口:`index.html` → `src/main.tsx`,`floating.html` → `src/floating/main.tsx`,对应 `tauri.conf.json` 的两个窗口。
 
 ## 设计语言
 
@@ -64,6 +84,8 @@
 | `.claude/rules/comment-style.mdc` | 写代码时（注释只写 why, 代码即注释） |
 | `.claude/rules/codegraph.mdc` | 跨文件结构查询时（vs grep） |
 | `.claude/rules/task-directory.mdc` | 写任务正式档时（slug 命名 + 模板 + 跟 commit 关系） |
+| `.claude/rules/dev-sync-before-windows-verify.mdc` | 改 Windows-side runtime（Tauri / WebView2 / 原生菜单 / Rust 后端）后，D:\ 端 dev.bat 验证前必走（push origin + D:\ pull）;WSL-only 验证不触发 |
+| `.claude/rules/dev-verify-before-commit.mdc` | 改 system API / OS 集成 / 框架 runtime 后,commit 前必须 dev 实测新机制本身在工作 |
 
 ## 工作流铁律(贯穿所有任务)
 
