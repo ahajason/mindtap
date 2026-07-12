@@ -177,3 +177,66 @@ describe("V0.2.8 patch — Issue A: 右键不被折叠态根 div 抢占 (P0-9 �
     }, { timeout: 300, interval: 20 });
   });
 });
+
+describe("V0.2.8 Issue C: 浮窗无 inset highlight 边框 (P1 回归)", () => {
+  // 反模式 15 防御: 先剥 CSS 注释, 防止 .floating-root / .glass-l 字样出现在 /* ... */ 里误匹配
+  function stripCssComments(css: string): string {
+    return css.replace(/\/\*[\s\S]*?\*\//g, "");
+  }
+
+  function extractFloatingRootBlocks(css: string): string[] {
+    const codeOnly = stripCssComments(css);
+    // 块范围限制: 用 [^}]* 保证不跨过下一个 }
+    return [...codeOnly.matchAll(/\.floating-root[^{]*\{[^}]*\}/g)].map((m) => m[0]);
+  }
+
+  function extractGlassBlocks(css: string): string[] {
+    const codeOnly = stripCssComments(css);
+    return [...codeOnly.matchAll(/\.glass-l\d[^{]*\{[^}]*\}/g)].map((m) => m[0]);
+  }
+
+  it("floating.css 含 .floating-root 块 (静态结构存在, 反模式 15 防御)", () => {
+    const css = readFileSync("src/floating/styles/floating.css", "utf-8");
+    const blocks = extractFloatingRootBlocks(css);
+    // 必须命中 .floating-root 和 .floating-root.expanded 两个块 (剥注释后正好 2)
+    expect(blocks.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it(".floating-root 块内不含 inset 0 1px 0 highlight (剥 CSS 注释后, 反模式 15 防御)", () => {
+    const css = readFileSync("src/floating/styles/floating.css", "utf-8");
+    const blocks = extractFloatingRootBlocks(css);
+    expect(blocks.length).toBeGreaterThanOrEqual(2);
+    for (const block of blocks) {
+      expect(block).not.toMatch(/inset\s+0\s+1px\s+0/);
+    }
+  });
+
+  it(".floating-root box-shadow 仅保留 drop shadow (行为断言)", () => {
+    const css = readFileSync("src/floating/styles/floating.css", "utf-8");
+    // 行为断言: 两个 .floating-root 块的 box-shadow 必须不含 inset 关键词
+    // 修复后的 box-shadow 形态: 0 8px 32px rgba(0, 30, 80, X) (纯 drop shadow)
+    const blocks = extractFloatingRootBlocks(css);
+    for (const block of blocks) {
+      const shadowMatch = block.match(/box-shadow\s*:\s*([^;]+);/);
+      expect(shadowMatch).toBeTruthy();
+      const shadowValue = shadowMatch![1];
+      // 行为断言: 不含 inset 关键词 (任何方向/任何 blur 都不行)
+      expect(shadowValue).not.toMatch(/\binset\b/);
+      // 行为断言: 必须保留 drop shadow (rgba(0, 30, 80, X))
+      expect(shadowValue).toMatch(/rgba\(\s*0\s*,\s*30\s*,\s*80/);
+    }
+  });
+
+  it(".glass-l* 段不受影响 (Issue C 范围仅限 .floating-root, 不动 glass utility)", () => {
+    const css = readFileSync("src/floating/styles/floating.css", "utf-8");
+    // .glass-l1/l2/l3 的 inset highlight 不属于 Issue C 范围, 必须保留
+    // 行为断言: glass utility 的 box-shadow 必须仍含 inset highlight
+    const blocks = extractGlassBlocks(css);
+    expect(blocks.length).toBeGreaterThanOrEqual(3); // l1/l2/l3
+    for (const block of blocks) {
+      const shadowMatch = block.match(/box-shadow\s*:\s*([^;]+);/);
+      expect(shadowMatch).toBeTruthy();
+      expect(shadowMatch![1]).toMatch(/\binset\b/); // inset 必须保留
+    }
+  });
+});
