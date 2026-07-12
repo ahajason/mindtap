@@ -403,16 +403,17 @@ describe("V0.2.0.12 patch — Issue 2: 展开态右键不折叠 (panel pointerdo
     expect(codeOnly).toMatch(/onPointerDownCapture=\{[\s\S]*?panelRef\.current\?\.contains/);
   });
 
-  it("ExpandedPanel.tsx handleBlur 读取 dismissingRef 决定是否 cancel (取代原 if (!submittingRef.current) 直接 cancel)", () => {
+  it("ExpandedPanel.tsx handleBlur 读取 dismissingRef 决定是否 dismiss (V0.2.0.13: onDismissRef.current(), 不是直调 onCancel)", () => {
     const src = readFileSync("src/floating/components/ExpandedPanel.tsx", "utf-8");
     const codeOnly = src
       .split("\n")
       .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
       .join("\n");
-    // 行为断言: handleBlur 必须检查 dismissingRef.current 才调 onCancel
-    // 形态: if (submittingRef.current) return; if (dismissingRef.current) onCancel();
+    // 行为断言: handleBlur 必须检查 dismissingRef.current 才调 dismiss (V0.2.0.13 用 onDismissRef.current())
+    // 形态: if (submittingRef.current) return; if (dismissingRef.current) onDismissRef.current();
+    // (V0.2.0.12 直接 onCancel; V0.2.0.13 改成 onDismissRef.current 因 onDismiss 是 prop, ref 化保证稳定引用)
     expect(codeOnly).toMatch(/function handleBlur[\s\S]*?if\s*\(\s*submittingRef\.current\s*\)\s*return/);
-    expect(codeOnly).toMatch(/function handleBlur[\s\S]*?if\s*\(\s*dismissingRef\.current\s*\)\s*onCancel\s*\(\s*\)/);
+    expect(codeOnly).toMatch(/function handleBlur[\s\S]*?if\s*\(\s*dismissingRef\.current\s*\)\s*onDismissRef\.current\s*\(\s*\)/);
   });
 });
 
@@ -533,5 +534,93 @@ describe("V0.2.0.12 PATCH — ContextMenu 锁住: HTML React 组件已删, 改�
     const path2 = "src/floating/components/ContextMenu" + ".test.tsx";
     expect(existsSync(path1)).toBe(false);
     expect(existsSync(path2)).toBe(false);
+  });
+});
+
+describe("V0.2.0.13 PATCH — User L3 重测 5 deviation inline 锁住 (StatusDot / 折叠展开叠加式 / Menu 文案+双触发 / onCancel 拆 / complete 不折叠)", () => {
+  // V0.2.0.12 集成后 user 在 D:\ 端 L3 重测, 仍然发现 5 个未修 issue (A-1 / A-2 / B-2 / C-3 / C-4).
+  // V0.2.0.13 PATCH 直接 inline 修 + vitest 锁住以下 6 个点, 防回滚.
+
+  it("A-1 StatusDot.tsx className 含 self-center + align-middle (垂直对齐修复)", () => {
+    const src = readFileSync("src/floating/components/StatusDot.tsx", "utf-8");
+    const codeOnly = src
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
+      .join("\n");
+    expect(codeOnly).toMatch(/className=\{\[[\s\S]*?self-center[\s\S]*?align-middle/);
+  });
+
+  it("A-2 App.tsx 折叠/展开 改叠加式: 永远渲染 FoldedBar, expanded 时下方追加 ExpandedPanel (不互斥替换)", () => {
+    const src = readFileSync("src/floating/App.tsx", "utf-8");
+    const codeOnly = src
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
+      .join("\n");
+    // FoldedBar 必须在 ExpandedPanel 渲染之前 (同 root div 内的 sibling, 顺序保留)
+    expect(codeOnly).toMatch(/<FoldedBar\b[\s\S]*?onClick=/);
+    expect(codeOnly).toMatch(/\{expanded\s+&&\s*\([\s\S]*?<ExpandedPanel\b/);
+  });
+
+  it("B-2-1 menu.rs 用 dynamic label: floating_visible / main_visible 字段驱动 label (非静态 \"显示/隐藏\")", () => {
+    const src = readFileSync("src-tauri/src/tray/menu.rs", "utf-8");
+    const codeOnly = src
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
+      .join("\n");
+    // MenuState 必须含 floating_visible + main_visible 字段 (驱动 label)
+    expect(codeOnly).toMatch(/floating_visible\s*:\s*bool/);
+    expect(codeOnly).toMatch(/main_visible\s*:\s*bool/);
+    // label 必须根据可见性选 4 种 (显示/隐藏主窗 + 显示/隐藏任务栏), 不能合并成 "显示/隐藏 xx"
+    expect(codeOnly).toMatch(/显示任务栏/);
+    expect(codeOnly).toMatch(/隐藏任务栏/);
+    expect(codeOnly).toMatch(/显示主窗/);
+    expect(codeOnly).toMatch(/隐藏主窗/);
+  });
+
+  it("B-2-2 lib.rs on_menu_event 只注册到 floating window (双触发修复: 去掉 main)", () => {
+    const src = readFileSync("src-tauri/src/lib.rs", "utf-8");
+    const codeOnly = src
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
+      .join("\n");
+    // V0.2.0.12 错把 on_menu_event 绑到 ["main", "floating"] → MenuEvent 被派发 2 次 (主窗+浮窗都收).
+    // V0.2.0.13 改 single label loop 仅 "floating". 双重断言防回滚:
+    //  - 正向: 必须含 "for label in [\"floating\"]"
+    //  - 反向: 必须不含 "main" 在同一 for label in [...] 数组里
+    expect(codeOnly).toMatch(/for\s+label\s+in\s*\[\s*["']floating["']\s*\]/);
+    expect(codeOnly).not.toMatch(/for\s+label\s+in\s*\[[^\]]*["']main["'][^\]]*\]/);
+  });
+
+  it("C-3 ExpandedPanel.tsx 拆 onCancel → onDismiss + onClearAndDismiss (语义分离: blur vs 显式取消)", () => {
+    const src = readFileSync("src/floating/components/ExpandedPanel.tsx", "utf-8");
+    const codeOnly = src
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
+      .join("\n");
+    // 必须含 onDismiss + onClearAndDismiss prop 类型 (两个语义分离的回调)
+    expect(codeOnly).toMatch(/onDismiss:\s*\(\s*\)\s*=>\s*void/);
+    expect(codeOnly).toMatch(/onClearAndDismiss:\s*\(\s*\)\s*=>\s*void/);
+    // onDismiss 在 useEffect 内通过 stable ref 调用 (blur listener 走 ref, 防 stale closure)
+    expect(codeOnly).toMatch(/onDismissRef\s*=\s*useRef/);
+    expect(codeOnly).toMatch(/onDismissRef\.current\s*\(\s*\)/);
+    // onClearAndDismiss 直接 prop 调用 (Esc + 取消按钮是同步 event handler, ref 不必要)
+    expect(codeOnly).toMatch(/onClick=\{onClearAndDismiss\}/);
+    // V0.2.0.12 错的 onCancel 必须清空 (已无 prop 名引用)
+    expect(codeOnly).not.toMatch(/onCancel\b/);
+  });
+
+  it("C-4 App.tsx handleStart 成功路径 + act('complete') 均不含 setExpanded(false) (任务开/完保持展开)", () => {
+    const src = readFileSync("src/floating/App.tsx", "utf-8");
+    const codeOnly = src
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
+      .join("\n");
+    // 抽 handleStart 函数体 + act 函数体, 各自确认无 setExpanded(false)
+    const handleStartMatch = codeOnly.match(/async\s+function\s+handleStart\s*\(\s*\)\s*\{([\s\S]*?)\n\s{2}\}/);
+    expect(handleStartMatch).toBeTruthy();
+    expect(handleStartMatch![1]).not.toMatch(/setExpanded\s*\(\s*false\s*\)/);
+    const actMatch = codeOnly.match(/async\s+function\s+act\s*\(\s*action[\s\S]*?\)\s*\{([\s\S]*?)\n\s{2}\}/);
+    expect(actMatch).toBeTruthy();
+    expect(actMatch![1]).not.toMatch(/setExpanded\s*\(\s*false\s*\)/);
   });
 });

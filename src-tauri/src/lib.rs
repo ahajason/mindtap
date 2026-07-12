@@ -97,11 +97,14 @@ pub fn run() {
                 });
             }
 
-            // V0.2.0.12 PATCH 对象 B:两窗口绑定 on_menu_event — 浮窗右键菜单弹出后
-            // 用户选菜单项 → window 派发 MenuEvent → 这里统一走 tray::menu::handle_action
-            // 分发到 4 项具体动作(floating_toggle / main_toggle / autostart_toggle / quit)。
-            // 对照 V1.0 archive `.archive/src-tauri/src/lib.rs` 第 47-55 行。
-            for label in ["main", "floating"] {
+            // V0.2.0.13 PATCH B-2-2: 只在 floating 窗口上挂 on_menu_event。
+            // V0.2.0.12 在 ["main", "floating"] 两个窗口都挂 listener 是 bug: Tauri 2
+            // popup_menu 在 floating 弹出后, MenuEvent 会被 app-level 派发到所有 registered
+            // listener, 结果 handle_action 走 2 遍 (用户实测 "显示主窗" 隐藏后又显示,
+            // "退出 Mindtap" 出 2 个确认框 — 走 2 遍 toggle / 出 2 次 confirm 弹窗)。
+            // 修法: 只在 floating 挂 (main 窗口不走 popup_menu 路径, 它的右键不在 scope)。
+            // 对照 V1.0 archive `.archive/src-tauri/src/lib.rs` 第 47-55 行也是单 floating 挂。
+            for label in ["floating"] {
                 if let Some(w) = app.get_webview_window(label) {
                     let app_handle = app.handle().clone();
                     w.on_menu_event(move |_window, event| {

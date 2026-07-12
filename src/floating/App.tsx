@@ -213,14 +213,27 @@ export function FloatingApp() {
     };
   }, []);
 
+  // V0.2.0.13 PATCH C-3: 拆 onCancel → 两个语义不同的 callback:
+  // - handleDismiss: 只折叠 (panel 外 click blur 用), 保留 taskTitle state 让用户切回不丢输入
+  // - handleClearAndDismiss: 清 taskTitle + 折叠 (用户显式 "取消" button + Esc 用)
+  function handleDismiss() {
+    setExpanded(false);
+  }
+  function handleClearAndDismiss() {
+    setTaskTitle("");
+    setExpanded(false);
+  }
+
   async function handleStart() {
     const title = taskTitle.trim();
     if (!title || submitting) return;
     setSubmitting(true);
     try {
       await api.timerSession.create(title);
+      // V0.2.0.13 PATCH C-4: 任务开启后保持展开, 不再 setExpanded(false)。
+      // spec §3.2 展开态语义是 "开新任务", 完成后自然变成 activeSession=新 session,
+      // 继续展开让用户可继续开下一个 task 或切回折叠态。V0.2.0.12 加 setExpanded(false) 错。
       setTaskTitle("");
-      setExpanded(false);
       await refresh();
     } catch (err) {
       console.error("[start] failed", err);
@@ -229,30 +242,15 @@ export function FloatingApp() {
     }
   }
 
-  if (!expanded) {
-    return (
-      <div
-        data-testid="floating-root-folded"
-        className="floating-root folded flex items-center gap-2 px-2 py-1"
-        onMouseDown={handleMouseDown}
-      >
-        <FoldedBar
-          taskTitle={session?.task_title ?? ""}
-          focusMs={liveFocusMs}
-          status={session ? session.status : "empty"}
-          onClick={() => setExpanded(true)}
-        />
-      </div>
-    );
-  }
-
   async function act(action: "pause" | "resume" | "complete") {
     if (!session) return;
     try {
       const updated = await api.timerSession[action](session.id);
       setSession(updated);
       if (action === "complete") {
-        setExpanded(false);
+        // V0.2.0.13 PATCH C-4: 完成 active task 后保持 expanded, 让用户无缝开下一个 task。
+        // V0.2.0.12 在 complete 后 setExpanded(false) 违反 spec §3.2 展开态连续性,
+        // user 实测 "点完成应该不折叠" 修复此项。
         void refresh();
       }
     } catch (err) {
@@ -262,21 +260,49 @@ export function FloatingApp() {
     }
   }
 
+  // V0.2.0.13 PATCH A-2: 折叠/展开改叠加式 — 根 div 永远渲染 FoldedBar (圆点+标题+时间),
+  // expanded=true 时在 FoldedBar 下方追加 ExpandedPanel 子层, 不互斥替换。
+  // V0.2.0.12 是 if/else 互斥: 折叠态只 FoldedBar, 展开态只 ExpandedPanel, 圆点+标题+时间丢。
+  const rootClass = expanded
+    ? "floating-root expanded flex h-full w-full flex-col"
+    : "floating-root folded flex h-full w-full items-center gap-2 px-2 py-1";
+
   return (
-    <ExpandedPanel
-      taskTitle={taskTitle}
-      onTaskTitleChange={setTaskTitle}
-      onStart={handleStart}
-      onCancel={() => {
-        setTaskTitle("");
-        setExpanded(false);
-      }}
-      maxLength={TASK_TITLE_MAX}
-      submitting={submitting}
-      activeSession={session}
-      onPause={() => act("pause")}
-      onResume={() => act("resume")}
-      onComplete={() => act("complete")}
-    />
+    <div
+      data-testid={expanded ? "floating-root-expanded" : "floating-root-folded"}
+      className={rootClass}
+      onMouseDown={handleMouseDown}
+    >
+      {/* FoldedBar 永远渲染 (圆点 + 标题 + 时间), 折叠态作为完整内容,
+          展开态作为顶部状态行, 让用户随时看到当前任务进度。 */}
+      <FoldedBar
+        taskTitle={session?.task_title ?? ""}
+        focusMs={liveFocusMs}
+        status={session ? session.status : "empty"}
+        onClick={() => {
+          // 仅折叠态 click 触发展开; 展开态 FoldedBar click 不再 toggle 折叠, 避免误收起。
+          if (!expanded) setExpanded(true);
+        }}
+      />
+      {expanded && (
+        // 展开态追加子层: 不替换 FoldedBar, 而是在其下方嵌面板。
+        // 子 div flex-1 占满折叠态 36px 之外的 244px (总高 280px)。
+        <div className="flex-1 overflow-hidden">
+          <ExpandedPanel
+            taskTitle={taskTitle}
+            onTaskTitleChange={setTaskTitle}
+            onStart={handleStart}
+            onDismiss={handleDismiss}
+            onClearAndDismiss={handleClearAndDismiss}
+            maxLength={TASK_TITLE_MAX}
+            submitting={submitting}
+            activeSession={session}
+            onPause={() => act("pause")}
+            onResume={() => act("resume")}
+            onComplete={() => act("complete")}
+          />
+        </div>
+      )}
+    </div>
   );
 }
