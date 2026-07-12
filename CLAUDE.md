@@ -4,20 +4,6 @@
 
 > **当前活跃版本** = 看 `docs/tasks/` 列表中在跑 task,和 `docs/reports/` 历史交付(V0.2.0.x PATCH 是浮窗回归阶段)。硬规范入口在 `docs/governance/` + `docs/tech/` + `.claude/rules/`(后两者每次 session 加载);本文件是入口上下文**不会被发版带过期**。
 
-## 文档分层速查表
-
-**任何新文档创建前必读** `docs/governance/doc-layers.md`。
-
-| 层 | 文件夹 | 职责 | 严禁出现 |
-|---|---|---|---|
-| L0 PRD | `docs/prd/` | 纯业务(用户故事/场景/规则/验收) | 技术名词/API/文件路径 |
-| L1 Domain | `docs/domain/` | 业务实体/状态/规则/ADR | 表名/字段/IPC 命令 |
-| L2 Tech | `docs/tech/` | 技术方案 + 接口 + 数据 + **bug 归属边界** | 用户故事/视觉稿 |
-| L3 Design | `docs/design/` | UI/UX(视觉/交互/组件契约/a11y) | 表/IPC/模块路径 |
-| L4 Plan | `docs/plans/` | 实施步骤 + commit 计划 + DoD 勾选 | 业务规则/产品愿景 |
-| L5 Reports | `docs/reports/` | 验收 + retro + release notes | 设计意图(已归档) |
-| **治理** | `docs/governance/` | 跨版本规则(doc-layers / versioning-rule / l3-gating) | 项目细节 |
-
 ## Quick Start
 
 | 动作 | 命令 |
@@ -64,40 +50,14 @@
 
 ```
 mindtap/
-├── src/                # 主窗口（当前为 StyleGuide 路由）
-│   ├── lib/tauri-bridge.ts    # Rust ↔ JS 唯一 seam
-│   ├── floating/        # ⭐ 真正产品：浮窗（V0.2.6 收口）
-│   └── components/ routes/ hooks/
-├── src-tauri/src/      # ⭐ Rust 后端
-│   ├── lib.rs           # run() + 全局快捷键 + invoke_handler 注册
-│   ├── commands/        # timer_session + app 两组 command
-│   └── db/              # rusqlite + DbState(Mutex<Connection>)
-├── docs/                # design / specs / plans / reports / tasks
-├── scripts/             # Windows 侧 Tauri dev 启动器
-└── .claude/rules/       # 强制规则（每次 session 加载）
+├── src/          # React 前端(主窗口 + floating 浮窗)
+├── src-tauri/    # Rust 后端
+├── docs/         # 治理 + L0-L5 分层文档(子目录加载 docs/CLAUDE.md)
+├── scripts/      # Windows 侧 Tauri dev 启动器
+└── .claude/rules/  # 自动加载规则
 ```
 
 入口:`index.html` → `src/main.tsx`,`floating.html` → `src/floating/main.tsx`,对应 `tauri.conf.json` 的两个窗口。
-
-## 设计语言
-
-所有 UI 改动必须参考 glassic-ui-spec.md（项目自有 Liquid Glass 视觉 spec）。
-
-**当前路径**: `.archive/docs/design/glassic-ui-spec.md`（v0.1.0 起步阶段尚未恢复到 active `docs/design/`）——接入 UI 前先 `cp` 到 `docs/design/`。
-
-**组件落地策略**: shadcn 源码拷 + Tailwind token + Radix primitive。
-
-**未 cp spec 之前不要起 `tauri dev` 跑 UI**——没有 Tailwind token 会编译报错. **不要**自创颜色 / 阴影 / 模糊 token——查 spec 拿现有值.
-
-## 文件归位
-
-| 内容类型 | 去处 |
-|---|---|
-| 新功能「做什么」 | `docs/specs/YYYY-MM-DD-<topic>-design.md` |
-| 新功能「怎么做」 | `docs/plans/YYYY-MM-DD-<topic>.md` |
-| 阶段交付报告 | `docs/reports/` |
-| 已交付版本的完整沙盒 | `docs/archive/v<version>/` |
-| 任务正式档 | `docs/tasks/<version>-<type>-<short-desc>/task.md` |
 
 ## 规则文件
 

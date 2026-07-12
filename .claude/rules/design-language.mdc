@@ -1,0 +1,36 @@
+---
+description: mindtap UI 改动的硬约束(glassic-ui-spec 是视觉 spec / 组件落地策略 shadcn+Tailwind+Radix / 不要自创 token)— src/ 下所有 UI 文件触发
+globs: ["src/**/*.{ts,tsx,css}"]
+---
+
+# mindtap 设计语言
+
+> 适用: 任何 src/ 下 UI 文件改动前必读。
+
+## 视觉 spec
+
+所有 UI 改动必须参考 `glassic-ui-spec.md`(项目自有 Liquid Glass 视觉 spec)。
+
+**当前路径**: `.archive/docs/design/glassic-ui-spec.md`(v0.1.0 起步阶段尚未恢复到 active `docs/design/`)——接入 UI 前先 `cp` 到 `docs/design/`。
+
+## 组件落地策略
+
+shadcn 源码拷 + Tailwind token + Radix primitive。
+
+## 反模式
+
+- ❌ **未 cp spec 之前起 `tauri dev` 跑 UI** — 没有 Tailwind token,编译报错
+- ❌ **自创颜色 / 阴影 / 模糊 token** — 查 spec 拿现有值,缺值先扩 spec,不要代码里写 magic number
+- ❌ **直接改 shadcn 默认样式绕过 token** — 走 token 层,不走 inline 覆盖
+
+## self-apply
+
+| # | 检验项 | 本规则 |
+|---|---|---|
+| 1 | 关键路径列全 | `.archive/docs/design/glassic-ui-spec.md` + `docs/design/`(cp 后) + `src/**/*.{ts,tsx,css}` |
+| 2 | 给具体步骤 | 接入 UI 前 cp → 用 token → 不要自创 |
+| 3 | 触发条件 | `globs: src/**/*.{ts,tsx,css}` |
+| 4 | 反模式例子 | "未 cp spec 之前跑 dev" + "自创 token" + "inline 覆盖 shadcn" |
+| 5 | 交叉引用 | 不引(只描述视觉与 token 约束) |
+| 6 | 验证机制 | `cargo tauri dev` 启动后控制台 + 视觉对照 spec |
+| 7 | 当下能说"下次 X,自动 Y" | "下次改 UI 自动 cp spec + 走 token + 不自创" |

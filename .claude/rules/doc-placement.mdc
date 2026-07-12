@@ -1,0 +1,57 @@
+---
+description: 新功能 / 新 bug / 任何 docs/ 内文档归位 — 写 docs/ 任何文件前必查(权威细则见 docs/governance/doc-layers.md)
+alwaysApply: true
+---
+
+# 文档归位
+
+> 强制: 写任何 `docs/**` 下文件(包括 task / report / retro / spec)前先确认归位。
+
+## L0-L5 归位
+
+| 内容类型 | 去处 | 关键约束 |
+|---|---|---|
+| 用户故事 / 业务规则 / 验收 | `docs/prd/<version>-<feature>-prd.md` | 纯业务,无技术名词 |
+| 业务实体 / 状态 / 业务 ADR | `docs/domain/<version>-domain-model.md` | 无表名 / 字段 / IPC 命令 |
+| 技术方案 / IPC / 数据 / bug 边界 | `docs/tech/<version>-<feature>-tech.md` | 必须含 §1 范围边界 + §6 bug 归属 |
+| 视觉 / 交互 / 组件契约 / a11y | `docs/design/<version>-<feature>-design.md` | 无表 / IPC / 模块路径 |
+| 实施步骤 / commit 计划 / DoD 勾选 | `docs/plans/YYYY-MM-DD-<version>-<feature>.md` | 不写业务规则 |
+| 阶段交付报告 / retro / release notes | `docs/reports/` | 含 L1/L2/L3 证据 |
+| 已交付版本的完整沙盒 | `docs/archive/v<version>/` | 源码 + 文档,自包含 |
+| 进行中 task | `docs/tasks/<version>-<type>-<short-desc>/task.md` | 入口固定 task.md |
+| 跨版本规则(doc-layers / versioning / l3-gating) | `docs/governance/` | 治理横向贯穿 |
+
+## 已弃用旧路径(内容已迁到对应 L 层,见 doc-layers.md §六)
+
+- ❌ `docs/specs/` → design/ + tech/
+- ❌ `docs/architecture/` → tech/ §DoD + governance/l3-gating.md
+- ❌ `docs/projects/<v>/CONTEXT.md` → domain/<v>-domain-model.md
+- ❌ `docs/projects/<v>/README.md` → prd/ + domain/ + tech/
+
+## 严禁出现(每层)
+
+写完后 grep 自查,命中必须改:
+
+```bash
+# L0 PRD
+grep -iE "INTEGER|TEXT|partial unique|invoke|Mutex|src-tauri|tauri-bridge|Rust|React|Tauri|文件路径" docs/prd/<file>.md
+
+# L1 Domain
+grep -iE "INTEGER|TEXT|partial unique|invoke|Mutex|src-tauri|tauri-bridge|SQL " docs/domain/<file>.md
+
+# L2 Tech
+grep -E "用户故事|产品愿景|视觉稿|字体" docs/tech/<file>.md
+
+# L3 Design
+grep -iE "INTEGER|TEXT|partial unique|invoke|SQL |src-tauri/" docs/design/<file>.md
+```
+
+## 触发场景
+
+| 动作 | 应用 |
+|---|---|
+| 新建 `docs/prd/ domain/ tech/ design/ plans/ reports/ tasks/` 下任何文件 | ✅ |
+| 写 release notes / retro / bug 列表 | ✅(L5 reports/) |
+| 写跨版本规则 | ✅(governance/) |
+| 写 task 正式档 | ✅(tasks/<v>-<type>-<topic>/task.md) |
+| 改 docs/governance/ | ✅(本表自身 + doc-layers.md) |
