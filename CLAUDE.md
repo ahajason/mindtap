@@ -2,7 +2,22 @@
 
 轻念 · Mindtap — 极简记录桌面应用。Tauri 2 (Rust) + React 19 + TypeScript + Vite 7。本地 SQLite，无云同步。
 
-> **当前交付**: V0.2.6 浮窗(floating window)收口(WebView2 透明 / native context menu / Overlay titleBar 已 iterate);下一阶段看 `docs/projects/v0.2/` 的任务档。
+> **当前交付**: V0.2.6 浮窗(floating window)收口(WebView2 透明 / native context menu / Overlay titleBar 已 iterate);下一阶段看 `docs/governance/` + `docs/tech/v0.2.0-floating-window-tech.md`(V0.2.7/2.8 4 issue 待重命名 V0.2.0.x PATCH)。
+
+## 文档分层速查表
+
+**任何新文档创建前必读** `docs/governance/doc-layers.md`。
+
+| 层 | 文件夹 | 职责 | 严禁出现 |
+|---|---|---|---|
+| L0 PRD | `docs/prd/` | 纯业务(用户故事/场景/规则/验收) | 技术名词/API/文件路径 |
+| L1 Domain | `docs/domain/` | 业务实体/状态/规则/ADR | 表名/字段/IPC 命令 |
+| L2 Tech | `docs/tech/` | 技术方案 + 接口 + 数据 + **bug 归属边界** | 用户故事/视觉稿 |
+| L3 Design | `docs/design/` | UI/UX(视觉/交互/组件契约/a11y) | 表/IPC/模块路径 |
+| L4 Plan | `docs/plans/` | 实施步骤 + commit 计划 + DoD 勾选 | 业务规则/产品愿景 |
+| L5 Reports | `docs/reports/` | 验收 + retro + release notes | 设计意图(已归档) |
+| **治理** | `docs/governance/` | 跨版本规则(doc-layers / versioning-rule / l3-gating) | 项目细节 |
+| **入口** | `.claude/rules/doc-layer-discipline.mdc` | agent 强制流程入口 | — |
 
 ## Quick Start
 

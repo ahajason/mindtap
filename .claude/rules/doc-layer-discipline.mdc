@@ -1,0 +1,88 @@
+---
+description: 文档分层纪律 — 新功能/新 bug 必须先按 6 层文档结构走完才能开 task,缺一层不开
+globs: ["docs/**/*.md"]
+---
+
+# 文档分层纪律(Doc Layer Discipline)
+
+> 强制执行入口:任何新功能、新 bug、新 doc 都必须先读 `docs/governance/doc-layers.md`,按 6 层结构走。
+
+## 触发条件
+
+以下任一动作前**必读**本规则:
+
+1. 创建 `docs/prd/ domain/ tech/ design/ plans/ reports/ tasks/` 下任何新文件
+2. 接到"做新 feature"任务
+3. 接到"修 bug"任务
+4. 发版前(`chore(release):` commit 前)
+5. 评审 PRD/Tech/Design/Plan 文档
+
+## 强制流程
+
+### 新功能(走全 6 步)
+
+```
+1. docs/prd/<version>-<feature>-prd.md       (L0,纯业务,无技术名词)
+2. docs/domain/<version>-domain-model.md      (L1,业务实体/状态)
+3. docs/tech/<version>-<feature>-tech.md      (L2,含 §1 范围边界 + §6 bug 边界)
+4. docs/design/<version>-<feature>-design.md  (L3,如有 UI)
+5. docs/plans/YYYY-MM-DD-<version>-<feature>.md (L4,步骤)
+6. docs/tasks/<version>-<type>-<topic>/task.md  (执行单元)
+```
+
+**6 步缺一不开 task**。
+
+### 新 bug(走 bug 归属判断)
+
+```
+1. 读 docs/tech/<v.minor>.*-tech.md §1 范围边界
+2. 在范围内 → 开 docs/tasks/<v.minor>.<N+1>-fix-<topic>/task.md
+3. 不在范围内 → 不归本版本,另开 version 的 PRD/Tech + task
+```
+
+## 关键词自检(写到文档后必跑)
+
+每写完一个文档,grep 检查是否违反了 doc-layers.md §三 "严禁出现" 列:
+
+```bash
+# L0 PRD 检查
+grep -iE "INTEGER|TEXT|partial unique|invoke|Mutex|src-tauri|tauri-bridge|Rust|React|Tauri" docs/prd/<file>.md
+# 命中即违规
+
+# L1 Domain 检查
+grep -iE "INTEGER|TEXT|partial unique|invoke|Mutex|src-tauri|tauri-bridge|SQL " docs/domain/<file>.md
+# 命中即违规
+
+# L2 Tech 检查
+grep -E "用户故事|产品愿景|视觉稿|字体" docs/tech/<file>.md
+# 命中即违规
+
+# L3 Design 检查
+grep -iE "INTEGER|TEXT|partial unique|invoke|SQL |src-tauri/" docs/design/<file>.md
+# 命中即违规
+```
+
+任一命中 → 必须改完才能 commit。
+
+## 违规处理
+
+| 违规等级 | 处理 |
+|---|---|
+| **L0 出现技术名词** | 必须删除技术段落,只留业务内容 |
+| **L2 出现用户故事** | 必须移到 PRD,Tech 只留接口/数据/DoD |
+| **L3 出现 IPC 命令** | 必须移到 Tech,Design 只留视觉/交互 |
+| **新 feature 缺文档** | 不开 task,先补齐 5 层文档 |
+| **新 bug 没走归属判断** | 必须先读 tech §1,不能直接开 task |
+
+## 关联
+
+- `docs/governance/doc-layers.md` — 总规则
+- `docs/governance/versioning-rule.md` — bug 归属 + PATCH 命名
+- `docs/governance/l3-gating.md` — L3 实测硬约束
+- `.claude/rules/task-directory.mdc` — task slug 命名
+- `.claude/rules/dev-verify-before-commit.mdc` — 系统 API 改动 L3 强制
+
+## 历史
+
+- 创建: 2026-07-13
+- 触发: V0.2.7 retro §3 反模式 14/15/16 + 用户对文档职责不清的反馈
