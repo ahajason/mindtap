@@ -294,3 +294,53 @@ describe("V0.2.8 patch — Bug 5 cosmetic: 折叠展开 width/height/border-radi
     expect(css).toMatch(/@media\s*\(\s*prefers-reduced-motion\s*:\s*reduce\s*\)/);
   });
 });
+
+describe("V0.2.8.1 follow-up: Issue C 真根因修复 — FoldedBar inline style box-shadow 防御", () => {
+  // V0.2.8 Issue C 反复修 .floating-root 的 CSS box-shadow 没生效,真根因是
+  // FoldedBar.tsx:31 有 inline style `style={{ boxShadow: "inset 0 1px 0 ..." }}`,
+  // inline style 优先级最高覆盖 CSS。V0.2.8.1 把 inline style boxShadow 删了,
+  // 改用 className "folded-bar-inner" 引用 floating.css 新 block。
+  // 本 describe 锁住: FoldedBar.tsx 不再有 inline style boxShadow,
+  // 且 floating.css 的 .folded-bar-inner 块不含 inset。
+
+  it("FoldedBar.tsx 不含 inline style boxShadow (反模式 14/15 防御: 防 inline style 再次覆盖 CSS)", () => {
+    const src = readFileSync("src/floating/components/FoldedBar.tsx", "utf-8");
+    // 反模式 15 防御: 排除注释行, 防 /* ... boxShadow ... */ 注释谎报
+    const lines = src.split("\n");
+    const codeLines = lines.filter((line) => {
+      const trimmed = line.trim();
+      if (trimmed.startsWith("//")) return false;
+      if (trimmed.startsWith("*")) return false;
+      return true;
+    });
+    const codeOnly = codeLines.join("\n");
+    // 排除注释后, FoldedBar.tsx 不能含 inline style boxShadow 字段
+    expect(codeOnly).not.toMatch(/boxShadow\s*:/);
+  });
+
+  it("FoldedBar.tsx 含 folded-bar-inner className (V0.2.8.1 修复形态锁定)", () => {
+    const src = readFileSync("src/floating/components/FoldedBar.tsx", "utf-8");
+    expect(src).toMatch(/folded-bar-inner/);
+  });
+
+  it("floating.css 含 .folded-bar-inner 块 (box-shadow 移到 CSS, 不再用 inline style)", () => {
+    const css = readFileSync("src/floating/styles/floating.css", "utf-8");
+    expect(css).toMatch(/\.folded-bar-inner\s*\{/);
+  });
+
+  it(".folded-bar-inner 块 box-shadow 不含 inset (跟 .floating-root 同思路: WebView2 transparent 边缘 + inset 在某些 DPI 合成出灰色描边)", () => {
+    const css = readFileSync("src/floating/styles/floating.css", "utf-8");
+    // 剥 CSS 注释 + @media 嵌套, 反模式 16 防御
+    const noComments = css.replace(/\/\*[\s\S]*?\*\//g, "");
+    const noMedia = noComments.replace(/@media[^{]+\{[\s\S]*?\}\s*\}/g, "");
+    const blocks = [...noMedia.matchAll(/\.folded-bar-inner[^{]*\{[^}]*\}/g)].map((m) => m[0]);
+    expect(blocks.length).toBeGreaterThanOrEqual(1);
+    for (const block of blocks) {
+      const shadowMatch = block.match(/box-shadow\s*:\s*([^;]+);/);
+      expect(shadowMatch).toBeTruthy();
+      expect(shadowMatch![1]).not.toMatch(/\binset\b/);
+      // 行为断言: 必须保留 drop shadow
+      expect(shadowMatch![1]).toMatch(/rgba\(\s*0\s*,\s*30\s*,\s*80/);
+    }
+  });
+});

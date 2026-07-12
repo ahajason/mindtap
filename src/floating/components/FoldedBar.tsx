@@ -25,10 +25,9 @@ export function FoldedBar({ taskTitle, focusMs, status, onClick }: FoldedBarProp
       onClick={onClick}
     >
       <div
-        className="flex h-9 w-full cursor-pointer items-center gap-2 rounded-full px-3 py-1.5 text-text-1 backdrop-blur-md transition-colors hover:bg-white/30"
+        className="folded-bar-inner flex h-9 w-full cursor-pointer items-center gap-2 rounded-full px-3 py-1.5 text-text-1 backdrop-blur-md transition-colors hover:bg-white/30"
         style={{
           background: "rgba(255, 255, 255, 0.45)",
-          boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 4px 16px rgba(0, 30, 80, 0.06)",
         }}
         role="status"
         aria-label={

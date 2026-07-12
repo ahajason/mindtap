@@ -118,3 +118,12 @@ body {
   user-select: none;
   -webkit-user-select: none;
 }
+
+/* V0.2.8.1 Issue C fix: FoldedBar 内层 div (任务名+计时器行) 的 box-shadow
+   从 inline style 挪到 CSS。inline style 优先级最高会覆盖 .floating-root 的 box-shadow,
+   V0.2.8 反复改 .floating-root 没修对就是这个原因。
+   这里只保留 drop shadow, 去掉 inset 0 1px 0 highlight — 跟 .floating-root 同思路:
+   WebView2 transparent 边缘 + 半透明 rgba + inset 在某些 DPI 上合成出灰色描边。*/
+.folded-bar-inner {
+  box-shadow: 0 4px 16px rgba(0, 30, 80, 0.06);
+}
