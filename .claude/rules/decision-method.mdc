@@ -25,12 +25,12 @@ alwaysApply: true
 2. **调用 `/retro`** — 走 4 段模板(决策/未识别/暴露/沉淀)
 3. **可推广教训 → memory** — 不是"这次具体反思",是"未来类似场景怎么防"
 
-## 关键文件
+## 关联
 
-- 完整方法论: `~/.claude/projects/.../memory/three-layer-decision-method.md`
-- 4 层机制分层: `~/.claude/projects/.../memory/mechanism-layering.md`
-- 复盘 skill: `/retro`(调出 4 段模板)
-- 根因穷尽: `exhaust-layers-before-fix.md`(memory)
+- 复盘 skill: `/retro`(调出 4 段模板:决策 / 未识别 / 暴露 / 沉淀)
+- 根因穷尽原则: 改前穷举 root cause 一次修完,见反模式 14(在 `memory/mindtap-floating-anti-patterns.md`)
+- `first-step-research.mdc` — L1 原始权威的具体调研流程
+- `archive-reference-only.mdc` — L2 引用 `.archive/` 时的事实性验证
 
 ## 反模式
 
