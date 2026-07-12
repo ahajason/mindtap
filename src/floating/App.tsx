@@ -193,6 +193,8 @@ export function FloatingApp() {
       dragRef.current = null;
     };
     const onContextMenuCapture = (e: MouseEvent) => {
+      // V0.2.0.11 Issue A fix: 右键 button=2 才弹 ContextMenu; e.button 守卫防止左/中键意外触发
+      if (e.button !== 2) return;
       e.preventDefault();
       e.stopPropagation();
       setContextMenu({ x: e.clientX, y: e.clientY });
@@ -232,22 +234,24 @@ export function FloatingApp() {
 
   if (!expanded) {
     return (
-      <div
-        data-testid="floating-root-folded"
-        className="floating-root folded flex items-center gap-2 px-2 py-1"
-        onMouseDown={handleMouseDown}
-      >
-        <StatusDot
-          status={session?.status ?? "empty"}
-          size="sm"
-          position="absolute"
-        />
-        <FoldedBar
-          taskTitle={session?.task_title ?? ""}
-          focusMs={liveFocusMs}
-          status={session ? session.status : "empty"}
-          onClick={() => setExpanded(true)}
-        />
+      <>
+        <div
+          data-testid="floating-root-folded"
+          className="floating-root folded flex items-center gap-2 px-2 py-1"
+          onMouseDown={handleMouseDown}
+        >
+          <StatusDot
+            status={session?.status ?? "empty"}
+            size="sm"
+            position="absolute"
+          />
+          <FoldedBar
+            taskTitle={session?.task_title ?? ""}
+            focusMs={liveFocusMs}
+            status={session ? session.status : "empty"}
+            onClick={() => setExpanded(true)}
+          />
+        </div>
         {contextMenu && (
           <ContextMenu
             x={contextMenu.x}
@@ -255,7 +259,7 @@ export function FloatingApp() {
             onClose={() => setContextMenu(null)}
           />
         )}
-      </div>
+      </>
     );
   }
 
@@ -276,20 +280,29 @@ export function FloatingApp() {
   }
 
   return (
-    <ExpandedPanel
-      taskTitle={taskTitle}
-      onTaskTitleChange={setTaskTitle}
-      onStart={handleStart}
-      onCancel={() => {
-        setTaskTitle("");
-        setExpanded(false);
-      }}
-      maxLength={TASK_TITLE_MAX}
-      submitting={submitting}
-      activeSession={session}
-      onPause={() => act("pause")}
-      onResume={() => act("resume")}
-      onComplete={() => act("complete")}
-    />
+    <>
+      <ExpandedPanel
+        taskTitle={taskTitle}
+        onTaskTitleChange={setTaskTitle}
+        onStart={handleStart}
+        onCancel={() => {
+          setTaskTitle("");
+          setExpanded(false);
+        }}
+        maxLength={TASK_TITLE_MAX}
+        submitting={submitting}
+        activeSession={session}
+        onPause={() => act("pause")}
+        onResume={() => act("resume")}
+        onComplete={() => act("complete")}
+      />
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
+    </>
   );
 }

@@ -155,7 +155,8 @@ describe("V0.2.8 patch — Issue A: 右键不被折叠态根 div 抢占 (P0-9 �
     render(<FloatingApp />);
     await screen.findByTestId("floating-root-folded");
     // 派发原生 contextmenu 事件 (document 级 capture phase listener 应当接到)
-    fireEvent.contextMenu(document, { clientX: 50, clientY: 60 });
+    // V0.2.0.11 A fix: 必须传 button: 2, e.button !== 2 守卫过滤左/中键
+    fireEvent.contextMenu(document, { button: 2, clientX: 50, clientY: 60 });
     // 行为断言: ContextMenu 组件被渲染 (role=menu + aria-label)
     await waitFor(() => {
       expect(screen.getByRole("menu", { name: "浮窗右键菜单" })).toBeTruthy();
@@ -246,52 +247,133 @@ describe("V0.2.8 Issue C: 浮窗无 inset highlight 边框 (P1 回归)", () => {
   });
 });
 
-describe("V0.2.8 patch — Bug 5 cosmetic: 折叠展开 width/height/border-radius 有平滑过渡 (无瞬变)", () => {
-  // 解析 .floating-root 块 (不含 .floating-root.expanded), 校验 transition 子串
-  function getFloatingRootBlock(css: string): string | null {
-    // 匹配 .floating-root { ... } 顶层块, 排除 .floating-root.expanded
-    const match = css.match(/\.floating-root\s*\{([\s\S]*?)\}/);
-    return match ? match[0] : null;
+describe("V0.2.0.11 patch — Issue D 移除: 折叠展开 transition 不在 V0.2.0 PRD §3.2 范围", () => {
+  // V0.2.0.9 Bug 5 cosmetic 加了 transition + @media prefers-reduced-motion 兜底,
+  // 但 user 实测从未看到 200ms 过渡。根因可能是 @media 兜底在 Tauri WebView2 transparent
+  // 模式被错误匹配 (Win11/高 DPI/远程桌面常把 prefers-reduced-motion 传成 reduce),
+  // 即使 user 没设系统偏好, transition 仍被 transition: none 覆盖。
+  // V0.2.0.11 治理: PRD §3.2 只提物理尺寸 360×280 无 transition 要求, 整体移除。
+  // (V0.2.0.9 4 个 describe "V0.2.8 patch — Bug 5 cosmetic" 已删除)
+
+  it("floating.css .floating-root 块内不含 transition 属性 (V0.2.0.11 D 移除)", () => {
+    const css = readFileSync("src/floating/styles/floating.css", "utf-8");
+    // 剥 CSS 注释 + 剥 @media/@supports/@keyframes 嵌套 (反模式 18 防御)
+    const noComments = css.replace(/\/\*[\s\S]*?\*\//g, "");
+    const noMedia = noComments.replace(/@media[^{]+\{[\s\S]*?\}\s*\}/g, "");
+    const block = noMedia.match(/\.floating-root\s*\{[^}]*\}/);
+    expect(block).toBeTruthy();
+    expect(block![0]).not.toMatch(/\btransition\s*:/);
+  });
+
+  it("floating.css 不含 @media prefers-reduced-motion 兜底块 (V0.2.0.11 D 移除)", () => {
+    const css = readFileSync("src/floating/styles/floating.css", "utf-8");
+    expect(css).not.toMatch(/@media\s*\(\s*prefers-reduced-motion\s*:\s*reduce\s*\)/);
+  });
+
+  it("floating.css .floating-root 块仍保留 width 320px / height 36px / border-radius 14px (数值层未破)", () => {
+    const css = readFileSync("src/floating/styles/floating.css", "utf-8");
+    const block = css.match(/\.floating-root\s*\{([\s\S]*?)\}/);
+    expect(block).toBeTruthy();
+    expect(block![0]).toMatch(/\bwidth\s*:\s*320px\b/);
+    expect(block![0]).toMatch(/\bheight\s*:\s*36px\b/);
+    expect(block![0]).toMatch(/\bborder-radius\s*:\s*14px\b/);
+  });
+});
+
+describe("V0.2.0.11 patch — Issue B fix: .floating-root 加 position: relative 让 StatusDot absolute 找根 div", () => {
+  // V0.2.0.7 反复改 StatusDot 类名 / top-right 值 (top-0.5 right-0.5 → top-1 right-1),
+  // user 仍报"呼吸灯在 .floating-root folded 第一个子节点但不在 .folded-bar-inner 内"。
+  // 真根因: .floating-root 没有 position: relative, StatusDot absolute 穿透到 body
+  // 作为祖先, 在 viewport 角落错位。修法: .floating-root 加 position: relative。
+
+  it("floating.css .floating-root 块内含 position: relative (V0.2.0.11 B fix)", () => {
+    const css = readFileSync("src/floating/styles/floating.css", "utf-8");
+    const block = css.match(/\.floating-root\s*\{([\s\S]*?)\}/);
+    expect(block).toBeTruthy();
+    expect(block![0]).toMatch(/\bposition\s*:\s*relative\b/);
+  });
+
+  it("floating.css .floating-root.expanded 不受 B fix 影响 (展开态走 ExpandedPanel 自带 relative, 不依赖根 div)", () => {
+    const css = readFileSync("src/floating/styles/floating.css", "utf-8");
+    const block = css.match(/\.floating-root\.expanded\s*\{([\s\S]*?)\}/);
+    expect(block).toBeTruthy();
+    // .floating-root.expanded 块本身不需要 position: relative (继承自 .floating-root 顶层规则),
+    // 但绝不能误删 width/height/border-radius 数值层
+    expect(block![0]).toMatch(/\bwidth\s*:\s*360px\b/);
+    expect(block![0]).toMatch(/\bheight\s*:\s*280px\b/);
+  });
+});
+
+describe("V0.2.0.11 patch — Issue C fix: tauri.conf.json floating 段 transparent + backgroundColor", () => {
+  // V0.2.0.6 / V0.2.0.8 反复改 .floating-root CSS / FoldedBar inline style 想消除黑边,
+  // user 实测仍有黑边且点击聚焦后更明显。真根因在 tauri.conf.json: floating 段
+  // transparent:false + 无 backgroundColor 字段, WebView2 用了非透明的默认底色 (白色),
+  // 在 transparent 边缘 + 半透明 rgba 合成时仍出灰色描边。修法: transparent:true +
+  // backgroundColor:"#00000000" (WebView2 透明窗口必须显式声明 alpha=0 背景色)。
+
+  function getFloatingWindowBlock(json: string): string | null {
+    // 匹配 tauri.conf.json 中 "label": "floating" 的 windows 段
+    const m = json.match(/"label"\s*:\s*"floating"\s*,[\s\S]*?\n\s*\}/);
+    return m ? m[0] : null;
   }
 
-  it("floating.css .floating-root 块内含 transition 属性 (200ms ease-out)", () => {
-    const css = readFileSync("src/floating/styles/floating.css", "utf-8");
-    const block = getFloatingRootBlock(css);
+  it("tauri.conf.json floating 段 transparent:true (V0.2.0.11 C fix)", () => {
+    const json = readFileSync("src-tauri/tauri.conf.json", "utf-8");
+    const block = getFloatingWindowBlock(json);
     expect(block).toBeTruthy();
-    expect(block!).toMatch(/transition\s*:/);
+    expect(block!).toMatch(/"transparent"\s*:\s*true/);
   });
 
-  it("floating.css .floating-root transition 必须含 width/height 子句 (反模式 16 防御: 排除注释行)", () => {
-    const css = readFileSync("src/floating/styles/floating.css", "utf-8");
-    // 排除注释后再匹配 (transition 行不应在注释行内)
-    const lines = css.split("\n");
-    const transitionLines = lines.filter((line) => {
-      const trimmed = line.trim();
-      if (trimmed.startsWith("//")) return false; // 排除单行注释
-      if (trimmed.startsWith("*")) return false;  // 排除 /* ... */ 块注释
-      return /transition\s*:/i.test(line);
-    });
-    // 必须至少有一行非注释 transition 声明
-    expect(transitionLines.length).toBeGreaterThanOrEqual(1);
-    // 检查 width / height 子句都在
-    const allTransitionText = transitionLines.join("\n");
-    expect(allTransitionText).toMatch(/transition\s*:[^;]*\bwidth\b/i);
-    expect(allTransitionText).toMatch(/transition\s*:[^;]*\bheight\b/i);
-  });
-
-  it("floating.css .floating-root 块不修改 width/height/border-radius 数值 (数值层不破, 仅补 transition)", () => {
-    const css = readFileSync("src/floating/styles/floating.css", "utf-8");
-    const block = getFloatingRootBlock(css);
+  it("tauri.conf.json floating 段含 backgroundColor: #00000000 字段 (V0.2.0.11 C fix)", () => {
+    const json = readFileSync("src-tauri/tauri.conf.json", "utf-8");
+    const block = getFloatingWindowBlock(json);
     expect(block).toBeTruthy();
-    // 折叠态 width 320px, height 36px, border-radius 14px 数值必须保留
-    expect(block!).toMatch(/\bwidth\s*:\s*320px\b/);
-    expect(block!).toMatch(/\bheight\s*:\s*36px\b/);
-    expect(block!).toMatch(/\bborder-radius\s*:\s*14px\b/);
+    expect(block!).toMatch(/"backgroundColor"\s*:\s*"#00000000"/);
   });
 
-  it("floating.css 含 prefers-reduced-motion: reduce 兜底 (可访问性, 无障碍)", () => {
-    const css = readFileSync("src/floating/styles/floating.css", "utf-8");
-    expect(css).toMatch(/@media\s*\(\s*prefers-reduced-motion\s*:\s*reduce\s*\)/);
+  it("tauri.conf.json floating 段 transparent:false 已移除 (反模式 15 防御: 防 commit 谎改)", () => {
+    const json = readFileSync("src-tauri/tauri.conf.json", "utf-8");
+    const block = getFloatingWindowBlock(json);
+    expect(block).toBeTruthy();
+    expect(block!).not.toMatch(/"transparent"\s*:\s*false/);
+  });
+});
+
+describe("V0.2.0.11 patch — Issue A fix: ContextMenu viewport 双向 clamp + 右键 button guard", () => {
+  // V0.2.0.6 反复改 ContextMenu 事件捕获 (capture phase / e.preventDefault),
+  // user 实测菜单仍不弹 (HTML 显示 left:4 top:-84)。真根因: ContextMenu.tsx line 46-50
+  // 用 single Math.min 做 bottom clamp, 折叠态 window.innerHeight=36 时 innerHeight-120=-84,
+  // Math.min(y+8, -84) = -84, 菜单跑到 viewport 外看不见。修法:
+  // 1) ContextMenu.tsx 加 clampToViewport() 用 MENU_W/MENU_H 常数 + 双向 Math.max/Math.min
+  // 2) App.tsx onContextMenuCapture 加 e.button !== 2 守卫 (左/中键不该弹菜单)
+
+  it("ContextMenu.tsx 含 clampToViewport 函数 (V0.2.0.11 A fix)", () => {
+    const src = readFileSync("src/floating/components/ContextMenu.tsx", "utf-8");
+    // 反模式 16 防御: 剥注释行后再 grep
+    const codeOnly = src
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
+      .join("\n");
+    expect(codeOnly).toMatch(/function\s+clampToViewport/);
+  });
+
+  it("ContextMenu.tsx clampToViewport 双向 clamp: top 既有 Math.max 也有 Math.min", () => {
+    const src = readFileSync("src/floating/components/ContextMenu.tsx", "utf-8");
+    const codeOnly = src
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
+      .join("\n");
+    // top 必须 Math.max(VIEWPORT_MARGIN, Math.min(y, maxTop)) 双向
+    expect(codeOnly).toMatch(/top\s*:\s*Math\.max\s*\(\s*VIEWPORT_MARGIN\s*,\s*Math\.min\s*\(\s*y\s*,\s*maxTop\s*\)\s*\)/);
+  });
+
+  it("App.tsx onContextMenuCapture 含 e.button !== 2 守卫 (反模式 14 防御: 防止左/中键误触发)", () => {
+    const src = readFileSync("src/floating/App.tsx", "utf-8");
+    const codeOnly = src
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
+      .join("\n");
+    expect(codeOnly).toMatch(/onContextMenuCapture[\s\S]*?if\s*\(\s*e\.button\s*!==\s*2\s*\)\s*return/);
   });
 });
 

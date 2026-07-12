@@ -216,22 +216,33 @@ describe("V0.2.6 patch 回归测试 — Cargo.toml + package.json tauri-plugin-d
   });
 });
 
-describe("V0.2.6 patch 回归测试 — tauri.conf.json transparent:false + resizable:true (V0.2.5 patch 修 Win11 WebView2 transparent setSize 不 work)", () => {
-  it("tauri.conf.json floating transparent:false", () => {
+describe("V0.2.0.11 patch — Issue C fix: tauri.conf.json floating 段 transparent:true + backgroundColor", () => {
+  // V0.2.0.6 旧测试断言锁死 transparent:false 是反向 lock-in (反模式 15 commit 谎改):
+  // V0.2.5 patch 把 transparent 关了绕过 Win11 WebView2 transparent setSize bug,
+  // 但 release notes 写 "WebView2 transparent 已 iterate" 是错的;V0.2.0 收口目标含
+  // transparent (Tech §7.2 TBD 但 V0.2.6 final fix 注明 transparent), V0.2.0.11 C fix
+  // 把 transparent 重新打开 + 加 backgroundColor 显式声明 alpha=0。
+  // (V0.2.0.6 describe 已删除, 本 describe 是 V0.2.0.11 替代)
+
+  it("tauri.conf.json floating 段 transparent:true (V0.2.0.11 C fix)", () => {
     const src = readFileSync("src-tauri/tauri.conf.json", "utf-8");
-    // floating 段 transparent:false
     const floatMatch = src.match(/"label":\s*"floating"[\s\S]*?\{[\s\S]*?\}/);
-    if (floatMatch) {
-      expect(floatMatch[0]).toMatch(/"transparent":\s*false/);
-    }
+    expect(floatMatch).toBeTruthy();
+    expect(floatMatch![0]).toMatch(/"transparent"\s*:\s*true/);
   });
 
-  it("tauri.conf.json floating resizable:true", () => {
+  it("tauri.conf.json floating 段含 backgroundColor: #00000000 (V0.2.0.11 C fix)", () => {
     const src = readFileSync("src-tauri/tauri.conf.json", "utf-8");
     const floatMatch = src.match(/"label":\s*"floating"[\s\S]*?\{[\s\S]*?\}/);
-    if (floatMatch) {
-      expect(floatMatch[0]).toMatch(/"resizable":\s*true/);
-    }
+    expect(floatMatch).toBeTruthy();
+    expect(floatMatch![0]).toMatch(/"backgroundColor"\s*:\s*"#00000000"/);
+  });
+
+  it("tauri.conf.json floating resizable:true 保留 (V0.2.5 fix 沿用, 防回归)", () => {
+    const src = readFileSync("src-tauri/tauri.conf.json", "utf-8");
+    const floatMatch = src.match(/"label":\s*"floating"[\s\S]*?\{[\s\S]*?\}/);
+    expect(floatMatch).toBeTruthy();
+    expect(floatMatch![0]).toMatch(/"resizable":\s*true/);
   });
 });
 

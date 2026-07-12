@@ -18,9 +18,12 @@ const SIZE_CLASS: Record<"sm" | "md", string> = {
   md: "size-2.5",
 };
 
-// V0.2.8 Issue B fix: 8x8 dot 推 -top-0.5 -right-0.5 (各 -2px) 会超出父容器, 被
-// .floating-root { overflow: hidden } 裁掉右上半圆; animate-pulse-dot scale(1.15)
-// 让跳动残影明显。改 top-1 right-1 (+4px 内) 整在父容器内, 不溢出不被裁。
+// V0.2.0.11 Issue B fix 注释修正: V0.2.0.7 改 top-1 right-1 是必要但非充分条件。
+// 真正根因是 .floating-root 缺 position: relative (floating.css 已修)。
+// 之前 StatusDot absolute 穿透到 body 作为祖先, 跑 viewport 角落错位;
+// 现在 .floating-root 是 relative, top-1 right-1 才真正相对浮窗根 div 右上角。
+// V0.2.0.7 反复改 top-right 值 (top-0.5 right-0.5 → top-1 right-1) 都没修对,
+// 因为根 div 缺 relative 这一层完全漏了 (反模式 14 反复修 + 反模式 15 根因错位)。
 const POSITION_CLASS: Record<"inline" | "absolute", string> = {
   inline: "",
   absolute: "absolute top-1 right-1",
