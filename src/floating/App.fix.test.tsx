@@ -186,13 +186,18 @@ describe("V0.2.8 Issue C: 浮窗无 inset highlight 边框 (P1 回归)", () => {
 
   function extractFloatingRootBlocks(css: string): string[] {
     const codeOnly = stripCssComments(css);
+    // 反模式 16 集成防御: 先剥 @media 嵌套块, 防止 V0.2.8 Bug 5 cosmetic 引入的
+    // @media (prefers-reduced-motion) { .floating-root { ... } } 被误抓 (嵌套块没有 box-shadow)
+    const noMedia = codeOnly.replace(/@media[^{]+\{[\s\S]*?\}\s*\}/g, "");
     // 块范围限制: 用 [^}]* 保证不跨过下一个 }
-    return [...codeOnly.matchAll(/\.floating-root[^{]*\{[^}]*\}/g)].map((m) => m[0]);
+    return [...noMedia.matchAll(/\.floating-root[^{]*\{[^}]*\}/g)].map((m) => m[0]);
   }
 
   function extractGlassBlocks(css: string): string[] {
     const codeOnly = stripCssComments(css);
-    return [...codeOnly.matchAll(/\.glass-l\d[^{]*\{[^}]*\}/g)].map((m) => m[0]);
+    // 同上: 剥 @media 嵌套块
+    const noMedia = codeOnly.replace(/@media[^{]+\{[\s\S]*?\}\s*\}/g, "");
+    return [...noMedia.matchAll(/\.glass-l\d[^{]*\{[^}]*\}/g)].map((m) => m[0]);
   }
 
   it("floating.css 含 .floating-root 块 (静态结构存在, 反模式 15 防御)", () => {
