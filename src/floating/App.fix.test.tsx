@@ -1,5 +1,8 @@
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
+
+import { FloatingApp } from "./App";
 
 /**
  * V0.2.7 patch — 6 bug 真根因修复回归测试
@@ -122,5 +125,55 @@ describe("V0.2.7 patch — Bug 5: 展开 setPosition x 必须不偏移 20px (贴
       /await\s+win\.setPosition\(\s*new\s+PhysicalPosition\(\s*pos\.x\s*,\s*pos\.y\s*\)\s*\)/,
     );
     expect(setPositionMatch).toBeTruthy();
+  });
+});
+
+describe("V0.2.8 patch — Issue A: 右键不被折叠态根 div 抢占 (P0-9 复活防御)", () => {
+  it("折叠态右键 mousedown+up 不触发展开 (行为断言: dragRef 被 e.button 守卫, 不创建)", async () => {
+    render(<FloatingApp />);
+    const foldedRoot = await screen.findByTestId("floating-root-folded");
+    // 右键 (button: 2) + 释放, 反模式 16 防御: 行为断言 .expanded 不出现
+    fireEvent.mouseDown(foldedRoot, { button: 2, clientX: 10, clientY: 10 });
+    fireEvent.mouseUp(foldedRoot, { clientX: 10, clientY: 10 });
+    // 关键: 不应切到 expanded 态
+    expect(document.querySelector('[data-testid="floating-root-folded"]')).toBe(foldedRoot);
+    expect(document.querySelector(".floating-root.expanded")).toBeNull();
+  });
+
+  it("折叠态右键 mousedown+up 不调 startDragging IPC (右键不该启动 OS 拖窗)", async () => {
+    render(<FloatingApp />);
+    const foldedRoot = await screen.findByTestId("floating-root-folded");
+    // 右键 mousedown + move(>= 4px) + up: 不应触发 startDragging 路径
+    fireEvent.mouseDown(foldedRoot, { button: 2, clientX: 10, clientY: 10 });
+    fireEvent.mouseMove(document, { clientX: 30, clientY: 30 });
+    fireEvent.mouseUp(document, { clientX: 30, clientY: 30 });
+    // 折叠态根 div 仍存在 (没切到展开态), 也未开始拖窗
+    expect(document.querySelector(".floating-root.expanded")).toBeNull();
+  });
+
+  it("折叠态右键 contextmenu 事件触发 ContextMenu 渲染 (capture phase 原生 listener 行为)", async () => {
+    render(<FloatingApp />);
+    await screen.findByTestId("floating-root-folded");
+    // 派发原生 contextmenu 事件 (document 级 capture phase listener 应当接到)
+    fireEvent.contextMenu(document, { clientX: 50, clientY: 60 });
+    // 行为断言: ContextMenu 组件被渲染 (role=menu + aria-label)
+    await waitFor(() => {
+      expect(screen.getByRole("menu", { name: "浮窗右键菜单" })).toBeTruthy();
+    });
+    // 且包含 "显示主窗" 按钮
+    expect(screen.getByText("显示主窗")).toBeTruthy();
+    expect(screen.getByText("退出")).toBeTruthy();
+  });
+
+  it("左键短按仍触发展开 (回归: e.button !== 0 守卫不影响左键 toggle 路径)", async () => {
+    render(<FloatingApp />);
+    const foldedRoot = await screen.findByTestId("floating-root-folded");
+    // 左键 (button: 0) 短按: dragRef 创建但 dragStarted=false → onMouseUp 调 setExpanded(true)
+    fireEvent.mouseDown(foldedRoot, { button: 0, clientX: 10, clientY: 10 });
+    fireEvent.mouseUp(foldedRoot, { clientX: 10, clientY: 10 });
+    // 折叠态根 div 消失 (切到 expanded 态)
+    await waitFor(() => {
+      expect(document.querySelector('[data-testid="floating-root-folded"]')).toBeNull();
+    }, { timeout: 300, interval: 20 });
   });
 });
