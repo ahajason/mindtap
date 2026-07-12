@@ -83,6 +83,7 @@ mindtap/
 | `.claude/rules/commit-style.mdc` | 写 commit message 前 / 决定何时 commit（业务层粒度 + 完整性门槛） |
 | `.claude/rules/comment-style.mdc` | 写代码时（注释只写 why, 代码即注释） |
 | `.claude/rules/codegraph.mdc` | 跨文件结构查询时（vs grep） |
+| `memory/mindtap-v0.2.8-anti-patterns.md` | 反模式 17 (gh/MCP 滥用) + 18 (CSS regex 嵌套) — V0.2.8 4 fix 沉淀 |
 | `.claude/rules/task-directory.mdc` | 写任务正式档时（slug 命名 + 模板 + 跟 commit 关系） |
 | `.claude/rules/dev-sync-before-windows-verify.mdc` | 改 Windows-side runtime（Tauri / WebView2 / 原生菜单 / Rust 后端）后，D:\ 端 dev.bat 验证前必走（push origin + D:\ pull）;WSL-only 验证不触发 |
 | `.claude/rules/dev-verify-before-commit.mdc` | 改 system API / OS 集成 / 框架 runtime 后,commit 前必须 dev 实测新机制本身在工作 |
@@ -92,6 +93,10 @@ mindtap/
 - **三层决策法**: 改前 L1 原始权威 / L2 统一设计 / L3 具体问题(主动枚举副作用);改后走 `/retro` 闭环
 - **避免决策疲劳**: 2-4 离散选项才用 AskUserQuestion;有 spec / convention / rule → 优先查
 - **穷举再下手**: 多个 root cause 不分散修(见 `memory/exhaust-layers-before-fix`)
+- **纯 git + ssh (本仓库约束)**: 默认 `git push origin develop` + D:\ `git pull`;**禁用 gh CLI** (无 auth) 和 **GitHub MCP `issue_write`/`create_pull_request`** (classifier 拦);要 PR 走 web (https://github.com/ahajason/mindtap/compare/develop...<branch>)
+- **多 issue 并行修**: 派 N 个 subagent, **每个 subagent 自己用 `Skill superpowers:using-git-worktrees` 起 worktree** (isolation);主 agent 留 develop, fetch + merge 集成;不要主 agent 串行跑多个 fix
+- **CSS 静态扫描 regex**: 写 `.floating-root[...]` 这类 selector 匹配时**先剥 `@media` / `@supports` / `@keyframes` 嵌套块**,否则后加的 @media 内嵌同名选择器会让测试误通过或 FAIL (反模式 18, 见 `memory/mindtap-v0.2.8-anti-patterns`)
+- **Background session 隔离**: 不能直接 `Edit`/`Write` 主 checkout 的 `develop` (harness `bgIsolation` 拦);改 develop 路径前先 `EnterWorktree` 或用 `Workflow` 的 `isolation: "worktree"`
 
 ## 本地配置
 
