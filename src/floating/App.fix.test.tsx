@@ -140,24 +140,23 @@ describe("V0.2.7 patch — Bug 5: 展开 setPosition x 必须不偏移 20px (贴
 describe("V0.2.8 patch — Issue A: 右键不被折叠态根 div 抢占 (P0-9 复活防御)", () => {
   it("折叠态右键 mousedown+up 不触发展开 (行为断言: dragRef 被 e.button 守卫, 不创建)", async () => {
     render(<FloatingApp />);
-    const foldedRoot = await screen.findByTestId("floating-root-folded");
+    const root = await screen.findByTestId("floating-root");
     // 右键 (button: 2) + 释放, 反模式 16 防御: 行为断言 .expanded 不出现
-    fireEvent.mouseDown(foldedRoot, { button: 2, clientX: 10, clientY: 10 });
-    fireEvent.mouseUp(foldedRoot, { clientX: 10, clientY: 10 });
-    // 关键: 不应切到 expanded 态
-    expect(document.querySelector('[data-testid="floating-root-folded"]')).toBe(foldedRoot);
-    expect(document.querySelector(".floating-root.expanded")).toBeNull();
+    fireEvent.mouseDown(root, { button: 2, clientX: 10, clientY: 10 });
+    fireEvent.mouseUp(root, { clientX: 10, clientY: 10 });
+    // 关键: 不应触发展开态 (input 不出现)
+    expect(document.querySelector("input[placeholder]")).toBeNull();
   });
 
   it("折叠态右键 mousedown+up 不调 startDragging IPC (右键不该启动 OS 拖窗)", async () => {
     render(<FloatingApp />);
-    const foldedRoot = await screen.findByTestId("floating-root-folded");
+    const root = await screen.findByTestId("floating-root");
     // 右键 mousedown + move(>= 4px) + up: 不应触发 startDragging 路径
-    fireEvent.mouseDown(foldedRoot, { button: 2, clientX: 10, clientY: 10 });
+    fireEvent.mouseDown(root, { button: 2, clientX: 10, clientY: 10 });
     fireEvent.mouseMove(document, { clientX: 30, clientY: 30 });
     fireEvent.mouseUp(document, { clientX: 30, clientY: 30 });
-    // 折叠态根 div 仍存在 (没切到展开态), 也未开始拖窗
-    expect(document.querySelector(".floating-root.expanded")).toBeNull();
+    // 折叠态 root 仍存在 (没切到展开态), 也未开始拖窗 (input 不出现)
+    expect(document.querySelector("input[placeholder]")).toBeNull();
   });
 
   it("折叠态右键 contextmenu 事件触发 Rust 原生 Menu IPC (V0.2.0.12: popup_menu 替代 HTML 渲染)", async () => {
@@ -166,7 +165,7 @@ describe("V0.2.8 patch — Issue A: 右键不被折叠态根 div 抢占 (P0-9 �
     const invokeMock = vi.mocked(invoke);
     invokeMock.mockClear();
     render(<FloatingApp />);
-    await screen.findByTestId("floating-root-folded");
+    await screen.findByTestId("floating-root");
     fireEvent.contextMenu(document, { button: 2, clientX: 50, clientY: 60 });
     await waitFor(() => {
       expect(invokeMock).toHaveBeenCalledWith("show_floating_context_menu", undefined);
@@ -179,14 +178,17 @@ describe("V0.2.8 patch — Issue A: 右键不被折叠态根 div 抢占 (P0-9 �
 
   it("左键短按仍触发展开 (回归: e.button !== 0 守卫不影响左键 toggle 路径)", async () => {
     render(<FloatingApp />);
-    const foldedRoot = await screen.findByTestId("floating-root-folded");
+    const root = await screen.findByTestId("floating-root");
     // 左键 (button: 0) 短按: dragRef 创建但 dragStarted=false → onMouseUp 调 setExpanded(true)
-    fireEvent.mouseDown(foldedRoot, { button: 0, clientX: 10, clientY: 10 });
-    fireEvent.mouseUp(foldedRoot, { clientX: 10, clientY: 10 });
-    // 折叠态根 div 消失 (切到 expanded 态)
+    fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
+    fireEvent.mouseUp(root, { clientX: 10, clientY: 10 });
+    // 展开态 input 出现 (切到 expanded 态)
     await waitFor(() => {
-      expect(document.querySelector('[data-testid="floating-root-folded"]')).toBeNull();
+      const input = document.querySelector("input[placeholder]");
+      if (input) return true;
+      throw new Error("not yet");
     }, { timeout: 300, interval: 20 });
+    expect(document.querySelector("input[placeholder]")).toBeTruthy();
   });
 });
 
@@ -375,76 +377,53 @@ describe("V0.2.8.1 follow-up: Issue C 真根因修复 — FoldedBar inline style
     }
   });
 });
-describe("V0.2.0.12 patch — Issue 2: 展开态右键不折叠 (panel pointerdown capture 守住)", () => {
-  // 真相: V0.2.0.6/0.11 既有 data-no-expand / e.button !== 0 守卫全在 mousedown / click 层,
-  // 不在 blur 层, 拦不住 ExpandedPanel useEffect 里 input 的 blur listener 同步调 onCancel.
-  // V0.2.0.12 修法 (Radix dismissable-layer 思路): panel 根 div 加 onPointerDownCapture,
-  // 在 mousedown/click 之前用 panelRef.contains(target) 设 dismissingRef, handleBlur 读它,
-  // panel 内 clicking → dismissingRef=false → blur 不 cancel. 右键 button=2 同样走 capture, 不被 button 守卫拦.
+describe("V0.2.0.14 PATCH — 单一 root div panelRef + document mousedown dismiss (替代 V0.2.0.12/13 的 ExpandedPanel panelRef + input blur)", () => {
+  // 真相演进:
+  //  V0.2.0.12 修法: ExpandedPanel 根 div 加 panelRef + onPointerDownCapture 设 dismissingRef,
+  //    handleBlur input listener 读它 → panel 内 click 不折叠, panel 外 click 折叠.
+  //    问题 1: FoldedBar 区域(在 ExpandedPanel 外的 root child)右键不覆盖 panelRef →
+  //            右键触发 input blur → dismissingRef=true → onDismiss → 折叠 (B-2-1 race).
+  //    问题 2: input blur 在某些 race condition 下不触发 (e.g. panel 内 click 不抢 focus,
+  //            浮窗 win 切后台) → panel 外 click 不折叠 (C-3 race).
+  //  V0.2.0.13 改进: 拆 onCancel → onDismiss + onClearAndDismiss, blur listener 改用 onDismissRef.
+  //    但仍是 ExpandedPanel 内 panelRef + input blur, 上述 2 race 仍未根除.
+  //  V0.2.0.14 根治: panelRef 移到 App.tsx 单一 root div (覆盖整个 panel: FoldedBar + ExpandedPanel/ControlRow),
+  //    用 document mousedown listener + panelRef.contains check 替代 input blur listener:
+  //      - panel 内任意位置 mousedown → panelRef.contains(target)=true → 不动.
+  //      - panel 外任意位置 mousedown → contains=false → handleDismiss() → setExpanded(false).
+  //    比 input blur 更可靠 (mousedown 必触发, 不依赖 input 是否失焦).
 
-  it("ExpandedPanel.tsx 声明 panelRef + dismissingRef (V0.2.0.12 新增)", () => {
-    const src = readFileSync("src/floating/components/ExpandedPanel.tsx", "utf-8");
+  it("App.tsx 声明 panelRef = useRef (panelRef 移到 root div, 不在 ExpandedPanel)", () => {
+    const src = readFileSync("src/floating/App.tsx", "utf-8");
     const codeOnly = src
       .split("\n")
       .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
       .join("\n");
     expect(codeOnly).toMatch(/panelRef\s*=\s*useRef/);
-    expect(codeOnly).toMatch(/dismissingRef\s*=\s*useRef/);
   });
 
-  it("ExpandedPanel.tsx panel 根 div 含 onPointerDownCapture (Radix pattern 落地)", () => {
-    const src = readFileSync("src/floating/components/ExpandedPanel.tsx", "utf-8");
-    // 反模式 16 防御: 剥注释行再断言, 防止 /*
+  it("App.tsx 单一 root div 含 ref={panelRef} (覆盖 FoldedBar + ExpandedPanel/ControlRow, 不再嵌在 ExpandedPanel 内)", () => {
+    const src = readFileSync("src/floating/App.tsx", "utf-8");
     const codeOnly = src
       .split("\n")
       .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
       .join("\n");
-    // 必须含 onPointerDownCapture={(e) => { ... panelRef.current?.contains ... }}
-    expect(codeOnly).toMatch(/onPointerDownCapture=\{[\s\S]*?panelRef\.current\?\.contains/);
-  });
-
-  it("ExpandedPanel.tsx handleBlur 读取 dismissingRef 决定是否 dismiss (V0.2.0.13: onDismissRef.current(), 不是直调 onCancel)", () => {
-    const src = readFileSync("src/floating/components/ExpandedPanel.tsx", "utf-8");
-    const codeOnly = src
-      .split("\n")
-      .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
-      .join("\n");
-    // 行为断言: handleBlur 必须检查 dismissingRef.current 才调 dismiss (V0.2.0.13 用 onDismissRef.current())
-    // 形态: if (submittingRef.current) return; if (dismissingRef.current) onDismissRef.current();
-    // (V0.2.0.12 直接 onCancel; V0.2.0.13 改成 onDismissRef.current 因 onDismiss 是 prop, ref 化保证稳定引用)
-    expect(codeOnly).toMatch(/function handleBlur[\s\S]*?if\s*\(\s*submittingRef\.current\s*\)\s*return/);
-    expect(codeOnly).toMatch(/function handleBlur[\s\S]*?if\s*\(\s*dismissingRef\.current\s*\)\s*onDismissRef\.current\s*\(\s*\)/);
-  });
-});
-
-describe("V0.2.0.12 patch — Issue 4: 点 Start 不折叠 (panel 内 pointerdown 把 dismissingRef 拦下来)", () => {
-  // 真相: 用户点 "开始" 按钮时, pointerdown 在按钮上 → capture phase 把 dismissingRef 设 false →
-  // input blur 触发 handleBlur → 读 dismissingRef=false → 不 cancel → panel 不卸载 →
-  // 按钮 click 正常调 onStart, 后续 setExpanded(false) 才折叠.
-  // V0.2.0.6/0.11 都没拦住, 根因在 blur listener 不在 mousedown/click 层.
-
-  it("ExpandedPanel.tsx onPointerDownCapture 体内 panelRef.contains 决定 dismissingRef (panel 内 = false)", () => {
-    const src = readFileSync("src/floating/components/ExpandedPanel.tsx", "utf-8");
-    const codeOnly = src
-      .split("\n")
-      .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
-      .join("\n");
-    // 关键赋值: dismissingRef.current = !panelRef.current?.contains(e.target as Node);
-    expect(codeOnly).toMatch(/dismissingRef\.current\s*=\s*!panelRef\.current\?\.contains\([^)]*e\.target/);
-  });
-
-  it("ExpandedPanel.tsx panel 根 div 同时含 ref={panelRef} (Radix pattern 必备)", () => {
-    const src = readFileSync("src/floating/components/ExpandedPanel.tsx", "utf-8");
-    const codeOnly = src
-      .split("\n")
-      .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
-      .join("\n");
-    // panel 根 div 必须挂 ref={panelRef}, 否则 onPointerDownCapture 里 panelRef.current 是 null
     expect(codeOnly).toMatch(/ref=\{panelRef\}/);
   });
 
-  it("App.tsx onContextMenuCapture / data-no-expand / e.button 守卫未被本次 fix 删除 (反模式 14 防御: 防回归)", () => {
-    // V0.2.0.12 Issue 4 修在 ExpandedPanel 内, 不动 App.tsx 的右键守卫 — 那些守卫拦的是别的链路
+  it("App.tsx document mousedown listener + panelRef.contains check 替代 V0.2.0.13 PATCH input blur listener", () => {
+    const src = readFileSync("src/floating/App.tsx", "utf-8");
+    const codeOnly = src
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
+      .join("\n");
+    // 必须含 document mousedown listener + panelRef-derived node.contains(e.target as Node) 判断
+    expect(codeOnly).toMatch(/document\.addEventListener\(\s*["']mousedown["']/);
+    expect(codeOnly).toMatch(/\.contains\(\s*e\.target\s+as\s+Node\s*\)/);
+    expect(codeOnly).toMatch(/handleDismiss\s*\(\s*\)/);
+  });
+
+  it("App.tsx onContextMenuCapture / data-no-expand / e.button 守卫未被本次重构删除 (反模式 14 防御: 防回归)", () => {
     const src = readFileSync("src/floating/App.tsx", "utf-8");
     const codeOnly = src
       .split("\n")
@@ -473,7 +452,7 @@ describe("V0.2.0.12 PATCH — StatusDot 锁住: 恢复 V1.0 archive inline-block
     expect(dot?.className).not.toMatch(/\bright-/);
   });
 
-  it("FoldedBar.tsx 内 StatusDot 是 .folded-bar-inner flex 容器第 1 child (V1.0 archive 形态锁定)", () => {
+  it("FoldedBar.tsx 内 StatusDot 是 root div 第 1 child (V1.0 archive 形态锁定, V0.2.0.14 A-2 单一 root div 适配)", () => {
     const src = readFileSync("src/floating/components/FoldedBar.tsx", "utf-8");
     // 反模式 16 防御: 剥 JSX 注释 ({} 单行注释或 /* */ 多行), 排除注释行谎报
     const lines = src.split("\n");
@@ -484,11 +463,10 @@ describe("V0.2.0.12 PATCH — StatusDot 锁住: 恢复 V1.0 archive inline-block
       return true;
     });
     const codeOnly = codeLines.join("\n");
-    // .folded-bar-inner div 内 StatusDot 必须是第 1 child JSX 元素
-    const foldedBarInnerMatch = codeOnly.match(/folded-bar-inner[^>]*>([\s\S]*?)<span/);
-    expect(foldedBarInnerMatch).toBeTruthy();
-    // StatusDot 必须在第 1 个 span 之前 (作为 flex 第 1 child)
-    expect(foldedBarInnerMatch![1]).toMatch(/<StatusDot/);
+    // V0.2.0.14 PATCH A-2: FoldedBar 根 div 单一化 (V0.2.0.13 PATCH 的 .folded-bar-inner 已删),
+    // StatusDot 必须是该 root div 的第 1 个 JSX child (flex 第 1 child, 最左, 跟 title 前面)
+    // 匹配 root div 结束 `>` 后紧跟 <StatusDot (跨多行属性)
+    expect(codeOnly).toMatch(/<div[\s\S]*?>\s*<StatusDot\s/);
   });
 
   it("floating.css .floating-root 块不含 position: relative (V0.2.0.11 B fix 已撤, V1.0 inline 不需要)", () => {
@@ -537,11 +515,15 @@ describe("V0.2.0.12 PATCH — ContextMenu 锁住: HTML React 组件已删, 改�
   });
 });
 
-describe("V0.2.0.13 PATCH — User L3 重测 5 deviation inline 锁住 (StatusDot / 折叠展开叠加式 / Menu 文案+双触发 / onCancel 拆 / complete 不折叠)", () => {
-  // V0.2.0.12 集成后 user 在 D:\ 端 L3 重测, 仍然发现 5 个未修 issue (A-1 / A-2 / B-2 / C-3 / C-4).
-  // V0.2.0.13 PATCH 直接 inline 修 + vitest 锁住以下 6 个点, 防回滚.
+describe("V0.2.0.14 PATCH — User L3 V0.2.0.13 重测 4 deviation 重构锁住 (A-2 单一容器 + B-2-1 右键不折叠 + C-3 taskTitle 保留 + C-4 active 折叠 + 保留 A-1 / B-2-1 menu / B-2-2)", () => {
+  // V0.2.0.13 PATCH 集成后 user 在 D:\ 端 L3 重测, 仍然发现 4 个未修偏差:
+  //   - A-2: 折叠态多 2 层容器嵌套 (floating-root-folded → folded-bar-inner → ...), 圆角/背景不一致, 切换闪
+  //   - B-2-1: 展开态右键偶尔折叠 (FoldedBar 区域右键不在 panelRef 内 → race)
+  //   - C-3: panel 外 click blur 未触发 onDismiss → input 未折叠
+  //   - C-4: user 改主意 — active session 时应折叠 + 控制行 active, 不是展开态保持 (V0.2.0.13 错)
+  // V0.2.0.14 PATCH 单一 root div 重构 + document mousedown dismiss + active session useEffect 自动折叠.
 
-  it("A-1 StatusDot.tsx className 含 self-center + align-middle (垂直对齐修复)", () => {
+  it("A-1 StatusDot.tsx className 含 self-center + align-middle (V0.2.0.13 修, V0.2.0.14 保留不退)", () => {
     const src = readFileSync("src/floating/components/StatusDot.tsx", "utf-8");
     const codeOnly = src
       .split("\n")
@@ -550,77 +532,105 @@ describe("V0.2.0.13 PATCH — User L3 重测 5 deviation inline 锁住 (StatusDo
     expect(codeOnly).toMatch(/className=\{\[[\s\S]*?self-center[\s\S]*?align-middle/);
   });
 
-  it("A-2 App.tsx 折叠/展开 改叠加式: 永远渲染 FoldedBar, expanded 时下方追加 ExpandedPanel (不互斥替换)", () => {
+  it("A-2 App.tsx 单一 root div: 永远同一 PANEL_STYLE + flex-col + rounded-2xl + p-3 (不嵌套多 2 层容器)", () => {
     const src = readFileSync("src/floating/App.tsx", "utf-8");
     const codeOnly = src
       .split("\n")
       .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
       .join("\n");
-    // FoldedBar 必须在 ExpandedPanel 渲染之前 (同 root div 内的 sibling, 顺序保留)
-    expect(codeOnly).toMatch(/<FoldedBar\b[\s\S]*?onClick=/);
-    expect(codeOnly).toMatch(/\{expanded\s+&&\s*\([\s\S]*?<ExpandedPanel\b/);
+    // 单一 root div className 永远含 rounded-2xl + p-3 + flex-col + gap-2
+    expect(codeOnly).toMatch(/className=["']floating-root\s+flex\s+h-full\s+w-full\s+flex-col\s+gap-2\s+overflow-hidden\s+rounded-2xl\s+p-3\s+text-\[12px\]/);
+    // PANEL_STYLE inline style 提到 App.tsx 顶层常量
+    expect(codeOnly).toMatch(/PANEL_STYLE\s*:\s*React\.CSSProperties/);
+    expect(codeOnly).toMatch(/backdropFilter\s*:\s*["']blur\(28px\)\s+saturate\(120%\)/);
+    // V0.2.0.13 PATCH 的 expanded/folded class 切换必须清空
+    expect(codeOnly).not.toMatch(/["']floating-root expanded["']/);
+    expect(codeOnly).not.toMatch(/["']floating-root folded["']/);
   });
 
-  it("B-2-1 menu.rs 用 dynamic label: floating_visible / main_visible 字段驱动 label (非静态 \"显示/隐藏\")", () => {
+  it("A-2 FoldedBar.tsx 不再有自身根 div / PANEL_STYLE / rounded-full (回到单一容器)", () => {
+    const src = readFileSync("src/floating/components/FoldedBar.tsx", "utf-8");
+    const codeOnly = src
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
+      .join("\n");
+    // 不再含自己的 PANEL_STYLE / rounded-full / background
+    expect(codeOnly).not.toMatch(/folded-bar-inner/);
+    expect(codeOnly).not.toMatch(/rounded-full/);
+    expect(codeOnly).not.toMatch(/PANEL_STYLE/);
+    // 但仍含 StatusDot + title + focusMs 三段内容
+    expect(codeOnly).toMatch(/<StatusDot\s/);
+    expect(codeOnly).toMatch(/formatFocusMs/);
+  });
+
+  it("A-2 ExpandedPanel.tsx 不再有自身根 div / PANEL_STYLE / panelRef (回到内容 fragment)", () => {
+    const src = readFileSync("src/floating/components/ExpandedPanel.tsx", "utf-8");
+    const codeOnly = src
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
+      .join("\n");
+    // V0.2.0.12/13 PATCH 的 panelRef + PANEL_STYLE + onPointerDownCapture 必须从 ExpandedPanel 清空
+    expect(codeOnly).not.toMatch(/panelRef\s*=\s*useRef/);
+    expect(codeOnly).not.toMatch(/PANEL_STYLE/);
+    expect(codeOnly).not.toMatch(/onPointerDownCapture/);
+    expect(codeOnly).not.toMatch(/dismissingRef/);
+    expect(codeOnly).not.toMatch(/rounded-2xl/);
+    // ExpandedPanel 不再接 activeSession prop (ControlRow 移到 App.tsx)
+    expect(codeOnly).not.toMatch(/activeSession\s*:\s*TimerSession\s*\|\s*null/);
+    expect(codeOnly).not.toMatch(/onPause\s*:|onResume\s*:|onComplete\s*:/);
+    // 仍含 input ref + 按钮 onClick (onStart + onClearAndDismiss)
+    expect(codeOnly).toMatch(/onClick=\{onStart\}/);
+    expect(codeOnly).toMatch(/onClick=\{onClearAndDismiss\}/);
+  });
+
+  it("B-2-1 menu.rs 用 dynamic label: floating_visible / main_visible 字段驱动 label (V0.2.0.13 修, V0.2.0.14 保留)", () => {
     const src = readFileSync("src-tauri/src/tray/menu.rs", "utf-8");
     const codeOnly = src
       .split("\n")
       .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
       .join("\n");
-    // MenuState 必须含 floating_visible + main_visible 字段 (驱动 label)
     expect(codeOnly).toMatch(/floating_visible\s*:\s*bool/);
     expect(codeOnly).toMatch(/main_visible\s*:\s*bool/);
-    // label 必须根据可见性选 4 种 (显示/隐藏主窗 + 显示/隐藏任务栏), 不能合并成 "显示/隐藏 xx"
     expect(codeOnly).toMatch(/显示任务栏/);
     expect(codeOnly).toMatch(/隐藏任务栏/);
     expect(codeOnly).toMatch(/显示主窗/);
     expect(codeOnly).toMatch(/隐藏主窗/);
   });
 
-  it("B-2-2 lib.rs on_menu_event 只注册到 floating window (双触发修复: 去掉 main)", () => {
+  it("B-2-2 lib.rs on_menu_event 只注册到 floating window (V0.2.0.13 修, V0.2.0.14 保留)", () => {
     const src = readFileSync("src-tauri/src/lib.rs", "utf-8");
     const codeOnly = src
       .split("\n")
       .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
       .join("\n");
-    // V0.2.0.12 错把 on_menu_event 绑到 ["main", "floating"] → MenuEvent 被派发 2 次 (主窗+浮窗都收).
-    // V0.2.0.13 改 single label loop 仅 "floating". 双重断言防回滚:
-    //  - 正向: 必须含 "for label in [\"floating\"]"
-    //  - 反向: 必须不含 "main" 在同一 for label in [...] 数组里
     expect(codeOnly).toMatch(/for\s+label\s+in\s*\[\s*["']floating["']\s*\]/);
     expect(codeOnly).not.toMatch(/for\s+label\s+in\s*\[[^\]]*["']main["'][^\]]*\]/);
   });
 
-  it("C-3 ExpandedPanel.tsx 拆 onCancel → onDismiss + onClearAndDismiss (语义分离: blur vs 显式取消)", () => {
-    const src = readFileSync("src/floating/components/ExpandedPanel.tsx", "utf-8");
-    const codeOnly = src
-      .split("\n")
-      .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
-      .join("\n");
-    // 必须含 onDismiss + onClearAndDismiss prop 类型 (两个语义分离的回调)
-    expect(codeOnly).toMatch(/onDismiss:\s*\(\s*\)\s*=>\s*void/);
-    expect(codeOnly).toMatch(/onClearAndDismiss:\s*\(\s*\)\s*=>\s*void/);
-    // onDismiss 在 useEffect 内通过 stable ref 调用 (blur listener 走 ref, 防 stale closure)
-    expect(codeOnly).toMatch(/onDismissRef\s*=\s*useRef/);
-    expect(codeOnly).toMatch(/onDismissRef\.current\s*\(\s*\)/);
-    // onClearAndDismiss 直接 prop 调用 (Esc + 取消按钮是同步 event handler, ref 不必要)
-    expect(codeOnly).toMatch(/onClick=\{onClearAndDismiss\}/);
-    // V0.2.0.12 错的 onCancel 必须清空 (已无 prop 名引用)
-    expect(codeOnly).not.toMatch(/onCancel\b/);
-  });
-
-  it("C-4 App.tsx handleStart 成功路径 + act('complete') 均不含 setExpanded(false) (任务开/完保持展开)", () => {
+  it("C-3 App.tsx taskTitle state 在 App.tsx, handleDismiss 只 setExpanded(false) 不清 taskTitle", () => {
     const src = readFileSync("src/floating/App.tsx", "utf-8");
     const codeOnly = src
       .split("\n")
       .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
       .join("\n");
-    // 抽 handleStart 函数体 + act 函数体, 各自确认无 setExpanded(false)
-    const handleStartMatch = codeOnly.match(/async\s+function\s+handleStart\s*\(\s*\)\s*\{([\s\S]*?)\n\s{2}\}/);
-    expect(handleStartMatch).toBeTruthy();
-    expect(handleStartMatch![1]).not.toMatch(/setExpanded\s*\(\s*false\s*\)/);
-    const actMatch = codeOnly.match(/async\s+function\s+act\s*\(\s*action[\s\S]*?\)\s*\{([\s\S]*?)\n\s{2}\}/);
-    expect(actMatch).toBeTruthy();
-    expect(actMatch![1]).not.toMatch(/setExpanded\s*\(\s*false\s*\)/);
+    // handleDismiss 函数体只含 setExpanded(false), 不含 setTaskTitle
+    const handleDismissMatch = codeOnly.match(/(?:const|function)\s+handleDismiss\s*=\s*(?:useCallback\s*\(\s*\(\s*\)\s*=>\s*\{|function\s*\(\s*\)\s*\{)([\s\S]*?)\n\s{2}\}/);
+    expect(handleDismissMatch).toBeTruthy();
+    expect(handleDismissMatch![1]).not.toMatch(/setTaskTitle/);
+    // 仍含 setExpanded(false)
+    expect(handleDismissMatch![1]).toMatch(/setExpanded\s*\(\s*false\s*\)/);
+  });
+
+  it("C-4 App.tsx useEffect 监听 session 变化自动 setExpanded(false) (active session 时折叠 + ControlRow)", () => {
+    const src = readFileSync("src/floating/App.tsx", "utf-8");
+    const codeOnly = src
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("//") && !line.trim().startsWith("*"))
+      .join("\n");
+    // useEffect 必须监听 session?.id, 自动 setExpanded(false)
+    expect(codeOnly).toMatch(/useEffect\(\s*\(\s*\)\s*=>\s*\{[\s\S]*?if\s*\(\s*session\s*\)\s*setExpanded\s*\(\s*false\s*\)/);
+    // active session 时 App.tsx 渲染 ControlRow (在 FoldedBar 后, 不渲染 ExpandedPanel)
+    expect(codeOnly).toMatch(/\{session\s*&&\s*\([\s\S]*?<ControlRow\s/);
+    expect(codeOnly).toMatch(/\{!session\s*&&\s*expanded\s*&&\s*\([\s\S]*?<ExpandedPanel\s/);
   });
 });
