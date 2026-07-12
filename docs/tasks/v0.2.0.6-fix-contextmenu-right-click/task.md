@@ -1,5 +1,7 @@
 # fix(floating): P0-9 复活 — 右键被折叠态根 div 抢占触发 toggle
 
+> ⚠️ **[作废,见 V0.2.0.12]** 本任务的实现前提("V0.2.6 误改的 HTML React ContextMenu")已被 V0.2.0.12 PATCH 证伪,本任务**不再适用**。详见 [`docs/tasks/v0.2.0.12-restore-v1-archive-design/task.md`](../../tasks/v0.2.0.12-restore-v1-archive-design/task.md) + [`docs/reports/v0.2.0.12-release-notes.md`](../../reports/v0.2.0.12-release-notes.md)。保留本文件仅作历史档案。
+
 > **[V0.2.0 误导]** 本文件基于"V0.2.6 误改的 HTML React ContextMenu 实现"前提 — V0.2.0 ~ V0.2.0.11 反复修 HTML React 组件,从未真修对。
 > **[V0.2.0 误导]** 真实实现按 V1.0 archive: **Rust 原生 Tauri Menu**(`src-tauri/src/tray/menu.rs` + `window.popup_menu(&menu)`),而不是 HTML React 组件。
 > **[V0.2.0 误导]** V0.2.0.12 PATCH 已删除 HTML `ContextMenu.tsx`,恢复 V1.0 archive Rust 原生 Menu 模式。本文件保留只作历史档案,**不**描述当前真实架构。

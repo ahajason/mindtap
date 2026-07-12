@@ -49,5 +49,5 @@ P2,不影响主流程,顺手修。
 - PRD §3.1 折叠态 + §3.2 展开态: `docs/prd/v0.2.0-floating-window-prd.md`
 - Design 视觉规范: `docs/design/v0.2.0-floating-window-design.md`(待迁)
 - 治理规则: `docs/governance/versioning-rule.md` §三 + `docs/governance/l3-gating.md`
-- L3 findings 来源: `docs/reports/v0.2.7-final-fix-retrospective.md` §2 Bug 5 段
+- L3 findings 来源: `docs/reports/v0.2.0.5-final-fix-retrospective.md` §2 Bug 5 段
 - 沉淀到 retro: `docs/reports/v0.2.0-retrospective.md`(待补)

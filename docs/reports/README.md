@@ -19,7 +19,7 @@ docs/reports/
 - `docs/reports/v0.2.0.6-release-notes.md`
 - `docs/reports/v0.2.1-release-notes.md`
 - `docs/reports/v0.2.0-retrospective.md`
-- `docs/reports/v0.2.7-windows-qa-v8.md`
+- `docs/reports/2026-07-12-v0.2.0.5-windows-qa.md`
 
 ## 二、release notes 模板(PATCH 和 MINOR 通用)
 
