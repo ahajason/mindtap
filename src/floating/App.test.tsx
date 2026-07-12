@@ -253,3 +253,22 @@ describe("V0.2.6 patch 回归测试 — package.json 完整依赖", () => {
     expect(src).toMatch(/"@tauri-apps\/plugin-dialog":/);
   });
 });
+
+
+describe("V0.2.0.12 patch — D fix: tauri.conf.json floating 段 shadow:false + resizable:false (根除 DWM aura shadow + resize grip 残留)", () => {
+  // 反模式 14 (V0.2.0.8 / V0.2.0.10 / V0.2.0.11 三轮改 .floating-root CSS / FoldedBar inline shadow 都失败)
+  // 根因: Tauri 2 WindowConfig shadow 默认 true,在 decorations:false + transparent 下 DWM 在 WebView2 透明画布
+  //       外面画 aura shadow (Win11 1px white border + 圆角 + focus 加重)。CSS 修不到画布之外。
+  // 修复: tauri.conf.json floating 段 shadow:false 关闭 DWM aura shadow,resizable:false 防 non-client edge / resize grip 残留
+  // 验证: grep -A 14 '"label": "floating"' src-tauri/tauri.conf.json 期望命中 shadow:false + transparent:true + backgroundColor:"#00000000" + resizable:false + decorations:false
+
+  it("tauri.conf.json floating 段四字段全命中 (shadow:false + resizable:false + transparent:true + backgroundColor:#00000000)", () => {
+    const src = readFileSync("src-tauri/tauri.conf.json", "utf-8");
+    const floatMatch = src.match(/"label":\s*"floating"[\s\S]*?\{[\s\S]*?\}/);
+    expect(floatMatch).toBeTruthy();
+    expect(floatMatch![0]).toMatch(/"shadow"\s*:\s*false/);
+    expect(floatMatch![0]).toMatch(/"resizable"\s*:\s*false/);
+    expect(floatMatch![0]).toMatch(/"transparent"\s*:\s*true/);
+    expect(floatMatch![0]).toMatch(/"backgroundColor"\s*:\s*"#00000000"/);
+  });
+});
