@@ -32,22 +32,34 @@ describe("V0.2.7 patch — Bug 1: act() 函数必须 try/catch 包裹 await (闪
 });
 
 describe("V0.2.7 patch — Bug 2: onMouseMove 拖 4px 后必须调 win.startDragging() (resize/拖动真根因)", () => {
-  it("App.tsx 拖动阈值满足后必须调 win.startDragging() IPC", () => {
+  // 反模式 16 防御: 用逐行扫描排除注释行, 不允许字面包含 "win.startDragging()" 的注释行谎报
+  function countStartDraggingCalls(src: string): { calls: number; sampleLines: string[] } {
+    const lines = src.split("\n");
+    const callLines = lines.filter((line) => {
+      const trimmed = line.trim();
+      if (trimmed.startsWith("//")) return false; // 排除单行注释
+      if (trimmed.startsWith("*")) return false;  // 排除 JSDoc /* ... */
+      return /(\w+\??\.startDragging\s*\(|\bstartDragging\s*\()/.test(line);
+    });
+    return { calls: callLines.length, sampleLines: callLines.slice(0, 3) };
+  }
+
+  it("App.tsx 拖动阈值满足后必须调 win.startDragging() IPC (排除注释行, 反模式 16 防御)", () => {
     const src = readFileSync("src/floating/App.tsx", "utf-8");
-    // 在 onMouseMove 内, dragStarted=true 后必须调 startDragging
-    // 允许两种合理形态:
-    //   形态 A (同步): if (>=THRESHOLD) { dragRef.current.dragStarted = true; win.startDragging(); }
-    //   形态 B (startDragging 是 const win = getCurrentWindow() 拿的): startDragging() 调用存在
-    expect(src).toMatch(/win\.startDragging\s*\(\s*\)/);
+    const { calls, sampleLines } = countStartDraggingCalls(src);
+    // 必须有 ≥ 1 个非注释行的 startDragging 调用
+    expect(calls).toBeGreaterThanOrEqual(1);
+    // 取样确认确实是 xxx.startDragging() 或 xxx?.startDragging() 形态, 不是别的 xxx.startDraggingWithoutMove 函数
+    expect(sampleLines[0]).toMatch(/\.startDragging\s*\(\s*\)/);
   });
 
-  it("App.tsx getCurrentWindow() 解构/调用必须含 startDragging (前端调 IPC 的前提)", () => {
+  it("App.tsx getCurrentWindow() 解构/调用必须含 startDragging (前端调 IPC 的前提, 排除注释行)", () => {
     const src = readFileSync("src/floating/App.tsx", "utf-8");
-    // 不依赖具体解构形态, 只断言 import 含 startDragging 或 getCurrentWindow().startDragging 调用
-    const hasStartDraggingImport =
-      /import[\s\S]*?startDragging[\s\S]*?from\s+["']@tauri-apps\/api\/window["']/.test(src);
-    const hasStartDraggingCall = /startDragging\s*\(/.test(src);
-    expect(hasStartDraggingImport || hasStartDraggingCall).toBe(true);
+    // 排除注释后再断言
+    const { calls } = countStartDraggingCalls(src);
+    // 不依赖具体解构形态 (const { startDragging } = getCurrentWindow(); 还是 getCurrentWindow().startDragging()),
+    // 但必须有真实的调用存在 (非注释)
+    expect(calls).toBeGreaterThanOrEqual(1);
   });
 });
 
