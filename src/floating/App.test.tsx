@@ -40,24 +40,23 @@ import { FloatingApp } from "./App";
  * - 1px 黑边 (V0.2.0.4 改 border: 0)
  * - OS native context menu (WebView2 拦截) */
 
-describe("V0.2.0.4 patch 回归测试 — 27 反复犯完整覆盖", () => {
-  it("折叠态根 div className 含 'floating-root folded' (V0.2.0 retro #1 .floating-root 漏挂修复)", async () => {
+describe("V0.2.6 patch 回归测试 — 27 反复犯完整覆盖 (V0.2.0.14 折叠态/展开态 同一 root div, data-testid='floating-root' 永远)", () => {
+  it("根 div className 含 'floating-root' (V0.2.0 retro #1 .floating-root 漏挂修复)", async () => {
     render(<FloatingApp />);
-    const foldedRoot = await screen.findByTestId("floating-root-folded");
-    expect(foldedRoot.className).toContain("floating-root");
-    expect(foldedRoot.className).toContain("folded");
+    const root = await screen.findByTestId("floating-root");
+    expect(root.className).toContain("floating-root");
   });
 
   it("浮窗不含 'cursor: grab' (V0.1.6 retro lesson 5 反 HIG)", async () => {
     render(<FloatingApp />);
-    const foldedRoot = await screen.findByTestId("floating-root-folded");
-    expect(foldedRoot.className).not.toContain("cursor-grab");
+    const root = await screen.findByTestId("floating-root");
+    expect(root.className).not.toContain("cursor-grab");
   });
 
-  it("折叠态根 div 不挂 data-tauri-drag-region (V0.2.0.3 patch + P0-9 修 WebView2 拦截 click 不可靠 + React 合成事件无效)", async () => {
+it("根 div 不挂 data-tauri-drag-region (V0.2.5 patch + P0-9 修 WebView2 拦截 click 不可靠 + React 合成事件无效)", async () => {
     render(<FloatingApp />);
-    const foldedRoot = await screen.findByTestId("floating-root-folded");
-    expect(foldedRoot.getAttribute("data-tauri-drag-region")).toBeNull();
+    const root = await screen.findByTestId("floating-root");
+    expect(root.getAttribute("data-tauri-drag-region")).toBeNull();
   });
 
 });
@@ -93,35 +92,36 @@ describe("V0.2.1 修复回归测试 — body/floating.css 关键约束", () => {
   });
 });
 
-describe("V0.2.0.4 patch 回归测试 — 拖动/展开/位置 完整覆盖 (1.x FloatShell 模式)", () => {
-  it("折叠态短按触发展开 (onClick 触发 setExpanded(true), dragRef 4px 阈值后 dragStarted 保持折叠)", async () => {
+describe("V0.2.6 patch 回归测试 — 拖动/展开/位置 完整覆盖 (1.x FloatShell 模式, V0.2.0.14 折叠态/展开态同一 root div)", () => {
+  it("折叠态短按触发展开 (FoldedBar onClick 触发 setExpanded(true), input 出现)", async () => {
     render(<FloatingApp />);
-    const foldedRoot = await screen.findByTestId("floating-root-folded");
-    const innerPill = foldedRoot.querySelector('[role="status"]') as HTMLElement;
-    fireEvent.click(innerPill, { clientX: 10, clientY: 10 });
+    const root = await screen.findByTestId("floating-root");
+    const pill = root.querySelector("[role=status]") as HTMLElement;
+    fireEvent.click(pill, { clientX: 10, clientY: 10 });
     await waitFor(() => {
-      const foldedGone = !document.querySelector('[data-testid="floating-root-folded"]');
-      if (foldedGone) return true;
+      const input = document.querySelector("input[placeholder]");
+      if (input) return true;
       throw new Error("not yet");
     }, { timeout: 300, interval: 20 });
-    expect(document.querySelector('[data-testid="floating-root-folded"]')).toBeNull();
+    expect(document.querySelector("input[placeholder]")).toBeTruthy();
   });
 
-  it("折叠态拖动超 4px 不触发展开 (dragRef dragStarted=true 后 mouseup 保持折叠)", async () => {
+  it("折叠态拖动超 4px 不触发展开 (dragRef dragStarted=true 后 mouseup 保持折叠, input 不出现)", async () => {
     render(<FloatingApp />);
-    const foldedRoot = await screen.findByTestId("floating-root-folded");
-    fireEvent.mouseDown(foldedRoot, { clientX: 10, clientY: 10 });
-    fireEvent.mouseMove(foldedRoot, { clientX: 20, clientY: 15 });
-    fireEvent.mouseUp(foldedRoot, { clientX: 20, clientY: 15 });
-    expect(document.querySelector(".floating-root.expanded")).toBeNull();
+    const root = await screen.findByTestId("floating-root");
+    fireEvent.mouseDown(root, { clientX: 10, clientY: 10 });
+    fireEvent.mouseMove(root, { clientX: 20, clientY: 15 });
+    fireEvent.mouseUp(root, { clientX: 20, clientY: 15 });
+    await new Promise((r) => setTimeout(r, 50));
+    expect(document.querySelector("input[placeholder]")).toBeNull();
   });
 
-  it("折叠态根 div 包含 FoldedBar (spec §三 3.1 显示内容 task_title + focus_ms; V0.2.0.12 StatusDot 是 flex 第 1 child, title 是 :nth-child(2))", async () => {
+  it("根 div 永远包含 FoldedBar (StatusDot flex 第 1 child + title :nth-child(2) + focusMs :nth-child(3))", async () => {
     render(<FloatingApp />);
-    await screen.findByTestId("floating-root-folded");
-    const pill = document.querySelector('[role="status"]');
+    await screen.findByTestId("floating-root");
+    const pill = document.querySelector("[role=status]");
     expect(pill).toBeTruthy();
-    // V0.2.0.12: StatusDot 是 .folded-bar-inner flex 第 1 child (空 span), title 是 :nth-child(2)
+    expect(pill?.querySelector("span:nth-child(1)")?.className).toMatch(/inline-block|rounded-full/);
     expect(pill?.querySelector("span:nth-child(2)")?.textContent).toBe("未命名任务");
     expect(pill?.querySelector("span:nth-child(3)")?.textContent).toMatch(/^\d{2}:\d{2}:\d{2}$/);
   });

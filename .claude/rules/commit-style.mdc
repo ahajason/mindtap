@@ -47,8 +47,6 @@ alwaysApply: true
 
 scope 选择规则: commit 改的代码 80% 以上在哪个业务域, 就用哪个 scope; 跨多个用最核心的那个.
 
-> **V0.1.0 init 阶段**: 业务域尚未拆分, scope 临时用 `meta` 或留空; 待业务域拆分后用真实 scope.
-
 ## 粒度
 
 **1 个任务(`docs/tasks/<slug>/`) = 1-3 个 commit**.
@@ -74,17 +72,7 @@ scope 选择规则: commit 改的代码 80% 以上在哪个业务域, 就用哪�
 
 ## 不引 footer
 
-❌ `Refs:` / `Closes:` / `See also:` / `BREAKING CHANGE:` — 不是任何标准 footer, git 不识别, 冗余.
-
-反向追溯靠 `git log -- <path>`:
-
-```bash
-# 查某任务的 commit
-git log --all --oneline -- docs/tasks/<slug>/
-
-# 查某业务的 commit
-git log --all --oneline -- <业务路径>
-```
+❌ `Refs:` / `Closes:` / `See also:` / `BREAKING CHANGE:` — 不是任何标准 footer, git 不识别, 冗余. 反向追溯靠 `git log -- <path>` / `git show` / `git diff`(详情见 CLAUDE.md),不用 footer 做反查指针.
 
 ## 业务层粒度（message 不描写代码）
 
