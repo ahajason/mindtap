@@ -112,6 +112,7 @@ mindtap/
 - **多 issue 并行修**: 派 N 个 subagent, **每个 subagent 自己用 `Skill superpowers:using-git-worktrees` 起 worktree** (isolation);主 agent 留 develop, fetch + merge 集成;不要主 agent 串行跑多个 fix
 - **CSS 静态扫描 regex**: 写 `.floating-root[...]` 这类 selector 匹配时**先剥 `@media` / `@supports` / `@keyframes` 嵌套块**,否则后加的 @media 内嵌同名选择器会让测试误通过或 FAIL (反模式 18, 见 `memory/mindtap-v0.2.8-anti-patterns`)
 - **Background session 隔离**: 不能直接 `Edit`/`Write` 主 checkout 的 `develop` (harness `bgIsolation` 拦);改 develop 路径前先 `EnterWorktree` 或用 `Workflow` 的 `isolation: "worktree"`
+- **不主动用 Worktree(交互 session)**: 默认直接在主 checkout 工作;只有用户明确指示 (`EnterWorktree` / 写新 feature 分支) 或子 agent `isolation: "worktree"` 才进。只读 / 问答 / 文档任务一律不开 worktree。
 
 ## 本地配置
 
