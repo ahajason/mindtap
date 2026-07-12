@@ -29,7 +29,21 @@
 | 验证 Rust 端 | `cd src-tauri && cargo check` |
 | 验证前端类型 | `npx tsc --noEmit` |
 | 跑 vitest | `npm test`(单次)/ `npm run test:watch`(监听) |
-| 看 git 状态 / 追溯 commit 详情 | `git status` / `git log --oneline` / `git log -- <path>`(按文件追溯)/ `git show <sha>`(某 commit 全貌)/ `git diff <sha>` 或 `git diff <sha>~1 <sha>`(某 commit 改动) |
+| 回看 git(按场景) | 见下方"Git 回看(按场景)"小节,默认起点 `git show <sha>` 查 commit / `git log -- <path>` 查文件历史 / `git diff` 查未提交改动 |
+
+## Git 回看(按场景)
+
+| 场景 | 命令 |
+|---|---|
+| 当前工作树是否脏 / 哪些 staged | `git status` |
+| 最近 N 个 commit list | `git log --oneline -20` |
+| 某文件 / 目录的所有 commit(任务 / 业务路径追溯) | `git log --oneline -- <path>` |
+| 单个 commit 全貌(作者 / 时间 / 全 diff / message body) | `git show <sha>` |
+| 单个 commit 的精确改动(parent vs 当前,无历史噪音) | `git diff <sha>~1 <sha>` |
+| 工作树 vs HEAD(还没 commit 的本地改动) | `git diff` |
+| staged vs HEAD(已 add 但未 commit) | `git diff --cached` |
+
+**默认起点**: 想知道 commit 说了什么 → `git show <sha>`;想知道某段代码历史上谁改过 → `git log -- <path>`;想精读一段改动 → `git diff <sha>~1 <sha>`。
 
 ## 双工作树 (WSL + D:\)
 
