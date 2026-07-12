@@ -112,6 +112,12 @@ docs/reports/
 3. `docs/tech/v<X>-<feature>-tech.md` §5 DoD 全勾选
 4. `docs/governance/l3-gating.md` §L3 全 PASS
 5. D:\ 端 `npm run tauri dev` 实测签字
+6. **同步 bump 3 个 config file `version` 字段**(在 lockstep 单个 commit 内):
+   - `package.json` → `"version": "<new>"`
+   - `src-tauri/Cargo.toml` → `[package] version = "<new>"`
+   - `src-tauri/tauri.conf.json` → `"version": "<new>"`
+   - 4-segment 标识 `V<MAJOR>.<MINOR>.<PATCH>` 对应 `0.<MAJOR>.<MINOR>.<PATCH>`(如 `V0.2.0.12` → `"0.2.0.12"`);cargo + npm + tauri 均接受
+   - 同步 bump 后再 bump `CHANGELOG.md` 当前已发布版本表(避免下一发版看不到当前状态)
 
 **任一项缺失 → 不允许 commit `chore(release): v<X>`**
 
