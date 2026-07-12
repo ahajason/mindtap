@@ -81,9 +81,9 @@
 
 | 旧路径(混乱期) | 新路径(分层后) | 迁移规则 |
 |---|---|---|
-| `docs/projects/v0.2/README.md` 整本 | 拆 → `prd/` + `domain/` + `tech/` | 整体删除,内容分散 |
-| `docs/projects/v0.2/CONTEXT.md` | → `domain/v0.2-domain-model.md` | 实体/状态迁,技术细节剔除 |
-| `docs/projects/v0.2/adr/*.md` | → `domain/adr/*.md` | 整体 mv |
+| `docs/prd/v0.2.0-floating-window-prd.md (基线 spec, 内容散拆自 projects/v0.2/README.md)` 整本 | 拆 → `prd/` + `domain/` + `tech/` | 整体删除,内容分散 |
+| `docs/domain/v0.2-domain-model.md` | → `domain/v0.2-domain-model.md` | 实体/状态迁,技术细节剔除 |
+| `docs/domain/adr/*.md` | → `domain/adr/*.md` | 整体 mv |
 | `docs/specs/*.md` | → `design/*.md` + `tech/*.md` | 按内容性质拆 |
 | `docs/architecture/*.md` | → `tech/*.md` §DoD + `governance/l3-gating.md` | 验证清单迁 tech,治理规则迁 governance |
 | `docs/plans/*.md` | 保持 `plans/` | 名称 OK,职责收紧 |

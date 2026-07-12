@@ -375,9 +375,9 @@ force push 经常被认为是"快速撤销" 工具,实际是历史破坏器。
 
 ## 5. 应该写但还没确认的子文档
 
-- `.opencode/rules/agent-self-discipline.md` (新增规则,涵盖上面 D1-D6)
+- `.claude/rules/agent-self-discipline.md` (新增规则,涵盖上面 D1-D6)
 - 更新 `AGENTS.md` 把这 6 个错加到 "工作流铁律" 段
-- 在 `.opencode/rules/dev-verify-before-commit.md` 里加一段 "测试期间不 commit"
+- 在 `.claude/rules/dev-verify-before-commit.md` 里加一段 "测试期间不 commit"
 
 但:**用户没让我加规则文档**,我只负责 "写到文档里"。新规则添加需要用户另开 task。
 

@@ -104,6 +104,6 @@ V0.2.0.6 ~ V0.2.0.10 五个 PATCH 都涉及浮窗,user L3 重测发现 4 issue �
 - V0.2.0.9 D(不在 scope): [`../v0.2.0.9-fix-expanded-asymmetry/task.md`](../v0.2.0.9-fix-expanded-asymmetry/task.md)
 - V0.2.0.10 C 二次根因: [`../v0.2.0.10-fix-foldedbar-inline-shadow/task.md`](../v0.2.0.10-fix-foldedbar-inline-shadow/task.md)
 - L3 findings 来源: [`docs/reports/2026-07-13-v0.2.7-l3-findings.md`](../../reports/2026-07-13-v0.2.7-l3-findings.md)
-- V0.2.5 commit 谎改审计: [`docs/reports/v0.2.0.4-33-commit-audit.md`](../../reports/v0.2.6-33-commit-line-by-line-audit.md)
+- V0.2.5 commit 谎改审计: [`docs/reports/v0.2.0.4-33-commit-audit.md`](../../reports/v0.2.0.4-33-commit-audit.md)
 - 治理规则: [`docs/governance/versioning-rule.md`](../../governance/versioning-rule.md) §三 + [`docs/governance/l3-gating.md`](../../governance/l3-gating.md)
 - 沉淀到 retro: [`docs/reports/v0.2.0-retrospective.md`](../../reports/v0.2.0-retrospective.md)(待补)

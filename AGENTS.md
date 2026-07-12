@@ -14,7 +14,7 @@
 
 **业务目标** (V0.2): 一个永远在桌面边缘、3 秒进入计时、1 秒切回工作的"我现在在做什么"指示器。
 
-**铁律**: 全本地 SQLite，无导出/无导入/无同步（沿用 V1.0 PRD D23，V0.2 立项时用户已确认 — 详见 `docs/projects/v0.2/README.md`）。
+**铁律**: 全本地 SQLite，无导出/无导入/无同步（沿用 V1.0 PRD D23，V0.2 立项时用户已确认 — 详见 `docs/prd/v0.2.0-floating-window-prd.md (基线 spec, 内容散拆自 projects/v0.2/README.md)`）。
 
 **设计语言**: Apple Liquid Glass（仅作视觉灵感参考；具体落地用项目自有 spec `docs/design/glassic-ui-spec.md` + Tailwind tokens）。
 
@@ -130,9 +130,9 @@ git-fetch-with-cli = true
 | 新功能「怎么做」 | `docs/plans/YYYY-MM-DD-<topic>.md` |
 | 阶段交付报告 | `docs/reports/` |
 | 已交付版本完整沙盒 | `docs/archive/v<version>/` |
-| 任务正式档 | `docs/tasks/<version>-<type>-<short-desc>/task.md`（命名/模板见 `.opencode/rules/task-directory.md`） |
+| 任务正式档 | `docs/tasks/<version>-<type>-<short-desc>/task.md`（命名/模板见 `.claude/rules/task-directory.md`） |
 
-## 详细规则索引（位于 `.opencode/rules/`）
+## 详细规则索引（位于 `.claude/rules/`）
 opencode 通过项目级 `opencode.jsonc` 的 `instructions` 字段自动加载这些规则（每次会话注入 context，无 frontmatter，纯 markdown）：
 
 | 规则 | 何时查阅 |
@@ -167,7 +167,7 @@ opencode 通过项目级 `opencode.jsonc` 的 `instructions` 字段自动加载�
 - 没有 CI / `.github/workflows/` — 未配置。
 - `package.json` 中没有 linter / formatter 脚本 — 仅 TS strict。
 - 没有 pre-commit 钩子。
-- 有项目级 `opencode.jsonc`（仅声明 `instructions: .opencode/rules/*.md`，其他配置继承 `~/.config/opencode/opencode.jsonc`）。
+- 有项目级 `opencode.jsonc`（仅声明 `instructions: .claude/rules/*.md`，其他配置继承 `~/.config/opencode/opencode.jsonc`）。
 - `Cargo.lock` 已 gitignore（Tauri app 默认）。
 - 除 README 自称 MIT 外没有 license 文件。
 

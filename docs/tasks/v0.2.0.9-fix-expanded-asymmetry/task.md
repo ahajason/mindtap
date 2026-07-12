@@ -17,7 +17,7 @@ V0.2.0.5(即原 V0.2.7)Bug 5 主流程修好(展开后位置不偏移),但用户
 
 P2,不影响主流程,顺手修。
 
-**业务影响**:`docs/prd/v0.2.0-floating-window-prd.md` §3.2 展开态业务规则第 1 条"浮窗物理尺寸 360×280"已硬契约,但折叠态 width 不固定(由内容撑开)违反 §3.1"浮窗物理尺寸 320×36"硬契约。Design 视觉规范(见 `docs/design/v0.2.0-floating-window-design.md`,待迁)中"折叠→展开应有 200-300ms ease-out 下拉动画"未实现。
+**业务影响**:`docs/prd/v0.2.0-floating-window-prd.md` §3.2 展开态业务规则第 1 条"浮窗物理尺寸 360×280"已硬契约,但折叠态 width 不固定(由内容撑开)违反 §3.1"浮窗物理尺寸 320×36"硬契约。Design 视觉规范(见 `docs/specs/2026-07-11-v0.2.0-floating-window-design.md`,待迁)中"折叠→展开应有 200-300ms ease-out 下拉动画"未实现。
 
 ## What
 
@@ -47,7 +47,7 @@ P2,不影响主流程,顺手修。
 
 - Tech §1 范围边界: `docs/tech/v0.2.0-floating-window-tech.md`
 - PRD §3.1 折叠态 + §3.2 展开态: `docs/prd/v0.2.0-floating-window-prd.md`
-- Design 视觉规范: `docs/design/v0.2.0-floating-window-design.md`(待迁)
+- Design 视觉规范: `docs/specs/2026-07-11-v0.2.0-floating-window-design.md`(待迁)
 - 治理规则: `docs/governance/versioning-rule.md` §三 + `docs/governance/l3-gating.md`
 - L3 findings 来源: `docs/reports/v0.2.0.5-final-fix-retrospective.md` §2 Bug 5 段
 - 沉淀到 retro: `docs/reports/v0.2.0-retrospective.md`(待补)
