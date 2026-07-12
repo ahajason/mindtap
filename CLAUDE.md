@@ -2,7 +2,7 @@
 
 轻念 · Mindtap — 极简记录桌面应用。Tauri 2 (Rust) + React 19 + TypeScript + Vite 7。本地 SQLite，无云同步。
 
-> **当前交付**: V0.2.6 浮窗(floating window)收口(WebView2 透明 / native context menu / Overlay titleBar 已 iterate);下一阶段看 `docs/governance/` + `docs/tech/v0.2.0-floating-window-tech.md`(V0.2.7/2.8 4 issue 待重命名 V0.2.0.x PATCH)。
+> **当前交付**: **V0.2.0.12 PATCH**(浮窗 4 对象并行恢复 V1.0 archive 设计,WebView2 transparent + native Rust menu + StatusDot inline + 浮窗 config focus: false 收口,2026-07-13;详见 `docs/reports/v0.2.0.12-release-notes.md`)。develop HEAD 含后续 V0.2.0.13 + V0.2.0.14 PATCH(commit `fd38127` + `a0fc00d`)已 merge 但**尚未写 release notes**(增量修 L3 user 重测 deviation + 单一 root div 重构)。版本历史详见 `docs/governance/versioning-rule.md` §三 + §四(V0.2.3~V0.2.8 已回退为 V0.2.0.x PATCH,V0.2.6/7/8 标签不再使用)。
 
 ## 文档分层速查表
 
@@ -53,7 +53,7 @@
 mindtap/
 ├── src/                # 主窗口（当前为 StyleGuide 路由）
 │   ├── lib/tauri-bridge.ts    # Rust ↔ JS 唯一 seam
-│   ├── floating/        # ⭐ 真正产品：浮窗（V0.2.6 收口）
+│   ├── floating/        # ⭐ 真正产品：浮窗（V0.2.0.12 PATCH 收口 + V0.2.0.13 加 align-middle P1 修）
 │   └── components/ routes/ hooks/
 ├── src-tauri/src/      # ⭐ Rust 后端
 │   ├── lib.rs           # run() + 全局快捷键 + invoke_handler 注册
@@ -98,7 +98,7 @@ mindtap/
 | `.claude/rules/commit-style.mdc` | 写 commit message 前 / 决定何时 commit（业务层粒度 + 完整性门槛） |
 | `.claude/rules/comment-style.mdc` | 写代码时（注释只写 why, 代码即注释） |
 | `.claude/rules/codegraph.mdc` | 跨文件结构查询时（vs grep） |
-| `memory/mindtap-v0.2.8-anti-patterns.md` | 反模式 17 (gh/MCP 滥用) + 18 (CSS regex 嵌套) — V0.2.8 4 fix 沉淀 |
+| `memory/mindtap-v0.2.8-anti-patterns.md` | 反模式 17 (gh/MCP 滥用) + 18 (CSS regex 嵌套) — 历史沉淀名(实际归属 V0.2.0.6~0.9 PATCH,见 versioning-rule §三) |
 | `.claude/rules/task-directory.mdc` | 写任务正式档时（slug 命名 + 模板 + 跟 commit 关系） |
 | `.claude/rules/dev-sync-before-windows-verify.mdc` | 改 Windows-side runtime（Tauri / WebView2 / 原生菜单 / Rust 后端）后，D:\ 端 dev.bat 验证前必走（push origin + D:\ pull）;WSL-only 验证不触发 |
 | `.claude/rules/dev-verify-before-commit.mdc` | 改 system API / OS 集成 / 框架 runtime 后,commit 前必须 dev 实测新机制本身在工作 |
@@ -110,7 +110,7 @@ mindtap/
 - **穷举再下手**: 多个 root cause 不分散修(见 `memory/exhaust-layers-before-fix`)
 - **纯 git + ssh (本仓库约束)**: 默认 `git push origin develop` + D:\ `git pull`;**禁用 gh CLI** (无 auth) 和 **GitHub MCP `issue_write`/`create_pull_request`** (classifier 拦);要 PR 走 web (https://github.com/ahajason/mindtap/compare/develop...<branch>)
 - **多 issue 并行修**: 派 N 个 subagent, **每个 subagent 自己用 `Skill superpowers:using-git-worktrees` 起 worktree** (isolation);主 agent 留 develop, fetch + merge 集成;不要主 agent 串行跑多个 fix
-- **CSS 静态扫描 regex**: 写 `.floating-root[...]` 这类 selector 匹配时**先剥 `@media` / `@supports` / `@keyframes` 嵌套块**,否则后加的 @media 内嵌同名选择器会让测试误通过或 FAIL (反模式 18, 见 `memory/mindtap-v0.2.8-anti-patterns`)
+- **CSS 静态扫描 regex**: 写 `.floating-root[...]` 这类 selector 匹配时**先剥 `@media` / `@supports` / `@keyframes` 嵌套块**,否则后加的 @media 内嵌同名选择器会让测试误通过或 FAIL (反模式 18, 见 `memory/mindtap-v0.2.8-anti-patterns` / 实际归属 V0.2.0.7~0.9 PATCH)
 - **Background session 隔离**: 不能直接 `Edit`/`Write` 主 checkout 的 `develop` (harness `bgIsolation` 拦);改 develop 路径前先 `EnterWorktree` 或用 `Workflow` 的 `isolation: "worktree"`
 - **不主动用 Worktree(交互 session)**: 默认直接在主 checkout 工作;只有用户明确指示 (`EnterWorktree` / 写新 feature 分支) 或子 agent `isolation: "worktree"` 才进。只读 / 问答 / 文档任务一律不开 worktree。
 

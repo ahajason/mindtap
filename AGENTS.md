@@ -7,9 +7,11 @@
 | 版本 | 状态 | 范围 |
 |---|---|---|
 | **V0.1.6** | ✅ main 已交付 (commit `8af219a`, 2026-06-22) | Style Guide 设计系统 — 11 UI 组件 + Tailwind tokens + Liquid Glass CSS + vitest。无业务 |
-| **V0.2.0** | ⏳ spec v1.1 冻结 (2026-07-11), plan 已落地 | 浮动窗计时器 — Windows 11 锁平台; 折叠态 320×36 + 展开态 360×280 + 全局快捷键 + SQLite timer_session 单表 |
-| V0.2.1 | ⏳ 待启动 | 加"选已有 timer_session" |
-| V0.2.2 | ⏳ 待启动 | 加时间盒 + 完成通知 |
+| **V0.2.0** | ✅ 已交付 (release notes `docs/reports/v0.2.0-release-notes.md`, 2026-07-11) | 浮动窗计时器 — Windows 11 锁平台; 折叠 320×36 + 展开 360×280 + 全局快捷键 + SQLite timer_session 单表 |
+| **V0.2.0.10~0.12 PATCHes** | ✅ 已交付 (`docs/reports/v0.2.0.10/11/12-release-notes.md`, 2026-07-13) | 浮窗 4 对象 PATCH 收口: transparent + 原生菜单 + StatusDot inline + 浮窗 config focus: false + 任务名 50 字符锁定 |
+| **V0.2.0.13 / 0.14 PATCH** | ⏳ 已 merge in develop (`fd38127` / `a0fc00d`, 2026-07-13), **release notes 待补** | V0.2.0.13: user L3 重测 5 deviation inline 修(StatusDot 垂直对齐 + 折叠/展开叠加式 + menu.rs 文案动态化 + on_menu_event scope + onCancel 拆分);V0.2.0.14: 单一 root div 重构 + document mousedown dismiss + active session 折叠 |
+| ~~V0.2.1 SwitchDropdown~~ | ⛔ 不再启动 (2026-07-13 decision);scope 被 V0.2.0.x PATCHes 吸收(详见 `docs/governance/versioning-rule.md` §三) | `docs/reports/v0.2.1-release-notes.md` 仅记录计划 TODO,从未 ship,应归档 |
+| V0.2.2 时间盒 + 通知 | ⏳ 待启动 | 加时间盒 + 完成通知 |
 | V0.3+ | ⏳ 待启动 | macOS 适配 + 主窗 + 时间线 + 设置中心 |
 
 **业务目标** (V0.2): 一个永远在桌面边缘、3 秒进入计时、1 秒切回工作的"我现在在做什么"指示器。
