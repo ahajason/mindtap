@@ -29,7 +29,7 @@
 | 验证 Rust 端 | `cd src-tauri && cargo check` |
 | 验证前端类型 | `npx tsc --noEmit` |
 | 跑 vitest | `npm test`(单次)/ `npm run test:watch`(监听) |
-| 看 git 状态 | `git status` / `git log --oneline` |
+| 看 git 状态 / 追溯 commit 详情 | `git status` / `git log --oneline` / `git log -- <path>`(按文件追溯)/ `git show <sha>`(某 commit 全貌)/ `git diff <sha>` 或 `git diff <sha>~1 <sha>`(某 commit 改动) |
 
 ## 双工作树 (WSL + D:\)
 
