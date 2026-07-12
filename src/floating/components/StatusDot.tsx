@@ -30,7 +30,10 @@ export function StatusDot({ status, size = "sm" }: StatusDotProps) {
       data-no-expand
       aria-hidden="true"
       className={[
-        "inline-block shrink-0 rounded-full ring-2 ring-white/40",
+        // V0.2.0.13 PATCH: 加 align-middle + self-center 让 inline-block 默认 baseline
+        // 在 flex 容器内 + active 状态 scale(1.15) 时, 视觉中心仍对齐父级 items-center 行
+        // (V0.2.0.12 状态未垂直对齐 P1 修复)
+        "inline-block shrink-0 self-center align-middle rounded-full ring-2 ring-white/40",
         DOT_COLOR[key],
         SIZE_CLASS[size],
         isPulsing ? "animate-pulse-dot" : "",

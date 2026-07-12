@@ -10,6 +10,12 @@ use tauri_plugin_autostart::ManagerExt;
 
 pub struct MenuState {
     pub autostart_enabled: bool,
+    // V0.2.0.13 PATCH B-2-1: 加 floating_visible / main_visible 字段,
+    // 让 floating_toggle / main_toggle menu item label 根据当前 visibility 动态化:
+    // 显示任务栏 / 隐藏任务栏 (浮窗) / 显示主窗 / 隐藏主窗。
+    // 不再用合并文案 "显示/隐藏 浮窗" — user 实测跟当前状态对不上,触发时会困惑。
+    pub floating_visible: bool,
+    pub main_visible: bool,
 }
 
 const ID_FLOATING_TOGGLE: &str = "floating_toggle";
@@ -18,19 +24,32 @@ const ID_AUTOSTART_TOGGLE: &str = "autostart_toggle";
 const ID_QUIT: &str = "quit";
 
 /// 构建 4 项主菜单(与 V1.4 spec §5.1 一致)。
-/// 每次调用都会读 autostart 真实状态,菜单用完即弃,不维护 CheckMenuItem 引用。
+/// 每次调用都会读 autostart 真实状态 + 各窗口 visibility,菜单用完即弃,
+/// 不维护 CheckMenuItem / MenuItem 引用。
 pub fn build_main_menu(app: &AppHandle, state: &MenuState) -> tauri::Result<Menu<Wry>> {
+    // V0.2.0.13 PATCH B-2-1: 根据 floating / main 当前可见性动态选 label,
+    // 让用户看到当前操作意图(单一动作文案,不是合并)。
+    let floating_label = if state.floating_visible {
+        "隐藏任务栏"
+    } else {
+        "显示任务栏"
+    };
+    let main_label = if state.main_visible {
+        "隐藏主窗"
+    } else {
+        "显示主窗"
+    };
     let floating = MenuItem::with_id(
         app,
         ID_FLOATING_TOGGLE,
-        "显示/隐藏 浮窗",
+        floating_label,
         true,
         None::<&str>,
     )?;
     let main = MenuItem::with_id(
         app,
         ID_MAIN_TOGGLE,
-        "显示/隐藏 主窗",
+        main_label,
         true,
         None::<&str>,
     )?;
