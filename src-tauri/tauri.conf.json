@@ -31,11 +31,12 @@
         "url": "floating.html",
         "width": 320,
         "height": 36,
-        "resizable": true,
+        "resizable": false,
         "fullscreen": false,
         "transparent": true,
         "backgroundColor": "#00000000",
         "decorations": false,
+        "shadow": false,
         "alwaysOnTop": true,
         "skipTaskbar": true,
         "focus": false
