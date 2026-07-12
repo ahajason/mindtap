@@ -60,7 +60,7 @@
 | V0.2.5 | setFocusable 闪退 + status dot | V0.2.0.3 | `v0.2.0.3-fix-setfocusable-panic` |
 | V0.2.6 | 13 commit 浮窗修复(部分 commit 撒谎) | V0.2.0.4~0.5 | 拆 2 个 PATCH |
 | V0.2.7 | 5 bug 真根因 | V0.2.0.5~0.6 | 拆 2 个 PATCH(已含 V0.2.6 漏修) |
-| V0.2.8 Issue A | 右键被折叠态根 div 抢占 | V0.2.0.6 | `v0.2.0.6-fix-contextmenu-right-click` |
+| V0.2.8 Issue A [V0.2.0 误导] | 右键被折叠态根 div 抢占 | V0.2.0.6 | `v0.2.0.6-fix-contextmenu-right-click` | (V0.2.0.6 整文件基于 HTML ContextMenu 误前提,V0.2.0.12 改 V1.0 archive Rust 原生 Menu)|
 | V0.2.8 Issue B | 呼吸灯错位 | V0.2.0.7 | `v0.2.0.7-fix-statusdot-displacement` |
 | V0.2.8 Issue C | 黑边仍有 | V0.2.0.8 | `v0.2.0.8-fix-black-border-regression` |
 | V0.2.8 Bug 5 | 展开态不等宽 + 无下拉动画(cosmetic) | V0.2.0.9 | `v0.2.0.9-fix-expanded-asymmetry` |

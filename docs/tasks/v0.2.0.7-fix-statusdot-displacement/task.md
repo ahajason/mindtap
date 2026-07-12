@@ -1,5 +1,8 @@
 # fix(floating): 折叠态 StatusDot 错位 — 时有时无 + 仅右上漏一部分
 
+> **[V0.2.0 误导]** 本文件基于"StatusDot 右上角 absolute 定位"的错误前提 — V1.0 archive StatusDot 实现为 **inline-block 8×8 span,FoldedBar flex 第 1 child(最左,标题前面)**,无 absolute。
+> **[V0.2.0 误导]** V0.2.x 反复修改 StatusDot 类名(top-0.5→top-1 等)是误导路径上的反复修,从未真修对。
+> **[V0.2.0 误导]** V0.2.0.12 PATCH 已恢复到 V1.0 archive inline-block flex 第 1 child 实现。本文件保留只作历史档案,**不**描述当前真实架构。
 > 创建: 2026-07-13
 > 旧目录: `docs/tasks/v0.2.8-fix-statusdot-displacement/`(2026-07-13 按 `docs/governance/versioning-rule.md` §三 回退)
 > 版本: V0.2.0.7(V0.2.0 的第 7 个 PATCH)
@@ -10,7 +13,7 @@
 
 ## Why
 
-V0.2.0.5(即原 V0.2.7,commit `c6fc6eb`)5 bug 主流程 PASS,但用户实测发现折叠态右上角"呼吸灯"(StatusDot)位置不对:时有时无 + 仅露一部分。
+V0.2.0.5(即原 V0.2.7,commit `c6fc6eb`)5 bug 主流程 PASS,但用户实测发现 [V0.2.0 误导] 折叠态右上角"呼吸灯"(StatusDot)位置不对:时有时无 + 仅露一部分 [V0.2.0 误导](实为 V0.2.x 误改,V1.0 archive StatusDot = inline-block flex 第 1 child 最左,根本不该在右上角)。
 
 StatusDot 是折叠态关键 UI 信号(timer running / paused 状态),错位破坏信息可见性,用户能看见但解释不通,算 P1 瑕疵必修。
 
@@ -22,7 +25,7 @@ StatusDot 是折叠态关键 UI 信号(timer running / paused 状态),错位破�
 
 修 `src/floating/components/StatusDot.tsx` + 关联 CSS(`StatusDot.css` / `floating.css`):排查 absolute 定位被父容器 `overflow: hidden` 裁掉的可能性,或 `animate-pulse-dot` keyframes scale 让 position 偏移,或 `transition-opacity` 中间帧 opacity=0。
 
-最终行为:折叠态右上角小圆点稳定可见 + 平滑呼吸,不闪烁不漏出。
+最终行为:[V0.2.0 误导] 折叠态右上角小圆点稳定可见 + 平滑呼吸(注:本文件错误前提为右上角,V1.0 archive = 最左 inline-block flex 第 1 child)
 
 ## Done when
 

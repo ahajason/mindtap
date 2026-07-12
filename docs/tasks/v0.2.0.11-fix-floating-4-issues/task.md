@@ -1,4 +1,6 @@
-# fix(floating): V0.2.0.11 PATCH — A 右键 ContextMenu 定位 + B StatusDot 错位 + C transparent + D 移除 transition (4 收口)
+# fix(floating): V0.2.0.11 PATCH — A [V0.2.0 误导] HTML 右键 ContextMenu 定位 + B [V0.2.0 误导] StatusDot 右上角错位 + C transparent + D 移除 transition (4 收口)
+
+> **[V0.2.0 误导]** 本文件中 A 段(HTML ContextMenu)与 B 段(StatusDot 右上角)基于 V0.2.6 误改的描述,V0.2.0.12 PATCH 已恢复 V1.0 archive(A = Rust 原生 Menu;B = inline-block flex 最左)。本文件保留只作历史档案。
 
 > 创建: 2026-07-13
 > 旧目录: 无(新 PATCH,4 issue 一次性收口)
@@ -14,7 +16,7 @@ V0.2.0.6 ~ V0.2.0.10 五个 PATCH 都涉及浮窗,user L3 重测发现 4 issue �
 
 | Issue | V0.2.0.6~10 反复修 | 真根因 | 反模式 |
 |---|---|---|---|
-| **A** ContextMenu 不弹 | 加 capture phase listener / `e.button !== 0` 守卫 | ContextMenu.tsx 单向 `Math.min` 做 bottom clamp;折叠态 `window.innerHeight=36` 时 `innerHeight-120=-84` → top:-84 跑 viewport 外;展开态 ContextMenu JSX 不渲染 | 反模式 14(反复修)+ 16(测试用 `fireEvent.contextMenu` 不传 button 测了"左键弹菜单") |
+| **A** ContextMenu 不弹 | 加 capture phase listener / `e.button !== 0` 守卫 | [V0.2.0 误导] HTML React ContextMenu.tsx 单向 `Math.min` 做 bottom clamp;折叠态 `window.innerHeight=36` 时 `innerHeight-120=-84` → top:-84 跑 viewport 外;展开态 ContextMenu JSX 不渲染(实为 V0.2.6 误改产物,V0.2.0.12 PATCH 已删 HTML 改 V1.0 archive Rust 原生 Menu) | 反模式 14(反复修)+ 16(测试用 `fireEvent.contextMenu` 不传 button 测了"左键弹菜单") |
 | **B** StatusDot 错位 4px | 反复改 `top-0.5 right-0.5` → `top-1 right-1` | `.floating-root` 缺 `position: relative`,StatusDot `absolute` 穿透到 body 当祖先 → 跑 viewport 角落错位 | 反模式 14(反复改 StatusDot 类名)+ 15(注释把功劳归错 StatusDot 而非根 div) |
 | **C** 黑边(focus 后更明显) | 删 `.floating-root` inset / FoldedBar inline style box-shadow | `tauri.conf.json` floating 段 `transparent:false` + 无 `backgroundColor` 字段,WebView2 transparent 半透明合成时仍出灰色描边;App.test.tsx V0.2.6 回归测试反向 lock-in 锁死 `transparent:false` | 反模式 15(commit 谎改:声称 transparent iterate 但配置 transparent:false;测试反向 lock-in) |
 | **D** 折叠↔展开 transition 看不到 | 加 `transition: width 200ms ease-out, height...` + `@media (prefers-reduced-motion: reduce) { transition: none }` 兜底 | `@media (prefers-reduced-motion: reduce)` 在 Tauri WebView2 transparent 模式下可能被错误匹配(Win11 / 高 DPI / 远程桌面常传 reduce),即使 user 没设系统偏好,transition 仍被 `none` 覆盖;且 PRD §3.2 只提物理尺寸 360×280 无 transition 要求 | 反模式 14(反复声称加过渡)+ 15(comment 谎改)+ PRD scope 误判 |
@@ -23,16 +25,16 @@ V0.2.0.6 ~ V0.2.0.10 五个 PATCH 都涉及浮窗,user L3 重测发现 4 issue �
 
 ## What
 
-### A 修 (ContextMenu 定位 + 展开态渲染 + capture phase button guard)
+### [V0.2.0 误导] A 修 (HTML ContextMenu 定位 + 展开态渲染 + capture phase button guard) — V0.2.0.12 已删 HTML React 组件,改 V1.0 archive Rust 原生 Tauri Menu
 
-1. **`ContextMenu.tsx`**:加 `MENU_W=144 / MENU_H=80 / VIEWPORT_MARGIN=4` 常数 + `clampToViewport(x, y)` 函数做双向 `Math.max / Math.min` clamp(修 top/left 都不出 viewport)
+1. **`ContextMenu.tsx`** [V0.2.0 误导]:加 `MENU_W=144 / MENU_H=80 / VIEWPORT_MARGIN=4` 常数 + `clampToViewport(x, y)` 函数做双向 `Math.max / Math.min` clamp(修 top/left 都不出 viewport)(V0.2.0.12 已删 HTML ContextMenu.tsx,改 V1.0 archive Rust 原生 Tauri Menu)
 2. **`App.tsx`**:`onContextMenuCapture` 加 `if (e.button !== 2) return;` 守卫(左/中键不该触发)
 3. **`App.tsx`**:ContextMenu 渲染从折叠态 JSX 移到外层(折叠 + 展开态共用),展开态右键也能弹 ContextMenu(user L3 报"左键展开后右键反而切换状态" — 实际是展开态 JSX 不渲染 ContextMenu,user 看不到菜单误读为状态切换)
 
 ### B 修 (`.floating-root` 加 `position: relative`)
 
-1. **`floating.css`**: `.floating-root` 块加 `position: relative;` 作为首条声明(让 StatusDot `absolute top-1 right-1` 找根 div 当祖先)
-2. **`StatusDot.tsx`**: 注释修正 — V0.2.0.7 改 `top-1 right-1` 是必要非充分;真正 fix 是根 div 加 relative(反模式 14/15 注释纠错)
+1. **`floating.css`** [V0.2.0 误导]: `.floating-root` 块加 `position: relative;` 作为首条声明(让 StatusDot `absolute top-1 right-1` 找根 div 当祖先)(V0.2.0.12 改回 V1.0 archive: StatusDot = inline-block flex 第 1 child,根本不需要 `position: relative` 兜底)
+2. **`StatusDot.tsx`** [V0.2.0 误导]: 注释修正 — V0.2.0.7 改 `top-1 right-1` 是必要非充分;真正 fix 是根 div 加 relative(反模式 14/15 注释纠错)(V0.2.0.12 改回 V1.0 archive: StatusDot 无 absolute,V0.2.0.7 `top-1 right-1` 改类名本就是误导)
 
 ### C 修 (tauri.conf.json floating 段 transparent + backgroundColor)
 
@@ -56,9 +58,9 @@ V0.2.0.6 ~ V0.2.0.10 五个 PATCH 都涉及浮窗,user L3 重测发现 4 issue �
 
 ## Done when
 
-- [x] ContextMenu.tsx 加 `clampToViewport` + `MENU_W/MENU_H/VIEWPORT_MARGIN` 常数 + 双向 clamp
+- [x] [V0.2.0 误导] ContextMenu.tsx 加 `clampToViewport` + `MENU_W/MENU_H/VIEWPORT_MARGIN` 常数 + 双向 clamp(V0.2.0.12 已删此 HTML 组件,改 Rust 原生 Menu)
 - [x] App.tsx `onContextMenuCapture` 加 `e.button !== 2` 守卫
-- [x] App.tsx ContextMenu 渲染提到外层(折叠 + 展开态共用)
+- [x] [V0.2.0 误导] App.tsx ContextMenu 渲染提到外层(折叠 + 展开态共用)(V0.2.0.12 改为外层调 `show_floating_context_menu` IPC)
 - [x] floating.css `.floating-root` 加 `position: relative`
 - [x] StatusDot.tsx 注释修正(B fix 真根因)
 - [x] tauri.conf.json floating 段 `transparent: true` + `backgroundColor: "#00000000"`
@@ -73,13 +75,13 @@ V0.2.0.6 ~ V0.2.0.10 五个 PATCH 都涉及浮窗,user L3 重测发现 4 issue �
   - `grep "prefers-reduced-motion" src/floating/styles/floating.css` = 0 hits
 - [x] `npx tsc --noEmit` = 0 error
 - [x] `cargo check` = pre-existing warning only(`src/lib.rs:26` `e` unused, V0.2.5 commit 1b162eb5)
-- [ ] **L3 D:\ 端实测**(user 必走): Ctrl+C 重启 `scripts\dev.bat` → 浮窗 4 issue L3 重测 — A 右键弹 ContextMenu(折叠 + 展开态) + B StatusDot 在浮窗右上角 + C 无黑边(focus 后也不明显) + D 无 transition(也没 prefers-reduced-motion 误匹配)
+- [ ] **L3 D:\ 端实测**(user 必走): Ctrl+C 重启 `scripts\dev.bat` → 浮窗 4 issue L3 重测 — A 右键弹 ContextMenu(折叠 + 展开态) [V0.2.0 误导] HTML React ContextMenu(V0.2.0.12 已删,改 Rust 原生) + B StatusDot [V0.2.0 误导] 在浮窗右上角(V0.2.0.12 改回 V1.0 archive inline-block flex 最左) + C 无黑边(focus 后也不明显) + D 无 transition(也没 prefers-reduced-motion 误匹配)
 - [ ] 沉淀:`docs/reports/v0.2.0.11-release-notes.md`(用户视角 5 行摘要)
 - [ ] 通知 user D:\ `git pull origin develop`
 
 ## 反模式防御
 
-- **反模式 14(反复修)**:4 issue 一次收口,不再分 PATCH — A 修 ContextMenu 定位 + 展开态渲染 + button guard 一起,B 修根 div relative + 注释纠错,C 修 tauri.conf.json + 反向 lock-in 测试清理,D 移除不在 scope 的 transition + 兜底块
+- **反模式 14(反复修)**:4 issue 一次收口,不再分 PATCH — A 修 [V0.2.0 误导] ContextMenu 定位 + 展开态渲染 + button guard 一起(HTML React 实现,V0.2.0.12 改 V1.0 archive Rust 原生),B 修 [V0.2.0 误导] 根 div relative + 注释纠错(V0.2.0.12 改回 V1.0 archive inline-block flex,根本不需要 relative 兜底),C 修 tauri.conf.json + 反向 lock-in 测试清理,D 移除不在 scope 的 transition + 兜底块
 - **反模式 15(commit 谎改)**:`grep "transition" src/floating/styles/floating.css` 验证 D 移除 commit claim 跟代码一致;tauri.conf.json floating transparent:true commit claim 跟代码一致;StatusDot.tsx 注释纠错不再把 B fix 功劳归 StatusDot 而归根 div
 - **反模式 16(测试字面断言)**:`fireEvent.contextMenu(document, { button: 2, clientX: 50, clientY: 60 })` 显式传 button=2(修 V0.2.0.8 测试缺 button 维度的 bug);剥注释 + 剥 @media 嵌套后 match `.floating-root` 块(反模式 18 防御);`getFloatingWindowBlock` JSON 解析只匹配 floating 段不误伤 main 段
 - **反模式 17**:不用 gh CLI / GitHub MCP 写 issue/PR,走纯 git + ssh(`git push origin develop` + D:\ `git pull`)
