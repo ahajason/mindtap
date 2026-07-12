@@ -56,14 +56,18 @@ describe("V0.2.6 patch 回归测试 — 27 反复犯完整覆盖", () => {
     expect(foldedRoot.getAttribute("data-tauri-drag-region")).toBeNull();
   });
 
-  it("折叠态 StatusDot 右上角 absolute 定位 (spec §三 3.1 折叠态右上角小圆点)", async () => {
+  it("折叠态 StatusDot 右上角 absolute 定位 (spec §三 3.1 折叠态右上角小圆点, V0.2.8 Issue B 改 top-1 right-1 防 overflow:hidden 裁)", async () => {
     render(<FloatingApp />);
     const foldedRoot = await screen.findByTestId("floating-root-folded");
     const dot = foldedRoot.querySelector('[aria-hidden="true"]');
     expect(dot).toBeTruthy();
     expect(dot?.className).toContain("absolute");
-    expect(dot?.className).toContain("-top-0.5");
-    expect(dot?.className).toContain("-right-0.5");
+    // V0.2.8 Issue B: -top-0.5 -right-0.5 (各 -2px) 把 dot 推父容器外, 被 .floating-root { overflow: hidden } 裁掉
+    // 改 top-1 right-1 (各 +4px) dot 整在父容器内, 不溢出不被裁
+    expect(dot?.className).toContain("top-1");
+    expect(dot?.className).toContain("right-1");
+    expect(dot?.className).not.toContain("-top-0.5");
+    expect(dot?.className).not.toContain("-right-0.5");
   });
 });
 
