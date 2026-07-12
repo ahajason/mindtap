@@ -1,5 +1,7 @@
 # fix(floating): 折叠态 StatusDot 错位 — 时有时无 + 仅右上漏一部分
 
+> ⚠️ **[作废,见 V0.2.0.12]** 本任务的实现前提("StatusDot 右上角 absolute 定位")已被 V0.2.0.12 PATCH 证伪 — V1.0 archive 真实实现是 inline-block flex 第 1 child(最左)。保留本文件仅作历史档案。详见 [`docs/tasks/v0.2.0.12-restore-v1-archive-design/task.md`](../../tasks/v0.2.0.12-restore-v1-archive-design/task.md) + [`docs/reports/v0.2.0.12-release-notes.md`](../../reports/v0.2.0.12-release-notes.md)。
+
 > **[V0.2.0 误导]** 本文件基于"StatusDot 右上角 absolute 定位"的错误前提 — V1.0 archive StatusDot 实现为 **inline-block 8×8 span,FoldedBar flex 第 1 child(最左,标题前面)**,无 absolute。
 > **[V0.2.0 误导]** V0.2.x 反复修改 StatusDot 类名(top-0.5→top-1 等)是误导路径上的反复修,从未真修对。
 > **[V0.2.0 误导]** V0.2.0.12 PATCH 已恢复到 V1.0 archive inline-block flex 第 1 child 实现。本文件保留只作历史档案,**不**描述当前真实架构。

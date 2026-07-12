@@ -1,5 +1,7 @@
 # fix(floating): V0.2.0.11 PATCH — A [V0.2.0 误导] HTML 右键 ContextMenu 定位 + B [V0.2.0 误导] StatusDot 右上角错位 + C transparent + D 移除 transition (4 收口)
 
+> ⚠️ **[作废,见 V0.2.0.12]** 本任务中 A 段(HTML ContextMenu)与 B 段(StatusDot 右上角)基于"V0.2.6 误改"的错误前提,V0.2.0.12 PATCH 已恢复 V1.0 archive(A = Rust 原生 Menu;B = inline-block flex 最左)。C/D 段(transparent + 移除 transition)在 V0.2.0.12 中也被替代方案覆盖。保留本文件仅作历史档案。详见 [`docs/tasks/v0.2.0.12-restore-v1-archive-design/task.md`](../../tasks/v0.2.0.12-restore-v1-archive-design/task.md) + [`docs/reports/v0.2.0.12-release-notes.md`](../../reports/v0.2.0.12-release-notes.md)。
+
 > **[V0.2.0 误导]** 本文件中 A 段(HTML ContextMenu)与 B 段(StatusDot 右上角)基于 V0.2.6 误改的描述,V0.2.0.12 PATCH 已恢复 V1.0 archive(A = Rust 原生 Menu;B = inline-block flex 最左)。本文件保留只作历史档案。
 
 > 创建: 2026-07-13
@@ -102,6 +104,6 @@ V0.2.0.6 ~ V0.2.0.10 五个 PATCH 都涉及浮窗,user L3 重测发现 4 issue �
 - V0.2.0.9 D(不在 scope): [`../v0.2.0.9-fix-expanded-asymmetry/task.md`](../v0.2.0.9-fix-expanded-asymmetry/task.md)
 - V0.2.0.10 C 二次根因: [`../v0.2.0.10-fix-foldedbar-inline-shadow/task.md`](../v0.2.0.10-fix-foldedbar-inline-shadow/task.md)
 - L3 findings 来源: [`docs/reports/2026-07-13-v0.2.7-l3-findings.md`](../../reports/2026-07-13-v0.2.7-l3-findings.md)
-- V0.2.5 commit 谎改审计: [`docs/reports/v0.2.6-33-commit-line-by-line-audit.md`](../../reports/v0.2.6-33-commit-line-by-line-audit.md)
+- V0.2.5 commit 谎改审计: [`docs/reports/v0.2.0.4-33-commit-audit.md`](../../reports/v0.2.6-33-commit-line-by-line-audit.md)
 - 治理规则: [`docs/governance/versioning-rule.md`](../../governance/versioning-rule.md) §三 + [`docs/governance/l3-gating.md`](../../governance/l3-gating.md)
 - 沉淀到 retro: [`docs/reports/v0.2.0-retrospective.md`](../../reports/v0.2.0-retrospective.md)(待补)
