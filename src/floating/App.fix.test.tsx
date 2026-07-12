@@ -124,3 +124,52 @@ describe("V0.2.7 patch — Bug 5: 展开 setPosition x 必须不偏移 20px (贴
     expect(setPositionMatch).toBeTruthy();
   });
 });
+
+describe("V0.2.8 patch — Bug 5 cosmetic: 折叠展开 width/height/border-radius 有平滑过渡 (无瞬变)", () => {
+  // 解析 .floating-root 块 (不含 .floating-root.expanded), 校验 transition 子串
+  function getFloatingRootBlock(css: string): string | null {
+    // 匹配 .floating-root { ... } 顶层块, 排除 .floating-root.expanded
+    const match = css.match(/\.floating-root\s*\{([\s\S]*?)\}/);
+    return match ? match[0] : null;
+  }
+
+  it("floating.css .floating-root 块内含 transition 属性 (200ms ease-out)", () => {
+    const css = readFileSync("src/floating/styles/floating.css", "utf-8");
+    const block = getFloatingRootBlock(css);
+    expect(block).toBeTruthy();
+    expect(block!).toMatch(/transition\s*:/);
+  });
+
+  it("floating.css .floating-root transition 必须含 width/height 子句 (反模式 16 防御: 排除注释行)", () => {
+    const css = readFileSync("src/floating/styles/floating.css", "utf-8");
+    // 排除注释后再匹配 (transition 行不应在注释行内)
+    const lines = css.split("\n");
+    const transitionLines = lines.filter((line) => {
+      const trimmed = line.trim();
+      if (trimmed.startsWith("//")) return false; // 排除单行注释
+      if (trimmed.startsWith("*")) return false;  // 排除 /* ... */ 块注释
+      return /transition\s*:/i.test(line);
+    });
+    // 必须至少有一行非注释 transition 声明
+    expect(transitionLines.length).toBeGreaterThanOrEqual(1);
+    // 检查 width / height 子句都在
+    const allTransitionText = transitionLines.join("\n");
+    expect(allTransitionText).toMatch(/transition\s*:[^;]*\bwidth\b/i);
+    expect(allTransitionText).toMatch(/transition\s*:[^;]*\bheight\b/i);
+  });
+
+  it("floating.css .floating-root 块不修改 width/height/border-radius 数值 (数值层不破, 仅补 transition)", () => {
+    const css = readFileSync("src/floating/styles/floating.css", "utf-8");
+    const block = getFloatingRootBlock(css);
+    expect(block).toBeTruthy();
+    // 折叠态 width 320px, height 36px, border-radius 14px 数值必须保留
+    expect(block!).toMatch(/\bwidth\s*:\s*320px\b/);
+    expect(block!).toMatch(/\bheight\s*:\s*36px\b/);
+    expect(block!).toMatch(/\bborder-radius\s*:\s*14px\b/);
+  });
+
+  it("floating.css 含 prefers-reduced-motion: reduce 兜底 (可访问性, 无障碍)", () => {
+    const css = readFileSync("src/floating/styles/floating.css", "utf-8");
+    expect(css).toMatch(/@media\s*\(\s*prefers-reduced-motion\s*:\s*reduce\s*\)/);
+  });
+});
