@@ -72,3 +72,36 @@ docs/tasks/v<X.Y>[.<Z>]-<type>-<topic>/
 - [versioning-rule.md](../governance/versioning-rule.md) — PATCH 命名 + 流程
 - [l3-gating.md](../governance/l3-gating.md) — L3 实测硬约束
 - `.claude/rules/task-directory.mdc` — slug 命名细节
+
+## 五、V0.1 历史 task 说明(2026-07-13 补档)
+
+`docs/tasks/v0.1*` 共 14 个目录,是 V0.1 风格指南阶段的交付记录。
+
+**重要**:
+- V0.1 task.md **不按本 README 模板写**(历史产物,2026-06-21 ~ 2026-07-11 期间 6 层架构未立)
+- 新 agent 接手 V0.1 时,应**从 V0.1 PRD/Tech/Domain 入口**(而非 14 个 task),了解业务全貌后再看具体 task
+- V0.1 task.md 仍可读,只是缺模板字段(归属判定 / 反模式防御 / L1/L2/L3 gates)
+
+**V0.1 入口文档**(2026-07-13 新建):
+- 业务: [`../prd/v0.1.0-style-guide-prd.md`](../prd/v0.1.0-style-guide-prd.md)
+- 领域: [`../domain/v0.1-design-system-domain.md`](../domain/v0.1-design-system-domain.md)
+- 技术: [`../tech/v0.1.0-style-guide-tech.md`](../tech/v0.1.0-style-guide-tech.md)
+
+**V0.1 14 个 task**(按 git commit 时间序):
+
+| slug | type | 主题 |
+|---|---|---|
+| `v0.1-chore-bootstrap` | chore | V1.0 taskisland 归档 + style guide 路由依赖 + 测试栈 |
+| `v0.1-chore-tailwind-tokens` | chore | Tailwind 4 主题块 + glass utilities 落地 |
+| `v0.1-docs-design-system` | docs | 4 设计文档(玻璃规范 / 组件格式 / 组件契约 / 引用) |
+| `v0.1-feat-style-guide` | feat | 侧栏路由 + 三段式演示页 |
+| `v0.1-fix-glass-percentage` | fix | 间距阶梯 + 圆角 + 玻璃 fill 收窄 |
+| `v0.1-fix-controls-spacing` | fix | Button 字号圆角 + Card 内边距 + Label 间距 |
+| `v0.1-fix-glass-passthrough` | fix | 基底色 + 6 子页面去除玻璃最重等级 |
+| `v0.1-feat-a11y-reduce-motion` | feat | Reduce Transparency + Reduce Motion 降级 |
+| `v0.1-feat-focus-state` | feat | 3 层焦点模型 + 窗口失焦钩子 + SidebarNavLink |
+| `v0.1-feat-transparent-drag` | feat | macOS 26 透明窗口 + 整窗可拖 |
+| `v0.1-docs-glass-issues-archive` | docs | V0.1.2 视觉问题归档(3 层分离 28/11/25) |
+| `v0.1.5-chore-docs-restructure` | chore | docs/ 整体收口(归档 + meta + design 提升) |
+| `v0.1-fix-drag-region` | fix | 拖动区域缩到专用 handle(按钮阻断 bug 收口) |
+| `v0.1.6-chore-carryover-closure` | chore | V0.1.6 carryover 4 项 closure |
