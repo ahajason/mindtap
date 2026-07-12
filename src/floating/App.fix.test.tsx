@@ -7,12 +7,14 @@ import { FloatingApp } from "./App";
 import { StatusDot as StatusDotFromComponents } from "./components/StatusDot";
 
 /**
- * V0.2.7 patch — 6 bug 真根因修复回归测试
+ * V0.2.0.5 patch — 6 bug 真根因修复回归测试
  *
- * 反模式 15 (commit message 谎改) 的下游灾害: V0.2.5/V0.2.6 反复修都漏改的真根因之一
+ * 反模式 15 (commit message 谎改) 的下游灾害: V0.2.0.3/V0.2.0.4 反复修都漏改的真根因之一
  * 是测试断言不够强 (App.test.tsx:115-122 拖动测试只断言"不展开", 没断言"调了 startDragging")。
  *
  * 本文件用静态检查 + 源码 grep 方式断言 fix 真的落在源码上, 不只是 commit message 上声称。
+ *
+ * 2026-07-13 retro-fit: 历史 V0.2.3..V0.2.8 + V0.2.8.1 标签 → V0.2.0.1..V0.2.0.9 PATCHes(见 docs/governance/versioning-rule.md §三 mapping 表)。
  *
  * e2e 验证仍需 Windows 真机 + WebView2 (playwright/tauri-driver 在 WSL 下无法测 Tauri 窗口 API)。
  *
@@ -21,10 +23,10 @@ import { StatusDot as StatusDotFromComponents } from "./components/StatusDot";
  * - 删 V0.2.0.11 Issue B fix describe (.floating-root position: relative, StatusDot 恢复 V1.0 inline 不再需要)
  * - 加 V0.2.0.12 StatusDot 锁住 describe (3 it)
  * - 加 V0.2.0.12 ContextMenu 锁住 describe (3 it)
- * - V0.2.8 Issue A test 3 更新: HTML 渲染断言 → IPC 调用断言 (旧 HTML ContextMenu 已删)
+ * - V0.2.0.6 Issue A test 3 更新: HTML 渲染断言 → IPC 调用断言 (旧 HTML ContextMenu 已删)
  */
 
-describe("V0.2.7 patch — Bug 1: act() 函数必须 try/catch 包裹 await (闪退真根因)", () => {
+describe("V0.2.0.5 patch — Bug 1: act() 函数必须 try/catch 包裹 await (闪退真根因)", () => {
   it("App.tsx act() 函数体内含 try { ... } catch (...) 块", () => {
     const src = readFileSync("src/floating/App.tsx", "utf-8");
     const actMatch = src.match(/async function act\([^)]*\)\s*\{[\s\S]*?\n\s{2}\}/);
@@ -43,7 +45,7 @@ describe("V0.2.7 patch — Bug 1: act() 函数必须 try/catch 包裹 await (闪
   });
 });
 
-describe("V0.2.7 patch — Bug 2: onMouseMove 拖 4px 后必须调 win.startDragging() (resize/拖动真根因)", () => {
+describe("V0.2.0.5 patch — Bug 2: onMouseMove 拖 4px 后必须调 win.startDragging() (resize/拖动真根因)", () => {
   // 反模式 16 防御: 用逐行扫描排除注释行, 不允许字面包含 "win.startDragging()" 的注释行谎报
   function countStartDraggingCalls(src: string): { calls: number; sampleLines: string[] } {
     const lines = src.split("\n");
@@ -75,8 +77,8 @@ describe("V0.2.7 patch — Bug 2: onMouseMove 拖 4px 后必须调 win.startDrag
   });
 });
 
-describe("V0.2.7 patch — Bug 3: tauri.conf.json floating 段必须不含硬编码 x/y (多屏错位)", () => {
-  it("tauri.conf.json floating 段不含硬编码 x 字段 (V0.2.7 修 V0.2.6 final fix 谎改)", () => {
+describe("V0.2.0.5 patch — Bug 3: tauri.conf.json floating 段必须不含硬编码 x/y (多屏错位)", () => {
+  it("tauri.conf.json floating 段不含硬编码 x 字段 (V0.2.0.5 修 V0.2.0.4 final fix 谎改)", () => {
     const src = readFileSync("src-tauri/tauri.conf.json", "utf-8");
     const floatMatch = src.match(/"label":\s*"floating"[\s\S]*?\}\s*\]/);
     expect(floatMatch).toBeTruthy();
@@ -84,7 +86,7 @@ describe("V0.2.7 patch — Bug 3: tauri.conf.json floating 段必须不含硬编
     expect(floatMatch![0]).not.toMatch(/^\s*"x":\s*-?\d+/m);
   });
 
-  it("tauri.conf.json floating 段不含硬编码 y 字段 (V0.2.7 修 V0.2.6 final fix 谎改)", () => {
+  it("tauri.conf.json floating 段不含硬编码 y 字段 (V0.2.0.5 修 V0.2.0.4 final fix 谎改)", () => {
     const src = readFileSync("src-tauri/tauri.conf.json", "utf-8");
     const floatMatch = src.match(/"label":\s*"floating"[\s\S]*?\}\s*\]/);
     expect(floatMatch).toBeTruthy();
@@ -92,7 +94,7 @@ describe("V0.2.7 patch — Bug 3: tauri.conf.json floating 段必须不含硬编
   });
 });
 
-describe("V0.2.7 patch — Bug 4: resize useEffect 每个 await 后必须检查 cancelled flag (串行 IPC race)", () => {
+describe("V0.2.0.5 patch — Bug 4: resize useEffect 每个 await 后必须检查 cancelled flag (串行 IPC race)", () => {
   it("App.tsx resize useEffect [expanded] 内 cancelled flag 检查次数 >= 4 (开头 1 + 3 个 await 后)", () => {
     const src = readFileSync("src/floating/App.tsx", "utf-8");
     const effectMatch = src.match(
@@ -121,7 +123,7 @@ describe("V0.2.7 patch — Bug 4: resize useEffect 每个 await 后必须检查 
   });
 });
 
-describe("V0.2.7 patch — Bug 5: 展开 setPosition x 必须不偏移 20px (贴右边缘截断)", () => {
+describe("V0.2.0.5 patch — Bug 5: 展开 setPosition x 必须不偏移 20px (贴右边缘截断)", () => {
   it("App.tsx 展开 setPosition 不再使用 Math.round((FOLDED_W - EXPANDED_W) / 2) 偏移公式", () => {
     const src = readFileSync("src/floating/App.tsx", "utf-8");
     expect(src).not.toMatch(/Math\.round\(\(\s*FOLDED_W\s*-\s*EXPANDED_W\s*\)\s*\/\s*2\s*\)/);
@@ -137,7 +139,7 @@ describe("V0.2.7 patch — Bug 5: 展开 setPosition x 必须不偏移 20px (贴
   });
 });
 
-describe("V0.2.8 patch — Issue A: 右键不被折叠态根 div 抢占 (P0-9 复活防御)", () => {
+describe("V0.2.0.6 patch — Issue A: 右键不被折叠态根 div 抢占 (P0-9 复活防御)", () => {
   it("折叠态右键 mousedown+up 不触发展开 (行为断言: dragRef 被 e.button 守卫, 不创建)", async () => {
     render(<FloatingApp />);
     const foldedRoot = await screen.findByTestId("floating-root-folded");
@@ -190,7 +192,7 @@ describe("V0.2.8 patch — Issue A: 右键不被折叠态根 div 抢占 (P0-9 �
   });
 });
 
-describe("V0.2.8 Issue C: 浮窗无 inset highlight 边框 (P1 回归)", () => {
+describe("V0.2.0.8 Issue C: 浮窗无 inset highlight 边框 (P1 回归)", () => {
   // 反模式 15 防御: 先剥 CSS 注释, 防止 .floating-root / .glass-l 字样出现在 /* ... */ 里误匹配
   function stripCssComments(css: string): string {
     return css.replace(/\/\*[\s\S]*?\*\//g, "");
@@ -198,7 +200,7 @@ describe("V0.2.8 Issue C: 浮窗无 inset highlight 边框 (P1 回归)", () => {
 
   function extractFloatingRootBlocks(css: string): string[] {
     const codeOnly = stripCssComments(css);
-    // 反模式 16 集成防御: 先剥 @media 嵌套块, 防止 V0.2.8 Bug 5 cosmetic 引入的
+    // 反模式 16 集成防御: 先剥 @media 嵌套块, 防止 V0.2.0.9 Bug 5 cosmetic 引入的
     // @media (prefers-reduced-motion) { .floating-root { ... } } 被误抓 (嵌套块没有 box-shadow)
     const noMedia = codeOnly.replace(/@media[^{]+\{[\s\S]*?\}\s*\}/g, "");
     // 块范围限制: 用 [^}]* 保证不跨过下一个 }
@@ -264,7 +266,7 @@ describe("V0.2.0.11 patch — Issue D 移除: 折叠展开 transition 不在 V0.
   // 模式被错误匹配 (Win11/高 DPI/远程桌面常把 prefers-reduced-motion 传成 reduce),
   // 即使 user 没设系统偏好, transition 仍被 transition: none 覆盖。
   // V0.2.0.11 治理: PRD §3.2 只提物理尺寸 360×280 无 transition 要求, 整体移除。
-  // (V0.2.0.9 4 个 describe "V0.2.8 patch — Bug 5 cosmetic" 已删除)
+  // (V0.2.0.9 4 个 describe "V0.2.0.9 patch — Bug 5 cosmetic" 已删除)
 
   it("floating.css .floating-root 块内不含 transition 属性 (V0.2.0.11 D 移除)", () => {
     const css = readFileSync("src/floating/styles/floating.css", "utf-8");
@@ -326,10 +328,10 @@ describe("V0.2.0.11 patch — Issue C fix: tauri.conf.json floating 段 transpar
   });
 });
 
-describe("V0.2.8.1 follow-up: Issue C 真根因修复 — FoldedBar inline style box-shadow 防御", () => {
-  // V0.2.8 Issue C 反复修 .floating-root 的 CSS box-shadow 没生效,真根因是
+describe("V0.2.0.8.1 follow-up: Issue C 真根因修复 — FoldedBar inline style box-shadow 防御", () => {
+  // V0.2.0.8 Issue C 反复修 .floating-root 的 CSS box-shadow 没生效,真根因是
   // FoldedBar.tsx:31 有 inline style `style={{ boxShadow: "inset 0 1px 0 ..." }}`,
-  // inline style 优先级最高覆盖 CSS。V0.2.8.1 把 inline style boxShadow 删了,
+  // inline style 优先级最高覆盖 CSS。V0.2.0.8.1 把 inline style boxShadow 删了,
   // 改用 className "folded-bar-inner" 引用 floating.css 新 block。
   // 本 describe 锁住: FoldedBar.tsx 不再有 inline style boxShadow,
   // 且 floating.css 的 .folded-bar-inner 块不含 inset。
@@ -349,7 +351,7 @@ describe("V0.2.8.1 follow-up: Issue C 真根因修复 — FoldedBar inline style
     expect(codeOnly).not.toMatch(/boxShadow\s*:/);
   });
 
-  it("FoldedBar.tsx 含 folded-bar-inner className (V0.2.8.1 修复形态锁定)", () => {
+  it("FoldedBar.tsx 含 folded-bar-inner className (V0.2.0.8.1 修复形态锁定)", () => {
     const src = readFileSync("src/floating/components/FoldedBar.tsx", "utf-8");
     expect(src).toMatch(/folded-bar-inner/);
   });

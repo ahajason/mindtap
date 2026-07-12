@@ -1,3 +1,7 @@
+// 本文件 version label 已按 docs/governance/versioning-rule.md §三 retro-fit:
+// V0.2.3..V0.2.8 单一数字 / "patch" → V0.2.0.1..V0.2.0.5。
+// 原 V0.2.x 标签含义见 governance §三 mapping 表。
+
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
@@ -12,14 +16,14 @@ import { FloatingApp } from "./App";
  * - 玻璃 alpha 0.78/0.6 应用
  * - ContextMenu 位置边界 clamp
  * - 浮窗位置默认右上角 -16px
- * - 折叠态根 div 不挂 data-tauri-drag-region (V0.2.5 + P0-9 修)
- * - 不调用 setFocusable (V0.2.5 patch 修 Win11 WebView2 setFocusable(true) panic)
+ * - 折叠态根 div 不挂 data-tauri-drag-region (V0.2.0.3 + P0-9 修)
+ * - 不调用 setFocusable (V0.2.0.3 patch 修 Win11 WebView2 setFocusable(true) panic)
  * - 不挂 onContextMenu React 合成 (P0-9 改原生 addEventListener capture phase)
- * - 折叠→展开 setPosition pos.y 不变 (V0.2.6 修向上 244px 改向下 pos.y)
- * - setDefaultAtTopRight 公式 (V0.2.6 修 -32→-16 沿用 V0.2.3)
- * - .floating-root border: 0 (V0.2.6 修 1px 黑边)
- * - .floating-root.expanded 0.6 alpha (V0.2.5 改 0.85→0.6)
- * - lib.rs app_show_main_window (V0.2.6 新增主窗恢复)
+ * - 折叠→展开 setPosition pos.y 不变 (V0.2.0.4 修向上 244px 改向下 pos.y)
+ * - setDefaultAtTopRight 公式 (V0.2.0.4 修 -32→-16 沿用 V0.2.0.1)
+ * - .floating-root border: 0 (V0.2.0.4 修 1px 黑边)
+ * - .floating-root.expanded 0.6 alpha (V0.2.0.3 改 0.85→0.6)
+ * - lib.rs app_show_main_window (V0.2.0.4 新增主窗恢复)
  * - tauri-bridge.ts app.showMainWindow wrapper
  * - ContextMenu "显示主窗" 按钮
  *
@@ -31,12 +35,12 @@ import { FloatingApp } from "./App";
  * - 关主窗=隐藏, Ctrl+Shift+Space toggle, 显示主窗
  *
  * 不能拦截 (Win 11 WebView2 transparent 浮窗限制):
- * - setFocusable(true) panic (V0.2.5 已删, 防 panic)
+ * - setFocusable(true) panic (V0.2.0.3 已删, 防 panic)
  * - React 合成事件 preventDefault 无效 (WebView2 不响应, P0-9 改原生 addEventListener capture phase)
- * - 1px 黑边 (V0.2.6 改 border: 0)
+ * - 1px 黑边 (V0.2.0.4 改 border: 0)
  * - OS native context menu (WebView2 拦截) */
 
-describe("V0.2.6 patch 回归测试 — 27 反复犯完整覆盖", () => {
+describe("V0.2.0.4 patch 回归测试 — 27 反复犯完整覆盖", () => {
   it("折叠态根 div className 含 'floating-root folded' (V0.2.0 retro #1 .floating-root 漏挂修复)", async () => {
     render(<FloatingApp />);
     const foldedRoot = await screen.findByTestId("floating-root-folded");
@@ -50,7 +54,7 @@ describe("V0.2.6 patch 回归测试 — 27 反复犯完整覆盖", () => {
     expect(foldedRoot.className).not.toContain("cursor-grab");
   });
 
-  it("折叠态根 div 不挂 data-tauri-drag-region (V0.2.5 patch + P0-9 修 WebView2 拦截 click 不可靠 + React 合成事件无效)", async () => {
+  it("折叠态根 div 不挂 data-tauri-drag-region (V0.2.0.3 patch + P0-9 修 WebView2 拦截 click 不可靠 + React 合成事件无效)", async () => {
     render(<FloatingApp />);
     const foldedRoot = await screen.findByTestId("floating-root-folded");
     expect(foldedRoot.getAttribute("data-tauri-drag-region")).toBeNull();
@@ -64,7 +68,7 @@ describe("V0.2.1 修复回归测试 — body/floating.css 关键约束", () => {
     expect(/<body[^>]*>/.test("<body><div id=\"root\"></div></body>")).toBe(true);
   });
 
-  it("floating.css .floating-root .floating-root.expanded .glass-l1/l2/l3 border: 0 (V0.2.5/2.6 修 Win11 WebView2 1px 黑边)", () => {
+  it("floating.css .floating-root .floating-root.expanded .glass-l1/l2/l3 border: 0 (V0.2.0.3/2.6 修 Win11 WebView2 1px 黑边)", () => {
     const css = [
       ".floating-root { border: 0; }",
       ".floating-root.expanded { border: 0; }",
@@ -75,7 +79,7 @@ describe("V0.2.1 修复回归测试 — body/floating.css 关键约束", () => {
     expect(css.match(/border:\s*0/g)?.length).toBeGreaterThanOrEqual(5);
   });
 
-  it("floating.css .floating-root.expanded 背景 0.6 alpha (V0.2.5 改 0.85→0.6 不用 backdrop-filter 兜底)", () => {
+  it("floating.css .floating-root.expanded 背景 0.6 alpha (V0.2.0.3 改 0.85→0.6 不用 backdrop-filter 兜底)", () => {
     const css = `.floating-root.expanded { background: rgba(255, 255, 255, 0.6); }`;
     expect(css).toMatch(/background:\s*rgba\(255,\s*255,\s*255,\s*0\.6\)/);
   });
@@ -89,7 +93,7 @@ describe("V0.2.1 修复回归测试 — body/floating.css 关键约束", () => {
   });
 });
 
-describe("V0.2.6 patch 回归测试 — 拖动/展开/位置 完整覆盖 (1.x FloatShell 模式)", () => {
+describe("V0.2.0.4 patch 回归测试 — 拖动/展开/位置 完整覆盖 (1.x FloatShell 模式)", () => {
   it("折叠态短按触发展开 (onClick 触发 setExpanded(true), dragRef 4px 阈值后 dragStarted 保持折叠)", async () => {
     render(<FloatingApp />);
     const foldedRoot = await screen.findByTestId("floating-root-folded");
@@ -123,31 +127,31 @@ describe("V0.2.6 patch 回归测试 — 拖动/展开/位置 完整覆盖 (1.x F
   });
 });
 
-describe("V0.2.6 patch 回归测试 — 浮窗位置主屏右上角 -16px (V0.2.3 沿用 + V0.2.6 修 setDefaultAtTopRight -32→-16)", () => {
+describe("V0.2.0.4 patch 回归测试 — 浮窗位置主屏右上角 -16px (V0.2.0.1 沿用 + V0.2.0.4 修 setDefaultAtTopRight -32→-16)", () => {
   it("App.tsx POS_MARGIN = 16 (spec §三 3.1 grill 9.5 B 右上角 -16px)", () => {
     const src = readFileSync("src/floating/App.tsx", "utf-8");
     expect(src).toMatch(/const POS_MARGIN = 16/);
   });
 
-  it("App.tsx setDefaultAtTopRight 公式 (V0.2.3 -32→V0.2.6 改 -16 沿用 V0.2.3 spec)", () => {
+  it("App.tsx setDefaultAtTopRight 公式 (V0.2.0.1 -32→V0.2.0.4 改 -16 沿用 V0.2.0.1 spec)", () => {
     const src = readFileSync("src/floating/App.tsx", "utf-8");
-    // V0.2.6 修 setDefaultAtTopRight 用 POS_MARGIN (-16 右上角) 不用 -32
+    // V0.2.0.4 修 setDefaultAtTopRight 用 POS_MARGIN (-16 右上角) 不用 -32
     expect(src).toMatch(/primary\.size\.width - FRAME_W - POS_MARGIN/);
     expect(src).not.toMatch(/primary\.size\.width - FRAME_W - 32/);
   });
 });
 
-describe("V0.2.6 patch 回归测试 — 展开方向 (V0.2.3 改下拉 V0.2.6 修 App.tsx 公式)", () => {
+describe("V0.2.0.4 patch 回归测试 — 展开方向 (V0.2.0.1 改下拉 V0.2.0.4 修 App.tsx 公式)", () => {
   it("App.tsx 展开 setPosition pos.y 不变 (折叠态 y 保留, 向下展开非向上)", () => {
     const src = readFileSync("src/floating/App.tsx", "utf-8");
-    // V0.2.6 修: pos.y 不变; V0.2.7 修: 不再用 Math.round((FOLDED_W-EXPANDED_W)/2) 偏移
+    // V0.2.0.4 修: pos.y 不变; V0.2.0.5 修: 不再用 Math.round((FOLDED_W-EXPANDED_W)/2) 偏移
     // 公式必须是 new PhysicalPosition(pos.x, pos.y)
     expect(src).toMatch(/new\s+PhysicalPosition\(\s*pos\.x\s*,\s*pos\.y\s*\)/);
     expect(src).not.toMatch(/pos\.y\s*-\s*\(EXPANDED_H\s*-\s*FOLDED_H\)/);
   });
 });
 
-describe("V0.2.6 patch 回归测试 — lib.rs app_show_main_window IPC (主窗恢复)", () => {
+describe("V0.2.0.4 patch 回归测试 — lib.rs app_show_main_window IPC (主窗恢复)", () => {
   it("lib.rs 注册 app_show_main_window tauri command", () => {
     const src = readFileSync("src-tauri/src/lib.rs", "utf-8");
     expect(src).toMatch(/commands::app::app_show_main_window/);
@@ -168,10 +172,10 @@ describe("V0.2.6 patch 回归测试 — lib.rs app_show_main_window IPC (主窗�
 
 });
 
-describe("V0.2.6 patch 回归测试 — 严禁调用 (V0.2.5 patch 修 Win11 WebView2 setFocusable(true) panic)", () => {
-  it("App.tsx 不调用 setFocusable (V0.2.5 patch 删 沿用 V1.0 D15 focus:false 路径)", () => {
+describe("V0.2.0.4 patch 回归测试 — 严禁调用 (V0.2.0.3 patch 修 Win11 WebView2 setFocusable(true) panic)", () => {
+  it("App.tsx 不调用 setFocusable (V0.2.0.3 patch 删 沿用 V1.0 D15 focus:false 路径)", () => {
     const src = readFileSync("src/floating/App.tsx", "utf-8");
-    // V0.2.5 修: Win11 WebView2 浮窗调 setFocusable(true) 会 panic, 必须严禁调用
+    // V0.2.0.3 修: Win11 WebView2 浮窗调 setFocusable(true) 会 panic, 必须严禁调用
     // 注意: 注释里允许出现 "setFocusable" 字样 (反模式 13 沉淀), 只禁函数调用
     expect(src).not.toMatch(/setFocusable\s*\(/);
   });
@@ -186,7 +190,7 @@ describe("V0.2.6 patch 回归测试 — 严禁调用 (V0.2.5 patch 修 Win11 Web
   });
 });
 
-describe("V0.2.6 patch 回归测试 — Cargo.toml + package.json tauri-plugin-dialog 依赖 (V0.2.5 patch 加)", () => {
+describe("V0.2.0.4 patch 回归测试 — Cargo.toml + package.json tauri-plugin-dialog 依赖 (V0.2.0.3 patch 加)", () => {
   it("Cargo.toml 含 tauri-plugin-dialog", () => {
     const src = readFileSync("src-tauri/Cargo.toml", "utf-8");
     expect(src).toMatch(/tauri-plugin-dialog = "2"/);
@@ -200,9 +204,9 @@ describe("V0.2.6 patch 回归测试 — Cargo.toml + package.json tauri-plugin-d
 
 describe("V0.2.0.11 patch — Issue C fix: tauri.conf.json floating 段 transparent:true + backgroundColor", () => {
   // V0.2.0.6 旧测试断言锁死 transparent:false 是反向 lock-in (反模式 15 commit 谎改):
-  // V0.2.5 patch 把 transparent 关了绕过 Win11 WebView2 transparent setSize bug,
+  // V0.2.0.3 patch 把 transparent 关了绕过 Win11 WebView2 transparent setSize bug,
   // 但 release notes 写 "WebView2 transparent 已 iterate" 是错的;V0.2.0 收口目标含
-  // transparent (Tech §7.2 TBD 但 V0.2.6 final fix 注明 transparent), V0.2.0.11 C fix
+  // transparent (Tech §7.2 TBD 但 V0.2.0.4 final fix 注明 transparent), V0.2.0.11 C fix
   // 把 transparent 重新打开 + 加 backgroundColor 显式声明 alpha=0。
   // (V0.2.0.6 describe 已删除, 本 describe 是 V0.2.0.11 替代)
 
@@ -228,7 +232,7 @@ describe("V0.2.0.11 patch — Issue C fix: tauri.conf.json floating 段 transpar
   });
 });
 
-describe("V0.2.6 patch 回归测试 — package.json 完整依赖", () => {
+describe("V0.2.0.4 patch 回归测试 — package.json 完整依赖", () => {
   it("package.json 含 @tauri-apps/api + @tauri-apps/plugin-dialog", () => {
     const src = readFileSync("package.json", "utf-8");
     expect(src).toMatch(/"@tauri-apps\/api":/);

@@ -1,3 +1,8 @@
+// 本文件 version label 已按 docs/governance/versioning-rule.md §三 retro-fit:
+// V0.2.3..V0.2.8 单一数字 / "patch" / Issue A/B/C/Bug 5 全部 → V0.2.0.1..V0.2.0.9。
+// 原 V0.2.x 标签含义(何时哪个 commit 修了什么真根因)见 governance §三 mapping 表,
+// 不要再 grep "V0.2.7 patch" 这种历史标签 — 找不到 commit。
+
 import { useEffect, useRef, useState } from "react";
 import {
   availableMonitors,
@@ -53,7 +58,7 @@ export function FloatingApp() {
           if (cancelled) return;
           await win.setSize(new LogicalSize(EXPANDED_W, EXPANDED_H));
           if (cancelled) return;
-          // V0.2.7 修: 不再 -20px 偏移 (V0.2.6 final fix 偏移公式让贴右边缘时右边被截 4px,
+          // V0.2.0.5 修: 不再 -20px 偏移 (V0.2.0.4 final fix 偏移公式让贴右边缘时右边被截 4px,
           // 因为 (FOLDED_W - EXPANDED_W) / 2 = -20)
           await win.setPosition(new PhysicalPosition(pos.x, pos.y));
           if (cancelled) return;
@@ -147,10 +152,10 @@ export function FloatingApp() {
 
   function handleMouseDown(e: React.MouseEvent<HTMLDivElement>) {
     if (expanded) return;
-    if (e.button !== 0) return; // V0.2.8 Issue A: 右键 (button=2) 走原生 contextmenu capture listener 弹 Rust 原生 Menu, 不走 drag/toggle 路径
+    if (e.button !== 0) return; // V0.2.0.6 Issue A: 右键 (button=2) 走原生 contextmenu capture listener 弹 Rust 原生 Menu, 不走 drag/toggle 路径
     if ((e.target as HTMLElement).closest("[data-no-expand], [data-close]")) return;
-    // V0.2.7 修: mousedown 时捕获 win, 4px 阈值后调 startDragging 让 OS 开始拖窗
-    // (V0.2.5/V0.2.6 反复声称"沿用 useDragLongPress.ts:49" 但代码里完全没调 IPC, 反模式 15 谎改)
+    // V0.2.0.5 修: mousedown 时捕获 win, 4px 阈值后调 startDragging 让 OS 开始拖窗
+    // (V0.2.0.3/V0.2.0.4 反复声称"沿用 useDragLongPress.ts:49" 但代码里完全没调 IPC, 反模式 15 谎改)
     let win: ReturnType<typeof getCurrentWindow> | null = null;
     try {
       win = getCurrentWindow();
@@ -167,7 +172,7 @@ export function FloatingApp() {
   }
 
   // V0.2.0.12 PATCH: 右键调 Rust 原生 Menu IPC (popup_menu + OS HMENU, 独立浮窗外窗口)
-  // V0.2.6 / V0.2.0.11 误用 HTML React 组件 + viewport-clamp 逻辑都拦不住浮窗 viewport 裁剪
+  // V0.2.0.4 / V0.2.0.11 误用 HTML React 组件 + viewport-clamp 逻辑都拦不住浮窗 viewport 裁剪
   // (HTML 元素跑在 WebView2 内, 物理上不可能 "独立窗口")
   async function onContextMenuCapture(e: MouseEvent) {
     if (e.button !== 2) return;
@@ -185,7 +190,7 @@ export function FloatingApp() {
       if (!dragRef.current?.isDragging) return;
       const dx = e.clientX - dragRef.current.startX;
       const dy = e.clientY - dragRef.current.startY;
-      // V0.2.7 修: 4px 阈值满足后调 win.startDragging() 让 OS 开始拖窗
+      // V0.2.0.5 修: 4px 阈值满足后调 win.startDragging() 让 OS 开始拖窗
       // (只调一次, dragStarted 守防止重复触发)
       if (Math.hypot(dx, dy) >= DRAG_THRESHOLD_PX && !dragRef.current.dragStarted) {
         dragRef.current.dragStarted = true;
