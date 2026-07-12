@@ -1,15 +1,25 @@
 use tauri::{Manager, WindowEvent};
+use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 
 pub mod commands;
 pub mod db;
 pub mod error;
+pub mod tray;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        // V0.2.0.12 PATCH 对象 B:浮窗右键原生菜单需要 autostart_toggle。
+        // 对照 V1.0 archive `.archive/src-tauri/src/lib.rs` 第 18-21 行;
+        // 当前仓库之前漏装 tauri-plugin-autostart,补回。
+        // Some(vec!["--floating"]) 让开机自启启动时直接打开浮窗(spec §3.2)。
+        .plugin(tauri_plugin_autostart::init(
+            MacosLauncher::LaunchAgent,
+            Some(vec!["--floating"]),
+        ))
         .setup(|app| {
             if cfg!(debug_assertions) {
                 if let Err(e) = app.handle().plugin(
@@ -87,6 +97,19 @@ pub fn run() {
                 });
             }
 
+            // V0.2.0.12 PATCH 对象 B:两窗口绑定 on_menu_event — 浮窗右键菜单弹出后
+            // 用户选菜单项 → window 派发 MenuEvent → 这里统一走 tray::menu::handle_action
+            // 分发到 4 项具体动作(floating_toggle / main_toggle / autostart_toggle / quit)。
+            // 对照 V1.0 archive `.archive/src-tauri/src/lib.rs` 第 47-55 行。
+            for label in ["main", "floating"] {
+                if let Some(w) = app.get_webview_window(label) {
+                    let app_handle = app.handle().clone();
+                    w.on_menu_event(move |_window, event| {
+                        crate::tray::menu::handle_action(&app_handle, event.id().as_ref());
+                    });
+                }
+            }
+
             let db_state = db::init(app.handle());
             match db_state {
                 Ok(state) => {
@@ -118,6 +141,8 @@ pub fn run() {
             commands::timer_session::timer_session_list_recent_task_titles,
             commands::app::app_exit,
             commands::app::app_show_main_window,
+            // V0.2.0.12 PATCH 对象 B:浮窗右键弹原生菜单 command。前端 IPC 调用入口。
+            commands::floating_cmd::show_floating_context_menu,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

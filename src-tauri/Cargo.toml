@@ -19,6 +19,15 @@ tauri = { version = "2.11.3", features = ["macos-private-api"] }
 tauri-plugin-log = "2"
 tauri-plugin-global-shortcut = "2"
 tauri-plugin-dialog = "2"
+# V0.2.0.12 PATCH 对象 B:浮窗右键原生菜单 + 开机自启 toggle。
+# V1.0 archive `.archive/src-tauri/Cargo.toml` 已有 tauri-plugin-autostart = "2";
+# 当前仓库 Cargo.toml 漏装,补回(tray/menu.rs 的 autostart_toggle 走
+# tauri_plugin_autostart::ManagerExt::autolaunch().enable()/disable())。
+tauri-plugin-autostart = "2"
+# V1.0 archive `.archive/src-tauri/src/tray/confirm.rs` 用 tokio::sync::oneshot
+# 把 MessageDialogBuilder 的 FnOnce(bool) 回调转 future;sync feature 必需。
+# Tauri 2.11 自身用 tokio runtime,加这个 dep 不引入新 runtime,仅多一个类型。
+tokio = { version = "1", features = ["sync"] }
 serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
 rusqlite = { version = "0.32", features = ["bundled"] }
