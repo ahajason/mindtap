@@ -1,0 +1,139 @@
+---
+description: 复杂 bug 排查 / root cause 钻进死胡同时必走 — 倒推根因四层法,从具体代码层退到需求对齐层
+alwaysApply: true
+---
+
+# 倒推根因四层法(Layered Reverse-Trace)
+
+## 反模式:钻牛角尖
+
+```text
+1. 现象 X 触发 bug 反馈
+2. 看代码 L1 → 觉得"行号 Z 是元凶"
+3. 改 Z → 还 fail
+4. 改 Z 附近细节 → 还 fail
+5. 改 Z 的相关逻辑 → 还 fail
+6. 加兜底 (100, 60) → smoke 过, commit, 谎改
+7. user 实测仍 fail, 找过来
+```
+
+**根因不是不会修, 是在更抽象的层想岔了** — 一直停在 L1 改代码, 真正的 root cause 在 L2/L3/L4。
+
+## 四层模型(具体 → 抽象)
+
+| Layer | 问的是什么 | 失败模式 |
+|---|---|---|
+| **L1 具体代码** | 哪一行 / 哪个变量 / 哪条控制流错了 | typo / off-by-one / 空指针 / 条件反 |
+| **L2 中间方法** | 用的 API / IPC / hook / callback 链对吗 | API 用错 / IPC 调度 race / 参数反 / 时序错 / 权限错 / 平台差异 |
+| **L3 解决方案** | 整体架构 / 模块拆分 / IPC vs 进程内调用选对了吗 | 同步 vs 异步 / IPC vs 进程内 / 中心化 vs 分散 / 库选错 |
+| **L4 需求对齐** | 我解决的是 user 真实需求吗? 跟 user L3 (实测反馈) 对齐过吗 | 替 user 想象需求 / 没核对"实测"vs "spec" / 走偏到相邻问题 |
+
+**总层数不固定, 倒推节点不固定** — 不同问题有不同层数, 同一层不同问题有不同分支。简易 typo 只需 L1; 架构错可能直达 L3; 理解错才上 L4。
+
+## 触发条件:何时启动倒推
+
+满足以下任一即启动,**不要继续在同一层试**:
+
+| # | 现象 | 说明 |
+|---|---|---|
+| 1 | 同一处代码改 **3 次仍 fail** | L1 已经被穷尽 |
+| 2 | root cause 解释出现 "可能 / 应该 / 也许" hedge | 解释需要 hedge = 没说死 = 没真找到 |
+| 3 | 解释 root cause 需要 **5+ 句** | 太长 = 没找对 |
+| 4 | 验证只覆盖 **代码层** (lint / type / 单测) 不覆盖 **行为层** (e2e) | 没真验证 root cause 修了 |
+| 5 | user 反馈 "不对" / "还是 fail" 但自评 root cause 没变 | 同一解释被拒绝 = 错的 |
+| 6 | 加兜底值 (100, 60) / (360, 320) "smoke 过" 但 root cause 没真修 | 反模式 15 谎改信号 |
+
+## 倒推流程:7 步走
+
+```
+1. 现象描述 → 第一手观察, 写症状清单
+2. 列可能的 root cause 层次 → L1 / L2 / L3 / L4 主动穷举, 不只 L1
+3. 从 L1 开始 → 每个假设列证据 (代码 / log / 调试输出)
+4. L1 找完没找到 → 整层跳 L2: 当前的 API / IPC 链路对吗?
+5. L2 找完没找到 → 整层跳 L3: 方案选对了吗? 有没有更合适的架构?
+6. L3 找完没找到 → 整层跳 L4: 我解决的是 user 真实的需求吗?
+7. 每层切换时 → 写明 "我放弃 Ln, 因为证据 X / 解释 Y" — 不要默默换层
+```
+
+**关键纪律**:
+
+- ❌ 不要在同一层反复试 (钻牛角尖)
+- ❌ 不要跳层 (从 L1 直接跳 L4 而没试 L2/L3)
+- ❌ 不要回退到更具体的层 (从 L3 倒退到 L1 后又再 L1 找)
+- ✅ 切换层必须**写明放弃上一层的证据** (append 到 Attempt Log)
+- ✅ 每层尝试必须**有证据** (代码 / log / 调试输出), 不是"我觉得"
+
+## 反例(V0.2.0.16 PATCH C-rust:浮窗物理 resize 失败)
+
+### 钻牛角尖过程(L1-only, 失败)
+
+```text
+L1 试: appWindow.setSize(LogicalSize(w, h)) 不生效
+   → 加 console.log 看 invoke 是否发出 ✓
+   → 加 try/catch 看是否有 throw ✗ (没有, 静默丢)
+L1 再试: 加 setTimeout(() => setSize(), 0) 让出主线程 ✓ 偶尔 work
+   → 加 setTimeout(setSize, 100) ✗ 时序不稳
+L1 再试: 调 win.setSize 前 await getCurrentWindow() ✗ race 仍在
+L1 加兜底: 把 FOLDED_W = (100, 60) "看起来 work" → commit → 谎改
+user L3 实测: 浮窗物理尺寸仍不切 → 找过来
+```
+
+### 倒推走法(L1 → L2 → L3, 正确)
+
+```text
+L1 试: appWindow.setSize 不生效 → 证据: log 看到调用, 但物理窗口不动
+   → 放弃 L1, 跳 L2
+
+L2 问: IPC 链路对吗? → 证据: Tauri JS API setSize 走 invoke("plugin:window|set_size", ...)
+   → invoke 在主线程调度, 不立即; tao::Window::set_inner_size 在 IPC handler 异步执行
+   → 物理窗口 resize 滞后或丢
+   → 放弃 L2, 跳 L3
+
+L3 问: 方案选对了吗? → 证据: 走 frontend JS API = 跨 IPC 边界, 不适合物理窗口立即跟随需求
+   → 改: 自定义 rust command set_floating_size(w, h) → tao::Window::set_inner_size
+   → 直接 Win32 SetWindowPos, 同步执行, 物理窗口立即跟随
+   → user L3 实测通过
+
+L4 未触发: 因为 L3 修法与 user L3 实测反馈 "物理窗口立即跟随" 完全对齐
+```
+
+**净差异**: L1 钻 4 轮仍 fail + 谎改; 倒推 3 步到 L3 找到根因 + 一次修对。
+
+## 跟其他规则关系
+
+- `decision-method.mdc` — 改前的"三层决策"(L1 原始权威 / L2 统一设计 / L3 具体问题); 本规则是改中/改后的"四层倒推"(L1 代码 / L2 方法 / L3 方案 / L4 需求)。
+  - decision-method 防"动手前没穷举", layered-reverse-trace 防"动手后没回退"
+- `first-step-research.mdc` — bug 反馈后第一步的双层调研(项目内部历史 + 外部 search); 本规则是调研后**仍没找到 root cause** 时的倒推手段。
+  - research 防"调研不够", layered-reverse-trace 防"调研够了但分析钻层"
+- `task-decomposition.mdc` — 复杂任务分解为多个子任务; 本规则用于分解后的单个子任务"卡住"时。
+  - decomposition 治"任务太大", layered-reverse-trace 治"单个子任务钻层"
+- `memory/mindtap-floating-anti-patterns.md` — 反模式 14 (反复犯) / 15 (commit 谎改) / 16 (字面断言) 都是本规则要拦截的具体症状。
+
+## 验证机制
+
+apply 这条规则的 3 个硬 gate:
+
+| Gate | 怎么验 | 不通过怎么办 |
+|---|---|---|
+| **每层尝试必须有证据** | "我猜是 L1 root cause" → 退回去找 log / 代码 / 调试输出 | 没证据 = 不是 root cause, 退回去补证据 |
+| **每层切换必须写明放弃理由** | Attempt Log 追加 "放弃 Ln, 因为 X" | 默默换层 = 没真分析, 写明 |
+| **修完必须覆盖行为层验证** | e2e 或 user L3 实测, 不是只跑 lint/type/单测 | 只覆盖代码层 = 反模式 15 谎改风险 |
+
+## 何时用
+
+| 场景 | 用 |
+|---|---|
+| 同一处代码改 3+ 次仍 fail | ✅ 必走 |
+| root cause 解释需要 hedge (可能 / 应该) | ✅ 必走 |
+| user 反馈 "不对" 但自评 root cause 没变 | ✅ 必走 |
+| 加兜底值 "smoke 过" commit 后被 user 实测打回 | ✅ 必走 (反模式 15 信号) |
+| 首次遇到 bug 反馈 | 弱用 — 先走 `first-step-research.mdc` 双层调研, 调研后仍没找到再倒推 |
+| 简单 typo / 一行修复 | 不用 — L1 直接修 |
+
+## 自我提醒 prompt
+
+每个 fix 类任务开始时, 心里默念:
+
+> "如果我 3 轮没修对, 我会停。停下后, 我会问自己: 这是 L1 还是 L2/L3/L4 问题? 我有没有切层? 切层有没有写明证据?"
+
+如果答不上来 = 正在钻牛角尖, 立即停手走 7 步倒推。
