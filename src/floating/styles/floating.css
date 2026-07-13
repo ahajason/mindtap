@@ -118,9 +118,9 @@ body {
 .floating-root {
   display: flex;
   align-items: center;
-  width: 320px;
-  height: 36px;
-  min-width: 240px;
+  /* V0.1 FloatShell: 物理尺寸由 rust set_floating_size 强制, CSS 100% 跟 #root (100vw/100vh). */
+  width: 100%;
+  height: 100%;
   border-radius: 14px;
   overflow: hidden;
   box-sizing: border-box;
@@ -128,24 +128,22 @@ body {
   backdrop-filter: blur(20px) saturate(180%);
   background: rgba(245, 249, 255, 0.95);
   border: 0;
-  /* V0.2.0.8 Issue C fix: 删除顶部白色高亮投影 (模拟 top border)
-     WebView2 transparent 边缘 + rgba(245,249,255,0.95) 半透明底色 + 顶部白色高亮投影
-     在某些 DPI 上合成出灰色描边, 用户感知为黑边。仅保留 drop shadow, 不动 .glass-l1/l2/l3。 */
+  /* V0.2.0.8 C fix: 仅 drop shadow — WebView2 transparent + inset highlight 在某些 DPI 合成灰色描边. */
   box-shadow: 0 8px 32px rgba(0, 30, 80, 0.08);
-  /* V0.2.0.11 Issue D 移除: 折叠→展开 width/height/border-radius 平滑过渡不在 V2.0.0 PRD §3.2 范围
-     (PRD §3.2 只提物理尺寸 360×280, 无 transition 要求; Tauri 2 用 win.setSize() 跳变即可,
-     CSS transition 反而在 IPC 异步 setSize 时序下引起视觉抖动)。 */
 }
 
+/* V0.1 FloatShell 折叠态: cursor grab + 长按拖动不选文本. */
+.floating-root.folded {
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.floating-root.folded:active {
+  cursor: grabbing;
+}
+
+/* V0.1 FloatShell 展开态: 长按拖动不选文本 (input / button 用自身 cursor). */
 .floating-root.expanded {
-  width: 360px;
-  height: 280px;
-  min-width: 360px;
-  border-radius: 18px;
-  background: rgba(245, 249, 255, 0.95);
-  border: 0;
-  /* V0.2.0.8 Issue C fix: 同样删除顶部白色高亮投影, 仅保留 drop shadow */
-  box-shadow: 0 8px 32px rgba(0, 30, 80, 0.12);
   user-select: none;
   -webkit-user-select: none;
 }

@@ -146,6 +146,10 @@ pub fn run() {
             commands::app::app_show_main_window,
             // V0.2.0.12 PATCH 对象 B:浮窗右键弹原生菜单 command。前端 IPC 调用入口。
             commands::floating_cmd::show_floating_context_menu,
+            // V0.2.0.16 PATCH C: 强制 resize floating 物理窗口 (user L3 实测 resize 完全无效
+            // 反馈后, 走自定义 rust command 绕过 Tauri JS setSize API 中转竞争, 直接
+            // tauri::Window::set_size 调 tao set_inner_size → Win32 SetWindowPos)。
+            commands::floating_cmd::set_floating_size,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -6,10 +6,10 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { UnlistenFn } from "@tauri-apps/api/event";
+import { invoke } from "@tauri-apps/api/core";
 import {
   availableMonitors,
   getCurrentWindow,
-  LogicalSize,
   PhysicalPosition,
 } from "@tauri-apps/api/window";
 
@@ -20,13 +20,15 @@ import { ControlRow } from "./components/ControlRow";
 import { ExpandedPanel } from "./components/ExpandedPanel";
 import { FoldedBar } from "./components/FoldedBar";
 
-const FOLDED_W = 320;
+// V0.2.0.16 PATCH C: 折叠/展开等宽 360, user L3 实测期望 "切换只高度变".
+const FOLDED_W = 360;
 const FOLDED_H = 36;
 const EXPANDED_W = 360;
 const EXPANDED_H = 280;
 const TASK_TITLE_MAX = 50;
 
-const FRAME_W = 320;
+// FRAME_W/H: 默认右上角位置 clamp 公式用, 等宽 (跟 FOLDED_W 一致 — 物理窗口尺寸).
+const FRAME_W = 360;
 const FRAME_H = 36;
 const POS_MARGIN = 16;
 // V0.2.0.15 PATCH E-1 fix: 移除 DEFAULT_X/DEFAULT_Y 常量 (旧 fire-and-forget fallback 用,
@@ -82,14 +84,19 @@ export function FloatingApp() {
         if (expanded) {
           const pos = await win.outerPosition();
           if (cancelled) return;
-          await win.setSize(new LogicalSize(EXPANDED_W, EXPANDED_H));
+          // V0.2.0.16 PATCH C-rust: 物理 resize 走自定义 rust command (不走 Tauri JS setSize IPC 中转).
+          await invoke<void>("set_floating_size", {
+            w: EXPANDED_W,
+            h: EXPANDED_H,
+          });
           if (cancelled) return;
-// V0.2.0.5 修: 不再 -20px 偏移 (V0.2.0.4 final fix 偏移公式让贴右边缘时右边被截 4px,
-          // 因为 (FOLDED_W - EXPANDED_W) / 2 = -20)
           await win.setPosition(new PhysicalPosition(pos.x, pos.y));
           if (cancelled) return;
         } else {
-          await win.setSize(new LogicalSize(FOLDED_W, FOLDED_H));
+          await invoke<void>("set_floating_size", {
+            w: FOLDED_W,
+            h: FOLDED_H,
+          });
           if (cancelled) return;
         }
       } catch (err) {
@@ -225,8 +232,8 @@ export function FloatingApp() {
   }, []);
 
   function handleMouseDown(e: React.MouseEvent<HTMLDivElement>) {
-    if (expanded) return;
-    if (e.button !== 0) return; // V0.2.0.6 Issue A: 右键 (button=2) 走原生 contextmenu capture listener 弹 Rust 原生 Menu, 不走 drag/toggle 路径
+    // V0.2.0.16 PATCH B: 展开态也允许拖 (user L3 实测期望).
+    if (e.button !== 0) return; // V0.2.0.6 A: 右键走原生 contextmenu capture, 不进 drag/toggle 路径.
     if ((e.target as HTMLElement).closest("[data-no-expand], [data-close]")) return;
     // V0.2.0.5 修: mousedown 时捕获 win, 4px 阈值后调 startDragging 让 OS 开始拖窗
     // (V0.2.0.3/V0.2.0.4 反复声称"沿用 useDragLongPress.ts:49" 但代码里完全没调 IPC, 反模式 15 谎改)
@@ -378,7 +385,8 @@ export function FloatingApp() {
     <div
       ref={panelRef}
       data-testid="floating-root"
-      className="floating-root flex h-full w-full flex-col gap-2 overflow-hidden rounded-2xl p-3 text-[12px]"
+      // V0.1 FloatShell: 切 folded/expanded 给 .folded/.expanded CSS rule 命中 (cursor:grab / user-select:none).
+      className={`floating-root ${expanded ? "expanded" : "folded"} flex h-full w-full flex-col gap-2 overflow-hidden rounded-2xl p-3 text-[12px]`}
       onMouseDown={handleMouseDown}
     >
       {/* V0.2.0.15 E-2: 内层 wrapper 拿 PANEL_STYLE (含 backdrop-filter), pointer-events: none 透传到 root */}
@@ -403,15 +411,18 @@ export function FloatingApp() {
           />
         )}
         {/* 无 active session 且 expanded: 显示 ExpandedPanel (input + 开始/取消) */}
+        {/* V0.2.0.16 PATCH D: flex-1 wrapper 让 ExpandedPanel 占满剩余空间, 防止内部 gap+多 item 挤压. */}
         {!session && expanded && (
-          <ExpandedPanel
-            taskTitle={taskTitle}
-            onTaskTitleChange={setTaskTitle}
-            onStart={handleStart}
-            onClearAndDismiss={handleClearAndDismiss}
-            maxLength={TASK_TITLE_MAX}
-            submitting={submitting}
-          />
+          <div className="flex-1 overflow-hidden">
+            <ExpandedPanel
+              taskTitle={taskTitle}
+              onTaskTitleChange={setTaskTitle}
+              onStart={handleStart}
+              onClearAndDismiss={handleClearAndDismiss}
+              maxLength={TASK_TITLE_MAX}
+              submitting={submitting}
+            />
+          </div>
         )}
       </div>
     </div>

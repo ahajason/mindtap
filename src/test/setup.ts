@@ -1,5 +1,6 @@
 import "@testing-library/jest-dom/vitest";
-import { vi } from "vitest";
+import { afterEach, vi } from "vitest";
+import { invoke } from "@tauri-apps/api/core";
 
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: vi.fn(() => Promise.resolve(null)),
@@ -32,3 +33,15 @@ vi.mock("@tauri-apps/api/window", () => ({
   LogicalSize: vi.fn(),
   PhysicalPosition: vi.fn(),
 }));
+
+// V0.2.0.16 PATCH: afterEach 统一重置 invoke + mockWindow 各 method 的 call history,
+// 防止前一个 test 设的 mockImplementation 在下一个 test 仍然生效 (反模式 15 防御: test 隔离).
+//   - vi.mocked(invoke).mockReset() 重置回 setup.ts 默认实现 Promise.resolve(null)
+//     timer_session_get_active 永远返回 null (除非本 test 显式 mockImplementation)
+//   - mockWindow 各 vi.fn method mockClear 只清 call history, 保留默认 Promise.resolve 实现
+afterEach(() => {
+  vi.mocked(invoke).mockReset();
+  for (const fn of Object.values(mocks.mockWindow)) {
+    (fn as ReturnType<typeof vi.fn>).mockClear();
+  }
+});
