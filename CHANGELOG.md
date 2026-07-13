@@ -12,13 +12,19 @@
 
 | 版本 | 发布日 | 范围 |
 |---|---|---|
+| **V0.2.0.14 PATCH** | 2026-07-13 | 单一 root div 容器重构 + document mousedown dismiss + active session 折叠(收回 V0.2.0.13 重测 4 deviation + 反 C-4) |
+| V0.2.0.13 PATCH | 2026-07-13 | user L3 重测 5 deviation inline 修(StatusDot 对齐 + 折叠/展开叠加式 + menu.rs 文案动态化 + on_menu_event scope + onCancel 拆) |
 | V0.2.0.12 PATCH | 2026-07-13 | 浮窗 4 对象并行恢复 V1.0 archive 设计(transparent + Rust 原生菜单 + StatusDot inline + focus: false) |
-| V0.2.0.10 PATCH | 2026-07-13 | (已被 V0.2.0.12 替代,仅修黑边局部根因) |
 | V0.2.0.11 PATCH | 2026-07-13 | (已被 V0.2.0.12 替代,A/B 段基于 HTML React ContextMenu 误前提被回退) |
+| V0.2.0.10 PATCH | 2026-07-13 | (已被 V0.2.0.12 替代,仅修黑边局部根因) |
 | V0.2.0      | 2026-07-12 | 浮窗最小可用(Windows 11 锁平台;折叠 320×36 + 展开 360×280 + Ctrl+Shift+Space + SQLite timer_session) |
 | V0.1.6      | 2026-06-22 | Style Guide 设计系统(11 UI + Tailwind tokens + Liquid Glass + vitest,无业务) |
 
 详见 `docs/reports/` 完整 release notes。
+
+## ⏳ 待同步(2026-07-13)
+
+V0.2.0.13 / V0.2.0.14 PATCH release notes 已补,但 **3 config field bump 仍待执行** (`package.json` + `src-tauri/Cargo.toml` + `src-tauri/tauri.conf.json` 当前 `version` 字段仍为 `0.2.0.12`)。这是 versioning-rule §六 硬约束 #6 的最后一步 — `chore(release): v0.2.0.14` 单个 commit 内 lockstep 完成。注:`V0.2.1` SwitchDropdown 旧计划已 ⛔(`docs/reports/v0.2.1-release-notes.md` 顶部 banner 已加),不等同于本 PATCH chain,后续"开启新的 0.2.1" MINOR 是新 feature 切片。
 
 ## 增量维护规则
 

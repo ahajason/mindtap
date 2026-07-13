@@ -2,7 +2,7 @@
 
 轻念 · Mindtap — 极简记录桌面应用。Tauri 2 (Rust) + React 19 + TypeScript + Vite 7。本地 SQLite，无云同步。
 
-> **当前活跃版本** = 看 `docs/tasks/` 列表中在跑 task,和 `docs/reports/` 历史交付(V0.2.0.x PATCH 是浮窗回归阶段)。**最后 release notes**:`V0.2.0.12 PATCH`(`docs/reports/v0.2.0.12-release-notes.md`, 2026-07-13,浮窗 4 对象并行恢复 V1.0 archive 设计 — WebView2 transparent + native Rust menu + StatusDot inline + 浮窗 config focus: false 收口)。develop HEAD 含后续 V0.2.0.13 + V0.2.0.14 PATCH(commit `fd38127` + `a0fc00d`)已 merge 但**尚未写 release notes**(增量修 L3 user 重测 deviation + 单一 root div 重构)。版本历史详见 `docs/governance/versioning-rule.md` §三 + §四(V0.2.3~V0.2.8 已回退为 V0.2.0.x PATCH,V0.2.6/7/8 标签不再使用)。硬规范入口在 `docs/governance/` + `docs/tech/` + `.claude/rules/`(后两者每次 session 加载);本文件是入口上下文**不会被发版带过期**。
+> **当前活跃版本** = 看 `docs/tasks/` 列表中在跑 task,和 `docs/reports/` 历史交付(V0.2.0.x PATCH 是浮窗回归阶段)。**最后 release notes**:`V0.2.0.14 PATCH`(`docs/reports/v0.2.0.14-release-notes.md`, 2026-07-13,单一 root div 容器重构 + document mousedown dismiss + active session 折叠 — 收回 V0.2.0.13 重测 4 deviation + 反 C-4 自动折叠);V0.2.0.13 (`fd38127`, 2026-07-13, user L3 重测 5 deviation inline 修 StatusDot 对齐 + 折叠/展开叠加式 + menu.rs 文案动态化 + on_menu_event scope + onCancel 拆分)。浮窗 PATCH chain 已收敛(`V0.2.0.{10,11,12,13,14}`)。**下一步**:等用户开启新的 V0.2.1 MINOR(switch-dropdown 旧 V0.2.1 已 ⛔ 在 `docs/reports/v0.2.1-release-notes.md` 顶部标 banner,scope 被 V0.2.0.x PATCHes 吸收);**当前 3 config field 仍 `0.2.0.12`**(`chore(release): v0.2.0.14` lockstep bump 待执行,见 `CHANGELOG.md` ⏳ 待同步段)。版本历史详见 `docs/governance/versioning-rule.md` §三 + §四(V0.2.3~V0.2.8 已回退为 V0.2.0.x PATCH,V0.2.6/7/8 标签不再使用)。硬规范入口在 `docs/governance/` + `docs/tech/` + `.claude/rules/`(后两者每次 session 加载);本文件是入口上下文**不会被发版带过期**。
 
 ## Quick Start
 
