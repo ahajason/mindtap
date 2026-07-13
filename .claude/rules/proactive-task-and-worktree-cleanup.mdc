@@ -1,0 +1,61 @@
+---
+description: 改完任何代码/规则/文档后必走 — 主动更新任务状态 + 主动清 worktree 三件套, 不待 user 提醒
+alwaysApply: true
+---
+
+# 主动更新任务 + 主动清 Worktree(强制规则)
+
+## 强约束
+
+任何交付完成时,**立即主动做两件事,不待 user 提醒**:
+
+### 1. 任务状态更新
+
+| 触发 | 动作 |
+|---|---|
+| 实质交付完成(commit / push / 文档完成 / 规则写入) | `TaskUpdate {status: completed}` |
+| 新工作开始前 | `TaskList` 看 stale → 清已完成的旧 task 或合并 |
+| 每完成一步 sub-step | 立即标 in_progress → completed, 不批量 |
+
+### 2. Worktree 三件套
+
+per `CLAUDE.md` feature branch 用完即清:
+
+```bash
+# 1. 物理删 sub-worktree(从主 worktree 路径操作, 不动 sub-worktree cwd)
+git -C <主 worktree 路径> worktree remove --force --force <sub-worktree 路径>
+
+# 2. 删本地 branch
+git -C <主 worktree 路径> branch -d <branch-name>
+
+# 3. 删远端 branch
+git -C <主 worktree 路径> push origin --delete <branch-name>
+```
+
+**触发条件**: push + ff-merge 回 develop 完成后立即跑, **不需 user 指令**。
+
+**关于 `--force --force`**(双 -f): harness 会 lock 当前 session 的 worktree, 单 `-f` 不够, 需双 `-f` override lock。
+
+## 反模式
+
+- ❌ "等 user 说 close worktree 我再关"
+- ❌ "task 已做但忘了标 completed, task list 一直 in_progress"
+- ❌ "push 后留 branch 在远端, 下次 pull 又拉回"
+- ❌ "完成 deliverable 但不 TaskUpdate, 等 user 提醒"
+
+## 关联
+
+- `CLAUDE.md` 工作流铁律 — Worktree 治理 + feature branch 用完即清
+- `memory/mindtap-proactive-task-and-worktree-cleanup.md` — 完整 reasoning + 反例
+- `self-apply-after-write.mdc` — 写完规则后必跑 7 项 self-apply
+
+## 验证 checklist
+
+每次 commit + push 后必自检:
+
+- [ ] 涉及的所有 task 已 `completed`
+- [ ] sub-worktree 已 `git worktree remove`(如果这是 isolated session)
+- [ ] 本地 branch 已 `git branch -d`
+- [ ] 远端 branch 已 `git push origin --delete`
+- [ ] `git -C <主 worktree> worktree list` 不含本次 worktree
+- [ ] `git -C <主 worktree> branch -a` 不含本次 branch (除非 ff-merged develop)
