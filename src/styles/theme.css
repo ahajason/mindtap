@@ -1,0 +1,55 @@
+@theme {
+  --color-bg-from: #F5F9FF;
+  --color-bg-to: #E8F1FF;
+
+  --color-primary: #165DFF;
+  --color-primary-hover: #0E4AD9;
+  --color-primary-active: #0A3DBC;
+  --color-primary-glow: rgba(22, 93, 255, 0.25);
+
+  --color-text-1: #1D2939;
+  --color-text-2: #475467;
+  --color-text-3: #98A2B3;
+  --color-success: #5BCBA0;
+  --color-inactive: #DDE3EE;
+
+  --glass-blur-1: 20px;
+  --glass-fill-1: 22%;
+  --glass-border-1: 60%;
+  --glass-shadow-1: 0.08;
+  --glass-blur-2: 24px;
+  --glass-fill-2: 28%;
+  --glass-border-2: 70%;
+  --glass-shadow-2: 0.10;
+  --glass-blur-3: 28px;
+  --glass-fill-3: 36%;
+  --glass-border-3: 80%;
+  --glass-shadow-3: 0.12;
+
+  --radius-card: 20px;
+  --radius-input: 12px;
+  --radius-button: 10px;
+  --radius-badge: 10px;
+
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-7: 32px;
+
+  --text-core: 48px;
+  --text-h1: 24px;
+  --text-h2: 16px;
+  --text-h3: 14px;
+  --text-caption: 12px;
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+}

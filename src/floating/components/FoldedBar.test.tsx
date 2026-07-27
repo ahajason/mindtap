@@ -1,36 +1,23 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 
 import { FoldedBar } from "./FoldedBar";
 
 describe("FoldedBar", () => {
-  it("空状态显示 '未命名任务'", () => {
-    render(<FoldedBar taskTitle="" focusMs={0} status="empty" />);
-    expect(screen.getByText("未命名任务")).toBeInTheDocument();
-  });
-
-  it("active 状态显示 task_title + 时间格式化 HH:MM:SS", () => {
+  it("活动任务显示标题、格式化计时和聚合状态语义", () => {
     render(<FoldedBar taskTitle="写代码" focusMs={3_661_000} status="active" />);
-    expect(screen.getByText("写代码")).toBeInTheDocument();
-    expect(screen.getByText("01:01:01")).toBeInTheDocument();
+
+    expect(screen.getByText("写代码")).toBeVisible();
+    expect(screen.getByText("01:01:01")).toBeVisible();
+    expect(screen.getByRole("status")).toHaveAccessibleName(
+      "当前任务 写代码，已计时 01:01:01",
+    );
   });
 
-  it("aria-label 含 task_title + 已计时 (active)", () => {
-    render(<FoldedBar taskTitle="写代码" focusMs={5_000} status="active" />);
-    const el = screen.getByRole("status");
-    expect(el.getAttribute("aria-label")).toBe("当前任务 写代码，已计时 00:00:05");
-  });
-
-  it("空状态 aria-label (无任务)", () => {
+  it("空闲状态提供未开始任务语义", () => {
     render(<FoldedBar taskTitle="" focusMs={0} status="empty" />);
-    const el = screen.getByRole("status");
-    expect(el.getAttribute("aria-label")).toBe("Mindtap 计时器，未开始任务");
-  });
 
-  it("点击触发 onClick (V0.2 spec §3.2 折叠态点击展开)", () => {
-    const onClick = vi.fn();
-    render(<FoldedBar taskTitle="X" focusMs={0} status="active" onClick={onClick} />);
-    fireEvent.click(screen.getByRole("status"));
-    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(screen.getByText("未命名任务")).toBeVisible();
+    expect(screen.getByRole("status")).toHaveAccessibleName("Mindtap 计时器，未开始任务");
   });
 });

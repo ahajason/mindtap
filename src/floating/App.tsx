@@ -37,23 +37,6 @@ const POS_MARGIN = 16;
 const POS_KEY = "floating-position";
 const DRAG_THRESHOLD_PX = 4;
 
-// V0.2.0.14 PATCH A-2 重构: 提取 PANEL_STYLE 到 App.tsx 顶层常量, 单一 root div 复用.
-// V0.2.0.13 PATCH FoldedBar 与 ExpandedPanel 各带一份 PANEL_STYLE + 各自 rounded / padding, 嵌套出多 2 层容器.
-// V0.2.0.14 单一 root div 永远用 PANEL_STYLE + flex-col + rounded-2xl + p-3, 内容只 2 行:
-//   - FoldedBar (圆点 + 标题 + 时间) — always
-//   - (active session) ControlRow / (!active && expanded) ExpandedPanel
-const PANEL_STYLE: React.CSSProperties = {
-  background: "rgba(255, 255, 255, 0.6)",
-  backdropFilter: "blur(28px) saturate(120%)",
-  WebkitBackdropFilter: "blur(28px) saturate(120%)",
-  boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 8px 32px rgba(0, 30, 80, 0.08)",
-  // V0.2.0.15 PATCH E-2 fix: pointer-events: none 让 wrapper 上的 backdrop-filter 不阻挡 root 的 hit-test.
-  // WebView2 transparent + backdrop-filter 组合让 root div 在 GPU 层不响应 mousedown, 折叠态拖动失效.
-  // 修法: PANEL_STYLE (含 backdrop-filter) 移到 root 内 wrapper, wrapper 加 pointer-events: none,
-  // 点击穿透到 root (root 没有 backdrop-filter, 响应 hit-test), onMouseDown 触发, 4px 阈值后 win.startDragging().
-  pointerEvents: "none",
-};
-
 export function FloatingApp() {
   const { session, refresh, setSession } = useActiveTask();
   const liveFocusMs = useFocusTicker(session, 1000);
@@ -367,42 +350,23 @@ export function FloatingApp() {
     }
   }
 
-  // V0.2.0.14 PATCH A-2 重构: 单一 root div, 永远同一 PANEL_STYLE + flex-col + rounded-2xl + p-3.
-  // 不再有 expanded/folded class 切换 + 嵌套 flex-1 wrapper, 切换折叠/非折叠不闪.
-  // 内容 3 段 (互斥, 但 root div 永远存在):
-  //   - FoldedBar: always
-  //   - active session: ControlRow (在 FoldedBar 下方, 折叠态浮窗第二行)
-  //   - !active && expanded: ExpandedPanel (input + 按钮, 展开态)
-  //
-  // V0.2.0.15 PATCH E-2 fix: PANEL_STYLE 从 root 移到内层 wrapper, wrapper 加 pointer-events: none.
-  // 旧版 PANEL_STYLE 在 root + backdrop-filter 让 root 在 WebView2 transparent 模式下 hit-test 失效,
-  // 折叠态 mousedown 走不到 handleMouseDown → dragRef 未设置 → 4px 阈值到不了 win.startDragging().
-  // 修法: root 拿掉 PANEL_STYLE (无 backdrop-filter, hit-testable), 内层 wrapper 拿 PANEL_STYLE.
-  // wrapper 的 pointer-events: none 让点击穿透到 root (root.onMouseDown 触发); wrapper 内 children
-  // (FoldedBar/ControlRow/ExpandedPanel) 默认 pointer-events: auto, 自己的 onClick/按钮不受影响.
-  // 单一 root div 仍保留 (test A-2 锁住 className 含 rounded-2xl + p-3 + flex-col + gap-2).
   return (
     <div
       ref={panelRef}
       data-testid="floating-root"
-      // V0.1 FloatShell: 切 folded/expanded 给 .folded/.expanded CSS rule 命中 (cursor:grab / user-select:none).
-      className={`floating-root ${expanded ? "expanded" : "folded"} flex h-full w-full flex-col gap-2 overflow-hidden rounded-2xl p-3 text-[12px]`}
+      className={`floating-root ${expanded ? "expanded" : "folded"}`}
       onMouseDown={handleMouseDown}
     >
-      {/* V0.2.0.15 E-2: 内层 wrapper 拿 PANEL_STYLE (含 backdrop-filter), pointer-events: none 透传到 root */}
-      <div style={PANEL_STYLE} className="flex flex-1 flex-col gap-2">
-        {/* FoldedBar: always — 圆点 + 标题 + 时间 */}
+      <div className="floating-content">
         <FoldedBar
           taskTitle={session?.task_title ?? ""}
           focusMs={liveFocusMs}
           status={session ? session.status : "empty"}
           onClick={() => {
-            // 仅无 active session 且折叠态 click 触发展开; active 时折叠是常态不展开.
-            if (!expanded && !session) setExpanded(true);
+            if (!expanded) setExpanded(true);
           }}
         />
-        {/* active session: 折叠态第二行显示 ControlRow (暂停/继续/完成) */}
-        {session && (
+        {session && expanded && (
           <ControlRow
             status={session.status}
             onPause={() => act("pause")}
@@ -410,10 +374,8 @@ export function FloatingApp() {
             onComplete={() => act("complete")}
           />
         )}
-        {/* 无 active session 且 expanded: 显示 ExpandedPanel (input + 开始/取消) */}
-        {/* V0.2.0.16 PATCH D: flex-1 wrapper 让 ExpandedPanel 占满剩余空间, 防止内部 gap+多 item 挤压. */}
         {!session && expanded && (
-          <div className="flex-1 overflow-hidden">
+          <div className="min-h-0 flex-1 overflow-hidden">
             <ExpandedPanel
               taskTitle={taskTitle}
               onTaskTitleChange={setTaskTitle}

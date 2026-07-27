@@ -29,7 +29,7 @@
         "label": "floating",
         "title": "Mindtap 计时",
         "url": "floating.html",
-        "width": 320,
+        "width": 360,
         "height": 36,
         "resizable": false,
         "fullscreen": false,

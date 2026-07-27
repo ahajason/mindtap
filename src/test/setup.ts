@@ -19,7 +19,7 @@ const mocks = vi.hoisted(() => ({
     setFocusable: vi.fn(() => Promise.resolve()),
     startDragging: vi.fn(() => Promise.resolve()),
     outerPosition: vi.fn(() => Promise.resolve({ x: 0, y: 0 })),
-    outerSize: vi.fn(() => Promise.resolve({ width: 320, height: 36 })),
+    outerSize: vi.fn(() => Promise.resolve({ width: 360, height: 36 })),
     show: vi.fn(() => Promise.resolve()),
     hide: vi.fn(() => Promise.resolve()),
     close: vi.fn(() => Promise.resolve()),
@@ -29,18 +29,23 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@tauri-apps/api/window", () => ({
+  availableMonitors: vi.fn(() =>
+    Promise.resolve([
+      {
+        position: { x: 0, y: 0 },
+        size: { width: 1920, height: 1080 },
+      },
+    ]),
+  ),
   getCurrentWindow: vi.fn(() => mocks.mockWindow),
   LogicalSize: vi.fn(),
   PhysicalPosition: vi.fn(),
 }));
 
-// V0.2.0.16 PATCH: afterEach 统一重置 invoke + mockWindow 各 method 的 call history,
-// 防止前一个 test 设的 mockImplementation 在下一个 test 仍然生效 (反模式 15 防御: test 隔离).
-//   - vi.mocked(invoke).mockReset() 重置回 setup.ts 默认实现 Promise.resolve(null)
-//     timer_session_get_active 永远返回 null (除非本 test 显式 mockImplementation)
-//   - mockWindow 各 vi.fn method mockClear 只清 call history, 保留默认 Promise.resolve 实现
+// 每个测试恢复默认 invoke 行为，避免单测自定义 implementation 泄漏到后续用例。
 afterEach(() => {
   vi.mocked(invoke).mockReset();
+  vi.mocked(invoke).mockResolvedValue(null);
   for (const fn of Object.values(mocks.mockWindow)) {
     (fn as ReturnType<typeof vi.fn>).mockClear();
   }

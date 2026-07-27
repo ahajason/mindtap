@@ -1,46 +1,32 @@
-/* src/floating/styles/floating.css
-   V0.2.0.x retro-fit: 沿用 V1.0 floating.css 41 行 fallback 模式 (var(--glass-X, fallback))
-   + Tailwind 4 @import "tailwindcss" 供 utility class 编译
-   + glass utilities 用 inline fallback 避免 main @theme token 跨 entry 缺失
-
-   关键教训 (反模式 9 + V3 报告):
-   - V0.2 floating.html 错挂 <body class="floating-root">, CSS 应用在 body 上撑满 viewport,
-     React 渲染的 .floating-root div 在 body 内拿不到兜底样式
-   - 修复: floating.html body 不挂类, React div 自己挂 .floating-root (App.tsx)
-   - glass-l1/l2/l3 utility 用 var(--glass-fill-1/2/3) 无 fallback, 浮窗 entry 没 main @theme,
-     var(--glass-fill-1) undefined → background: rgba(255,255,255, undefined) = 透明
-   - 修复: 改 inline fallback var(--glass-fill-1, 22%) 沿用 V1.0 模式
-
-   V0.2.0.12 PATCH:
-   - 删 .floating-root 锚点声明 (V0.2.0.11 B fix 加的, StatusDot 已回 V1.0 inline 不再需要)
-   - 加 V1.0 archive .dot flex item 样式 + @keyframes pulse (照搬 .archive/src/floating/styles/focus-block.css:71-88 + 163-171)
-*/
+/* 浮窗独立入口：加载 Tailwind 和共享玻璃 token。
+   玻璃材质由 .floating-root::before 单独负责，内容层只负责布局。 */
 
 @import "tailwindcss";
+@import "../../styles/theme.css";
 
 @layer utilities {
   .glass-l1 {
-    -webkit-backdrop-filter: blur(20px) saturate(120%);
-    backdrop-filter: blur(20px) saturate(120%);
-    background: rgba(255, 255, 255, 0.35);
+    -webkit-backdrop-filter: blur(var(--glass-blur-1)) saturate(120%);
+    backdrop-filter: blur(var(--glass-blur-1)) saturate(120%);
+    background: rgba(255, 255, 255, var(--glass-fill-1));
     border: 0;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 8px 32px rgba(0, 30, 80, 0.08);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, var(--glass-border-1)), 0 8px 32px rgba(0, 30, 80, var(--glass-shadow-1));
   }
 
   .glass-l2 {
-    -webkit-backdrop-filter: blur(24px) saturate(120%);
-    backdrop-filter: blur(24px) saturate(120%);
-    background: rgba(255, 255, 255, 0.42);
+    -webkit-backdrop-filter: blur(var(--glass-blur-2)) saturate(120%);
+    backdrop-filter: blur(var(--glass-blur-2)) saturate(120%);
+    background: rgba(255, 255, 255, var(--glass-fill-2));
     border: 0;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 8px 32px rgba(0, 30, 80, 0.1);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, var(--glass-border-2)), 0 8px 32px rgba(0, 30, 80, var(--glass-shadow-2));
   }
 
   .glass-l3 {
-    -webkit-backdrop-filter: blur(28px) saturate(120%);
-    backdrop-filter: blur(28px) saturate(120%);
-    background: rgba(255, 255, 255, 0.5);
+    -webkit-backdrop-filter: blur(var(--glass-blur-3)) saturate(120%);
+    backdrop-filter: blur(var(--glass-blur-3)) saturate(120%);
+    background: rgba(255, 255, 255, var(--glass-fill-3));
     border: 0;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 8px 32px rgba(0, 30, 80, 0.12);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, var(--glass-border-3)), 0 8px 32px rgba(0, 30, 80, var(--glass-shadow-3));
   }
 }
 
@@ -64,38 +50,6 @@
   animation: pulse-dot 1.6s ease-in-out infinite;
 }
 
-/* V0.2.0.12 PATCH: 照搬 V1.0 archive .archive/src/floating/styles/focus-block.css:71-88 + 163-171
-   .dot 是 flex item 8×8 圆点 + @keyframes pulse 1.6s 呼吸动画。
-   V0.2.x 的 pulse-dot / animate-pulse-dot 保留作为 active 状态触发器。 */
-.dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  align-self: center;
-}
-.dot-active {
-  background: #34c759;
-  animation: pulse 1.6s ease-in-out infinite;
-}
-.dot-done {
-  background: #34c759;
-  opacity: 0.5;
-}
-.dot-empty {
-  background: rgba(0, 0, 0, 0.12);
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgba(52, 199, 89, 0.4);
-  }
-  50% {
-    box-shadow: 0 0 0 6px rgba(52, 199, 89, 0);
-  }
-}
-
 :root {
   font-family: system-ui, sans-serif;
   background: transparent;
@@ -116,20 +70,43 @@ body {
 }
 
 .floating-root {
-  display: flex;
-  align-items: center;
-  /* V0.1 FloatShell: 物理尺寸由 rust set_floating_size 强制, CSS 100% 跟 #root (100vw/100vh). */
+  position: relative;
   width: 100%;
   height: 100%;
-  border-radius: 14px;
   overflow: hidden;
   box-sizing: border-box;
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  backdrop-filter: blur(20px) saturate(180%);
-  background: rgba(245, 249, 255, 0.95);
   border: 0;
-  /* V0.2.0.8 C fix: 仅 drop shadow — WebView2 transparent + inset highlight 在某些 DPI 合成灰色描边. */
-  box-shadow: 0 8px 32px rgba(0, 30, 80, 0.08);
+  border-radius: 14px;
+  color: #1d2939;
+  font-size: 12px;
+}
+
+.floating-root::before {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  content: "";
+  pointer-events: none;
+  -webkit-backdrop-filter: blur(var(--glass-blur-1)) saturate(120%);
+  backdrop-filter: blur(var(--glass-blur-1)) saturate(120%);
+  background: rgba(255, 255, 255, var(--glass-fill-1));
+  box-shadow: 0 8px 32px rgba(0, 0, 0, var(--glass-shadow-1));
+}
+
+.floating-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.floating-root.expanded .floating-content {
+  gap: 8px;
+  padding: 12px;
 }
 
 /* V0.1 FloatShell 折叠态: cursor grab + 长按拖动不选文本. */
@@ -146,13 +123,4 @@ body {
 .floating-root.expanded {
   user-select: none;
   -webkit-user-select: none;
-}
-
-/* V0.2.0.8.1 Issue C fix: FoldedBar 内层 div (任务名+计时器行) 的 box-shadow
-   从 inline style 挪到 CSS。inline style 优先级最高会覆盖 .floating-root 的 box-shadow,
-   V0.2.0.8 反复改 .floating-root 没修对就是这个原因。
-   这里只保留 drop shadow, 去掉 inset 0 1px 0 highlight — 跟 .floating-root 同思路:
-   WebView2 transparent 边缘 + 半透明 rgba + inset 在某些 DPI 上合成出灰色描边。*/
-.folded-bar-inner {
-  box-shadow: 0 4px 16px rgba(0, 30, 80, 0.06);
 }
