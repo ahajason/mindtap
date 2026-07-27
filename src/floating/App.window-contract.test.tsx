@@ -74,20 +74,22 @@ describe("浮窗生产契约", () => {
     expect(css).not.toMatch(/\.floating-root\.expanded\s+\.floating-content\s*\{[\s\S]*?padding:/);
   });
 
-  it("浮窗材质使用 L2 token 和内高光，且只有 CSS 一个 owner", () => {
+  it("浮窗 CSS 保底表面使用 L2 token，且透明页面和表面层不产生顶部白边", () => {
     const app = readFileSync("src/floating/App.tsx", "utf8");
+    const html = readFileSync("floating.html", "utf8");
     const css = readFileSync("src/floating/styles/floating.css", "utf8");
     const theme = readFileSync("src/styles/theme.css", "utf8");
 
     expect(app).not.toContain("PANEL_STYLE");
     expect(app).not.toContain("backdropFilter:");
+    expect(html).toContain("<body>");
     expect(theme).toMatch(/--glass-fill-2:\s*28%/);
     expect(theme).toMatch(/--glass-blur-2:\s*24px/);
-    expect(theme).toMatch(/--glass-border-2:\s*70%/);
     expect(theme).toMatch(/--glass-shadow-2:\s*0\.10/);
     expect(css).toMatch(/\.floating-root::before\s*\{[\s\S]*?background:\s*rgba\(255,\s*255,\s*255,\s*var\(--glass-fill-2\)\)/);
     expect(css).toMatch(/\.floating-root::before\s*\{[\s\S]*?backdrop-filter:\s*blur\(var\(--glass-blur-2\)\)\s*saturate\(120%\)/);
-    expect(css).toMatch(/\.floating-root::before\s*\{[\s\S]*?box-shadow:[\s\S]*?inset\s+0\s+1px\s+0[\s\S]*?var\(--glass-border-2\)/);
+    expect(css).toMatch(/\.floating-root::before\s*\{[\s\S]*?box-shadow:[\s\S]*?inset\s+0\s+0\s+0\s+1px[\s\S]*?var\(--glass-border-2\)/);
+    expect(css).not.toMatch(/\.floating-root::before\s*\{[\s\S]*?inset\s+0\s+1px\s+0/);
     expect(css).not.toMatch(/\.folded-bar-inner/);
   });
 });
