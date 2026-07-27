@@ -15,7 +15,7 @@ export function ControlRow({ status, onPause, onResume, onComplete }: ControlRow
           type="button"
           data-no-expand
           onClick={onPause}
-          className="rounded-full px-3 py-1 text-[11px] text-text-2 hover:bg-white/40"
+          className="h-8 rounded-[10px] px-4 text-[13px] font-medium text-text-2 transition-colors hover:bg-white/40"
         >
           暂停
         </button>
@@ -25,7 +25,7 @@ export function ControlRow({ status, onPause, onResume, onComplete }: ControlRow
           type="button"
           data-no-expand
           onClick={onResume}
-          className="rounded-full bg-white/40 px-3 py-1 text-[11px] font-medium text-text-1 hover:bg-white/60"
+          className="h-8 rounded-[10px] bg-white/40 px-4 text-[13px] font-medium text-text-1 transition-colors hover:bg-white/60"
         >
           恢复
         </button>
@@ -35,7 +35,7 @@ export function ControlRow({ status, onPause, onResume, onComplete }: ControlRow
           type="button"
           data-no-expand
           onClick={onComplete}
-          className="rounded-full bg-white/40 px-3 py-1 text-[11px] font-medium text-text-1 hover:bg-white/60"
+          className="h-8 rounded-[10px] bg-white/40 px-4 text-[13px] font-medium text-text-1 transition-colors hover:bg-white/60"
         >
           完成
         </button>

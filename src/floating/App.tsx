@@ -366,24 +366,25 @@ export function FloatingApp() {
             if (!expanded) setExpanded(true);
           }}
         />
-        {session && expanded && (
-          <ControlRow
-            status={session.status}
-            onPause={() => act("pause")}
-            onResume={() => act("resume")}
-            onComplete={() => act("complete")}
-          />
-        )}
-        {!session && expanded && (
-          <div className="min-h-0 flex-1 overflow-hidden">
-            <ExpandedPanel
-              taskTitle={taskTitle}
-              onTaskTitleChange={setTaskTitle}
-              onStart={handleStart}
-              onClearAndDismiss={handleClearAndDismiss}
-              maxLength={TASK_TITLE_MAX}
-              submitting={submitting}
-            />
+        {expanded && (
+          <div className="floating-body">
+            {session ? (
+              <ControlRow
+                status={session.status}
+                onPause={() => act("pause")}
+                onResume={() => act("resume")}
+                onComplete={() => act("complete")}
+              />
+            ) : (
+              <ExpandedPanel
+                taskTitle={taskTitle}
+                onTaskTitleChange={setTaskTitle}
+                onStart={handleStart}
+                onClearAndDismiss={handleClearAndDismiss}
+                maxLength={TASK_TITLE_MAX}
+                submitting={submitting}
+              />
+            )}
           </div>
         )}
       </div>

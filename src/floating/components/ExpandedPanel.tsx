@@ -5,10 +5,8 @@ import { EmptyHistoryHint } from "./EmptyHistoryHint";
 import { InputBar } from "./InputBar";
 import { SwitchDropdownSection } from "./SwitchDropdownSection";
 
-// V0.2.0.14 PATCH A-2 重构: ExpandedPanel 不再有自己的根 div (PANEL_STYLE / rounded-2xl / p-3),
-// 只返回内容 fragment (recs + InputBar + 取消/开始按钮), 由 App.tsx 单一 root div 统一提供背景/圆角/padding.
-// V0.2.0.13 PATCH 让 ExpandedPanel 嵌套在 floating-root + flex-1 wrapper 内, 自身又套一层 PANEL_STYLE,
-// 跟 root div 的圆角/背景不一致 — user L3 反馈 "flex-1 overflow-hidden 宽度没铺满 / 切换折叠非折叠闪一下".
+// ExpandedPanel 只渲染空闲展开态内容；外层 floating-body 统一负责展开区间距。
+// 浮窗材质仍由唯一 root material layer 负责，本组件不叠加容器背景。
 
 // V0.2.0.13 PATCH C-3: 拆 onCancel → onDismiss + onClearAndDismiss:
 // - onDismiss: 只折叠 (panel 外 click 用), 保留 taskTitle state 让用户切回不丢输入
@@ -69,7 +67,7 @@ export function ExpandedPanel(props: ExpandedPanelProps) {
         <button
           type="button"
           data-no-expand
-          className="rounded-full px-3 py-1 text-[12px] font-medium text-text-2 transition-colors hover:bg-white/40 hover:text-text-1"
+          className="h-8 rounded-[10px] px-4 text-[13px] font-medium text-text-2 transition-colors hover:bg-white/40 hover:text-text-1"
           onClick={onClearAndDismiss}
         >
           取消
@@ -77,7 +75,7 @@ export function ExpandedPanel(props: ExpandedPanelProps) {
         <button
           type="button"
           data-no-expand
-          className="rounded-full bg-primary px-4 py-1 text-[12px] font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover disabled:opacity-50"
+          className="h-8 rounded-[10px] bg-primary px-4 text-[13px] font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover disabled:opacity-50"
           onClick={onStart}
           disabled={taskTitle.trim().length === 0 || submitting}
         >

@@ -33,7 +33,7 @@ pub fn run() {
 
             let toggle_shortcut =
                 Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::Space);
-            if let Err(e) = app.handle().plugin(
+            if let Err(err) = app.handle().plugin(
                 tauri_plugin_global_shortcut::Builder::new()
                     .with_handler(move |app, _shortcut, event| {
                         if event.state() == ShortcutState::Pressed {
@@ -57,7 +57,7 @@ pub fn run() {
                     })
                     .build(),
             ) {
-                eprintln!("[setup] global-shortcut plugin init failed");
+                eprintln!("[setup] global-shortcut plugin init failed: {err}");
                 let _ = app
                     .dialog()
                     .message("全局快捷键插件初始化失败, 浮窗快捷键可能无效。")

@@ -79,7 +79,7 @@ export function SwitchDropdownSection({ onSelect }: Props) {
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label="或选择已有任务"
-        className="glass-l2 w-full rounded-lg px-3 py-2 text-left text-xs text-text-2 hover:bg-white/70"
+        className="glass-l2 h-8 w-full rounded-[10px] px-3 text-left text-[13px] text-text-2 hover:bg-white/70"
         onClick={() => setOpen((v) => !v)}
       >
         或选择已有任务 {open ? "▴" : "▾"}

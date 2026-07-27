@@ -275,13 +275,13 @@ git merge-base --is-ancestor develop HEAD
 
 本轮先按故障模式审查测试价值，再删除或合并重复入口：
 
-- 浮窗专项从 **11 个测试文件 / 73 项测试** 收敛为 **6 个测试文件 / 19 项测试**；
+- 浮窗专项从 **11 个测试文件 / 73 项测试** 收敛为 **6 个测试文件 / 20 项测试**；
 - 保留生产 artifact 契约、鼠标与原生菜单边界、任务关键路径、状态分支、键盘操作、可访问语义和错误降级；
 - 删除按 PATCH 编号命名的叙事测试、精确 class/DOM child 顺序、依赖存在性、源码公式、重复配置字段和被父级关键路径覆盖的薄组件测试；
 - `App.fix.test.tsx` 与 `App.v0.2.0.16.test.tsx` 中仍有效的行为合并到稳定职责入口 `App.behavior.test.tsx`；
 - 生产配置与 CSS ownership 统一由 `App.window-contract.test.tsx` 验证。
 
-测试减少约 74%，但保留的每项测试都对应一个独立故障模式；删除数量不作为质量目标，稳定 seam 和旧实现可判红才是保留依据。
+测试减少约 73%，但保留的每项测试都对应一个独立故障模式；删除数量不作为质量目标，稳定 seam 和旧实现可判红才是保留依据。Windows 首轮 L3 发现状态条几何切换问题后，新增 1 项生产契约，因此当前专项总数为 20 项。
 
 ---
 
@@ -313,22 +313,30 @@ git merge-base --is-ancestor develop HEAD
 - [x] CSS：单一材质 owner、共享 G3 token、折叠态无不可满足 padding
 - [x] IPC：expanded/folded 分别发出 `360×280` / `360×36` resize
 - [x] 测试输出无 `NaN`、无缺 export 警告、无未处理异常
-- [x] 浮窗专项：6 个测试文件、19 项测试全部通过
+- [x] 浮窗专项：6 个测试文件、20 项测试全部通过
 
 ### L2：工程回归
 
-- [x] `npm test -- --run`：20 个测试文件、61 项测试全部通过
+- [x] `npm test -- --run`：20 个测试文件、62 项测试全部通过
 - [x] `npx tsc --noEmit`：通过，无输出
 - [x] `npm run build`：构建通过；保留既有 Tailwind 生成 CSS 的 `invalid-calc` minify warning，不阻断产物
 - [x] `cargo check --manifest-path src-tauri/Cargo.toml`：通过；本机 `PATH` 中 `/home/jason/.local/bin/cc` 遮蔽系统编译器，复验时显式使用 `CC=/usr/bin/cc CXX=/usr/bin/c++ AR=/usr/bin/ar RUSTFLAGS='-C linker=/usr/bin/cc'`
 
-Cargo 首轮失败属于本机工具链污染而非产品代码：错误的 `cc` 对链接调用返回成功但不生成目标文件，并进一步影响 `cc-rs` 编译 SQLite。显式固定系统工具后完整编译通过。仍有 `src-tauri/src/lib.rs` 的既有未使用变量 warning，本轮不扩大范围处理。
+Cargo 首轮失败属于本机工具链污染而非产品代码：错误的 `cc` 对链接调用返回成功但不生成目标文件，并进一步影响 `cc-rs` 编译 SQLite。显式固定系统工具后完整编译通过。本轮 Windows 复验反馈的未使用变量 warning 也已在错误日志中使用该变量后消除。
 
 ### L3：Windows WebView2 实机
 
-> **当前状态**：待 Windows 11 WebView2 实机验收。L1/L2 通过仅代表代码与静态验证完成，本报告不宣称视觉问题已完成修复。
+> **当前状态**：首轮 Windows 11 WebView2 实机验收已判红并形成修复，等待同一环境复验。L1/L2 通过仅代表代码与静态验证完成，本报告不宣称视觉问题已完成修复。
 
-- [ ] 四状态基准截图
+**首轮实机偏差与归因**：
+
+- Rust 启动输出存在未使用变量 warning：错误变量未写入日志，已在 Rust owner 处补充错误详情；
+- 折叠态左右留白失衡：状态条无水平 padding，标题还受 220px 上限约束，导致状态点贴左而计时整体偏左；
+- 浮窗材质过透：浮窗实例使用 L1 token 且缺少内高光，已依据实机证据提升为 L2，未修改共享 token；
+- 折叠/展开状态条观感不一致：展开 class 先给整个内容层增加 12px padding，原生 resize 后完成，切换瞬间状态条发生位移和挤压。已改为固定 36px 的共享状态条，展开间距只由其下方 body 管理；
+- 展开控件间距偏离规范：输入框、历史任务入口与操作按钮统一到 32/36px 控件高度、10–12px 圆角和 13–14px 字号。
+
+- [ ] 修复后四状态基准截图
 - [ ] 100% / 125% / 150% DPI
 - [ ] 折叠/展开物理尺寸、位置不跳、圆角无黑边/灰边、内容不裁剪
 - [ ] 折叠与展开拖动、点击展开、开始/暂停/恢复/完成

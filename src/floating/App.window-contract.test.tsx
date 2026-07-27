@@ -61,23 +61,33 @@ describe("浮窗生产契约", () => {
     expect(screen.getByRole("button", { name: "完成" })).toBeVisible();
   });
 
-  it("玻璃材质只有 CSS 一个 owner，并使用共享 G3 token", () => {
+  it("折叠与展开复用固定几何的状态条，展开内容不改变状态条间距", () => {
+    const app = readFileSync("src/floating/App.tsx", "utf8");
+    const foldedBar = readFileSync("src/floating/components/FoldedBar.tsx", "utf8");
+    const css = readFileSync("src/floating/styles/floating.css", "utf8");
+
+    expect(app).toContain('className="floating-body"');
+    expect(foldedBar).toContain('className="floating-status-bar"');
+    expect(foldedBar).not.toContain("max-w-[220px]");
+    expect(css).toMatch(/\.floating-status-bar\s*\{[\s\S]*?height:\s*36px[\s\S]*?padding:\s*0\s+12px/);
+    expect(css).toMatch(/\.floating-body\s*\{[\s\S]*?padding:\s*12px/);
+    expect(css).not.toMatch(/\.floating-root\.expanded\s+\.floating-content\s*\{[\s\S]*?padding:/);
+  });
+
+  it("浮窗材质使用 L2 token 和内高光，且只有 CSS 一个 owner", () => {
     const app = readFileSync("src/floating/App.tsx", "utf8");
     const css = readFileSync("src/floating/styles/floating.css", "utf8");
     const theme = readFileSync("src/styles/theme.css", "utf8");
 
     expect(app).not.toContain("PANEL_STYLE");
     expect(app).not.toContain("backdropFilter:");
-    expect(theme).toMatch(/--glass-fill-1:\s*22%/);
-    expect(theme).toMatch(/--glass-blur-1:\s*20px/);
-    expect(theme).toMatch(/--glass-shadow-1:\s*0\.08/);
-    expect(theme).toMatch(/--glass-fill-3:\s*36%/);
-    expect(theme).toMatch(/--glass-blur-3:\s*28px/);
-    expect(css).toMatch(/\.floating-root::before\s*\{[\s\S]*?background:\s*rgba\(255,\s*255,\s*255,\s*var\(--glass-fill-1\)\)/);
-    expect(css).toMatch(/\.floating-root::before\s*\{[\s\S]*?backdrop-filter:\s*blur\(var\(--glass-blur-1\)\)\s*saturate\(120%\)/);
-    expect(css).toMatch(/\.glass-l1\s*\{[\s\S]*?var\(--glass-fill-1\)/);
-    expect(css).toMatch(/\.glass-l2\s*\{[\s\S]*?var\(--glass-fill-2\)/);
-    expect(css).toMatch(/\.glass-l3\s*\{[\s\S]*?var\(--glass-fill-3\)/);
+    expect(theme).toMatch(/--glass-fill-2:\s*28%/);
+    expect(theme).toMatch(/--glass-blur-2:\s*24px/);
+    expect(theme).toMatch(/--glass-border-2:\s*70%/);
+    expect(theme).toMatch(/--glass-shadow-2:\s*0\.10/);
+    expect(css).toMatch(/\.floating-root::before\s*\{[\s\S]*?background:\s*rgba\(255,\s*255,\s*255,\s*var\(--glass-fill-2\)\)/);
+    expect(css).toMatch(/\.floating-root::before\s*\{[\s\S]*?backdrop-filter:\s*blur\(var\(--glass-blur-2\)\)\s*saturate\(120%\)/);
+    expect(css).toMatch(/\.floating-root::before\s*\{[\s\S]*?box-shadow:[\s\S]*?inset\s+0\s+1px\s+0[\s\S]*?var\(--glass-border-2\)/);
     expect(css).not.toMatch(/\.folded-bar-inner/);
   });
 });
