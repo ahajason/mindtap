@@ -20,7 +20,7 @@ export function InputBar({
       <input
         ref={inputRef}
         type="text"
-        className="glass-l1 h-9 w-full rounded-xl px-3 text-[14px] text-text-1 outline-none placeholder:text-text-3 focus:bg-white/30"
+        className="glass-l1 h-9 w-full rounded-xl px-3 text-[14px] text-text-1 outline-none placeholder:text-text-2 focus:bg-white/30"
         placeholder="我现在在做什么…（回车开始）"
         value={value}
         onChange={(e) => onChange(e.target.value)}
