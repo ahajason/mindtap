@@ -10,9 +10,9 @@
 |---|---|
 | 装前端依赖 | `npm install` |
 | 起 Vite 开发服务器 | `npm run dev` |
-| 起 Tauri 桌面应用 | `npm run tauri dev`(WSL)/ `scripts\dev.bat`(Win 推荐) |
+| 起 Tauri 桌面应用 | Windows 侧运行 `scripts\dev.bat` |
 | 同步 WSL → D:\ | WSL 内 `git push origin develop` + `git -C /mnt/d/workspace/mindtap pull` |
-| 验证 Rust 端 | `cd src-tauri && cargo check` |
+| 验证 Rust / Tauri | Windows 侧运行 `scripts\dev.bat`；WSL 不执行 Rust/Tauri 编译 |
 | 验证前端类型 | `npx tsc --noEmit` |
 | 跑 vitest | `npm test`(单次)/ `npm run test:watch`(监听) |
 | 回看 git(按场景) | 见下方"Git 回看(按场景)"小节,默认起点 `git show <sha>` 查 commit / `git log -- <path>` 查文件历史 / `git diff` 查未提交改动 |
@@ -37,7 +37,7 @@
 
 | 角色 | 路径 | 用法 |
 |---|---|---|
-| WSL 端 | `/home/jason/workspace/mindtap` | 代码 / 单测 / cargo check / Claude Code / OpenCode |
+| WSL 端 | `/home/jason/workspace/mindtap` | 代码 / 前端单测与静态检查 / Claude Code / OpenCode；不执行 Rust/Tauri 编译 |
 | D:\ 端 | `D:\workspace\mindtap` | Tauri dev / WebView2 调试 / 视觉稿 QA |
 
 **同步流向**:WSL 内 `git commit` → `git push origin develop` → `git -C /mnt/d/workspace/mindtap pull`。
@@ -80,6 +80,7 @@ CLAUDE.md 是 session 入口上下文; 子规则放在 `.claude/rules/*.mdc`(Cla
 - **纯 git + ssh (本仓库约束)**: 默认 `git push origin develop` + D:\ `git pull`;**禁用 gh CLI**(无 auth)和 **GitHub MCP `issue_write`/`create_pull_request`**(classifier 拦);要 PR 走 web (https://github.com/ahajason/mindtap/compare/develop...<branch>)
 - **多 issue 并行修**: 派 N 个 subagent, **每个 subagent 自己用 `Skill superpowers:using-git-worktrees` 起 worktree** (isolation);主 agent 留 develop, fetch + merge 集成;不要主 agent 串行跑多个 fix
 - **CSS 静态扫描 regex**: 写 `.floating-root[...]` 这类 selector 匹配时**先剥 `@media` / `@supports` / `@keyframes` 嵌套块**,否则后加的 @media 内嵌同名选择器会让测试误通过或 FAIL(见反模式 18 / 实际归属 V0.2.0.7~0.9 PATCH,见 versioning-rule §三)
+- **Tailwind 扫描边界**: 遇到来源不明的生成 utility 或 esbuild CSS warning，先检查 Tailwind 是否扫描了 `docs/archive` 中的字面量；通过 source exclusion 收紧生产扫描范围，不修改历史归档或无关组件
 
 ### Worktree 治理(三种场景分开)
 
