@@ -12,7 +12,8 @@ docs/tech/v<MAJOR>.<MINOR>-<feature>-tech.md
 
 例:
 - `docs/tech/v0.2.0-floating-window-tech.md`
-- `docs/tech/v0.2.1-task-switching-tech.md`
+- `docs/tech/v0.2.1-native-dynamic-material-tech.md`
+- `docs/tech/v0.2.1-task-switching-tech.md`（历史参考，已 superseded）
 
 ## 二、模板
 
