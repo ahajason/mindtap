@@ -116,6 +116,48 @@ describe("浮窗任务关键路径", () => {
     });
   });
 
+  it("控制面板按 Esc 时折叠并保留当前任务", async () => {
+    const invokeMock = vi.mocked(invoke);
+    invokeMock.mockImplementation(async (command: string) => {
+      if (command === "timer_session_get_active") return ACTIVE_SESSION;
+      if (command === "set_floating_size") return null;
+      return null;
+    });
+
+    render(<FloatingApp />);
+    const root = await screen.findByTestId("floating-root");
+    await screen.findByText("整理窗口样式");
+    fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
+    fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
+    await screen.findByRole("button", { name: "暂停" });
+
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    await waitFor(() => expect(root.className).toContain("folded"));
+    expect(screen.getByText("整理窗口样式")).toBeVisible();
+  });
+
+  it("控制面板失焦时折叠并保留当前任务", async () => {
+    const invokeMock = vi.mocked(invoke);
+    invokeMock.mockImplementation(async (command: string) => {
+      if (command === "timer_session_get_active") return ACTIVE_SESSION;
+      if (command === "set_floating_size") return null;
+      return null;
+    });
+
+    render(<FloatingApp />);
+    const root = await screen.findByTestId("floating-root");
+    await screen.findByText("整理窗口样式");
+    fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
+    fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
+    await screen.findByRole("button", { name: "暂停" });
+
+    fireEvent.blur(window);
+
+    await waitFor(() => expect(root.className).toContain("folded"));
+    expect(screen.getByText("整理窗口样式")).toBeVisible();
+  });
+
   it("暂停后保持控制面板并切换为恢复", async () => {
     const invokeMock = vi.mocked(invoke);
     invokeMock.mockImplementation(async (command: string) => {

@@ -20,14 +20,17 @@ import { ControlRow } from "./components/ControlRow";
 import { ExpandedPanel } from "./components/ExpandedPanel";
 import { FoldedBar } from "./components/FoldedBar";
 
-// V0.2.0.16 PATCH C: 折叠/展开等宽 360, user L3 实测期望 "切换只高度变".
-const FOLDED_W = 360;
-const FOLDED_H = 36;
-const EXPANDED_W = 360;
-const EXPANDED_H = 280;
+type FloatingPresentation = "folded" | "compose" | "controls";
+
+const FLOATING_SIZE: Record<FloatingPresentation, { w: number; h: number }> = {
+  folded: { w: 360, h: 36 },
+  compose: { w: 360, h: 280 },
+  controls: { w: 360, h: 96 },
+};
+
 const TASK_TITLE_MAX = 50;
 
-// FRAME_W/H: 默认右上角位置 clamp 公式用, 等宽 (跟 FOLDED_W 一致 — 物理窗口尺寸).
+// FRAME_W/H: 默认右上角位置 clamp 公式用, 折叠态物理窗口尺寸.
 const FRAME_W = 360;
 const FRAME_H = 36;
 const POS_MARGIN = 16;
@@ -38,12 +41,17 @@ const POS_KEY = "floating-position";
 const DRAG_THRESHOLD_PX = 4;
 
 export function FloatingApp() {
-  const { session, refresh, setSession } = useActiveTask();
+  const { session, setSession } = useActiveTask();
   const liveFocusMs = useFocusTicker(session, 1000);
 
-  const [expanded, setExpanded] = useState(false);
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [taskTitle, setTaskTitle] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const presentation: FloatingPresentation = !isPanelOpen
+    ? "folded"
+    : session
+      ? "controls"
+      : "compose";
 
   // V0.2.0.14 PATCH A-2 + B-2-1 + C-3: 单一 root div panelRef 覆盖整个 panel 区域 (FoldedBar + ExpandedPanel/ControlRow).
   // 之前 V0.2.0.13 PATCH panelRef 只在 ExpandedPanel 内, FoldedBar 区域右键不覆盖 → dismissingRef=true → input blur → onDismiss → 折叠 (B-2-1 race).
@@ -64,24 +72,18 @@ export function FloatingApp() {
     (async () => {
       try {
         if (cancelled) return;
-        if (expanded) {
+        const { w, h } = FLOATING_SIZE[presentation];
+        if (presentation !== "folded") {
           const pos = await win.outerPosition();
           if (cancelled) return;
           // V0.2.0.16 PATCH C-rust: 物理 resize 走自定义 rust command (不走 Tauri JS setSize IPC 中转).
-          await invoke<void>("set_floating_size", {
-            w: EXPANDED_W,
-            h: EXPANDED_H,
-          });
+          await invoke<void>("set_floating_size", { w, h });
           if (cancelled) return;
           await win.setPosition(new PhysicalPosition(pos.x, pos.y));
-          if (cancelled) return;
-        } else {
-          await invoke<void>("set_floating_size", {
-            w: FOLDED_W,
-            h: FOLDED_H,
-          });
-          if (cancelled) return;
+          return;
         }
+
+        await invoke<void>("set_floating_size", { w, h });
       } catch (err) {
         if (!cancelled) {
           console.error("[resize/position] failed", err);
@@ -91,7 +93,7 @@ export function FloatingApp() {
     return () => {
       cancelled = true;
     };
-  }, [expanded]);
+  }, [presentation]);
 
   // V0.2.0.15 PATCH E-1 fix: 浮窗默认右上角 16px (V0.2.0.1 + V0.2.0.4 公式锁).
   // 旧版 fire-and-forget 模式 (`void setDefaultAtRightBottom()`) 有 2 个真根因:
@@ -268,7 +270,7 @@ export function FloatingApp() {
     const onMouseUp = () => {
       if (!dragRef.current) return;
       if (!dragRef.current.dragStarted) {
-        setExpanded(true);
+        setIsPanelOpen(true);
       }
       dragRef.current = null;
     };
@@ -286,11 +288,11 @@ export function FloatingApp() {
   // - handleDismiss: 只折叠 (panel 外 mousedown 用), 保留 taskTitle state 让用户切回不丢输入
   // - handleClearAndDismiss: 清 taskTitle + 折叠 (用户显式 "取消" button + Esc 用)
   const handleDismiss = useCallback(() => {
-    setExpanded(false);
+    setIsPanelOpen(false);
   }, []);
   const handleClearAndDismiss = useCallback(() => {
     setTaskTitle("");
-    setExpanded(false);
+    setIsPanelOpen(false);
   }, []);
 
   // V0.2.0.14 PATCH C-3: document mousedown listener (替代 V0.2.0.13 PATCH input blur listener).
@@ -309,24 +311,34 @@ export function FloatingApp() {
     return () => document.removeEventListener("mousedown", onDocMouseDown);
   }, [handleDismiss]);
 
-  // V0.2.0.15 PATCH C-4: 不再用 useEffect[session?.id] 监听自动折叠 —
-  //   V0.2.0.14 PATCH 该 useEffect 在 handleStart 后 session 从 null → newSession,
-  //   useEffect 触发 setExpanded(false) → useEffect[expanded] 跑(true → false)
-  //   → setSize(FOLDED_W, FOLDED_H). 但 user 此时 expanded=true (开新 task 展开态),
-  //   期望 360×280 展开, 实际变 320×36 折叠 — 即 V0.2.0.15 PATCH 修的 resize bug.
-  // 反模式 14 防御: 不用 useEffect, 直接回到 V0.2.0.13 之前的显式路径
-  // (handleStart 末尾 + act('complete') 末尾 setExpanded(false)).
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape" && presentation === "controls") handleDismiss();
+    }
+    function onWindowBlur() {
+      if (presentation !== "folded") handleDismiss();
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    window.addEventListener("blur", onWindowBlur);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("blur", onWindowBlur);
+    };
+  }, [presentation, handleDismiss]);
+
+  // V0.2.0.15 PATCH C-4: 不再用 session 变化自动折叠，避免创建会话时的异步 resize race。
+  // 开始与完成成功后，由各自的成功路径显式折叠。
 
   async function handleStart() {
     const title = taskTitle.trim();
     if (!title || submitting) return;
     setSubmitting(true);
     try {
-      await api.timerSession.create(title);
+      const created = await api.timerSession.create(title);
+      setSession(created);
       setTaskTitle("");
-      await refresh();
-      // V0.2.0.15 PATCH C-4: 显式折叠 (不再依赖 useEffect[session?.id], 同根因)
-      setExpanded(false);
+      setIsPanelOpen(false);
     } catch (err) {
       console.error("[start] failed", err);
     } finally {
@@ -338,12 +350,12 @@ export function FloatingApp() {
     if (!session) return;
     try {
       const updated = await api.timerSession[action](session.id);
-      setSession(updated);
       if (action === "complete") {
-        void refresh();
-        // V0.2.0.15 PATCH C-4: complete 后显式折叠 (不再依赖 useEffect[session?.id], 同 handleStart 根因)
-        setExpanded(false);
+        setSession(null);
+        setIsPanelOpen(false);
+        return;
       }
+      setSession(updated);
     } catch (err) {
       // 防御闪退: Tauri 2 unhandled promise rejection → React error boundary → tree unmount
       console.error(`[act:${action}] failed`, err);
@@ -354,7 +366,7 @@ export function FloatingApp() {
     <div
       ref={panelRef}
       data-testid="floating-root"
-      className={`floating-root ${expanded ? "expanded" : "folded"}`}
+      className={`floating-root ${presentation === "folded" ? "folded" : "expanded"}`}
       onMouseDown={handleMouseDown}
     >
       <div className="floating-content">
@@ -363,14 +375,14 @@ export function FloatingApp() {
           focusMs={liveFocusMs}
           status={session ? session.status : "empty"}
           onClick={() => {
-            if (!expanded) setExpanded(true);
+            if (presentation === "folded") setIsPanelOpen(true);
           }}
         />
-        {expanded && (
+        {presentation !== "folded" && (
           <div className="floating-body">
-            {session ? (
+            {presentation === "controls" ? (
               <ControlRow
-                status={session.status}
+                status={session!.status}
                 onPause={() => act("pause")}
                 onResume={() => act("resume")}
                 onComplete={() => act("complete")}
