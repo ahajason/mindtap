@@ -77,6 +77,28 @@ describe("浮窗鼠标交互", () => {
 
     await waitFor(() => expect(startDragging).toHaveBeenCalledTimes(1));
   });
+
+  it("拖动创建面板触发窗口失焦时保持展开", async () => {
+    const { getCurrentWindow } = await import("@tauri-apps/api/window");
+    const startDragging = getCurrentWindow().startDragging;
+
+    render(<FloatingApp />);
+    const root = await screen.findByTestId("floating-root");
+    fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
+    fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
+    await screen.findByPlaceholderText(/做什么/);
+
+    fireEvent.mouseDown(root, { button: 0, clientX: 20, clientY: 20 });
+    fireEvent.mouseMove(document, { clientX: 25, clientY: 20 });
+    await waitFor(() => expect(startDragging).toHaveBeenCalledTimes(1));
+
+    fireEvent.blur(window);
+
+    expect(screen.getByPlaceholderText(/做什么/)).toBeVisible();
+    expect(screen.getByRole("button", { name: "开始" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "取消" })).toBeVisible();
+    expect(root.className).toContain("expanded");
+  });
 });
 
 describe("浮窗任务关键路径", () => {

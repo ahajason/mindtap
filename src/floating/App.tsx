@@ -316,6 +316,10 @@ export function FloatingApp() {
       if (e.key === "Escape" && presentation === "controls") handleDismiss();
     }
     function onWindowBlur() {
+      if (dragRef.current?.dragStarted) {
+        dragRef.current = null;
+        return;
+      }
       if (presentation !== "folded") handleDismiss();
     }
 
