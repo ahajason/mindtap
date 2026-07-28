@@ -1,6 +1,10 @@
-# feat(floating): 平台原生动态材质与能力复用
+# feat(floating): 平台原生动态材质与能力复用（旧立项入口）
 
-> 状态：pending
+> **SUPERSEDED / REFERENCE ONLY — 2026-07-28**
+> 本任务已正式分配为 V0.2.1；当前任务入口为 `docs/tasks/v0.2.1-feat-native-dynamic-material/task.md`。
+> 以下内容保留为立项前证据，不再作为状态、范围或 Done when 真值。
+
+> 状态：superseded
 > 版本：待产品路线确定（不属于 V0.2.0.x PATCH）
 > 范围：后续版本调研、设计与 Windows 实机验证；当前不实现
 
