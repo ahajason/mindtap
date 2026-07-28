@@ -17,7 +17,7 @@ export default function FeedbackRoute() {
         title="Feedback"
         description="Badge / Sonner Toast / Dialog"
       />
-      <section className="rounded-[var(--radius-card)] bg-[var(--color-bg-section)] p-[var(--spacing-4)] space-y-[var(--spacing-4)]">
+      <section className="glass-l2 rounded-[var(--radius-card)] p-[var(--spacing-4)] space-y-[var(--spacing-4)]">
         <TabsRoot defaultValue="preview">
           <TabsList>
             <TabsTrigger value="preview">预览</TabsTrigger>

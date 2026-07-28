@@ -76,6 +76,7 @@ CLAUDE.md 是 session 入口上下文; 子规则放在 `.claude/rules/*.mdc`(Cla
 - **穷举再下手**: 多个 root cause 不分散修(见反模式 14)
 - **Worktree 基线校验**: 调查当前修复链前先用 `git log -1 --oneline` + `git merge-base --is-ancestor develop HEAD` 确认 worktree 包含本地 `develop` HEAD；不满足先对齐，禁止基于旧快照下结论
 - **样式 bug 反馈环**: 修复前先建立能在旧实现判红的生产契约，直接读取生产 config/CSS/DOM 公共行为；`css: false` 的 jsdom 测试和测试内手写源码字符串不得作为视觉修复证据
+- **跨窗口视觉修复**: 不为颜色、色调或“风格一致”新增 E2E、截图断言或源码色值测试；视觉改动优先收敛到一个既有材质 owner。若需同时改 token、多个组件或业务逻辑，先停止并回到实机视觉反馈，不以多文件同步伪造修复
 - **纯 git + ssh (本仓库约束)**: 默认 `git push origin develop` + D:\ `git pull`;**禁用 gh CLI**(无 auth)和 **GitHub MCP `issue_write`/`create_pull_request`**(classifier 拦);要 PR 走 web (https://github.com/ahajason/mindtap/compare/develop...<branch>)
 - **多 issue 并行修**: 派 N 个 subagent, **每个 subagent 自己用 `Skill superpowers:using-git-worktrees` 起 worktree** (isolation);主 agent 留 develop, fetch + merge 集成;不要主 agent 串行跑多个 fix
 - **CSS 静态扫描 regex**: 写 `.floating-root[...]` 这类 selector 匹配时**先剥 `@media` / `@supports` / `@keyframes` 嵌套块**,否则后加的 @media 内嵌同名选择器会让测试误通过或 FAIL(见反模式 18 / 实际归属 V0.2.0.7~0.9 PATCH,见 versioning-rule §三)

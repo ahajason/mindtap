@@ -20,7 +20,7 @@ export default function TokensRoute() {
         title="Token 速查"
         description="色板 / 字号 / 间距 (静态展示,无 Live Preview)"
       />
-      <section className="rounded-[var(--radius-card)] bg-[var(--color-bg-section)] p-[var(--spacing-4)] space-y-[var(--spacing-4)] space-y-[var(--spacing-6)]">
+      <section className="glass-l2 rounded-[var(--radius-card)] p-[var(--spacing-4)] space-y-[var(--spacing-6)]">
         <div>
           <h2 className="text-lg font-semibold text-text-1 mb-[var(--spacing-3)]">色板</h2>
           <div className="grid grid-cols-4 gap-[var(--spacing-3)]">

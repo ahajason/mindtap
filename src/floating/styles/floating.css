@@ -70,7 +70,7 @@ body {
 }
 
 .floating-root {
-  --floating-fallback-fill: 80%;
+  --floating-fallback-fill: 90%;
 
   position: relative;
   width: 100%;
@@ -91,7 +91,7 @@ body {
   pointer-events: none;
   -webkit-backdrop-filter: blur(var(--glass-blur-2)) saturate(120%);
   backdrop-filter: blur(var(--glass-blur-2)) saturate(120%);
-  background: rgba(255, 255, 255, var(--floating-fallback-fill));
+  background: rgba(216, 232, 255, var(--floating-fallback-fill));
   border-radius: inherit;
   box-shadow: 0 8px 32px rgba(0, 30, 80, var(--glass-shadow-2));
 }

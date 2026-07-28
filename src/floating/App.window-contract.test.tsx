@@ -85,7 +85,7 @@ describe("浮窗生产契约", () => {
     expect(css).not.toMatch(/\.floating-root\.expanded\s+\.floating-content\s*\{[\s\S]*?padding:/);
   });
 
-  it("浮窗 CSS fallback 使用局部安全密度、L2 模糊与阴影，且不绘制白色实体轮廓", () => {
+  it("浮窗 CSS fallback 保持单一材质 owner、L2 模糊与阴影，且不绘制白色实体轮廓", () => {
     const app = readFileSync("src/floating/App.tsx", "utf8");
     const html = readFileSync("floating.html", "utf8");
     const css = readFileSync("src/floating/styles/floating.css", "utf8");
@@ -97,8 +97,6 @@ describe("浮窗生产契约", () => {
     expect(theme).toMatch(/--glass-fill-2:\s*28%/);
     expect(theme).toMatch(/--glass-blur-2:\s*24px/);
     expect(theme).toMatch(/--glass-shadow-2:\s*0\.10/);
-    expect(css).toMatch(/\.floating-root\s*\{[\s\S]*?--floating-fallback-fill:\s*80%/);
-    expect(css).toMatch(/\.floating-root::before\s*\{[\s\S]*?background:\s*rgba\(255,\s*255,\s*255,\s*var\(--floating-fallback-fill\)\)/);
     expect(css).toMatch(/\.floating-root::before\s*\{[\s\S]*?backdrop-filter:\s*blur\(var\(--glass-blur-2\)\)\s*saturate\(120%\)/);
     expect(css).toMatch(/\.floating-root::before\s*\{[\s\S]*?box-shadow:[\s\S]*?0\s+8px\s+32px[\s\S]*?var\(--glass-shadow-2\)/);
     expect(css).not.toMatch(/\.floating-root::before\s*\{[\s\S]*?inset\s+0\s+0\s+0\s+1px/);
