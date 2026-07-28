@@ -59,6 +59,17 @@ describe("浮窗生产契约", () => {
     await waitFor(() => expect(root.className).toContain("expanded"));
     expect(screen.getByRole("button", { name: "暂停" })).toBeVisible();
     expect(screen.getByRole("button", { name: "完成" })).toBeVisible();
+    expect(screen.queryByPlaceholderText(/做什么/)).toBeNull();
+    expect(screen.queryByRole("button", { name: "开始" })).toBeNull();
+  });
+
+  it("呈现状态声明折叠、创建和控制三项固定窗口几何", () => {
+    const app = readFileSync("src/floating/App.tsx", "utf8");
+
+    expect(app).toContain('type FloatingPresentation = "folded" | "compose" | "controls"');
+    expect(app).toMatch(/folded:\s*\{\s*w:\s*360,\s*h:\s*36\s*\}/);
+    expect(app).toMatch(/compose:\s*\{\s*w:\s*360,\s*h:\s*280\s*\}/);
+    expect(app).toMatch(/controls:\s*\{\s*w:\s*360,\s*h:\s*96\s*\}/);
   });
 
   it("折叠与展开复用固定几何的状态条，展开内容不改变状态条间距", () => {

@@ -77,9 +77,131 @@ describe("浮窗鼠标交互", () => {
 
     await waitFor(() => expect(startDragging).toHaveBeenCalledTimes(1));
   });
+
+  it("拖动创建面板触发窗口失焦时保持展开", async () => {
+    const { getCurrentWindow } = await import("@tauri-apps/api/window");
+    const startDragging = getCurrentWindow().startDragging;
+
+    render(<FloatingApp />);
+    const root = await screen.findByTestId("floating-root");
+    fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
+    fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
+    await screen.findByPlaceholderText(/做什么/);
+
+    fireEvent.mouseDown(root, { button: 0, clientX: 20, clientY: 20 });
+    fireEvent.mouseMove(document, { clientX: 25, clientY: 20 });
+    await waitFor(() => expect(startDragging).toHaveBeenCalledTimes(1));
+
+    fireEvent.blur(window);
+
+    expect(screen.getByPlaceholderText(/做什么/)).toBeVisible();
+    expect(screen.getByRole("button", { name: "开始" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "取消" })).toBeVisible();
+    expect(root.className).toContain("expanded");
+  });
 });
 
 describe("浮窗任务关键路径", () => {
+  const ACTIVE_SESSION: TimerSession = {
+    id: 1,
+    task_title: "整理窗口样式",
+    status: "active",
+    started_at: 0,
+    paused_at: null,
+    completed_at: null,
+    focus_ms: 0,
+    created_at: 0,
+    updated_at: 0,
+  };
+
+  it("当前任务展开为紧凑控制面板，不显示创建输入", async () => {
+    const invokeMock = vi.mocked(invoke);
+    invokeMock.mockImplementation(async (command: string) => {
+      if (command === "timer_session_get_active") return ACTIVE_SESSION;
+      if (command === "set_floating_size") return null;
+      return null;
+    });
+
+    render(<FloatingApp />);
+    const root = await screen.findByTestId("floating-root");
+    await screen.findByText("整理窗口样式");
+
+    fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
+    fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
+
+    expect(await screen.findByRole("button", { name: "暂停" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "完成" })).toBeVisible();
+    expect(screen.queryByPlaceholderText(/做什么/)).toBeNull();
+    expect(screen.queryByRole("button", { name: "开始" })).toBeNull();
+    await waitFor(() => {
+      expect(findResizeCall(invokeMock.mock.calls, 360, 96)).toBeDefined();
+    });
+  });
+
+  it("控制面板按 Esc 时折叠并保留当前任务", async () => {
+    const invokeMock = vi.mocked(invoke);
+    invokeMock.mockImplementation(async (command: string) => {
+      if (command === "timer_session_get_active") return ACTIVE_SESSION;
+      if (command === "set_floating_size") return null;
+      return null;
+    });
+
+    render(<FloatingApp />);
+    const root = await screen.findByTestId("floating-root");
+    await screen.findByText("整理窗口样式");
+    fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
+    fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
+    await screen.findByRole("button", { name: "暂停" });
+
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    await waitFor(() => expect(root.className).toContain("folded"));
+    expect(screen.getByText("整理窗口样式")).toBeVisible();
+  });
+
+  it("控制面板失焦时折叠并保留当前任务", async () => {
+    const invokeMock = vi.mocked(invoke);
+    invokeMock.mockImplementation(async (command: string) => {
+      if (command === "timer_session_get_active") return ACTIVE_SESSION;
+      if (command === "set_floating_size") return null;
+      return null;
+    });
+
+    render(<FloatingApp />);
+    const root = await screen.findByTestId("floating-root");
+    await screen.findByText("整理窗口样式");
+    fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
+    fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
+    await screen.findByRole("button", { name: "暂停" });
+
+    fireEvent.blur(window);
+
+    await waitFor(() => expect(root.className).toContain("folded"));
+    expect(screen.getByText("整理窗口样式")).toBeVisible();
+  });
+
+  it("暂停后保持控制面板并切换为恢复", async () => {
+    const invokeMock = vi.mocked(invoke);
+    invokeMock.mockImplementation(async (command: string) => {
+      if (command === "timer_session_get_active") return ACTIVE_SESSION;
+      if (command === "timer_session_pause") return { ...ACTIVE_SESSION, status: "paused" };
+      if (command === "set_floating_size") return null;
+      return null;
+    });
+
+    render(<FloatingApp />);
+    const root = await screen.findByTestId("floating-root");
+    await screen.findByText("整理窗口样式");
+    fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
+    fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
+
+    fireEvent.click(await screen.findByRole("button", { name: "暂停" }));
+
+    expect(await screen.findByRole("button", { name: "恢复" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "完成" })).toBeVisible();
+    expect(root.className).toContain("expanded");
+  });
+
   it("从空闲展开开始任务，活动折叠后可展开并完成", async () => {
     const invokeMock = vi.mocked(invoke);
     let activeSession: TimerSession | null = null;
