@@ -11,7 +11,8 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc && npm run lint:boundaries && vite build",
+    "lint:boundaries": "depcruise src/packages --config .dependency-cruiser.cjs",
     "preview": "vite preview",
     "tauri": "tauri",
     "test": "vitest run",
@@ -37,6 +38,7 @@
     "@vitejs/plugin-react": "^4.6.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dependency-cruiser": "^17.4.3",
     "jsdom": "^29.1.1",
     "lucide-react": "^0.469.0",
     "sonner": "^1.7.4",
