@@ -102,7 +102,7 @@ docs/reports/
 |---|---|---|
 | **修复号当版本号** | V0.2.3/V0.2.4/V0.2.5 都是"修上个版本",没有新 feature | agent 看不到"在开发什么业务" |
 | **PATCH 跨 MINOR** | V0.2.8 修 V0.2.0 surface 的 bug,但版本号写 V0.2.8(假象新 MINOR) | 后续 V0.2.0.x 真 bug 找不到版本号 |
-| **MINOR 当 PATCH 用** | 新功能落地后不为同范围 bug 分配 PATCH，直接累积到下一 MINOR | MINOR 内累积过多 bug |
+| **MINOR 当 PATCH 用** | 同一 MINOR 的 bug 不打 PATCH，直接累积到下一个版本 | MINOR 内累积过多 bug |
 | **commit 谎报版本** | commit message 写 "V0.2.7 修了" 但代码没改 | 见 V0.2.7 retro §3 反模式 15 |
 
 ## 六、发版硬约束(每次发版前必走)
