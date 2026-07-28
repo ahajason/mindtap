@@ -57,6 +57,8 @@ mindtap/
 └── .claude/rules/  # 自动加载规则
 ```
 
+Packages 是深模块：新增或导入前先读 [src/packages/README.md](./src/packages/README.md)。
+
 入口:`index.html` → `src/main.tsx`,`floating.html` → `src/floating/main.tsx`,对应 `tauri.conf.json` 的两个窗口。
 
 ## 规则文件
