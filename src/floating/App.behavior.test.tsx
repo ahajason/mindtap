@@ -80,6 +80,64 @@ describe("浮窗鼠标交互", () => {
 });
 
 describe("浮窗任务关键路径", () => {
+  const ACTIVE_SESSION: TimerSession = {
+    id: 1,
+    task_title: "整理窗口样式",
+    status: "active",
+    started_at: 0,
+    paused_at: null,
+    completed_at: null,
+    focus_ms: 0,
+    created_at: 0,
+    updated_at: 0,
+  };
+
+  it("当前任务展开为紧凑控制面板，不显示创建输入", async () => {
+    const invokeMock = vi.mocked(invoke);
+    invokeMock.mockImplementation(async (command: string) => {
+      if (command === "timer_session_get_active") return ACTIVE_SESSION;
+      if (command === "set_floating_size") return null;
+      return null;
+    });
+
+    render(<FloatingApp />);
+    const root = await screen.findByTestId("floating-root");
+    await screen.findByText("整理窗口样式");
+
+    fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
+    fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
+
+    expect(await screen.findByRole("button", { name: "暂停" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "完成" })).toBeVisible();
+    expect(screen.queryByPlaceholderText(/做什么/)).toBeNull();
+    expect(screen.queryByRole("button", { name: "开始" })).toBeNull();
+    await waitFor(() => {
+      expect(findResizeCall(invokeMock.mock.calls, 360, 96)).toBeDefined();
+    });
+  });
+
+  it("暂停后保持控制面板并切换为恢复", async () => {
+    const invokeMock = vi.mocked(invoke);
+    invokeMock.mockImplementation(async (command: string) => {
+      if (command === "timer_session_get_active") return ACTIVE_SESSION;
+      if (command === "timer_session_pause") return { ...ACTIVE_SESSION, status: "paused" };
+      if (command === "set_floating_size") return null;
+      return null;
+    });
+
+    render(<FloatingApp />);
+    const root = await screen.findByTestId("floating-root");
+    await screen.findByText("整理窗口样式");
+    fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
+    fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
+
+    fireEvent.click(await screen.findByRole("button", { name: "暂停" }));
+
+    expect(await screen.findByRole("button", { name: "恢复" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "完成" })).toBeVisible();
+    expect(root.className).toContain("expanded");
+  });
+
   it("从空闲展开开始任务，活动折叠后可展开并完成", async () => {
     const invokeMock = vi.mocked(invoke);
     let activeSession: TimerSession | null = null;
