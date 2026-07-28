@@ -1,6 +1,7 @@
 @theme {
   --color-bg-from: #F5F9FF;
   --color-bg-to: #E8F1FF;
+  --color-bg-section: rgba(245, 249, 255, 0.92);
 
   --color-primary: #165DFF;
   --color-primary-hover: #0E4AD9;

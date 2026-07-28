@@ -13,7 +13,7 @@ export default function OverlayRoute() {
         title="Overlay"
         description="Tooltip / Tabs (浮层组件)"
       />
-      <section className="rounded-[var(--radius-card)] bg-white/95 p-[var(--spacing-4)] space-y-[var(--spacing-4)]">
+      <section className="rounded-[var(--radius-card)] bg-[var(--color-bg-section)] p-[var(--spacing-4)] space-y-[var(--spacing-4)]">
         <TabsRoot defaultValue="preview">
           <TabsList>
             <TabsTrigger value="preview">预览</TabsTrigger>

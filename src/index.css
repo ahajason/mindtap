@@ -62,7 +62,7 @@
    spec: 1-design/09-transparency-tier.md Tier 5 + 2-issues/P0-foundation/01-transparent-passthrough.md B-1
    后续: V0.2.x Rust NSVisualEffectView Tier 2 替换  */
 body {
-  background: rgba(245, 249, 255, 0.92);
+  background: var(--color-bg-section);
   color: var(--color-text-1);
   min-height: 100vh;
 }
