@@ -113,8 +113,8 @@ export function FoldedBar({
       >
         {card.content}
       </span>
-      {/* 计时数字:秒级变化时轻微淡入(卡内容切卡时整卡滑入,时间变化独立 flicker)。 */}
-      <span key={`t-${card.focusMs}`} className="floating-status-timer animate-timer-flicker">
+      {/* 计时数字:与卡轮换动效一致(下方滑入 + 淡入,卡切卡时整卡滑入,时间变化独立过渡)。 */}
+      <span key={`t-${card.focusMs}`} className="floating-status-timer animate-timer-slide-in">
         {formatFocusMs(card.focusMs)}
       </span>
       {rest > 0 && (

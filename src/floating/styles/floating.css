@@ -50,7 +50,7 @@
   animation: pulse-dot 1.6s ease-in-out infinite;
 }
 
-/* V0.2.1 折叠条轮换动效:卡内容切换时从下方滑入 + 淡入(上下滑动过渡,320ms,与呼吸灯节奏一致)。 */
+/* V0.2.1 折叠条轮换动效:卡内容切换时从下方滑入 + 淡入(上下滑动过渡,400ms,与呼吸灯节奏一致)。 */
 @keyframes card-slide-in {
   0% {
     opacity: 0;
@@ -63,21 +63,23 @@
 }
 
 .animate-card-slide-in {
-  animation: card-slide-in 320ms ease-out both;
+  animation: card-slide-in 400ms ease-out both;
 }
 
-/* V0.2.1 折叠条计时数字变化过渡:秒级跳变时轻微淡入,不突兀。 */
-@keyframes timer-flicker {
+/* V0.2.1 折叠条计时数字:与卡轮换动效一致(下方滑入 + 淡入,400ms),整体缓一点。 */
+@keyframes timer-slide-in {
   0% {
-    opacity: 0.45;
+    opacity: 0;
+    transform: translateY(8px);
   }
   100% {
     opacity: 1;
+    transform: translateY(0);
   }
 }
 
-.animate-timer-flicker {
-  animation: timer-flicker 200ms ease-out both;
+.animate-timer-slide-in {
+  animation: timer-slide-in 400ms ease-out both;
 }
 
 :root {
