@@ -21,7 +21,7 @@
 
 | 能力 | 失败原因 | 处理 |
 |---|---|---|
-| `cargo test` / `cargo check`(Rust 编译) | `tauri-plugin-autostart` build script 失败,`could not execute process ... build-script-build (No such file)`;`--lib` 也会编译整个 crate,无法隔离 | **必须 D:\ 端跑** |
+| `cargo test` / `cargo check`(Rust 编译) | build-script 执行失败。实测(2026-08-02):WSL 能下载依赖、编译大部分 crate,但撞在 build-script 边界——`tauri-plugin-autostart` 与 `getrandom v0.3.4` 的 `build-script-build` 报 `No such file or directory (os error 2)` / `could not execute process ... (never executed)`。这是 WSL 环境的构建脚本执行问题,**不是代码问题**;重试无效,每次到同一处失败 | **必须 D:\ 端跑** |
 | `cargo clippy` | 依赖编译 | D:\ 端跑 |
 | `cargo fmt --check` | ✅ **可用**(纯语法,不需编译) | WSL 已跑通 |
 | `npm run tauri dev` | Tauri 需 Windows WebView2 | D:\ 端跑 |
