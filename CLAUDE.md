@@ -34,7 +34,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | WSL 端 | `/home/jason/workspace/mindtap` | 代码 / 前端单测与静态检查 / **Rust cargo test 与 clippy（假 cc 修复后，2026-08-02）** / Claude Code / OpenCode；不执行 Tauri dev |
 | D:\ 端 | `D:\workspace\mindtap` | Tauri dev / WebView2 调试 / 视觉稿 QA（Windows-only 实机验证） |
 
-**同步流向**：WSL 内 `git commit` → `git push origin develop` → `git -C /mnt/d/workspace/mindtap pull`。
+**同步流向**：WSL 内 `git commit` → **默认立即** `git push origin develop`（用户约定：每次提交默认推送，不待提醒）→ `git -C /mnt/d/workspace/mindtap pull`。
 
 **Tauri dev 必须在 Windows 侧**：`WebView2` 是 Windows 原生 COM 组件，WSL 启动它得绕 WSLg，debug 信号会断在 syscall 边界。WebView2 透明 / 原生菜单 / Overlay titleBar 这类 Windows-only bug，在 WSL 里复现不到——只能从 D:\ 端验证。
 
