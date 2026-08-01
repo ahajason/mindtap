@@ -241,8 +241,7 @@ pub fn pause(conn: &Connection, id: i64, pending_ms: Option<i64>) -> Result<Paus
 
 /// 归档:active/todo → archived(完成即归档,去掉独立 done)。结算 active 段,清空待确认。
 /// V0.2.1 三态:唯一出口「归档」,做过的/没做过的都进 archived。
-pub fn complete(conn: &Connection, id: i64) -> Result<Item, AppError> {
-    let tx = conn.unchecked_transaction()?;
+pub fn complete(conn: &Connection, id: i64) -> Result<Item, AppError> {    let tx = conn.unchecked_transaction()?;
     let now = now_ms();
 
     let target = match get_by_id(&tx, id)? {
@@ -269,6 +268,27 @@ pub fn complete(conn: &Connection, id: i64) -> Result<Item, AppError> {
     )?;
     tx.commit()?;
 
+    get_by_id(conn, id)?.ok_or_else(|| AppError(format!("item {id} not found")))
+}
+
+/// 改名:任意非删除态 → 更新 content(3a 双击行内编辑)。内容非空 + ≤200 字;active 卡改名不结算(只改文字)。
+/// 改名不改变状态机、不影响计时;只更新 content + updated_at。
+pub fn rename(conn: &Connection, id: i64, content: String) -> Result<Item, AppError> {
+    let content = content.trim();
+    if content.is_empty() {
+        return Err(AppError("内容不能为空".into()));
+    }
+    if content.chars().count() > 200 {
+        return Err(AppError("内容超过 200 字上限".into()));
+    }
+    let now = now_ms();
+    let affected = conn.execute(
+        "UPDATE item SET content = ?1, updated_at = ?2 WHERE id = ?3 AND deleted_at IS NULL",
+        params![content, now, id],
+    )?;
+    if affected == 0 {
+        return Err(AppError(format!("item {id} 不存在或已删除")));
+    }
     get_by_id(conn, id)?.ok_or_else(|| AppError(format!("item {id} not found")))
 }
 
@@ -747,6 +767,36 @@ mod tests {
         let conn = fresh_db();
         let item = create(&conn, "X".into()).unwrap();
         assert!(confirm_pending(&conn, item.id, true).is_err());
+    }
+
+    #[test]
+    fn rename_updates_content_and_preserves_state() {
+        let conn = fresh_db();
+        let item = create(&conn, "旧名字".into()).unwrap();
+        start(&conn, item.id).unwrap();
+        let renamed = rename(&conn, item.id, "新名字".into()).unwrap();
+        assert_eq!(renamed.content, "新名字");
+        assert_eq!(renamed.status, "active"); // 改名不改变状态机
+        let after = get_by_id(&conn, item.id).unwrap().unwrap();
+        assert_eq!(after.content, "新名字");
+    }
+
+    #[test]
+    fn rename_rejects_empty_and_over_200() {
+        let conn = fresh_db();
+        let item = create(&conn, "X".into()).unwrap();
+        assert!(rename(&conn, item.id, "  ".into()).is_err());
+        assert!(rename(&conn, item.id, "字".repeat(201)).is_err());
+        assert_eq!(get_by_id(&conn, item.id).unwrap().unwrap().content, "X");
+    }
+
+    #[test]
+    fn rename_rejects_missing_or_deleted() {
+        let conn = fresh_db();
+        assert!(rename(&conn, 99999, "X".into()).is_err());
+        let item = create(&conn, "X".into()).unwrap();
+        soft_delete(&conn, item.id).unwrap();
+        assert!(rename(&conn, item.id, "Y".into()).is_err());
     }
 
     #[test]

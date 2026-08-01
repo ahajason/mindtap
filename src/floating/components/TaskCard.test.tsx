@@ -91,12 +91,12 @@ describe("TaskCard", () => {
     expect(onArchive).toHaveBeenCalledTimes(1);
   });
 
-  it("待办卡点击卡片本身即开始(进入进行中)", () => {
+  it("待办卡整卡点击不开始(2d,只有按钮触发)", () => {
     const onStart = vi.fn();
     render(<TaskCard item={TODO} onStart={onStart} />);
 
     fireEvent.click(screen.getByText("整理文档"));
-    expect(onStart).toHaveBeenCalledTimes(1);
+    expect(onStart).not.toHaveBeenCalled();
   });
 
   it("三态下无「完成/仅留档/删除」按钮(统一「归档」)", () => {
@@ -111,5 +111,44 @@ describe("TaskCard", () => {
     expect(screen.queryByRole("button", { name: /完成/ })).toBeNull();
     expect(screen.queryByRole("button", { name: /仅留档/ })).toBeNull();
     expect(screen.queryByRole("button", { name: /删除/ })).toBeNull();
+  });
+
+  it("双击卡进入行内改名,回车提交 onRename(3a)", () => {
+    const onRename = vi.fn();
+    render(
+      <TaskCard
+        item={TODO}
+        onStart={() => {}}
+        onRename={onRename}
+      />,
+    );
+
+    fireEvent.doubleClick(screen.getByText("整理文档"));
+    const input = screen.getByRole("textbox", { name: "改名 整理文档" });
+    fireEvent.change(input, { target: { value: "新名字" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    expect(onRename).toHaveBeenCalledWith("新名字");
+  });
+
+  it("双击改名 Esc 取消,不提交且退出编辑态(3a 及时取消)", () => {
+    const onRename = vi.fn();
+    render(
+      <TaskCard
+        item={TODO}
+        onStart={() => {}}
+        onRename={onRename}
+      />,
+    );
+
+    fireEvent.doubleClick(screen.getByText("整理文档"));
+    const input = screen.getByRole("textbox", { name: "改名 整理文档" });
+    fireEvent.change(input, { target: { value: "不该存" } });
+    fireEvent.keyDown(input, { key: "Escape" });
+
+    expect(onRename).not.toHaveBeenCalled();
+    // 编辑态已退出,回到内容展示
+    expect(screen.queryByRole("textbox")).toBeNull();
+    expect(screen.getByText("整理文档")).toBeVisible();
   });
 });

@@ -490,6 +490,16 @@ export function FloatingApp() {
     }
   }
 
+  // 双击改名:提交新内容(3a)。改名不改变状态机,刷新后新内容生效。
+  async function handleRenameItem(id: number, content: string) {
+    try {
+      await api.item.rename(id, content);
+      void refresh();
+    } catch (err) {
+      console.error("[item.rename] failed", err);
+    }
+  }
+
   // 归档:active/todo → archived(完成即归档,三态唯一出口)。结算 active 段,刷新后自然消失。
   async function handleArchiveItem(id: number) {
     try {
@@ -560,6 +570,7 @@ export function FloatingApp() {
                     onStart={() => handleStartItem(item.id)}
                     onPause={() => handlePauseItem(item.id)}
                     onArchive={() => handleArchiveItem(item.id)}
+                    onRename={(content) => handleRenameItem(item.id, content)}
                   />
                 ))}
                 {todo.length > 0 && (
@@ -573,6 +584,7 @@ export function FloatingApp() {
                     item={item}
                     onStart={() => handleStartItem(item.id)}
                     onArchive={() => handleArchiveItem(item.id)}
+                    onRename={(content) => handleRenameItem(item.id, content)}
                   />
                 ))}
                 {active.length === 0 && todo.length === 0 && (

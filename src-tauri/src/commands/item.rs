@@ -63,6 +63,12 @@ pub fn item_confirm_pending(id: i64, keep: bool, state: State<DbState>) -> Resul
 }
 
 #[tauri::command]
+pub fn item_rename(id: i64, content: String, state: State<DbState>) -> Result<Item, AppError> {
+    let conn = state.0.lock().map_err(|e| AppError(e.to_string()))?;
+    item::rename(&conn, id, content)
+}
+
+#[tauri::command]
 pub fn item_triage_todo(id: i64, state: State<DbState>) -> Result<Item, AppError> {
     let conn = state.0.lock().map_err(|e| AppError(e.to_string()))?;
     item::triage_to_todo(&conn, id)

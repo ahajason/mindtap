@@ -72,6 +72,8 @@ export const api = {
     complete: (id: number) => invoke<Item>("item_complete", { id }),
     confirmPending: (id: number, keep: boolean) =>
       invoke<Item>("item_confirm_pending", { id, keep }),
+    rename: (id: number, content: string) =>
+      invoke<Item>("item_rename", { id, content }),
     checkDormant: () => invoke<DormantPayload[]>("item_check_dormant"),
     listDuplicate: (content: string) =>
       invoke<Item[]>("item_list_duplicate", { content }),

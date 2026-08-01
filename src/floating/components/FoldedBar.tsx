@@ -89,11 +89,18 @@ export function FoldedBar({
       aria-label={`Mindtap 工作台账，待办 ${todoCount}，进行中 ${activeCount}，当前 ${card.content}`}
     >
       <StatusDot status="active" size="sm" />
-      {/* V0.2.1 动效:轮换时卡内容淡入上滑(index 变化 → key 变化 → 重播 rotate-in) */}
+      {/* V0.2.1 动效:轮换时卡内容淡入上滑(index 变化 → key 变化 → 重播 rotate-in)。
+          2c: 点击卡内容区 → 立即切到下一张(快速轮换,不涉及任务状态切换)。 */}
       <span
         key={index}
         className="floating-status-title animate-rotate-in"
         title={card.content}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (activeCount > 1) {
+            setIndex((i) => (i + 1) % activeCount);
+          }
+        }}
       >
         {card.content}
       </span>

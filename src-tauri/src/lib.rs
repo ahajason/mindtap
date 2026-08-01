@@ -217,6 +217,7 @@ pub fn run() {
             commands::item::item_pause,
             commands::item::item_complete,
             commands::item::item_confirm_pending,
+            commands::item::item_rename,
             commands::item::item_triage_todo,
             commands::item::item_triage_archive,
             commands::item::item_soft_delete,
