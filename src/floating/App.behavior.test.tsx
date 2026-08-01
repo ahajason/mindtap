@@ -378,6 +378,64 @@ describe("浮窗列表分区与动作", () => {
   });
 });
 
+describe("展开态高度可调", () => {
+  it("启动时从 app_setting 读展开高度;未存则用默认 280", async () => {
+    mockData([ACTIVE_ITEM], [TODO_ITEM_1]);
+    const invokeMock = vi.mocked(invoke);
+    render(<FloatingApp />);
+    const root = await screen.findByTestId("floating-root");
+
+    await waitFor(() => {
+      expect(invokeMock).toHaveBeenCalledWith("setting_get", { key: "floating_list_height" });
+    });
+    // mock 未存 → 默认 280,展开态调用 set_floating_size 传 280
+    fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
+    fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
+    await waitFor(() => {
+      expect(screen.getAllByText("整理窗口样式").length).toBeGreaterThan(0);
+    });
+    await waitFor(() => {
+      expect(invokeMock).toHaveBeenCalledWith(
+        "set_floating_size",
+        expect.objectContaining({ h: 280 }),
+      );
+    });
+  });
+
+  it("拖拽底部把手调整高度,结束调 setting_set 持久化", async () => {
+    mockData([ACTIVE_ITEM], [TODO_ITEM_1]);
+    const invokeMock = vi.mocked(invoke);
+    render(<FloatingApp />);
+    const root = await screen.findByTestId("floating-root");
+    fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
+    fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
+    await screen.findByRole("separator", { name: "调整列表高度" });
+
+    // 从 y=100 拖到 y=200 → 高度 280 + 100 = 380
+    fireEvent.mouseDown(screen.getByRole("separator", { name: "调整列表高度" }), {
+      button: 0,
+      clientX: 180,
+      clientY: 100,
+    });
+    fireEvent.mouseMove(document, { clientX: 180, clientY: 200 });
+    fireEvent.mouseUp(document, { clientX: 180, clientY: 200 });
+
+    await waitFor(() => {
+      expect(invokeMock).toHaveBeenCalledWith("setting_set", {
+        key: "floating_list_height",
+        value: "380",
+      });
+    });
+    // 新高度同步到物理窗口
+    await waitFor(() => {
+      expect(invokeMock).toHaveBeenCalledWith(
+        "set_floating_size",
+        expect.objectContaining({ h: 380 }),
+      );
+    });
+  });
+});
+
 describe("新增面板取消回落", () => {
   it("从折叠条「+」进 compose,Esc 取消 → 收起", async () => {
     mockData([ACTIVE_ITEM], [TODO_ITEM_1]);

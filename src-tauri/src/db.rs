@@ -8,6 +8,7 @@ use crate::error::AppError;
 
 pub mod item;
 pub mod schema;
+pub mod setting;
 
 pub struct DbState(pub Mutex<Connection>);
 

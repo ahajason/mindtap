@@ -1,9 +1,6 @@
 import { useEffect, useRef } from "react";
 
-import { useRecentTaskTitles } from "../hooks/useRecentTaskTitles";
-import { EmptyHistoryHint } from "./EmptyHistoryHint";
 import { InputBar } from "./InputBar";
-import { SwitchDropdownSection } from "./SwitchDropdownSection";
 
 // ExpandedPanel 只渲染空闲展开态内容；外层 floating-body 统一负责展开区间距。
 // 浮窗材质仍由唯一 root material layer 负责，本组件不叠加容器背景。
@@ -13,6 +10,8 @@ import { SwitchDropdownSection } from "./SwitchDropdownSection";
 // - onClearAndDismiss: 清 taskTitle + 折叠 (用户显式 "取消" button + Esc 用)
 // V0.2.0.14 PATCH C-3 改用 document mousedown listener 替代 input blur listener (在 App.tsx),
 // 单一 root div panelRef 覆盖整个 panel 区域, panel 外 mousedown → onDismiss, panel 内 mousedown → 不动.
+// V0.2.1 三态: 移除历史任务下拉(SwitchDropdownSection/EmptyHistoryHint)——已有任务就在待办列表,
+// 输入框再弹历史下拉是冗余决策。历史复用能力由待办列表承担。
 type ExpandedPanelProps = {
   taskTitle: string;
   onTaskTitleChange: (v: string) => void;
@@ -30,8 +29,6 @@ export function ExpandedPanel(props: ExpandedPanelProps) {
     props;
 
   const inputRef = useRef<HTMLInputElement | null>(null);
-
-  const { recs, loading } = useRecentTaskTitles();
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -53,15 +50,6 @@ export function ExpandedPanel(props: ExpandedPanelProps) {
 
   return (
     <>
-      {!loading && recs !== null && (
-        <div className="px-0.5 pb-1">
-          {recs.length === 0 ? (
-            <EmptyHistoryHint onClickCreate={() => inputRef.current?.focus()} />
-          ) : (
-            <SwitchDropdownSection onSelect={onTaskTitleChange} />
-          )}
-        </div>
-      )}
       <InputBar
         value={taskTitle}
         onChange={onTaskTitleChange}

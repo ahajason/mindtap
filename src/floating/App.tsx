@@ -26,6 +26,13 @@ const FLOATING_SIZE: Record<FloatingPresentation, { w: number; h: number }> = {
   list: { w: 360, h: 280 },
 };
 
+// V0.2.1 展开态高度可调:list 高度用户可拖拽调整,存 app_setting 表(floating_list_height)。
+// 折叠/新增面板高度固定(不跟随),切换态物理 resize 各归各位,不混淆。
+const LIST_H_MIN = 200;
+const LIST_H_MAX = 600;
+const LIST_H_DEFAULT = 280;
+const LIST_H_KEY = "floating_list_height";
+
 const TASK_TITLE_MAX = 200;
 const WIP_SOFT_LIMIT = 5;
 
@@ -55,6 +62,8 @@ export function FloatingApp() {
   const [submitting, setSubmitting] = useState(false);
   const [duplicateHint, setDuplicateHint] = useState<string | null>(null);
   const [forceCompose, setForceCompose] = useState(false);
+  // V0.2.1 展开态高度:从 app_setting 读默认(list 高度可拖拽调整),compose/folded 不受影响。
+  const [listHeight, setListHeight] = useState<number | null>(null);
   // compose 进入来源:从列表进(true)→ 取消回落列表;从折叠条「+」/快捷键进(false)→ 取消收起。
   const [composeFromList, setComposeFromList] = useState(false);
 
@@ -115,13 +124,74 @@ export function FloatingApp() {
     return () => clearInterval(id);
   }, []);
 
+  // V0.2.1 展开态高度:启动读 app_setting,clamp 到 [MIN, MAX]。
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const raw = await api.setting.get(LIST_H_KEY);
+        if (cancelled) return;
+        const n = raw != null ? Number(raw) : NaN;
+        setListHeight(
+          Number.isFinite(n)
+            ? Math.min(LIST_H_MAX, Math.max(LIST_H_MIN, Math.round(n)))
+            : LIST_H_DEFAULT,
+        );
+      } catch {
+        if (!cancelled) setListHeight(LIST_H_DEFAULT);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // V0.2.1 拖拽调整 list 高度:底部把手 mousedown → 跟 mouseMove 更新高度 → mouseup 存库。
+  // 用 ref 避免 resize 期间触发 re-render 竞态;clamp 到 [MIN, MAX]。
+  const resizeRef = useRef<{ startY: number; startH: number } | null>(null);
+  function onResizeStart(e: React.MouseEvent) {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    resizeRef.current = { startY: e.clientY, startH: listHeight ?? LIST_H_DEFAULT };
+  }
+  useEffect(() => {
+    function onMove(e: MouseEvent) {
+      const r = resizeRef.current;
+      if (!r) return;
+      const dy = e.clientY - r.startY;
+      const next = Math.min(LIST_H_MAX, Math.max(LIST_H_MIN, r.startH + dy));
+      setListHeight(next);
+    }
+    function onUp() {
+      if (!resizeRef.current) return;
+      resizeRef.current = null;
+      // 结束时持久化
+      setListHeight((h) => {
+        const v = h ?? LIST_H_DEFAULT;
+        api.setting.set(LIST_H_KEY, String(v)).catch(() => {});
+        return v;
+      });
+    }
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+    return () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     const win = getCurrentWindow();
     (async () => {
       try {
         if (cancelled) return;
-        const { w, h } = FLOATING_SIZE[presentation];
+        // V0.2.1 高度:list 用可调 listHeight,folded/compose 用固定 FLOATING_SIZE。
+        const h = presentation === "list"
+          ? (listHeight ?? LIST_H_DEFAULT)
+          : FLOATING_SIZE[presentation].h;
+        const { w } = FLOATING_SIZE[presentation];
         if (presentation !== "folded") {
           const pos = await win.outerPosition();
           if (cancelled) return;
@@ -141,7 +211,7 @@ export function FloatingApp() {
     return () => {
       cancelled = true;
     };
-  }, [presentation]);
+  }, [presentation, listHeight]);
 
   // 位置记忆(保留 V0.2.0.15 实现)
   useEffect(() => {
@@ -468,7 +538,8 @@ export function FloatingApp() {
         {presentation !== "folded" && (
           <div className="floating-body">
             {presentation === "list" ? (
-              <div className="floating-list">
+              <>
+                <div className="floating-list">
                 {active.length > WIP_SOFT_LIMIT && (
                   <div className="px-2 pb-1 text-[12px] text-amber-600">
                     在推进的事有点多
@@ -510,6 +581,17 @@ export function FloatingApp() {
                   </div>
                 )}
               </div>
+              {/* V0.2.1 展开态高度可调:底部把手,拖拽调整列表高度(存 app_setting)。 */}
+              <div
+                data-no-expand
+                aria-label="调整列表高度"
+                role="separator"
+                onMouseDown={onResizeStart}
+                className="group flex h-2.5 shrink-0 cursor-ns-resize items-center justify-center"
+              >
+                <div className="h-[3px] w-7 rounded-full bg-black/10 transition-colors group-hover:bg-black/20" />
+              </div>
+              </>
             ) : (
               <>
                 <ExpandedPanel

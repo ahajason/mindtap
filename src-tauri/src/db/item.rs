@@ -551,28 +551,7 @@ pub fn list_duplicate(conn: &Connection, content: &str) -> Result<Vec<Item>, App
         .map_err(AppError::from)
 }
 
-/// 历史任务名复用(改自 timer_session_list_recent_task_titles)
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-pub struct TitleRec {
-    pub content: String,
-    pub last_used: i64,
-}
-pub fn list_recent_titles(conn: &Connection, limit: i64) -> Result<Vec<TitleRec>, AppError> {
-    let mut stmt = conn.prepare(
-        "SELECT content, MAX(updated_at) AS last_used FROM item
-         WHERE status = 'archived' GROUP BY content ORDER BY last_used DESC LIMIT ?1",
-    )?;
-    let rows = stmt.query_map(params![limit], |row| {
-        Ok(TitleRec {
-            content: row.get(0)?,
-            last_used: row.get(1)?,
-        })
-    })?;
-    rows.collect::<rusqlite::Result<Vec<_>>>()
-        .map_err(AppError::from)
-}
-
-// 本地时区"今天 0 点"毫秒。SQLite 无时区概念,用系统本地时区算自然日边界。
+/// 本地时区"今天 0 点"毫秒。SQLite 无时区概念,用系统本地时区算自然日边界。
 fn local_day_start_ms(now: i64) -> i64 {
     // 用系统本地偏移近似(不引入 chrono 依赖)
     let local_offset_secs = local_utc_offset_secs(now);
@@ -835,20 +814,6 @@ mod tests {
         complete(&conn, item.id).unwrap();
         let dup = list_duplicate(&conn, "写代码").unwrap();
         assert!(dup.is_empty());
-    }
-
-    #[test]
-    fn list_recent_titles_dedup() {
-        let conn = fresh_db();
-        let a = create(&conn, "写周报".into()).unwrap();
-        start(&conn, a.id).unwrap();
-        complete(&conn, a.id).unwrap();
-        let b = create(&conn, "写周报".into()).unwrap();
-        start(&conn, b.id).unwrap();
-        complete(&conn, b.id).unwrap();
-        let recs = list_recent_titles(&conn, 5).unwrap();
-        assert_eq!(recs.len(), 1);
-        assert_eq!(recs[0].content, "写周报");
     }
 
     #[test]

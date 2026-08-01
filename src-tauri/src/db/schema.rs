@@ -31,5 +31,12 @@ CREATE TABLE IF NOT EXISTS focus_interval (
 CREATE INDEX IF NOT EXISTS idx_focus_interval_item
   ON focus_interval (item_id);
 
+-- 应用设置 KV 表:浮窗展开高度等用户偏好(2026-08-02)。key 唯一,value 文本。
+CREATE TABLE IF NOT EXISTS app_setting (
+  key        TEXT PRIMARY KEY,
+  value      TEXT NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+
 -- 注意: 不建 active 部分唯一索引(支持多并行进行中)
 ";

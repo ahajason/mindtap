@@ -83,7 +83,7 @@ describe("浮窗生产契约", () => {
     expect(foldedBar).toContain('className="floating-status-bar"');
     expect(foldedBar).not.toContain("max-w-[220px]");
     expect(css).toMatch(/\.floating-status-bar\s*\{[\s\S]*?height:\s*36px[\s\S]*?padding:\s*0\s+12px/);
-    expect(css).toMatch(/\.floating-body\s*\{[\s\S]*?padding:\s*12px/);
+    expect(css).toMatch(/\.floating-body\s*\{[\s\S]*?padding:\s*10px\s+12px/);
     expect(css).not.toMatch(/\.floating-root\.expanded\s+\.floating-content\s*\{[\s\S]*?padding:/);
   });
 

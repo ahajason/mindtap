@@ -67,8 +67,7 @@ pub fn run() {
                     .build(),
             ) {
                 eprintln!("[setup] global-shortcut plugin init failed: {err}");
-                let _ = app
-                    .dialog()
+                app.dialog()
                     .message("全局快捷键插件初始化失败, 浮窗快捷键可能无效。")
                     .title("初始化错误")
                     .buttons(MessageDialogButtons::Ok)
@@ -83,8 +82,7 @@ pub fn run() {
                     eprintln!(
                         "[setup] global shortcut Ctrl+Shift+Space register failed: {err} (likely hotkey conflict, see spec §3.8)"
                     );
-                    let _ = app
-                        .dialog()
+                    app.dialog()
                         .message(format!(
                             "Ctrl+Shift+Space 已被其他应用占用, 浮窗无法用快捷键显示/隐藏。\n\n\
                             建议: 在系统设置里关闭其他应用(如中文输入法)的全局快捷键, 或编辑 src-tauri/src/lib.rs:21 改其他 Modifier。\n\n\
@@ -197,8 +195,7 @@ pub fn run() {
                 }
                 Err(e) => {
                     eprintln!("[setup] db init failed: {e}");
-                    let _ = app
-                        .dialog()
+                    app.dialog()
                         .message(format!(
                             "数据库初始化失败: {e}\n\n\
                             应用无法启动。请删除 %APPDATA%\\com.mindtap.desktop\\projects.db 后重试。"
@@ -227,11 +224,13 @@ pub fn run() {
             commands::item::item_undo_delete,
             commands::item::item_check_dormant,
             commands::item::item_list_duplicate,
-            commands::item::item_get_history_titles,
             // V0.2.1 自动计时空闲保护:前端轮询 idle 是否超自动暂停阈值。
             commands::item::item_get_idle,
             // V0.2.1 3.3:某卡的激活明细(供并行统计/合并)。
             commands::item::item_list_intervals,
+            // V0.2.1 设置 KV:浮窗展开高度等用户偏好。
+            commands::setting::setting_get,
+            commands::setting::setting_set,
             commands::app::app_exit,
             commands::app::app_show_main_window,
             // V0.2.0.12 PATCH 对象 B:浮窗右键弹原生菜单 command。前端 IPC 调用入口。

@@ -89,7 +89,12 @@ export function FoldedBar({
       aria-label={`Mindtap 工作台账，待办 ${todoCount}，进行中 ${activeCount}，当前 ${card.content}`}
     >
       <StatusDot status="active" size="sm" />
-      <span className="floating-status-title" title={card.content}>
+      {/* V0.2.1 动效:轮换时卡内容淡入上滑(index 变化 → key 变化 → 重播 rotate-in) */}
+      <span
+        key={index}
+        className="floating-status-title animate-rotate-in"
+        title={card.content}
+      >
         {card.content}
       </span>
       <span className="floating-status-timer">{formatFocusMs(card.focusMs)}</span>

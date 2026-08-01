@@ -4,7 +4,7 @@
 use tauri::State;
 
 use crate::db::item::{
-    self, DormantPayload, FocusInterval, Item, ListStatus, PauseResult, StartResult, TitleRec,
+    self, DormantPayload, FocusInterval, Item, ListStatus, PauseResult, StartResult,
 };
 use crate::db::DbState;
 use crate::error::AppError;
@@ -106,16 +106,6 @@ pub fn item_check_dormant(state: State<DbState>) -> Result<Vec<DormantPayload>, 
 pub fn item_list_duplicate(content: String, state: State<DbState>) -> Result<Vec<Item>, AppError> {
     let conn = state.0.lock().map_err(|e| AppError(e.to_string()))?;
     item::list_duplicate(&conn, &content)
-}
-
-/// 历史任务名复用
-#[tauri::command]
-pub fn item_get_history_titles(
-    limit: Option<i64>,
-    state: State<DbState>,
-) -> Result<Vec<TitleRec>, AppError> {
-    let conn = state.0.lock().map_err(|e| AppError(e.to_string()))?;
-    item::list_recent_titles(&conn, limit.unwrap_or(5))
 }
 
 /// 某卡的激活明细(供并行统计 / 合并)

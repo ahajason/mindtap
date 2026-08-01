@@ -44,11 +44,6 @@ export type FocusInterval = {
   ended_at: number | null;
 };
 
-export type TitleRec = {
-  content: string;
-  last_used: number;
-};
-
 async function invoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
   return tauriInvoke<T>(cmd, args);
 }
@@ -60,6 +55,11 @@ export const api = {
     // V0.2.0.12 PATCH: 浮窗右键调 Rust 原生 Menu IPC (popup_menu + OS HMENU, 独立浮窗外窗口)
     // V0.2.6 / V0.2.0.11 误用 HTML React 组件 (./components/ContextMenu) 物理上不可能"独立窗口"
     showFloatingContextMenu: () => invoke<void>("show_floating_context_menu"),
+  },
+  // V0.2.1 设置 KV:展开高度等用户偏好(存 app_setting 表,跨会话持久)。
+  setting: {
+    get: (key: string) => invoke<string | null>("setting_get", { key }),
+    set: (key: string, value: string) => invoke<void>("setting_set", { key, value }),
   },
   item: {
     create: (content: string) => invoke<Item>("item_create", { content }),
@@ -75,8 +75,6 @@ export const api = {
     checkDormant: () => invoke<DormantPayload[]>("item_check_dormant"),
     listDuplicate: (content: string) =>
       invoke<Item[]>("item_list_duplicate", { content }),
-    getHistoryTitles: (limit?: number) =>
-      invoke<TitleRec[]>("item_get_history_titles", { limit: limit ?? 5 }),
     // V0.2.1 三态:整理动作 —— triageToTodo 仅 active→todo 兜底;triageArchive 待办直接归档。
     triageToTodo: (id: number) => invoke<Item>("item_triage_todo", { id }),
     triageArchive: (id: number) => invoke<Item>("item_triage_archive", { id }),

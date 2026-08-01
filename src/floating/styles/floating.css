@@ -50,6 +50,22 @@
   animation: pulse-dot 1.6s ease-in-out infinite;
 }
 
+/* V0.2.1 折叠条轮换动效:卡内容切换时淡入 + 轻微上滑(180ms)。 */
+@keyframes rotate-in {
+  0% {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-rotate-in {
+  animation: rotate-in 180ms ease-out both;
+}
+
 :root {
   font-family: system-ui, sans-serif;
   background: transparent;
@@ -151,8 +167,9 @@ body {
   flex-direction: column;
   gap: 12px;
   box-sizing: border-box;
-  padding: 12px;
-  padding-top: 8px;
+  /* V0.2.1 间距一致:上下对称 padding(10px),避免列表卡距顶部/底部间距不一致。
+     折叠态无 body 不参与,故不引入折叠/展开切换抖动。 */
+  padding: 10px 12px;
   overflow: hidden;
 }
 
@@ -161,6 +178,27 @@ body {
   min-height: 0;
   flex: 1;
   overflow-y: auto;
+  /* 细滚动条,贴合玻璃材质(WebKit 为 WebView2/Chromium 渲染引擎) */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 30, 80, 0.18) transparent;
+  scrollbar-gutter: stable;
+}
+
+.floating-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.floating-list::-webkit-scrollbar-thumb {
+  background: rgba(0, 30, 80, 0.18);
+  border-radius: 3px;
+}
+
+.floating-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 30, 80, 0.28);
+}
+
+.floating-list::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 /* V0.1 FloatShell 折叠态: cursor grab + 长按拖动不选文本. */
