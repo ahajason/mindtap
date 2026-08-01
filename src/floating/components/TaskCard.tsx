@@ -118,7 +118,7 @@ export function TaskCard({
 
   return (
     <div
-      className={`group flex items-center justify-between gap-2 rounded-[10px] px-2 py-1.5 transition-colors hover:bg-white/40 ${opacity}`}
+      className={`group flex items-center justify-between gap-2 rounded-[10px] px-2 py-1 transition-colors hover:bg-white/40 ${opacity}`}
       data-cold={cold ?? undefined}
       // 2d: 整卡不绑定开始(只有「开始」按钮触发)。双击进入行内改名。
       onDoubleClick={() => {
@@ -175,7 +175,7 @@ export function TaskCard({
           </div>
         )}
       </div>
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex shrink-0 items-center gap-1.5">
         {isActiveCard && (
           <span className="text-[12px] tabular-nums text-text-2" aria-label="累计投入">
             {formatFocusMs(displayMs)}

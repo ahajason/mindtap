@@ -58,7 +58,7 @@ export function ExpandedPanel(props: ExpandedPanelProps) {
         maxLength={maxLength}
         submitting={submitting}
       />
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex items-center justify-end gap-1.5">
         <button
           type="button"
           data-no-expand

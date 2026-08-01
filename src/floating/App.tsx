@@ -557,7 +557,7 @@ export function FloatingApp() {
                 )}
                 {/* V0.2.1: 列表不再有「记一下」入口,新增移到折叠条右侧「+」 */}
                 {active.length > 0 && (
-                  <div className="px-2 pb-1 pt-1.5 text-[11px] font-medium text-text-3">
+                  <div className="px-2 pb-0.5 pt-1 text-[11px] font-medium text-text-3">
                     进行中
                   </div>
                 )}
@@ -574,7 +574,7 @@ export function FloatingApp() {
                   />
                 ))}
                 {todo.length > 0 && (
-                  <div className="px-2 pb-1 pt-1.5 text-[11px] font-medium text-text-3">
+                  <div className="px-2 pb-0.5 pt-1 text-[11px] font-medium text-text-3">
                     待办
                   </div>
                 )}
