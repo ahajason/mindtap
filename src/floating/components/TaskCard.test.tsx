@@ -151,4 +151,22 @@ describe("TaskCard", () => {
     expect(screen.queryByRole("textbox")).toBeNull();
     expect(screen.getByText("整理文档")).toBeVisible();
   });
+
+  it("双击改名失焦即保存(3a 调整,不丢输入)", () => {
+    const onRename = vi.fn();
+    render(
+      <TaskCard
+        item={TODO}
+        onStart={() => {}}
+        onRename={onRename}
+      />,
+    );
+
+    fireEvent.doubleClick(screen.getByText("整理文档"));
+    const input = screen.getByRole("textbox", { name: "改名 整理文档" });
+    fireEvent.change(input, { target: { value: "改到一半" } });
+    fireEvent.blur(input);
+
+    expect(onRename).toHaveBeenCalledWith("改到一半");
+  });
 });

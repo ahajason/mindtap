@@ -36,8 +36,11 @@ const COLD_OPACITY: Record<string, string> = {
 
 const PRIMARY_BTN =
   "h-6 rounded-[8px] bg-primary px-2 text-[12px] font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover";
-const SECONDARY_BTN =
-  "h-6 rounded-[8px] px-2 text-[12px] font-medium text-text-2 transition-colors hover:bg-white/40 hover:text-text-1";
+// V0.2.1 视觉区分:暂停(挂起,未完成)= 琥珀警示;归档(结束)= 主色确认。
+const PAUSE_BTN =
+  "h-6 rounded-[8px] px-2 text-[12px] font-medium text-amber-600 transition-colors hover:bg-amber-400/15 hover:text-amber-700";
+const ARCHIVE_BTN =
+  "h-6 rounded-[8px] px-2 text-[12px] font-medium text-primary transition-colors hover:bg-primary/10 hover:text-primary-hover";
 
 export function TaskCard({
   item,
@@ -58,24 +61,32 @@ export function TaskCard({
       ? item.focus_ms + Math.max(0, now - item.last_active_at)
       : item.focus_ms;
 
-  // 3a 双击行内改名:编辑态本地管理;Esc/失焦/归档改名都及时取消,不让编辑态卡住。
+  // 3a 双击行内改名:编辑态本地管理;失焦即保存,Esc 取消,不让编辑态卡住。
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(item.content);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  // 防重入:Enter 提交会卸载 input → blur 再触发,用 ref 标记已提交避免二次调用。
+  const submittedRef = useRef(false);
 
   useEffect(() => {
     if (editing) {
+      submittedRef.current = false;
       inputRef.current?.focus();
       inputRef.current?.select();
     }
   }, [editing]);
 
-  // 编辑态失焦 → 立即取消(不保存草稿),避免"卡在编辑态"。
+  // 编辑态失焦 → 保存草稿(3a 调整:失焦即保存,不丢失输入);Esc → 取消。
   useEffect(() => {
     if (!editing) return;
     function onBlur() {
+      if (submittedRef.current) return;
+      submittedRef.current = true;
+      const next = draft.trim();
       setEditing(false);
-      setDraft(item.content);
+      if (next && next !== item.content) {
+        onRename?.(next);
+      }
     }
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") {
@@ -90,9 +101,11 @@ export function TaskCard({
       input?.removeEventListener("blur", onBlur);
       document.removeEventListener("keydown", onKey);
     };
-  }, [editing, item.content]);
+  }, [editing, item.content, draft, onRename]);
 
   function submitRename() {
+    if (submittedRef.current) return;
+    submittedRef.current = true;
     const next = draft.trim();
     setEditing(false);
     if (next && next !== item.content) {
@@ -147,7 +160,7 @@ export function TaskCard({
           </>
         )}
       </div>
-      <div className="flex shrink-0 items-center gap-1.5">
+      <div className="flex shrink-0 items-center gap-2">
         {isActiveCard && (
           <span className="text-[12px] tabular-nums text-text-2" aria-label="累计投入">
             {formatFocusMs(displayMs)}
@@ -175,7 +188,7 @@ export function TaskCard({
               e.stopPropagation();
               onPause();
             }}
-            className={SECONDARY_BTN}
+            className={PAUSE_BTN}
           >
             暂停
           </button>
@@ -189,7 +202,7 @@ export function TaskCard({
               e.stopPropagation();
               onArchive();
             }}
-            className={SECONDARY_BTN}
+            className={ARCHIVE_BTN}
           >
             归档
           </button>
