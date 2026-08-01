@@ -156,6 +156,13 @@ body {
   overflow: hidden;
 }
 
+/* V0.2.1 列表滚动:展开态卡片超出窗口高度时可滚动查看(任务多时)。 */
+.floating-list {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+}
+
 /* V0.1 FloatShell 折叠态: cursor grab + 长按拖动不选文本. */
 .floating-root.folded {
   cursor: grab;

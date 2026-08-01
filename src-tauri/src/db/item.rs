@@ -174,7 +174,9 @@ pub fn create(conn: &Connection, content: String) -> Result<Item, AppError> {
     get_by_id(conn, id)?.ok_or_else(|| AppError("just-created item not found".into()))
 }
 
-/// 开始:inbox/todo → active。零成本切换(一个事务):把其他 active 全部退回 todo。
+/// 开始:inbox/todo → active。**并行式**——不自动暂停其他 active 卡。
+/// 多任务并行(用户核心需求):点 B「开始」,A 保持 active 继续计时,两者并行。
+/// 显式「切走/专注」由用户主动暂停某卡完成,不是点开始的副作用。
 pub fn start(conn: &Connection, id: i64) -> Result<StartResult, AppError> {
     let tx = conn.unchecked_transaction()?;
 
@@ -184,28 +186,8 @@ pub fn start(conn: &Connection, id: i64) -> Result<StartResult, AppError> {
         None => return Err(AppError(format!("item {id} 不存在"))),
     }
 
-    // 零成本切换:所有其他 active → todo(结算)
+    // 并行式:不切换其他 active 卡,只把目标卡设为 active + 开一段进行中 interval
     let now = now_ms();
-    let mut switched: Vec<i64> = Vec::new();
-    {
-        let mut stmt = tx.prepare(
-            "SELECT id FROM item WHERE status = 'active' AND id != ?1 AND deleted_at IS NULL",
-        )?;
-        let rows = stmt.query_map(params![id], |r| r.get::<_, i64>(0))?;
-        for r in rows {
-            switched.push(r?);
-        }
-    }
-    for sid in &switched {
-        tx.execute(
-            "UPDATE item SET status = 'todo', focus_ms = focus_ms + (CASE WHEN last_active_at IS NOT NULL THEN ?1 - last_active_at ELSE 0 END),
-             last_active_at = ?1, updated_at = ?1 WHERE id = ?2 AND status = 'active'",
-            params![now, sid],
-        )?;
-        // 切走结算:旧卡进行中 interval 记 ended_at = now
-        settle_open_intervals(&tx, *sid, now)?;
-    }
-
     tx.execute(
         "UPDATE item SET status = 'active', last_active_at = ?1, updated_at = ?1 WHERE id = ?2",
         params![now, id],
@@ -220,7 +202,7 @@ pub fn start(conn: &Connection, id: i64) -> Result<StartResult, AppError> {
     let item = get_by_id(conn, id)?.ok_or_else(|| AppError(format!("item {id} not found")))?;
     Ok(StartResult {
         item,
-        switched_from: switched,
+        switched_from: Vec::new(),
     })
 }
 
@@ -693,13 +675,12 @@ mod tests {
         let a = create(&conn, "A".into()).unwrap();
         let b = create(&conn, "B".into()).unwrap();
         start(&conn, a.id).unwrap();
-        // 第二张卡 start 应把 A 退回,但 B 进 active —— 任意时刻可多 active 的语义由"切换"保证
-        // 这里直接验证:start B 后 A 是 todo,B 是 active
+        // 并行式:start B 后 A 保持 active(不切换),两者真并行
         let res = start(&conn, b.id).unwrap();
         assert_eq!(res.item.status, "active");
-        assert!(res.switched_from.contains(&a.id));
+        assert!(res.switched_from.is_empty());
         let a_after = get_by_id(&conn, a.id).unwrap().unwrap();
-        assert_eq!(a_after.status, "todo");
+        assert_eq!(a_after.status, "active");
     }
 
     #[test]
@@ -1049,26 +1030,23 @@ mod tests {
     }
 
     #[test]
-    fn start_switch_settles_old_card_interval() {
+    fn start_parallel_keeps_both_intervals_open() {
         let conn = fresh_db();
         let a = create(&conn, "A".into()).unwrap();
         let b = create(&conn, "B".into()).unwrap();
         start(&conn, a.id).unwrap();
-        let res = start(&conn, b.id).unwrap(); // 切走 A
-        assert!(res.switched_from.contains(&a.id));
+        let res = start(&conn, b.id).unwrap(); // 并行式:不切走 A
+        assert!(res.switched_from.is_empty());
+        // A 保持 active,interval 仍进行中(ended_at None)
         let a_ivs = list_intervals(&conn, a.id).unwrap();
         assert_eq!(a_ivs.len(), 1);
-        assert!(a_ivs[0].ended_at.is_some()); // 旧卡 interval 已结算
+        assert!(a_ivs[0].ended_at.is_none());
+        // B 也进行中
         let b_ivs = list_intervals(&conn, b.id).unwrap();
         assert_eq!(b_ivs.len(), 1);
-        assert!(b_ivs[0].ended_at.is_none()); // 新卡进行中
-        let agg: i64 = a_ivs
-            .iter()
-            .map(|i| i.ended_at.unwrap() - i.started_at)
-            .sum();
+        assert!(b_ivs[0].ended_at.is_none());
         let a_after = get_by_id(&conn, a.id).unwrap().unwrap();
-        assert_eq!(a_after.status, "todo");
-        assert_eq!(a_after.focus_ms, agg);
+        assert_eq!(a_after.status, "active");
     }
 
     #[test]

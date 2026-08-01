@@ -69,7 +69,9 @@ mod windows_idle {
             dwTime: 0,
         };
         // GetLastInputInfo 返回 BOOL → windows crate 包成 Result<()>;FALSE 即取不到输入时间,不判定
-        if !unsafe { GetLastInputInfo(&mut info).as_bool() } { return None; }
+        if !unsafe { GetLastInputInfo(&mut info).as_bool() } {
+            return None;
+        }
         let now_tick = unsafe { GetTickCount64() } as i64;
         let last_tick = info.dwTime as i64;
         Some(now_tick.saturating_sub(last_tick))
