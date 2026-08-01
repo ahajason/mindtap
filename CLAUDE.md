@@ -18,11 +18,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | 起 Vite 开发服务器 | `npm run dev`（固定端口 1420，strictPort） |
 | 起 Tauri 桌面应用 | Windows 侧运行 `scripts\dev.bat` |
 | 同步 WSL → D:\ | WSL 内 `git push origin develop` + `git -C /mnt/d/workspace/mindtap pull` |
-| 验证 Rust / Tauri | Windows 侧运行 `scripts\dev.bat`；WSL 不执行 Rust/Tauri 编译 |
+| 验证 Rust / Tauri | `cargo test` 可在 **WSL 直接跑**(假 cc 已修,`~/.cargo/config.toml` 持久化 gcc 链接器);Tauri dev 仍 Windows 侧 `scripts\dev.bat` |
 | 验证前端类型 | `npx tsc --noEmit`（`npm run build` 的 `tsc` 即类型检查，是 build 的一部分） |
 | 模块边界检查 | `npm run lint:boundaries`（`depcruise src/packages`，build 已含） |
 | 跑 vitest | `npm test`（单次）/ `npm run test:watch`（监听） |
-| 跑 Rust 测试 | `cd src-tauri && cargo test`（在 D:\ 端跑；测试覆盖 db 状态机 + 不变量） |
+| 跑 Rust 测试 | `cd src-tauri && cargo test`（WSL 可直接跑，覆盖 db 状态机 + 不变量；2026-08-02 假 cc 修复后 40 passed，详见 `docs/tasks/v0.2.1-workbench-core/wsl-dash-boundary.md` §七） |
 | 回看 git（按场景） | `git show <sha>` 查 commit / `git log -- <path>` 查文件历史 / `git diff` 查未提交改动 |
 
 ## 双工作树 (WSL + D:\)
@@ -31,8 +31,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 | 角色 | 路径 | 用法 |
 |---|---|---|
-| WSL 端 | `/home/jason/workspace/mindtap` | 代码 / 前端单测与静态检查 / Claude Code / OpenCode；不执行 Rust/Tauri 编译 |
-| D:\ 端 | `D:\workspace\mindtap` | Tauri dev / WebView2 调试 / 视觉稿 QA |
+| WSL 端 | `/home/jason/workspace/mindtap` | 代码 / 前端单测与静态检查 / **Rust cargo test 与 clippy（假 cc 修复后，2026-08-02）** / Claude Code / OpenCode；不执行 Tauri dev |
+| D:\ 端 | `D:\workspace\mindtap` | Tauri dev / WebView2 调试 / 视觉稿 QA（Windows-only 实机验证） |
 
 **同步流向**：WSL 内 `git commit` → `git push origin develop` → `git -C /mnt/d/workspace/mindtap pull`。
 
@@ -122,7 +122,7 @@ Rust 依赖的 macOS 分支在 `Cargo.toml` `[target.'cfg(target_os = "macos")'.
 ## 测试
 
 - **vitest**：jsdom 环境，`css: false`（不加载真实 CSS），`src/test/setup.ts`。单测覆盖浮窗 UI 组件 / hooks / packages。**`css: false` 意味着测试看不到真实样式** —— 视觉修复证据必须来自实机或直接读生产 CSS，不能用测试断言颜色。
-- **Rust**：`cd src-tauri && cargo test`（在 D:\ 端跑，覆盖 db 状态机 + 不变量）。
+- **Rust**：`cd src-tauri && cargo test`（WSL 可直接跑，2026-08-02 假 cc 修复后 40 passed；覆盖 db 状态机 + 不变量）。
 
 ## 设计语言
 

@@ -71,7 +71,7 @@ npm run tauri build
 
 ### Rust 测试
 ```
-cd src-tauri && cargo test    # 18 个测试，覆盖 db 状态机 + 不变量 L1-L5
+cd src-tauri && cargo test    # 40 个测试，覆盖 db 状态机 + 不变量（WSL 可直接跑，2026-08-02 假 cc 修复后全绿）
 ```
 未配置 JS 测试框架。唯一测试入口是 `cargo test`（`#[cfg(test)]` 模块位于 `src-tauri/src/db/` 各文件内）。
 
@@ -96,7 +96,7 @@ cd src-tauri && cargo test    # 18 个测试，覆盖 db 状态机 + 不变量 L
 玻璃表面（`topbar`、`sidebar`、`fab`、`floating/*`）**只**承载控件/导航。**内容必须落在非玻璃背景上**（在 `RecordTimeline` 内部）。这是硬性设计规则（参见 `src/App.tsx` 注释 + `docs/material/apple/liquid-glass/`），不是建议。
 
 ## 跨环境开发（D43）—— 修改路径前必读
-WSL 没有 MSVC 工具链 → 无法 `cargo build`。仓库在**两个独立副本**中存在：WSL 端用于编辑/开发，Windows 端用于原生构建。**禁止软链** —— 9P + Windows 软链会破坏 npm（`EISDIR`）和 UNC 路径（E13/E14）。每次会话选一个环境。
+WSL 没有 MSVC 工具链 → 无法 `cargo build`（但 `cargo test` / `cargo clippy` 可跑，假 cc 修复后 2026-08-02，见 `docs/tasks/v0.2.1-workbench-core/wsl-dash-boundary.md` §七）。仓库在**两个独立副本**中存在：WSL 端用于编辑/开发，Windows 端用于原生构建。**禁止软链** —— 9P + Windows 软链会破坏 npm（`EISDIR`）和 UNC 路径（E13/E14）。每次会话选一个环境。
 
 ## 中国大陆 Rust 镜像（D45）
 `crates.io` 官方源在大陆几乎不可用（3.86 KiB/s）。首次 `cargo build` 前配置 `~/.cargo/config.toml` 用 rsproxy.cn：
