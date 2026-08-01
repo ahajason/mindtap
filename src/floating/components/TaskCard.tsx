@@ -182,6 +182,12 @@ export function TaskCard({
             {formatFocusMs(displayMs)}
           </span>
         )}
+        {/* V0.2.1 暂停任务也显示累积投入(focus_ms),灰色小字与 active 蓝色区分。 */}
+        {isTodoCard && item.focus_ms > 0 && (
+          <span className="text-[12px] tabular-nums text-text-3" aria-label="累计投入">
+            {formatFocusMs(item.focus_ms)}
+          </span>
+        )}
         {isTodoCard && (
           <button
             type="button"

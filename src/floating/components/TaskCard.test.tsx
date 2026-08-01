@@ -32,6 +32,20 @@ const TODO: Item = {
   updated_at: 0,
 };
 
+const TODO_PAUSED: Item = {
+  id: 4,
+  content: "回邮件",
+  type: "task",
+  status: "todo",
+  focus_ms: 3_600_000, // 已投入 1 小时
+  last_active_at: null,
+  progress_note: null,
+  source: "manual",
+  pending_ms: null,
+  created_at: 0,
+  updated_at: 0,
+};
+
 describe("TaskCard", () => {
   it("进行中卡显示内容/时长/进度备注,不显示开始按钮", () => {
     render(<TaskCard item={ACTIVE} onStart={() => {}} />);
@@ -97,6 +111,28 @@ describe("TaskCard", () => {
 
     fireEvent.click(screen.getByText("整理文档"));
     expect(onStart).not.toHaveBeenCalled();
+  });
+
+  it("暂停过的待办卡显示累积投入时长(灰色,与 active 区分)", () => {
+    render(
+      <TaskCard
+        item={TODO_PAUSED}
+        onStart={() => {}}
+      />,
+    );
+
+    expect(screen.getByText("01:00:00")).toBeVisible();
+  });
+
+  it("未投入过的待办卡不显示 00:00:00", () => {
+    render(
+      <TaskCard
+        item={TODO}
+        onStart={() => {}}
+      />,
+    );
+
+    expect(screen.queryByText("00:00:00")).toBeNull();
   });
 
   it("三态下无「完成/仅留档/删除」按钮(统一「归档」)", () => {
