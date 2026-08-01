@@ -53,15 +53,23 @@ export function FoldedBar({
         aria-label={`Mindtap 工作台账，待办 ${todoCount}`}
       >
         <StatusDot status="empty" size="sm" />
-        <span className="floating-status-title" title={`待办 ${todoCount}`}>
-          待办 {todoCount}
-        </span>
-        <span className="shrink-0 text-text-3">·</span>
+        {/* V0.2.1 空态友好:无任务时不显示生硬的「待办 0」,改为温和引导文案。
+            有待办(pendingCount/待办>0)时显示待办数;全空时显示「记一笔」。 */}
+        {todoCount > 0 ? (
+          <span className="floating-status-title" title={`待办 ${todoCount}`}>
+            待办 {todoCount}
+          </span>
+        ) : (
+          <span className="floating-status-title">
+            轻念 · 记一笔
+          </span>
+        )}
         {pendingCount > 0 && (
           <span className="shrink-0 rounded-full bg-amber-400/20 px-1.5 text-[11px] font-medium text-amber-700">
             待确认 {pendingCount}
           </span>
         )}
+        {/* V0.2.1 新增按钮风格统一:与有卡时一致(圆形 + 图标,不用 []) */}
         <button
           type="button"
           data-no-expand
@@ -70,9 +78,9 @@ export function FoldedBar({
             e.stopPropagation();
             onAdd();
           }}
-          className="flex h-5 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[12px] font-semibold leading-none text-primary transition-colors hover:bg-primary/20"
+          className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[14px] font-semibold leading-none text-primary transition-colors hover:bg-primary/20"
         >
-          [+]
+          +
         </button>
       </div>
     );

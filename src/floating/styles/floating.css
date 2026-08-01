@@ -178,10 +178,10 @@ body {
   min-height: 0;
   flex: 1;
   overflow-y: auto;
-  /* 细滚动条,贴合玻璃材质(WebKit 为 WebView2/Chromium 渲染引擎) */
+  /* 细滚动条,贴合玻璃材质(WebKit 为 WebView2/Chromium 渲染引擎)。
+     overlay 在内容上(不占布局空间)——避免无滚动时右侧多余间距(用户反馈)。 */
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 30, 80, 0.18) transparent;
-  scrollbar-gutter: stable;
 }
 
 .floating-list::-webkit-scrollbar {

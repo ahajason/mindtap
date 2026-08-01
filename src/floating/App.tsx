@@ -589,7 +589,7 @@ export function FloatingApp() {
                 ))}
                 {active.length === 0 && todo.length === 0 && (
                   <div className="px-2 py-2 text-[12px] text-text-2">
-                    暂无任务，点「+」记一笔
+                    轻念 · 记一笔
                   </div>
                 )}
               </div>

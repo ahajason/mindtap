@@ -150,10 +150,11 @@ export function TaskCard({
           />
         ) : (
           <div className="flex min-w-0 items-center gap-1">
-            <span className="truncate text-[13px] font-medium text-text-1">
+            <span className="truncate text-[13px] font-medium leading-none text-text-1">
               {item.content}
             </span>
-            {/* 3a 编辑入口:双击是隐藏手势,加铅笔图标让改名可见(hover 浮现,点击进编辑)。 */}
+            {/* 3a 编辑入口:双击是隐藏手势,加铅笔图标让改名可见(hover 浮现,点击进编辑)。
+                leading-none + self-center:图标与文字垂直居中对齐(避免偏下)。 */}
             <button
               type="button"
               data-no-expand
@@ -163,9 +164,9 @@ export function TaskCard({
                 setDraft(item.content);
                 setEditing(true);
               }}
-              className="shrink-0 rounded p-0.5 text-text-3 opacity-0 transition-all hover:bg-primary/10 hover:text-primary group-hover:opacity-100 focus-visible:opacity-100"
+              className="shrink-0 self-center rounded p-0.5 leading-none text-text-3 opacity-0 transition-all hover:bg-primary/10 hover:text-primary group-hover:opacity-100 focus-visible:opacity-100"
             >
-              <Pencil className="h-3 w-3" />
+              <Pencil className="block h-3 w-3" />
             </button>
             {item.progress_note && (
               <span className="truncate text-[12px] text-text-2">

@@ -26,6 +26,22 @@ describe("FoldedBar(折叠条滚动展示)", () => {
     expect(screen.getByRole("status")).toHaveAccessibleName("Mindtap 工作台账，待办 3");
   });
 
+  it("全空态(无待办无进行中)显示友好文案「轻念 · 记一笔」,新增按钮风格统一", () => {
+    render(
+      <FoldedBar
+        activeCards={[]}
+        todoCount={0}
+        pendingCount={0}
+        onAdd={() => {}}
+        onOpenList={() => {}}
+      />,
+    );
+
+    expect(screen.queryByText("待办 0")).toBeNull();
+    expect(screen.getByText("轻念 · 记一笔")).toBeVisible();
+    expect(screen.getByRole("button", { name: "新增任务" })).toBeVisible();
+  });
+
   it("有进行中卡时展示第一张内容 + 实时时长 + 其余数量", () => {
     render(
       <FoldedBar
