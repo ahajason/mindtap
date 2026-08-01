@@ -1,19 +1,42 @@
 import { invoke as tauriInvoke } from "@tauri-apps/api/core";
 
-export type TimerSession = {
+// V0.2.1: Item 统一实体取代 TimerSession(ADR-0011)。
+// 五态状态机:inbox/todo/active/done/archived;无独立 paused(暂停=退回 todo)。
+// 计时后端主导:focus_ms 存已结算值,实时时长由前端按 (now - last_active_at) 推导,不写库(决策 9)。
+
+export type ItemStatus = "inbox" | "todo" | "active" | "done" | "archived";
+
+export type Item = {
   id: number;
-  task_title: string;
-  status: "active" | "paused" | "completed";
-  started_at: number | null;
-  paused_at: number | null;
-  completed_at: number | null;
-  focus_ms: number;
+  content: string;
+  type: string; // 'task'(远期多族)
+  status: ItemStatus;
+  focus_ms: number; // 已结算投入(只增不减)
+  last_active_at: number | null; // 最近活跃(冷却/跨天派生源)
+  progress_note: string | null;
+  source: string; // 'manual'(远期 suggested/hook)
+  pending_ms: number | null; // 待确认失真窗口毫秒(ADR-0012)
   created_at: number;
   updated_at: number;
 };
 
-export type TaskTitleRec = {
-  task_title: string;
+export type StartResult = {
+  item: Item;
+  switched_from: number[]; // 因切换退回待办的原进行中卡 id
+};
+
+export type PauseResult = {
+  item: Item;
+  pending_ms: number | null; // 失真窗口毫秒(若非主动暂停)
+};
+
+export type DormantResult = {
+  paused: number[]; // 因失真退回待办的卡 id
+  has_pending: number[]; // 有待确认窗口的卡 id
+};
+
+export type TitleRec = {
+  content: string;
   last_used: number;
 };
 
@@ -29,6 +52,24 @@ export const api = {
     // V0.2.6 / V0.2.0.11 误用 HTML React 组件 (./components/ContextMenu) 物理上不可能"独立窗口"
     showFloatingContextMenu: () => invoke<void>("show_floating_context_menu"),
   },
+  item: {
+    create: (content: string) => invoke<Item>("item_create", { content }),
+    getActive: () => invoke<Item[]>("item_get_active"),
+    getInbox: () => invoke<Item[]>("item_get_inbox"),
+    getTodo: () => invoke<Item[]>("item_get_todo"),
+    start: (id: number) => invoke<StartResult>("item_start", { id }),
+    pause: (id: number, pendingMs?: number | null) =>
+      invoke<PauseResult>("item_pause", { id, pendingMs }),
+    complete: (id: number) => invoke<Item>("item_complete", { id }),
+    confirmPending: (id: number, keep: boolean) =>
+      invoke<Item>("item_confirm_pending", { id, keep }),
+    checkDormant: () => invoke<DormantResult>("item_check_dormant"),
+    listDuplicate: (content: string) =>
+      invoke<Item[]>("item_list_duplicate", { content }),
+    getHistoryTitles: (limit?: number) =>
+      invoke<TitleRec[]>("item_get_history_titles", { limit: limit ?? 5 }),
+  },
+  // 兼容别名:旧 timerSession 命令仍注册(未删),前端批次 2 迁移到 api.item 后删除。
   timerSession: {
     getActive: () => invoke<TimerSession | null>("timer_session_get_active"),
     create: (taskTitle: string) =>
@@ -43,4 +84,22 @@ export const api = {
         limit: limit ?? 5,
       }),
   },
+};
+
+// 兼容别名:旧 timerSession 命令仍注册(未删),但前端已迁移到 api.item。
+export type TimerSession = {
+  id: number;
+  task_title: string;
+  status: "active" | "paused" | "completed";
+  started_at: number | null;
+  paused_at: number | null;
+  completed_at: number | null;
+  focus_ms: number;
+  created_at: number;
+  updated_at: number;
+};
+
+export type TaskTitleRec = {
+  task_title: string;
+  last_used: number;
 };

@@ -135,6 +135,17 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            commands::item::item_create,
+            commands::item::item_get_active,
+            commands::item::item_get_inbox,
+            commands::item::item_get_todo,
+            commands::item::item_start,
+            commands::item::item_pause,
+            commands::item::item_complete,
+            commands::item::item_confirm_pending,
+            commands::item::item_check_dormant,
+            commands::item::item_list_duplicate,
+            commands::item::item_get_history_titles,
             commands::timer_session::timer_session_get_active,
             commands::timer_session::timer_session_create,
             commands::timer_session::timer_session_update_focus_ms,

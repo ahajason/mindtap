@@ -6,8 +6,8 @@ use tauri::{AppHandle, Manager};
 use crate::db::schema::CREATE_SQL;
 use crate::error::AppError;
 
+pub mod item;
 pub mod schema;
-pub mod timer_session;
 
 pub struct DbState(pub Mutex<Connection>);
 
