@@ -98,12 +98,11 @@ export function FoldedBar({
       aria-label={`Mindtap 工作台账，${todoCount} 件待处理，进行中 ${activeCount}，当前 ${card.content}`}
     >
       <StatusDot status="active" size="sm" />
-      {/* V0.2.1 动效:标题 + 时间在同一容器,key=index → 切卡时整体下滑入 + 淡入。
-          时间数字本身每秒仅更新数值,不再触发动画(避免秒级闪动)。
+      {/* V0.2.1 动效:只有标题在切卡时下滑入 + 淡入(key=index → 重播 card-slide-in)。
+          时间数字静止在固定位置,每秒仅更新数值(不参与滚动动画)。
           2c: 点击容器 → 立即切到下一张(快速轮换,不涉及任务状态切换)。 */}
       <div
-        key={index}
-        className="flex min-w-0 flex-1 animate-card-slide-in items-center gap-2"
+        className="flex min-w-0 flex-1 items-center gap-2"
         onClick={(e) => {
           e.stopPropagation();
           if (activeCount > 1) {
@@ -111,7 +110,11 @@ export function FoldedBar({
           }
         }}
       >
-        <span className="floating-status-title" title={card.content}>
+        <span
+          key={index}
+          className="floating-status-title animate-card-slide-in"
+          title={card.content}
+        >
           {card.content}
         </span>
         <span className="floating-status-timer">{formatFocusMs(card.focusMs)}</span>
