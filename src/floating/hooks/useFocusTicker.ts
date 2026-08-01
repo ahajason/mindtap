@@ -1,28 +1,31 @@
+// V0.2.1: 后端主导实时时长推导(决策 9)。
+// focus_ms 存已结算值,实时时长 = focus_ms + (now - last_active_at)。
+// 前端只显示,不写库(删除了旧 updateFocusMs 调用)。
 import { useEffect, useState } from "react";
 
-import { api, type TimerSession } from "../../lib/tauri-bridge";
+import type { Item } from "../../lib/tauri-bridge";
 
-export function useFocusTicker(session: TimerSession | null, intervalMs = 1000): number {
+export function useFocusTicker(item: Item | null, intervalMs = 1000): number {
   const [displayMs, setDisplayMs] = useState(0);
 
   useEffect(() => {
-    if (!session) {
+    if (!item) {
       setDisplayMs(0);
       return;
     }
-    const startMs = session.focus_ms;
-    setDisplayMs(startMs);
+    if (item.status !== "active" || item.last_active_at == null) {
+      setDisplayMs(item.focus_ms);
+      return;
+    }
 
-    if (session.status !== "active") return;
-
-    const baseAt = Date.now();
-    const id = setInterval(() => {
-      const next = startMs + (Date.now() - baseAt);
-      setDisplayMs(next);
-      void api.timerSession.updateFocusMs(session.id, next);
-    }, intervalMs);
+    const elapsedBase = item.last_active_at;
+    const setFromClock = () => {
+      setDisplayMs(item.focus_ms + Math.max(0, Date.now() - elapsedBase));
+    };
+    setFromClock();
+    const id = setInterval(setFromClock, intervalMs);
     return () => clearInterval(id);
-  }, [session?.id, session?.status, session?.focus_ms]);
+  }, [item?.id, item?.status, item?.focus_ms, item?.last_active_at, intervalMs]);
 
   return displayMs;
 }

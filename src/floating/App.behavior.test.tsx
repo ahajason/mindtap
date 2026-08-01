@@ -3,19 +3,43 @@ import { invoke } from "@tauri-apps/api/core";
 import { describe, expect, it, vi } from "vitest";
 
 import { FloatingApp } from "./App";
-import type { TimerSession } from "../lib/tauri-bridge";
+import type { Item } from "../lib/tauri-bridge";
 
-function findResizeCall(
-  calls: ReadonlyArray<ReadonlyArray<unknown>>,
-  w: number,
-  h: number,
-): ReadonlyArray<unknown> | undefined {
-  return calls.find(
-    (args) =>
-      args[0] === "set_floating_size" &&
-      (args[1] as { w?: unknown; h?: unknown } | undefined)?.w === w &&
-      (args[1] as { w?: unknown; h?: unknown } | undefined)?.h === h,
-  );
+const ACTIVE_ITEM: Item = {
+  id: 1,
+  content: "整理窗口样式",
+  type: "task",
+  status: "active",
+  focus_ms: 0,
+  last_active_at: 0,
+  progress_note: "接口写完",
+  source: "manual",
+  pending_ms: null,
+  created_at: 0,
+  updated_at: 0,
+};
+
+const INBOX_ITEM: Item = {
+  id: 2,
+  content: "回邮件",
+  type: "task",
+  status: "inbox",
+  focus_ms: 0,
+  last_active_at: null,
+  progress_note: null,
+  source: "manual",
+  pending_ms: null,
+  created_at: 0,
+  updated_at: 0,
+};
+
+function mockData(active: Item[], inbox: Item[]) {
+  vi.mocked(invoke).mockImplementation(async (command: string) => {
+    if (command === "item_get_active") return active;
+    if (command === "item_get_inbox") return inbox;
+    if (command === "set_floating_size") return null;
+    return null;
+  });
 }
 
 describe("浮窗鼠标交互", () => {
@@ -102,172 +126,103 @@ describe("浮窗鼠标交互", () => {
 });
 
 describe("浮窗任务关键路径", () => {
-  const ACTIVE_SESSION: TimerSession = {
-    id: 1,
-    task_title: "整理窗口样式",
-    status: "active",
-    started_at: 0,
-    paused_at: null,
-    completed_at: null,
-    focus_ms: 0,
-    created_at: 0,
-    updated_at: 0,
-  };
-
-  it("当前任务展开为紧凑控制面板，不显示创建输入", async () => {
-    const invokeMock = vi.mocked(invoke);
-    invokeMock.mockImplementation(async (command: string) => {
-      if (command === "timer_session_get_active") return ACTIVE_SESSION;
-      if (command === "set_floating_size") return null;
-      return null;
-    });
-
+  it("有进行中卡时展开为并行列表,显示卡内容/备注/收件箱开始按钮", async () => {
+    mockData([ACTIVE_ITEM], [INBOX_ITEM]);
     render(<FloatingApp />);
     const root = await screen.findByTestId("floating-root");
-    await screen.findByText("整理窗口样式");
+    // 折叠态:计数条显示概览,不显示任务内容
+    await screen.findByText("收件箱 1");
+    expect(screen.getByText("进行中 1")).toBeVisible();
+    expect(screen.queryByText("整理窗口样式")).toBeNull();
 
     fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
     fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
 
-    expect(await screen.findByRole("button", { name: "暂停" })).toBeVisible();
-    expect(screen.getByRole("button", { name: "完成" })).toBeVisible();
+    // 展开态:收件箱项显示"开始"按钮,进行中卡显示内容/备注
+    expect(await screen.findByText("整理窗口样式")).toBeVisible();
+    expect(screen.getByText("接口写完")).toBeVisible();
+    expect(screen.getByText("回邮件")).toBeVisible();
+    expect(screen.getByRole("button", { name: /开始/ })).toBeVisible();
     expect(screen.queryByPlaceholderText(/做什么/)).toBeNull();
-    expect(screen.queryByRole("button", { name: "开始" })).toBeNull();
+  });
+
+  it("收件箱项点开始 → 调 item_start", async () => {
+    mockData([], [INBOX_ITEM]);
+    const invokeMock = vi.mocked(invoke);
+    render(<FloatingApp />);
+    const root = await screen.findByTestId("floating-root");
+    await screen.findByText("收件箱 1");
+    fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
+    fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
+
+    // 展开态:收件箱项显示"开始"按钮
+    await screen.findByText("回邮件");
+    fireEvent.click(screen.getByRole("button", { name: /开始/ }));
     await waitFor(() => {
-      expect(findResizeCall(invokeMock.mock.calls, 360, 96)).toBeDefined();
+      expect(invokeMock).toHaveBeenCalledWith("item_start", { id: 2 });
     });
   });
 
-  it("控制面板按 Esc 时折叠并保留当前任务", async () => {
-    const invokeMock = vi.mocked(invoke);
-    invokeMock.mockImplementation(async (command: string) => {
-      if (command === "timer_session_get_active") return ACTIVE_SESSION;
-      if (command === "set_floating_size") return null;
-      return null;
-    });
-
+  it("折叠条显示收件箱数与进行中数", async () => {
+    mockData([ACTIVE_ITEM], [INBOX_ITEM]);
     render(<FloatingApp />);
-    const root = await screen.findByTestId("floating-root");
-    await screen.findByText("整理窗口样式");
-    fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
-    fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
-    await screen.findByRole("button", { name: "暂停" });
 
-    fireEvent.keyDown(document, { key: "Escape" });
-
-    await waitFor(() => expect(root.className).toContain("folded"));
-    expect(screen.getByText("整理窗口样式")).toBeVisible();
+    expect(await screen.findByText("收件箱 1")).toBeVisible();
+    expect(screen.getByText("进行中 1")).toBeVisible();
   });
 
-  it("控制面板失焦时折叠并保留当前任务", async () => {
-    const invokeMock = vi.mocked(invoke);
-    invokeMock.mockImplementation(async (command: string) => {
-      if (command === "timer_session_get_active") return ACTIVE_SESSION;
-      if (command === "set_floating_size") return null;
-      return null;
-    });
-
+  it("无卡时空展开显示输入面板", async () => {
+    mockData([], []);
     render(<FloatingApp />);
     const root = await screen.findByTestId("floating-root");
-    await screen.findByText("整理窗口样式");
-    fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
-    fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
-    await screen.findByRole("button", { name: "暂停" });
-
-    fireEvent.blur(window);
-
-    await waitFor(() => expect(root.className).toContain("folded"));
-    expect(screen.getByText("整理窗口样式")).toBeVisible();
-  });
-
-  it("暂停后保持控制面板并切换为恢复", async () => {
-    const invokeMock = vi.mocked(invoke);
-    invokeMock.mockImplementation(async (command: string) => {
-      if (command === "timer_session_get_active") return ACTIVE_SESSION;
-      if (command === "timer_session_pause") return { ...ACTIVE_SESSION, status: "paused" };
-      if (command === "set_floating_size") return null;
-      return null;
-    });
-
-    render(<FloatingApp />);
-    const root = await screen.findByTestId("floating-root");
-    await screen.findByText("整理窗口样式");
     fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
     fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
 
-    fireEvent.click(await screen.findByRole("button", { name: "暂停" }));
-
-    expect(await screen.findByRole("button", { name: "恢复" })).toBeVisible();
-    expect(screen.getByRole("button", { name: "完成" })).toBeVisible();
-    expect(root.className).toContain("expanded");
+    expect(await screen.findByPlaceholderText(/做什么/)).toBeVisible();
   });
 
-  it("从空闲展开开始任务，活动折叠后可展开并完成", async () => {
+  it("捕获后调 item_create 并折叠", async () => {
+    mockData([], []);
     const invokeMock = vi.mocked(invoke);
-    let activeSession: TimerSession | null = null;
-
-    invokeMock.mockImplementation(async (command: string, args?: unknown) => {
-      if (command === "set_floating_size") return null;
-      if (command === "timer_session_create") {
-        const now = Date.now();
-        activeSession = {
-          id: 1,
-          task_title: ((args ?? {}) as { taskTitle?: string }).taskTitle ?? "",
-          status: "active",
-          started_at: now,
-          paused_at: null,
-          completed_at: null,
-          focus_ms: 0,
-          created_at: now,
-          updated_at: now,
-        };
-        return activeSession;
-      }
-      if (command === "timer_session_get_active") return activeSession;
-      if (command === "timer_session_complete") {
-        activeSession = activeSession && { ...activeSession, status: "completed" };
-        return activeSession;
-      }
-      return null;
-    });
-
     render(<FloatingApp />);
     const root = await screen.findByTestId("floating-root");
-
-    await waitFor(() => {
-      expect(findResizeCall(invokeMock.mock.calls, 360, 36)).toBeDefined();
-    });
-
     fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
     fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
     const input = await screen.findByPlaceholderText(/做什么/);
 
-    await waitFor(() => {
-      expect(findResizeCall(invokeMock.mock.calls, 360, 280)).toBeDefined();
-    });
-
-    fireEvent.change(input, { target: { value: "关键路径任务" } });
+    fireEvent.change(input, { target: { value: "写代码" } });
     fireEvent.click(screen.getByRole("button", { name: "开始" }));
 
     await waitFor(() => {
-      expect(invokeMock).toHaveBeenCalledWith(
-        "timer_session_create",
-        expect.objectContaining({ taskTitle: "关键路径任务" }),
-      );
-      expect(root.className).toContain("folded");
+      expect(invokeMock).toHaveBeenCalledWith("item_create", { content: "写代码" });
     });
-    expect(screen.queryByRole("button", { name: "暂停" })).toBeNull();
+    await waitFor(() => expect(root.className).toContain("folded"));
+  });
 
-    fireEvent.mouseDown(root, { button: 0, clientX: 50, clientY: 10 });
-    fireEvent.mouseUp(document, { button: 0, clientX: 50, clientY: 10 });
-    fireEvent.click(await screen.findByRole("button", { name: "完成" }));
+  it("空输入时开始按钮禁用", async () => {
+    mockData([], []);
+    render(<FloatingApp />);
+    const root = await screen.findByTestId("floating-root");
+    fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
+    fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
 
-    await waitFor(() => {
-      expect(invokeMock).toHaveBeenCalledWith(
-        "timer_session_complete",
-        expect.objectContaining({ id: 1 }),
-      );
-      expect(root.className).toContain("folded");
-    });
+    const startBtn = await screen.findByRole("button", { name: "开始" });
+    expect(startBtn).toBeDisabled();
+  });
+
+  it("超过 5 个进行中显示 WIP 轻提示", async () => {
+    const manyActive: Item[] = Array.from({ length: 6 }, (_, i) => ({
+      ...ACTIVE_ITEM,
+      id: i + 1,
+      content: `任务${i + 1}`,
+    }));
+    mockData(manyActive, []);
+    render(<FloatingApp />);
+    const root = await screen.findByTestId("floating-root");
+    await screen.findByText("进行中 6");
+    fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
+    fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
+
+    expect(await screen.findByText("在推进的事有点多")).toBeVisible();
   });
 });

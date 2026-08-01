@@ -1,48 +1,34 @@
-import type { TimerStatus } from "../types/timer";
+// V0.2.1: 折叠态 = 并行计数条(收件箱数 + 活跃任务数 + 待确认数)。
+// 存在感最低,展示"未整理 + 在推进"的概览。取代旧单任务状态条。
 import { StatusDot } from "./StatusDot";
 
 type FoldedBarProps = {
-  taskTitle: string;
-  focusMs: number;
-  status: TimerStatus | "empty";
+  inboxCount: number;
+  activeCount: number;
+  pendingCount: number;
   onClick?: () => void;
 };
 
-function formatFocusMs(ms: number): string {
-  const totalSec = Math.floor(ms / 1000);
-  const hh = Math.floor(totalSec / 3600);
-  const mm = Math.floor((totalSec % 3600) / 60);
-  const ss = totalSec % 60;
-  return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
-}
-
-// 折叠与展开持续复用同一状态条；固定几何和间距由 floating-status-bar 负责。
-// 展开内容在状态条下方渲染，不改变状态条的位置或尺寸。
-export function FoldedBar({ taskTitle, focusMs, status, onClick }: FoldedBarProps) {
-  const isEmpty = status === "empty";
-  const title = isEmpty ? "未命名任务" : taskTitle;
-
+export function FoldedBar({ inboxCount, activeCount, pendingCount, onClick }: FoldedBarProps) {
   return (
     <div
       className="floating-status-bar"
       onClick={onClick}
       role="status"
-      aria-label={
-        isEmpty
-          ? "Mindtap 计时器，未开始任务"
-          : `当前任务 ${title}，已计时 ${formatFocusMs(focusMs)}`
-      }
+      aria-label={`Mindtap 工作台账，收件箱 ${inboxCount}，进行中 ${activeCount}`}
     >
-      <StatusDot status={status} size="sm" />
-      <span className="floating-status-title" title={title}>
-        {title}
+      <StatusDot status={activeCount > 0 ? "active" : "empty"} size="sm" />
+      <span className="floating-status-title" title={`收件箱 ${inboxCount}`}>
+        收件箱 {inboxCount}
       </span>
-      <span
-        className="floating-status-timer"
-        aria-label="已计时"
-      >
-        {formatFocusMs(focusMs)}
+      <span className="floating-status-timer" aria-label="进行中">
+        进行中 {activeCount}
       </span>
+      {pendingCount > 0 && (
+        <span className="ml-1 rounded-full bg-amber-400/20 px-1.5 text-[11px] font-medium text-amber-700">
+          待确认 {pendingCount}
+        </span>
+      )}
     </div>
   );
 }
