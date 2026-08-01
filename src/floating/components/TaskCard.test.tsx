@@ -169,4 +169,22 @@ describe("TaskCard", () => {
 
     expect(onRename).toHaveBeenCalledWith("改到一半");
   });
+
+  it("点编辑图标进入行内改名(3a 可见入口)", () => {
+    const onRename = vi.fn();
+    render(
+      <TaskCard
+        item={TODO}
+        onStart={() => {}}
+        onRename={onRename}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "编辑 整理文档" }));
+    const input = screen.getByRole("textbox", { name: "改名 整理文档" });
+    fireEvent.change(input, { target: { value: "图标改名" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    expect(onRename).toHaveBeenCalledWith("图标改名");
+  });
 });

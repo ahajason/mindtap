@@ -1,8 +1,9 @@
 // V0.2.1: 并行任务卡。四要素直接显示(内容/累计时长/冷却深浅/进度备注),不点开。
 // 三态动作派生:todo(开始/归档)、active(暂停/归档)。无独立收件箱/已完成。
-// 交互:整卡不绑定开始(2d,只有「开始」按钮触发);双击卡 → 行内改名(3a)。
+// 交互:整卡不绑定开始(2d,只有「开始」按钮触发);双击卡或点编辑图标 → 行内改名(3a)。
 // 冷却深浅(透明度档位)由父级传 data-cold 标记,本组件不持有失真检测逻辑。
 import { useEffect, useRef, useState } from "react";
+import { Pencil } from "lucide-react";
 
 import type { Item } from "../../lib/tauri-bridge";
 
@@ -117,7 +118,7 @@ export function TaskCard({
 
   return (
     <div
-      className={`flex items-center justify-between gap-2 rounded-[10px] px-2 py-1.5 transition-colors hover:bg-white/40 ${opacity}`}
+      className={`group flex items-center justify-between gap-2 rounded-[10px] px-2 py-1.5 transition-colors hover:bg-white/40 ${opacity}`}
       data-cold={cold ?? undefined}
       // 2d: 整卡不绑定开始(只有「开始」按钮触发)。双击进入行内改名。
       onDoubleClick={() => {
@@ -148,16 +149,30 @@ export function TaskCard({
             aria-label={`改名 ${item.content}`}
           />
         ) : (
-          <>
+          <div className="flex min-w-0 items-center gap-1">
             <span className="truncate text-[13px] font-medium text-text-1">
               {item.content}
             </span>
+            {/* 3a 编辑入口:双击是隐藏手势,加铅笔图标让改名可见(hover 浮现,点击进编辑)。 */}
+            <button
+              type="button"
+              data-no-expand
+              aria-label={`编辑 ${item.content}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                setDraft(item.content);
+                setEditing(true);
+              }}
+              className="shrink-0 rounded p-0.5 text-text-3 opacity-0 transition-all hover:bg-primary/10 hover:text-primary group-hover:opacity-100 focus-visible:opacity-100"
+            >
+              <Pencil className="h-3 w-3" />
+            </button>
             {item.progress_note && (
               <span className="truncate text-[12px] text-text-2">
                 {item.progress_note}
               </span>
             )}
-          </>
+          </div>
         )}
       </div>
       <div className="flex shrink-0 items-center gap-2">
