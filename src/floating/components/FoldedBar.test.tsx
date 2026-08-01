@@ -21,12 +21,12 @@ describe("FoldedBar(折叠条滚动展示)", () => {
       />,
     );
 
-    expect(screen.getByText("待办 3")).toBeVisible();
+    expect(screen.getByText("3 件待处理")).toBeVisible();
     expect(screen.getByRole("button", { name: "新增任务" })).toBeVisible();
-    expect(screen.getByRole("status")).toHaveAccessibleName("Mindtap 工作台账，待办 3");
+    expect(screen.getByRole("status")).toHaveAccessibleName("Mindtap 工作台账，3 件待处理");
   });
 
-  it("全空态(无待办无进行中)显示友好文案「轻念 · 记一笔」,新增按钮风格统一", () => {
+  it("全空态(无待办无进行中)显示友好文案「✨ 记一笔」,新增按钮风格统一", () => {
     render(
       <FoldedBar
         activeCards={[]}
@@ -38,7 +38,7 @@ describe("FoldedBar(折叠条滚动展示)", () => {
     );
 
     expect(screen.queryByText("待办 0")).toBeNull();
-    expect(screen.getByText("轻念 · 记一笔")).toBeVisible();
+    expect(screen.getByText("✨ 记一笔")).toBeVisible();
     expect(screen.getByRole("button", { name: "新增任务" })).toBeVisible();
   });
 

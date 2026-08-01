@@ -191,7 +191,7 @@ describe("浮窗任务关键路径", () => {
     const invokeMock = vi.mocked(invoke);
     render(<FloatingApp />);
     const root = await screen.findByTestId("floating-root");
-    await screen.findByText("待办 1");
+    await screen.findByText("1 件待处理");
     fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
     fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
 

@@ -50,18 +50,18 @@ export function FoldedBar({
         className="floating-status-bar"
         onClick={onOpenList}
         role="status"
-        aria-label={`Mindtap 工作台账，待办 ${todoCount}`}
+        aria-label={`Mindtap 工作台账，${todoCount} 件待处理`}
       >
         <StatusDot status="empty" size="sm" />
         {/* V0.2.1 空态友好:无任务时不显示生硬的「待办 0」,改为温和引导文案。
-            有待办(pendingCount/待办>0)时显示待办数;全空时显示「记一笔」。 */}
+            有待办(待办>0)时显示「N 件待处理」;全空时显示「✨ 记一笔」。 */}
         {todoCount > 0 ? (
-          <span className="floating-status-title" title={`待办 ${todoCount}`}>
-            待办 {todoCount}
+          <span className="floating-status-title" title={`${todoCount} 件待处理`}>
+            {todoCount} 件待处理
           </span>
         ) : (
           <span className="floating-status-title">
-            轻念 · 记一笔
+            ✨ 记一笔
           </span>
         )}
         {pendingCount > 0 && (
@@ -94,7 +94,7 @@ export function FoldedBar({
       className="floating-status-bar"
       onClick={onOpenList}
       role="status"
-      aria-label={`Mindtap 工作台账，待办 ${todoCount}，进行中 ${activeCount}，当前 ${card.content}`}
+      aria-label={`Mindtap 工作台账，${todoCount} 件待处理，进行中 ${activeCount}，当前 ${card.content}`}
     >
       <StatusDot status="active" size="sm" />
       {/* V0.2.1 动效:轮换时卡内容淡入上滑(index 变化 → key 变化 → 重播 rotate-in)。
