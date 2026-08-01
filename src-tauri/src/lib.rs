@@ -187,13 +187,6 @@ pub fn run() {
             commands::item::item_check_dormant,
             commands::item::item_list_duplicate,
             commands::item::item_get_history_titles,
-            commands::timer_session::timer_session_get_active,
-            commands::timer_session::timer_session_create,
-            commands::timer_session::timer_session_update_focus_ms,
-            commands::timer_session::timer_session_pause,
-            commands::timer_session::timer_session_resume,
-            commands::timer_session::timer_session_complete,
-            commands::timer_session::timer_session_list_recent_task_titles,
             commands::app::app_exit,
             commands::app::app_show_main_window,
             // V0.2.0.12 PATCH 对象 B:浮窗右键弹原生菜单 command。前端 IPC 调用入口。

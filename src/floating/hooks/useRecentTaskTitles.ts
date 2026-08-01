@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { api, type TaskTitleRec } from "../../lib/tauri-bridge";
+import { api, type TitleRec } from "../../lib/tauri-bridge";
 
 const CACHE_TTL_MS = 30_000;
 
 export function useRecentTaskTitles() {
-  const [recs, setRecs] = useState<TaskTitleRec[] | null>(null);
+  const [recs, setRecs] = useState<TitleRec[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [fetchedAt, setFetchedAt] = useState(0);
@@ -15,7 +15,7 @@ export function useRecentTaskTitles() {
     setLoading(true);
     setError(null);
     try {
-      const data = await api.timerSession.listRecentTaskTitles(5);
+      const data = await api.item.getHistoryTitles(5);
       if (aliveRef.current) {
         setRecs(data);
         setFetchedAt(Date.now());

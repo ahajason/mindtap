@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 
-import type { TaskTitleRec } from "../../lib/tauri-bridge";
+import type { TitleRec } from "../../lib/tauri-bridge";
 import { useRecentTaskTitles } from "../hooks/useRecentTaskTitles";
 
 type Props = {
-  onSelect: (task_title: string) => void;
+  onSelect: (content: string) => void;
 };
 
 function formatRelative(ms: number): string {
@@ -65,8 +65,8 @@ export function SwitchDropdownSection({ onSelect }: Props) {
     if (open) setActiveIndex(0);
   }, [open]);
 
-  const handleSelect = (rec: TaskTitleRec) => {
-    onSelect(rec.task_title);
+  const handleSelect = (rec: TitleRec) => {
+    onSelect(rec.content);
     setOpen(false);
   };
 
@@ -88,7 +88,7 @@ export function SwitchDropdownSection({ onSelect }: Props) {
       {open && (
         <ul
           role="listbox"
-          aria-label="历史 task_title 列表"
+          aria-label="历史任务列表"
           aria-activedescendant={recs?.[activeIndex] ? `sd-opt-${activeIndex}` : undefined}
           tabIndex={0}
           className="glass-l3 absolute left-0 right-0 top-full z-10 mt-1 max-h-48 overflow-y-auto rounded-lg p-1 shadow-lg"
@@ -103,7 +103,7 @@ export function SwitchDropdownSection({ onSelect }: Props) {
             !error &&
             recs?.map((rec, i) => (
               <li
-                key={rec.task_title}
+                key={rec.content}
                 id={`sd-opt-${i}`}
                 role="option"
                 aria-selected={i === activeIndex}
@@ -111,7 +111,7 @@ export function SwitchDropdownSection({ onSelect }: Props) {
                 onClick={() => handleSelect(rec)}
               >
                 <span className="block whitespace-normal break-words">
-                  {rec.task_title}
+                  {rec.content}
                 </span>
                 <span className="ml-2 text-[10px] text-text-3">
                   {formatRelative(rec.last_used)}

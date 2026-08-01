@@ -187,16 +187,19 @@ pub fn pause(conn: &Connection, id: i64, pending_ms: Option<i64>) -> Result<Paus
         None => return Err(AppError(format!("item {id} 不存在"))),
     };
 
-    // 结算:active 段 (started → 失真点/暂停点)
+    // 结算:active 段 (started → 暂停点)。
+    // - 主动暂停(pending_ms=None):settled_ms 计入 focus(这段真实投入)
+    // - 失真暂停(pending_ms=Some):settled_ms 即失真窗口,未确认前不入账(ADR-0012),只挂 pending_ms
     let settled_ms = target
         .last_active_at
         .map(|la| now.saturating_sub(la))
         .unwrap_or(0);
+    let focus_delta = if pending_ms.is_some() { 0 } else { settled_ms };
     let pending_to_write = pending_ms;
 
     tx.execute(
         "UPDATE item SET status = 'todo', focus_ms = focus_ms + ?1, pending_ms = ?2, updated_at = ?3 WHERE id = ?4",
-        params![settled_ms, pending_to_write, now, id],
+        params![focus_delta, pending_to_write, now, id],
     )?;
     tx.commit()?;
 
@@ -287,11 +290,12 @@ pub fn settle_dormant(conn: &Connection, now: i64) -> Result<DormantResult, AppE
     drop(stmt);
     for (id, la) in to_settle {
         let pending = now.saturating_sub(la);
+        // ADR-0012: 冷却检测不转 todo(卡保持 active,计时继续),只挂 pending_ms 触发气泡。
+        // 气泡 5s 超时才真正 pause(active→todo + 挂待确认)。
         tx.execute(
-            "UPDATE item SET status = 'todo', focus_ms = focus_ms + ?1, pending_ms = ?2, updated_at = ?3 WHERE id = ?4 AND status = 'active'",
-            params![pending, pending, now, id],
+            "UPDATE item SET pending_ms = ?1, updated_at = ?2 WHERE id = ?3 AND status = 'active'",
+            params![pending, now, id],
         )?;
-        paused.push(id);
         has_pending.push(id);
     }
 
@@ -502,6 +506,8 @@ mod tests {
         assert_eq!(res.pending_ms, Some(12345));
         let after = get_by_id(&conn, item.id).unwrap().unwrap();
         assert_eq!(after.pending_ms, Some(12345));
+        // ADR-0012: 失真暂停不入账,只挂待确认
+        assert_eq!(after.focus_ms, 0);
     }
 
     #[test]
@@ -550,18 +556,19 @@ mod tests {
     }
 
     #[test]
-    fn settle_dormant_cooling_pauses_and_pends() {
+    fn settle_dormant_cooling_pends_but_keeps_active() {
         let conn = fresh_db();
         // 失真:4 小时前活跃 → 冷却
         let now = now_ms();
         let id = insert_raw(&conn, "X", "active", 1000, now - 4 * 3600 * 1000);
         let res = settle_dormant(&conn, now).unwrap();
-        assert!(res.paused.contains(&id));
+        // 冷却只挂 pending,不转 todo(卡保持 active,计时继续,等气泡超时再停)
         assert!(res.has_pending.contains(&id));
+        assert!(!res.paused.contains(&id));
         let after = get_by_id(&conn, id).unwrap().unwrap();
-        assert_eq!(after.status, "todo");
-        assert!(after.pending_ms.is_some());
-        // focus = 1000 + 4h 待确认
+        assert_eq!(after.status, "active");
+        assert_eq!(after.pending_ms, Some(4 * 3600 * 1000));
+        // ADR-0012: 失真窗口未确认前不入账 → focus 保持 1000
         assert_eq!(after.focus_ms, 1000);
     }
 

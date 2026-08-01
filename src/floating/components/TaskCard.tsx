@@ -9,6 +9,8 @@ type TaskCardProps = {
   isInbox: boolean;
   /** 冷却档位: 'active' | 'cooling' | 'stale',决定透明度 */
   cold?: "cooling" | "stale";
+  /** 当前时间戳(秒级 tick):active 卡实时滚动时长用 */
+  now?: number;
 };
 
 export function formatFocusMs(ms: number): string {
@@ -24,8 +26,13 @@ const COLD_OPACITY: Record<string, string> = {
   stale: "opacity-35",
 };
 
-export function TaskCard({ item, onStart, isInbox, cold }: TaskCardProps) {
+export function TaskCard({ item, onStart, isInbox, cold, now }: TaskCardProps) {
   const opacity = cold ? COLD_OPACITY[cold] : "";
+  // 决策9: 后端主导。active 卡实时时长 = focus_ms + (now - last_active_at),不写库。
+  const displayMs =
+    !isInbox && item.status === "active" && item.last_active_at != null && now != null
+      ? item.focus_ms + Math.max(0, now - item.last_active_at)
+      : item.focus_ms;
   return (
     <div
       className={`flex items-center justify-between gap-2 rounded-[10px] px-2 py-1.5 transition-colors hover:bg-white/40 ${opacity}`}
@@ -47,7 +54,7 @@ export function TaskCard({ item, onStart, isInbox, cold }: TaskCardProps) {
       <div className="flex shrink-0 items-center gap-2">
         {!isInbox && (
           <span className="text-[12px] tabular-nums text-text-2" aria-label="累计投入">
-            {formatFocusMs(item.focus_ms)}
+            {formatFocusMs(displayMs)}
           </span>
         )}
         {isInbox && (

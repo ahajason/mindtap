@@ -46,13 +46,36 @@ function coldLevel(la: number | null | undefined, now: number): "cooling" | "sta
 }
 
 export function FloatingApp() {
-  const { active, inbox, refresh } = useActiveTasks();
+  const { active, inbox, todo, refresh } = useActiveTasks();
   const { intent, clear } = useCaptureIntent();
   const [nowTick, setNowTick] = useState(() => Date.now());
 
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [taskTitle, setTaskTitle] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [duplicateHint, setDuplicateHint] = useState<string | null>(null);
+
+  // ADR-0013: 重复捕获轻提示(不阻止不合并)。输入变化时检测同名已有卡。
+  useEffect(() => {
+    const title = taskTitle.trim();
+    if (!title) {
+      setDuplicateHint(null);
+      return;
+    }
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      try {
+        const dup = await api.item.listDuplicate(title);
+        if (!cancelled) setDuplicateHint(dup.length > 0 ? title : null);
+      } catch {
+        if (!cancelled) setDuplicateHint(null);
+      }
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [taskTitle]);
 
   // 展开态默认:有卡 → list;空 → compose;捕获意图强制 compose
   const hasCards = active.length > 0 || inbox.length > 0;
@@ -351,7 +374,8 @@ export function FloatingApp() {
     }
   }
 
-  const pendingCount = active.filter((a) => a.pending_ms != null).length;
+  // 待确认 = 有 pending_ms 的卡(active 冷却挂 pending + todo 超时停表挂 pending)
+  const pendingCount = [...active, ...todo].filter((i) => i.pending_ms != null).length;
 
   return (
     <div
@@ -392,6 +416,7 @@ export function FloatingApp() {
                     item={item}
                     isInbox={false}
                     cold={coldLevel(item.last_active_at, nowTick)}
+                    now={nowTick}
                     onStart={() => handleStartItem(item.id)}
                   />
                 ))}
@@ -412,14 +437,21 @@ export function FloatingApp() {
                 )}
               </div>
             ) : (
-              <ExpandedPanel
-                taskTitle={taskTitle}
-                onTaskTitleChange={setTaskTitle}
-                onStart={handleStart}
-                onClearAndDismiss={handleClearAndDismiss}
-                maxLength={TASK_TITLE_MAX}
-                submitting={submitting}
-              />
+              <>
+                <ExpandedPanel
+                  taskTitle={taskTitle}
+                  onTaskTitleChange={setTaskTitle}
+                  onStart={handleStart}
+                  onClearAndDismiss={handleClearAndDismiss}
+                  maxLength={TASK_TITLE_MAX}
+                  submitting={submitting}
+                />
+                {duplicateHint && (
+                  <div className="px-2 pb-1 text-[12px] text-amber-600">
+                    已有同名任务「{duplicateHint}」
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
