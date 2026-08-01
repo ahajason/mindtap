@@ -73,7 +73,7 @@ describe("FoldedBar(折叠条滚动展示)", () => {
     expect(screen.queryByText("+1")).toBeNull();
   });
 
-  it("每 2.5 秒轮换展示下一张进行中卡", () => {
+  it("每 3.2 秒(2×呼吸灯周期)轮换展示下一张进行中卡", () => {
     vi.useFakeTimers();
     try {
       render(
@@ -87,9 +87,9 @@ describe("FoldedBar(折叠条滚动展示)", () => {
       );
 
       expect(screen.getByText("写报告")).toBeVisible();
-      act(() => vi.advanceTimersByTime(2500));
+      act(() => vi.advanceTimersByTime(3200));
       expect(screen.getByText("回邮件")).toBeVisible();
-      act(() => vi.advanceTimersByTime(2500));
+      act(() => vi.advanceTimersByTime(3200));
       expect(screen.getByText("写报告")).toBeVisible();
     } finally {
       vi.useRealTimers();

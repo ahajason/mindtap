@@ -19,7 +19,8 @@ type FoldedBarProps = {
   onOpenList: () => void;
 };
 
-const ROTATE_INTERVAL_MS = 2500;
+// V0.2.1 轮换节奏与呼吸灯一致(呼吸灯 1.6s 周期 × 2 = 3.2s),切换与呼吸节拍合拍。
+const ROTATE_INTERVAL_MS = 3200;
 
 export function FoldedBar({
   activeCards,
@@ -97,11 +98,11 @@ export function FoldedBar({
       aria-label={`Mindtap 工作台账，${todoCount} 件待处理，进行中 ${activeCount}，当前 ${card.content}`}
     >
       <StatusDot status="active" size="sm" />
-      {/* V0.2.1 动效:轮换时卡内容淡入上滑(index 变化 → key 变化 → 重播 rotate-in)。
+      {/* V0.2.1 动效:轮换时卡内容从下方滑入 + 淡入(index 变化 → key 变化 → 重播 card-slide-in)。
           2c: 点击卡内容区 → 立即切到下一张(快速轮换,不涉及任务状态切换)。 */}
       <span
         key={index}
-        className="floating-status-title animate-rotate-in"
+        className="floating-status-title animate-card-slide-in"
         title={card.content}
         onClick={(e) => {
           e.stopPropagation();
@@ -112,7 +113,10 @@ export function FoldedBar({
       >
         {card.content}
       </span>
-      <span className="floating-status-timer">{formatFocusMs(card.focusMs)}</span>
+      {/* 计时数字:秒级变化时轻微淡入(卡内容切卡时整卡滑入,时间变化独立 flicker)。 */}
+      <span key={`t-${card.focusMs}`} className="floating-status-timer animate-timer-flicker">
+        {formatFocusMs(card.focusMs)}
+      </span>
       {rest > 0 && (
         <span className="shrink-0 rounded-full bg-primary/10 px-1.5 text-[11px] font-medium text-primary">
           +{rest}
