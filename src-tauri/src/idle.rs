@@ -61,7 +61,7 @@ pub fn scan_and_auto_pause(
 #[cfg(target_os = "windows")]
 mod windows_idle {
     use windows::Win32::System::SystemInformation::GetTickCount64;
-    use windows::Win32::UI::InputKeyboardAndMouse::{GetLastInputInfo, LASTINPUTINFO};
+    use windows::Win32::UI::Input::KeyboardAndMouse::{GetLastInputInfo, LASTINPUTINFO};
 
     pub(super) fn last_input_ms() -> Option<i64> {
         let mut info = LASTINPUTINFO {
@@ -69,8 +69,8 @@ mod windows_idle {
             dwTime: 0,
         };
         // GetLastInputInfo 返回 BOOL → windows crate 包成 Result<()>;FALSE 即取不到输入时间,不判定
-        GetLastInputInfo(&mut info).ok()?;
-        let now_tick = GetTickCount64() as i64;
+        if !unsafe { GetLastInputInfo(&mut info).as_bool() } { return None; }
+        let now_tick = unsafe { GetTickCount64() } as i64;
         let last_tick = info.dwTime as i64;
         Some(now_tick.saturating_sub(last_tick))
     }

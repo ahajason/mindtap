@@ -168,7 +168,7 @@ pub fn run() {
                         let now = crate::db::item::now_ms_for_cmd();
                         let paused = {
                             let state = app_handle.state::<crate::db::DbState>();
-                            match state.0.lock() {
+                            let result = match state.0.lock() {
                                 Ok(conn) => {
                                     match crate::idle::scan_and_auto_pause(&conn, idle, now) {
                                         Ok(items) => items,
@@ -182,7 +182,8 @@ pub fn run() {
                                     log::warn!("[idle] db lock poisoned: {e}");
                                     Vec::new()
                                 }
-                            }
+                            };
+                            result
                         };
                         for it in paused {
                             let _ = app_handle
