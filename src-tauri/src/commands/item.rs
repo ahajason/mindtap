@@ -23,8 +23,9 @@ pub fn item_get_active(state: State<DbState>) -> Result<Vec<Item>, AppError> {
 
 #[tauri::command]
 pub fn item_get_inbox(state: State<DbState>) -> Result<Vec<Item>, AppError> {
+    // V0.2.1 三态:收件箱并入待办,此命令保留为「待办」别名(向后兼容前端旧调用)。
     let conn = state.0.lock().map_err(|e| AppError(e.to_string()))?;
-    item::list(&conn, ListStatus::Inbox, None)
+    item::list(&conn, ListStatus::Todo, None)
 }
 
 #[tauri::command]
@@ -100,7 +101,7 @@ pub fn item_check_dormant(state: State<DbState>) -> Result<Vec<DormantPayload>, 
     item::get_dormant_payloads(&conn, &dormant.has_pending)
 }
 
-/// 重复捕获检测:同内容已有 inbox/todo/active 卡(轻提示,不合并)
+/// 重复捕获检测:同内容已有 todo/active 卡(轻提示,不合并)
 #[tauri::command]
 pub fn item_list_duplicate(content: String, state: State<DbState>) -> Result<Vec<Item>, AppError> {
     let conn = state.0.lock().map_err(|e| AppError(e.to_string()))?;

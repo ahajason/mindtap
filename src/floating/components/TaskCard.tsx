@@ -1,21 +1,15 @@
 // V0.2.1: 并行任务卡。四要素直接显示(内容/累计时长/冷却深浅/进度备注),不点开。
-// 动作按状态派生:inbox(开始/仅留档/删除)、active(暂停/完成)、todo(开始/完成)。
+// 三态动作派生:todo(开始/归档)、active(暂停/归档)。无独立收件箱/已完成。
 // 冷却深浅(透明度档位)由父级传 data-cold 标记,本组件不持有失真检测逻辑。
 import type { Item } from "../../lib/tauri-bridge";
 
 type TaskCardProps = {
   item: Item;
   onStart: () => void;
-  /** 收件箱态标记(兼容旧调用;新代码可省略,组件按 item.status 派生) */
-  isInbox?: boolean;
   /** 进行中卡手动暂停(退回待办) */
   onPause?: () => void;
-  /** active/todo 卡完成 → done */
-  onComplete?: () => void;
-  /** 收件箱项仅留档 → archived */
+  /** todo/active 卡归档(完成即归档,三态唯一出口) */
   onArchive?: () => void;
-  /** 收件箱项软删除 */
-  onDelete?: () => void;
   /** 冷却档位: 'cooling' | 'stale',决定透明度 */
   cold?: "cooling" | "stale";
   /** 当前时间戳(秒级 tick):active 卡实时滚动时长用 */
@@ -43,16 +37,12 @@ const SECONDARY_BTN =
 export function TaskCard({
   item,
   onStart,
-  isInbox,
   onPause,
-  onComplete,
   onArchive,
-  onDelete,
   cold,
   now,
 }: TaskCardProps) {
   const opacity = cold ? COLD_OPACITY[cold] : "";
-  const isInboxCard = isInbox || item.status === "inbox";
   const isActiveCard = item.status === "active";
   const isTodoCard = item.status === "todo";
 
@@ -66,9 +56,7 @@ export function TaskCard({
     <div
       className={`flex items-center justify-between gap-2 rounded-[10px] px-2 py-1.5 transition-colors hover:bg-white/40 ${opacity}`}
       data-cold={cold ?? undefined}
-      onClick={isInboxCard ? undefined : onStart}
-      role={isInboxCard ? undefined : "button"}
-      aria-label={isInboxCard ? undefined : `${item.content}，切换到进行中`}
+      onClick={isTodoCard ? onStart : undefined}
     >
       <div className="flex min-w-0 flex-col">
         <span className="truncate text-[13px] font-medium text-text-1">
@@ -86,7 +74,7 @@ export function TaskCard({
             {formatFocusMs(displayMs)}
           </span>
         )}
-        {(isInboxCard || isTodoCard) && (
+        {isTodoCard && (
           <button
             type="button"
             data-no-expand
@@ -113,46 +101,18 @@ export function TaskCard({
             暂停
           </button>
         )}
-        {(isActiveCard || isTodoCard) && onComplete && (
+        {(isActiveCard || isTodoCard) && onArchive && (
           <button
             type="button"
             data-no-expand
-            aria-label={`完成 ${item.content}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              onComplete();
-            }}
-            className={SECONDARY_BTN}
-          >
-            完成
-          </button>
-        )}
-        {isInboxCard && onArchive && (
-          <button
-            type="button"
-            data-no-expand
-            aria-label={`仅留档 ${item.content}`}
+            aria-label={`归档 ${item.content}`}
             onClick={(e) => {
               e.stopPropagation();
               onArchive();
             }}
             className={SECONDARY_BTN}
           >
-            仅留档
-          </button>
-        )}
-        {isInboxCard && onDelete && (
-          <button
-            type="button"
-            data-no-expand
-            aria-label={`删除 ${item.content}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete();
-            }}
-            className={SECONDARY_BTN}
-          >
-            删除
+            归档
           </button>
         )}
       </div>

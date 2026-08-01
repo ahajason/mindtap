@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS item (
   id             INTEGER PRIMARY KEY AUTOINCREMENT,
   content        TEXT NOT NULL,
   type           TEXT NOT NULL DEFAULT 'task',
-  status         TEXT NOT NULL CHECK (status IN ('inbox','todo','active','done','archived')),
+  status         TEXT NOT NULL CHECK (status IN ('todo','active','archived')),
   focus_ms       INTEGER NOT NULL DEFAULT 0,
   last_active_at INTEGER,
   progress_note  TEXT,

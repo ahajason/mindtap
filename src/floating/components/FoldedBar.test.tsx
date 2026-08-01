@@ -10,27 +10,27 @@ describe("FoldedBar(折叠条滚动展示)", () => {
     { content: "回邮件", focusMs: 120_000 },
   ];
 
-  it("无进行中卡时显示收件箱数 + [+] 入口", () => {
+  it("无进行中卡时显示待办数 + [+] 入口", () => {
     render(
       <FoldedBar
         activeCards={[]}
-        inboxCount={3}
+        todoCount={3}
         pendingCount={0}
         onAdd={() => {}}
         onOpenList={() => {}}
       />,
     );
 
-    expect(screen.getByText("收件箱 3")).toBeVisible();
+    expect(screen.getByText("待办 3")).toBeVisible();
     expect(screen.getByRole("button", { name: "新增任务" })).toBeVisible();
-    expect(screen.getByRole("status")).toHaveAccessibleName("Mindtap 工作台账，收件箱 3");
+    expect(screen.getByRole("status")).toHaveAccessibleName("Mindtap 工作台账，待办 3");
   });
 
   it("有进行中卡时展示第一张内容 + 实时时长 + 其余数量", () => {
     render(
       <FoldedBar
         activeCards={cards}
-        inboxCount={2}
+        todoCount={2}
         pendingCount={0}
         onAdd={() => {}}
         onOpenList={() => {}}
@@ -46,7 +46,7 @@ describe("FoldedBar(折叠条滚动展示)", () => {
     render(
       <FoldedBar
         activeCards={[cards[0]]}
-        inboxCount={2}
+        todoCount={2}
         pendingCount={0}
         onAdd={() => {}}
         onOpenList={() => {}}
@@ -63,7 +63,7 @@ describe("FoldedBar(折叠条滚动展示)", () => {
       render(
         <FoldedBar
           activeCards={cards}
-          inboxCount={2}
+          todoCount={2}
           pendingCount={0}
           onAdd={() => {}}
           onOpenList={() => {}}
@@ -85,7 +85,7 @@ describe("FoldedBar(折叠条滚动展示)", () => {
     render(
       <FoldedBar
         activeCards={cards}
-        inboxCount={2}
+        todoCount={2}
         pendingCount={0}
         onAdd={() => {}}
         onOpenList={onOpenList}
@@ -103,7 +103,7 @@ describe("FoldedBar(折叠条滚动展示)", () => {
     render(
       <FoldedBar
         activeCards={cards}
-        inboxCount={2}
+        todoCount={2}
         pendingCount={0}
         onAdd={onAdd}
         onOpenList={onOpenList}
@@ -120,7 +120,7 @@ describe("FoldedBar(折叠条滚动展示)", () => {
     render(
       <FoldedBar
         activeCards={cards}
-        inboxCount={2}
+        todoCount={2}
         pendingCount={2}
         onAdd={() => {}}
         onOpenList={() => {}}

@@ -44,7 +44,7 @@ describe("浮窗生产契约", () => {
     const { invoke } = await import("@tauri-apps/api/core");
     vi.mocked(invoke).mockImplementation(async (command: string) => {
       if (command === "item_get_active") return [ACTIVE_ITEM];
-      if (command === "item_get_inbox") return [];
+      if (command === "item_get_todo") return [];
       return null;
     });
 
@@ -61,8 +61,8 @@ describe("浮窗生产契约", () => {
     fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
 
     await waitFor(() => expect(root.className).toContain("expanded"));
-    // 展开后并行列表出现进行中卡
-    expect(screen.getByRole("button", { name: "整理窗口样式，切换到进行中" })).toBeVisible();
+    // 展开后并行列表出现进行中卡(active 卡非按钮,显示内容与时长;折叠条与列表同时显示 → getAllByText)
+    expect(screen.getAllByText("整理窗口样式").length).toBeGreaterThan(0);
   });
 
   it("呈现状态声明折叠、创建和列表三项固定窗口几何", () => {

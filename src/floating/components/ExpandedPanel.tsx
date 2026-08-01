@@ -18,7 +18,7 @@ type ExpandedPanelProps = {
   onTaskTitleChange: (v: string) => void;
   /** 开始:捕获 + 直接计时(active) */
   onStart: () => void;
-  /** 保存:捕获进收件箱 + 收起 */
+  /** 保存:捕获进待办 + 收起 */
   onSave: () => void;
   onClearAndDismiss: () => void;
   maxLength: number;
@@ -39,7 +39,7 @@ export function ExpandedPanel(props: ExpandedPanelProps) {
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") {
-      // V0.2.1: 回车 = 保存(进收件箱),不直接开计时。
+      // V0.2.1: 回车 = 保存(进待办),不直接开计时。
       e.preventDefault();
       onSave();
     } else if (e.key === "Escape") {

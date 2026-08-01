@@ -19,11 +19,11 @@ const ACTIVE: Item = {
   updated_at: 0,
 };
 
-const INBOX: Item = {
+const TODO: Item = {
   id: 2,
   content: "回邮件",
   type: "task",
-  status: "inbox",
+  status: "todo",
   focus_ms: 0,
   last_active_at: null,
   progress_note: null,
@@ -38,33 +38,33 @@ describe("useActiveTasks", () => {
     vi.mocked(invoke).mockReset();
   });
 
-  it("拉取 active 与 inbox 列表", async () => {
+  it("拉取 active 与 todo 列表(三态:待办含原收件箱)", async () => {
     vi.mocked(invoke).mockImplementation(async (command: string) => {
       if (command === "item_get_active") return [ACTIVE];
-      if (command === "item_get_inbox") return [INBOX];
+      if (command === "item_get_todo") return [TODO];
       return null;
     });
 
     const { result } = renderHook(() => useActiveTasks());
     await waitFor(() => {
       expect(result.current.active).toHaveLength(1);
-      expect(result.current.inbox).toHaveLength(1);
+      expect(result.current.todo).toHaveLength(1);
     });
     expect(result.current.active[0].content).toBe("写代码");
-    expect(result.current.inbox[0].content).toBe("回邮件");
+    expect(result.current.todo[0].content).toBe("回邮件");
   });
 
-  it("setActive / setInbox 支持本地更新(切换/暂停后同步)", async () => {
+  it("setActive / setTodo 支持本地更新(切换/暂停后同步)", async () => {
     vi.mocked(invoke).mockImplementation(async (command: string) => {
       if (command === "item_get_active") return [ACTIVE];
-      if (command === "item_get_inbox") return [];
+      if (command === "item_get_todo") return [];
       return null;
     });
 
     const { result } = renderHook(() => useActiveTasks());
     await waitFor(() => expect(result.current.active).toHaveLength(1));
 
-    // 模拟:该卡被切走(退回 todo)
+    // 模拟:该卡被暂停(退回待办)
     act(() => {
       result.current.setActive([]);
     });
@@ -77,7 +77,7 @@ describe("useActiveTasks", () => {
     const { result } = renderHook(() => useActiveTasks());
     await waitFor(() => {
       expect(result.current.active).toEqual([]);
-      expect(result.current.inbox).toEqual([]);
+      expect(result.current.todo).toEqual([]);
     });
   });
 });

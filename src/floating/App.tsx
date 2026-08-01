@@ -46,7 +46,7 @@ function coldLevel(la: number | null | undefined, now: number): "cooling" | "sta
 }
 
 export function FloatingApp() {
-  const { active, inbox, todo, refresh } = useActiveTasks();
+  const { active, todo, refresh } = useActiveTasks();
   const { intent, clear } = useCaptureIntent();
   const [nowTick, setNowTick] = useState(() => Date.now());
 
@@ -81,7 +81,7 @@ export function FloatingApp() {
   }, [taskTitle]);
 
   // 展开态默认:有卡 → list;空 → compose;捕获意图/手动新增 → compose
-  const hasCards = active.length > 0 || inbox.length > 0 || todo.length > 0;
+  const hasCards = active.length > 0 || todo.length > 0;
   const presentation: FloatingPresentation = !isPanelOpen
     ? "folded"
     : forceCompose || intent
@@ -323,11 +323,11 @@ export function FloatingApp() {
     setForceCompose(false);
     setTaskTitle("");
     if (fromList) {
-      setIsPanelOpen(active.length > 0 || inbox.length > 0 || todo.length > 0);
+      setIsPanelOpen(active.length > 0 || todo.length > 0);
     } else {
       setIsPanelOpen(false);
     }
-  }, [clear, composeFromList, active, inbox, todo]);
+  }, [clear, composeFromList, active, todo]);
 
   useEffect(() => {
     function onDocMouseDown(e: MouseEvent) {
@@ -361,7 +361,7 @@ export function FloatingApp() {
     };
   }, [presentation, handleDismiss, handleClearAndDismiss]);
 
-  // 保存:捕获 → 收件箱 + 收起(PRD 1.1 + 3.2 规则 1)。
+  // 保存:捕获 → 待办 + 收起(PRD 1.1 + 3.2 规则 1)。三态下捕获直接进待办。
   async function handleSave() {
     const title = taskTitle.trim();
     if (!title || submitting) return;
@@ -400,7 +400,7 @@ export function FloatingApp() {
     }
   }
 
-  // 开始/切换:inbox/todo → active,零成本切换(后端事务把其他 active 退回 todo)
+  // 开始:todo → active,并行式(不暂停其他 active 卡)。
   async function handleStartItem(id: number) {
     try {
       await api.item.start(id);
@@ -410,7 +410,7 @@ export function FloatingApp() {
     }
   }
 
-  // 手动暂停:active → todo(退回待办)。后端 pause 已就绪(失真气泡在用),此按钮让它闭环可用。
+  // 手动暂停:active → todo(退回待办)。
   async function handlePauseItem(id: number) {
     try {
       await api.item.pause(id, null);
@@ -420,33 +420,13 @@ export function FloatingApp() {
     }
   }
 
-  // 完成:active/todo → done(收进 1.3)。done 不进浮窗列表,刷新后自然消失。
-  async function handleCompleteItem(id: number) {
+  // 归档:active/todo → archived(完成即归档,三态唯一出口)。结算 active 段,刷新后自然消失。
+  async function handleArchiveItem(id: number) {
     try {
       await api.item.complete(id);
       void refresh();
     } catch (err) {
       console.error("[item.complete] failed", err);
-    }
-  }
-
-  // 仅留档:inbox → archived,不转待办(收进 1.3)。
-  async function handleArchiveItem(id: number) {
-    try {
-      await api.item.triageArchive(id);
-      void refresh();
-    } catch (err) {
-      console.error("[item.triageArchive] failed", err);
-    }
-  }
-
-  // 软删除:inbox 项删除(收进 1.3,5 秒撤销在 BubbleApp/归档入口)。
-  async function handleDeleteItem(id: number) {
-    try {
-      await api.item.softDelete(id);
-      void refresh();
-    } catch (err) {
-      console.error("[item.softDelete] failed", err);
     }
   }
 
@@ -458,9 +438,7 @@ export function FloatingApp() {
   }
 
   // 待确认 = 有 pending_ms 的卡(active 冷却挂 pending + todo 超时停表挂 pending)
-  const pendingCount = [...active, ...todo].filter((i) => i.pending_ms != null).length;
-
-  // 折叠条滚动展示的进行中卡视图:实时时长 = focus_ms + (now - last_active_at)(决策 9)。
+  const pendingCount = [...active, ...todo].filter((i) => i.pending_ms != null).length;  // 折叠条滚动展示的进行中卡视图:实时时长 = focus_ms + (now - last_active_at)(决策 9)。
   const activeCards = active.map((item) => ({
     content: item.content,
     focusMs:
@@ -479,7 +457,7 @@ export function FloatingApp() {
       <div className="floating-content">
         <FoldedBar
           activeCards={activeCards}
-          inboxCount={inbox.length}
+          todoCount={todo.length}
           pendingCount={pendingCount}
           onAdd={openCompose}
           onOpenList={() => {
@@ -510,7 +488,7 @@ export function FloatingApp() {
                     now={nowTick}
                     onStart={() => handleStartItem(item.id)}
                     onPause={() => handlePauseItem(item.id)}
-                    onComplete={() => handleCompleteItem(item.id)}
+                    onArchive={() => handleArchiveItem(item.id)}
                   />
                 ))}
                 {todo.length > 0 && (
@@ -523,25 +501,10 @@ export function FloatingApp() {
                     key={`todo-${item.id}`}
                     item={item}
                     onStart={() => handleStartItem(item.id)}
-                    onComplete={() => handleCompleteItem(item.id)}
-                  />
-                ))}
-                {inbox.length > 0 && (
-                  <div className="px-2 pb-1 pt-1.5 text-[11px] font-medium text-text-3">
-                    收件箱
-                  </div>
-                )}
-                {inbox.map((item) => (
-                  <TaskCard
-                    key={`inbox-${item.id}`}
-                    item={item}
-                    isInbox
-                    onStart={() => handleStartItem(item.id)}
                     onArchive={() => handleArchiveItem(item.id)}
-                    onDelete={() => handleDeleteItem(item.id)}
                   />
                 ))}
-                {active.length === 0 && todo.length === 0 && inbox.length === 0 && (
+                {active.length === 0 && todo.length === 0 && (
                   <div className="px-2 py-2 text-[12px] text-text-2">
                     暂无任务，点「+」记一笔
                   </div>

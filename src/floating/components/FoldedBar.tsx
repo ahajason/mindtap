@@ -1,6 +1,6 @@
 // V0.2.1: 折叠态 = 进行中卡滚动展示(内容 + 实时计时) + 新增「+」入口。
 // 有进行中卡:每 2.5 秒轮换展示一张,「+N」指示其余卡;右侧「+」进入新增面板。
-// 无进行中卡:退化为「收件箱 N · [+]」计数条。
+// 无进行中卡:退化为「待办 N · [+]」计数条。
 // 实时时长由父级按 focus_ms + (now - last_active_at) 算好传入,本组件只展示 + 轮换。
 import { useEffect, useState } from "react";
 
@@ -11,7 +11,7 @@ type ActiveCardView = { content: string; focusMs: number };
 
 type FoldedBarProps = {
   activeCards: ActiveCardView[];
-  inboxCount: number;
+  todoCount: number;
   pendingCount: number;
   /** 右侧「+」→ 新增面板(compose) */
   onAdd: () => void;
@@ -23,7 +23,7 @@ const ROTATE_INTERVAL_MS = 2500;
 
 export function FoldedBar({
   activeCards,
-  inboxCount,
+  todoCount,
   pendingCount,
   onAdd,
   onOpenList,
@@ -50,11 +50,11 @@ export function FoldedBar({
         className="floating-status-bar"
         onClick={onOpenList}
         role="status"
-        aria-label={`Mindtap 工作台账，收件箱 ${inboxCount}`}
+        aria-label={`Mindtap 工作台账，待办 ${todoCount}`}
       >
         <StatusDot status="empty" size="sm" />
-        <span className="floating-status-title" title={`收件箱 ${inboxCount}`}>
-          收件箱 {inboxCount}
+        <span className="floating-status-title" title={`待办 ${todoCount}`}>
+          待办 {todoCount}
         </span>
         <span className="shrink-0 text-text-3">·</span>
         {pendingCount > 0 && (
@@ -86,7 +86,7 @@ export function FoldedBar({
       className="floating-status-bar"
       onClick={onOpenList}
       role="status"
-      aria-label={`Mindtap 工作台账，收件箱 ${inboxCount}，进行中 ${activeCount}，当前 ${card.content}`}
+      aria-label={`Mindtap 工作台账，待办 ${todoCount}，进行中 ${activeCount}，当前 ${card.content}`}
     >
       <StatusDot status="active" size="sm" />
       <span className="floating-status-title" title={card.content}>

@@ -1,10 +1,10 @@
 import { invoke as tauriInvoke } from "@tauri-apps/api/core";
 
 // V0.2.1: Item 统一实体取代 TimerSession(ADR-0011)。
-// 五态状态机:inbox/todo/active/done/archived;无独立 paused(暂停=退回 todo)。
+// 三态状态机:todo/active/archived(2026-08-02 决策——收件箱并入待办、完成并入归档)。
 // 计时后端主导:focus_ms 存已结算值,实时时长由前端按 (now - last_active_at) 推导,不写库(决策 9)。
 
-export type ItemStatus = "inbox" | "todo" | "active" | "done" | "archived";
+export type ItemStatus = "todo" | "active" | "archived";
 
 export type Item = {
   id: number;
@@ -77,7 +77,7 @@ export const api = {
       invoke<Item[]>("item_list_duplicate", { content }),
     getHistoryTitles: (limit?: number) =>
       invoke<TitleRec[]>("item_get_history_titles", { limit: limit ?? 5 }),
-    // V0.2.1 1.3 收进:收件箱整理 + 软删除 5 秒撤销 + 重新激活。
+    // V0.2.1 三态:整理动作 —— triageToTodo 仅 active→todo 兜底;triageArchive 待办直接归档。
     triageToTodo: (id: number) => invoke<Item>("item_triage_todo", { id }),
     triageArchive: (id: number) => invoke<Item>("item_triage_archive", { id }),
     softDelete: (id: number) => invoke<Item>("item_soft_delete", { id }),

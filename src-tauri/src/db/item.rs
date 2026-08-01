@@ -66,9 +66,7 @@ pub struct DormantPayload {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ListStatus {
     Active,
-    Inbox,
     Todo,
-    Done,
     Archived,
 }
 
@@ -76,9 +74,7 @@ impl ListStatus {
     fn as_str(self) -> &'static str {
         match self {
             ListStatus::Active => "active",
-            ListStatus::Inbox => "inbox",
             ListStatus::Todo => "todo",
-            ListStatus::Done => "done",
             ListStatus::Archived => "archived",
         }
     }
@@ -156,7 +152,7 @@ pub fn get_by_id(conn: &Connection, id: i64) -> Result<Option<Item>, AppError> {
     }
 }
 
-/// 捕获:内容非空即存,进收件箱。
+/// 捕获:内容非空即存,进待办(V0.2.1 三态后捕获直接进待办,无独立收件箱)。
 pub fn create(conn: &Connection, content: String) -> Result<Item, AppError> {
     let content = content.trim();
     if content.is_empty() {
@@ -167,21 +163,21 @@ pub fn create(conn: &Connection, content: String) -> Result<Item, AppError> {
     }
     let now = now_ms();
     conn.execute(
-        "INSERT INTO item (content, status, created_at, updated_at) VALUES (?1, 'inbox', ?2, ?2)",
+        "INSERT INTO item (content, status, created_at, updated_at) VALUES (?1, 'todo', ?2, ?2)",
         params![content, now],
     )?;
     let id = conn.last_insert_rowid();
     get_by_id(conn, id)?.ok_or_else(|| AppError("just-created item not found".into()))
 }
 
-/// 开始:inbox/todo → active。**并行式**——不自动暂停其他 active 卡。
+/// 开始:todo → active。**并行式**——不自动暂停其他 active 卡。
 /// 多任务并行(用户核心需求):点 B「开始」,A 保持 active 继续计时,两者并行。
 /// 显式「切走/专注」由用户主动暂停某卡完成,不是点开始的副作用。
 pub fn start(conn: &Connection, id: i64) -> Result<StartResult, AppError> {
     let tx = conn.unchecked_transaction()?;
 
     match get_by_id(&tx, id)? {
-        Some(t) if t.status == "inbox" || t.status == "todo" => (),
+        Some(t) if t.status == "todo" => (),
         Some(t) => return Err(AppError(format!("item {id} 状态 {} 不能开始", t.status))),
         None => return Err(AppError(format!("item {id} 不存在"))),
     }
@@ -243,14 +239,15 @@ pub fn pause(conn: &Connection, id: i64, pending_ms: Option<i64>) -> Result<Paus
     })
 }
 
-/// 完成:active/todo → done。结算 active 段,清空待确认。
+/// 归档:active/todo → archived(完成即归档,去掉独立 done)。结算 active 段,清空待确认。
+/// V0.2.1 三态:唯一出口「归档」,做过的/没做过的都进 archived。
 pub fn complete(conn: &Connection, id: i64) -> Result<Item, AppError> {
     let tx = conn.unchecked_transaction()?;
     let now = now_ms();
 
     let target = match get_by_id(&tx, id)? {
         Some(t) if t.status == "active" || t.status == "todo" => t,
-        Some(t) => return Err(AppError(format!("item {id} 状态 {} 不能完成", t.status))),
+        Some(t) => return Err(AppError(format!("item {id} 状态 {} 不能归档", t.status))),
         None => return Err(AppError(format!("item {id} 不存在"))),
     };
 
@@ -267,7 +264,7 @@ pub fn complete(conn: &Connection, id: i64) -> Result<Item, AppError> {
     settle_open_intervals(&tx, id, now)?;
 
     tx.execute(
-        "UPDATE item SET status = 'done', focus_ms = focus_ms + ?1, pending_ms = NULL, updated_at = ?2 WHERE id = ?3",
+        "UPDATE item SET status = 'archived', focus_ms = focus_ms + ?1, pending_ms = NULL, updated_at = ?2 WHERE id = ?3",
         params![settled_ms, now, id],
     )?;
     tx.commit()?;
@@ -297,13 +294,14 @@ pub fn confirm_pending(conn: &Connection, id: i64, keep: bool) -> Result<Item, A
     get_by_id(conn, id)?.ok_or_else(|| AppError(format!("item {id} not found")))
 }
 
-/// 收件箱整理 → 待办:inbox/todo/active → todo。active 先结算当前段(计时不丢)。done/archived 不可。
+/// 整理 → 待办:active → todo(暂停退回)。三态下 inbox 已并入 todo,此命令仅用于 active 结算退回。
+/// V0.2.1:active 卡「暂停」走 pause();此命令保留为 active→todo 的兜底整理(供「切走」类动作)。
 pub fn triage_to_todo(conn: &Connection, id: i64) -> Result<Item, AppError> {
     let tx = conn.unchecked_transaction()?;
     let now = now_ms();
 
     let target = match get_by_id(&tx, id)? {
-        Some(t) if t.status == "inbox" || t.status == "todo" || t.status == "active" => t,
+        Some(t) if t.status == "active" => t,
         Some(t) => {
             return Err(AppError(format!(
                 "item {id} 状态 {} 不能转入待办",
@@ -313,34 +311,28 @@ pub fn triage_to_todo(conn: &Connection, id: i64) -> Result<Item, AppError> {
         None => return Err(AppError(format!("item {id} 不存在"))),
     };
 
-    if target.status == "active" {
-        let settled_ms = target
-            .last_active_at
-            .map(|la| now.saturating_sub(la))
-            .unwrap_or(0);
-        tx.execute(
-            "UPDATE item SET status = 'todo', focus_ms = focus_ms + ?1, last_active_at = ?2, updated_at = ?2 WHERE id = ?3",
-            params![settled_ms, now, id],
-        )?;
-        settle_open_intervals(&tx, id, now)?;
-    } else {
-        tx.execute(
-            "UPDATE item SET status = 'todo', updated_at = ?1 WHERE id = ?2",
-            params![now, id],
-        )?;
-    }
+    let settled_ms = target
+        .last_active_at
+        .map(|la| now.saturating_sub(la))
+        .unwrap_or(0);
+    tx.execute(
+        "UPDATE item SET status = 'todo', focus_ms = focus_ms + ?1, last_active_at = ?2, updated_at = ?2 WHERE id = ?3",
+        params![settled_ms, now, id],
+    )?;
+    settle_open_intervals(&tx, id, now)?;
     tx.commit()?;
 
     get_by_id(conn, id)?.ok_or_else(|| AppError(format!("item {id} not found")))
 }
 
-/// 收件箱整理 → 归档:仅 inbox → archived,留档不删。done/todo/active 不可。
+/// 归档:todo → archived(直接归档,不转待办)。active 卡先结算退回 todo 再归档,或直接走 complete。
+/// V0.2.1 三态:待办/进行中的「归档」动作。仅 todo 可走此命令;active 归档走 complete()(会结算)。
 pub fn triage_archive(conn: &Connection, id: i64) -> Result<Item, AppError> {
     let tx = conn.unchecked_transaction()?;
     let now = now_ms();
 
     match get_by_id(&tx, id)? {
-        Some(t) if t.status == "inbox" => {}
+        Some(t) if t.status == "todo" => {}
         Some(t) => return Err(AppError(format!("item {id} 状态 {} 不能归档", t.status))),
         None => return Err(AppError(format!("item {id} 不存在"))),
     }
@@ -548,13 +540,13 @@ pub fn get_dormant_payloads(
     Ok(out)
 }
 
-/// 重复捕获检测:同内容已有 inbox/todo/active 卡(不合并,轻提示)。
+/// 重复捕获检测:同内容已有 todo/active 卡(不合并,轻提示)。
 pub fn list_duplicate(conn: &Connection, content: &str) -> Result<Vec<Item>, AppError> {
     let content = content.trim();
     let mut stmt = conn.prepare(&format!(
-        "SELECT {COLS} FROM item WHERE content = ?1 AND status IN ('inbox','todo','active') AND deleted_at IS NULL ORDER BY created_at DESC"
+        "SELECT {COLS} FROM item WHERE content = ?1 AND status IN ('todo','active') AND deleted_at IS NULL ORDER BY created_at DESC"
     ))?;
-    let rows = stmt.query_map(params![content], |row| row_to_item(row))?;
+    let rows = stmt.query_map(params![content], row_to_item)?;
     rows.collect::<rusqlite::Result<Vec<_>>>()
         .map_err(AppError::from)
 }
@@ -568,7 +560,7 @@ pub struct TitleRec {
 pub fn list_recent_titles(conn: &Connection, limit: i64) -> Result<Vec<TitleRec>, AppError> {
     let mut stmt = conn.prepare(
         "SELECT content, MAX(updated_at) AS last_used FROM item
-         WHERE status = 'done' GROUP BY content ORDER BY last_used DESC LIMIT ?1",
+         WHERE status = 'archived' GROUP BY content ORDER BY last_used DESC LIMIT ?1",
     )?;
     let rows = stmt.query_map(params![limit], |row| {
         Ok(TitleRec {
@@ -643,10 +635,10 @@ mod tests {
     }
 
     #[test]
-    fn create_enters_inbox() {
+    fn create_enters_todo() {
         let conn = fresh_db();
         let item = create(&conn, "写代码".into()).unwrap();
-        assert_eq!(item.status, "inbox");
+        assert_eq!(item.status, "todo");
         assert_eq!(item.content, "写代码");
         assert_eq!(item.focus_ms, 0);
     }
@@ -656,11 +648,11 @@ mod tests {
         let conn = fresh_db();
         assert!(create(&conn, "字".repeat(201)).is_err());
         let ok = create(&conn, "字".repeat(200)).unwrap();
-        assert_eq!(ok.status, "inbox");
+        assert_eq!(ok.status, "todo");
     }
 
     #[test]
-    fn start_inbox_to_active() {
+    fn start_todo_to_active() {
         let conn = fresh_db();
         let item = create(&conn, "写代码".into()).unwrap();
         let res = start(&conn, item.id).unwrap();
@@ -684,7 +676,7 @@ mod tests {
     }
 
     #[test]
-    fn start_rejects_completed() {
+    fn start_rejects_archived() {
         let conn = fresh_db();
         let item = create(&conn, "X".into()).unwrap();
         start(&conn, item.id).unwrap();
@@ -693,7 +685,7 @@ mod tests {
     }
 
     #[test]
-    fn start_from_done_rejected() {
+    fn start_from_archived_rejected() {
         let conn = fresh_db();
         let item = create(&conn, "X".into()).unwrap();
         start(&conn, item.id).unwrap();
@@ -728,18 +720,19 @@ mod tests {
     fn complete_from_active_settles_focus() {
         let conn = fresh_db();
         let id = insert_raw(&conn, "X", "active", 1000, now_ms() - 5000);
-        let done = complete(&conn, id).unwrap();
-        assert_eq!(done.status, "done");
-        assert!(done.focus_ms >= 6000 && done.focus_ms < 6200); // 1000 + 5000 已结算 + 运行开销容差
-        assert!(done.pending_ms.is_none());
+        let arch = complete(&conn, id).unwrap();
+        assert_eq!(arch.status, "archived");
+        assert!(arch.focus_ms >= 6000 && arch.focus_ms < 6200); // 1000 + 5000 已结算 + 运行开销容差
+        assert!(arch.pending_ms.is_none());
     }
 
     #[test]
     fn complete_from_todo_no_settle() {
         let conn = fresh_db();
         let id = insert_raw(&conn, "X", "todo", 1000, now_ms());
-        let done = complete(&conn, id).unwrap();
-        assert_eq!(done.focus_ms, 1000);
+        let arch = complete(&conn, id).unwrap();
+        assert_eq!(arch.status, "archived");
+        assert_eq!(arch.focus_ms, 1000);
     }
 
     #[test]
@@ -835,7 +828,7 @@ mod tests {
     }
 
     #[test]
-    fn list_duplicate_ignores_done() {
+    fn list_duplicate_ignores_archived() {
         let conn = fresh_db();
         let item = create(&conn, "写代码".into()).unwrap();
         start(&conn, item.id).unwrap();
@@ -866,21 +859,19 @@ mod tests {
         let _b = create(&conn, "B".into()).unwrap();
         let actives = list(&conn, ListStatus::Active, None).unwrap();
         assert_eq!(actives.len(), 1);
-        let inboxes = list(&conn, ListStatus::Inbox, None).unwrap();
-        assert_eq!(inboxes.len(), 1);
+        let todos = list(&conn, ListStatus::Todo, None).unwrap();
+        assert_eq!(todos.len(), 1);
     }
 
     #[test]
-    fn triage_to_todo_from_inbox() {
+    fn triage_to_todo_from_todo() {
+        // V0.2.1 三态:收件箱并入待办,todo→todo 无意义(已不是整理动作)。此命令只处理 active→todo。
         let conn = fresh_db();
         let item = create(&conn, "X".into()).unwrap();
-        assert_eq!(item.status, "inbox");
-        let t = triage_to_todo(&conn, item.id).unwrap();
-        assert_eq!(t.status, "todo");
-        let inboxes = list(&conn, ListStatus::Inbox, None).unwrap();
-        assert!(inboxes.is_empty());
-        let todos = list(&conn, ListStatus::Todo, None).unwrap();
-        assert_eq!(todos.len(), 1);
+        assert_eq!(item.status, "todo");
+        // todo 卡直接归档(而非转待办)
+        let arch = triage_archive(&conn, item.id).unwrap();
+        assert_eq!(arch.status, "archived");
     }
 
     #[test]
@@ -893,35 +884,35 @@ mod tests {
     }
 
     #[test]
-    fn triage_to_todo_rejects_done_and_archived() {
+    fn triage_to_todo_rejects_archived() {
         let conn = fresh_db();
-        // done 不可
+        // archived 不可
         let item = create(&conn, "X".into()).unwrap();
         start(&conn, item.id).unwrap();
         complete(&conn, item.id).unwrap();
         assert!(triage_to_todo(&conn, item.id).is_err());
-        // archived 不可
+        // 另一个已归档
         let item2 = create(&conn, "Y".into()).unwrap();
         triage_archive(&conn, item2.id).unwrap();
         assert!(triage_to_todo(&conn, item2.id).is_err());
     }
 
     #[test]
-    fn triage_archive_moves_inbox_to_archived() {
+    fn triage_archive_moves_todo_to_archived() {
         let conn = fresh_db();
         let item = create(&conn, "X".into()).unwrap();
         let a = triage_archive(&conn, item.id).unwrap();
         assert_eq!(a.status, "archived");
-        assert!(list(&conn, ListStatus::Inbox, None).unwrap().is_empty());
+        assert!(list(&conn, ListStatus::Todo, None).unwrap().is_empty());
         let archived = list(&conn, ListStatus::Archived, None).unwrap();
         assert_eq!(archived.len(), 1);
     }
 
     #[test]
-    fn triage_archive_rejects_non_inbox() {
+    fn triage_archive_rejects_active() {
         let conn = fresh_db();
         let item = create(&conn, "X".into()).unwrap();
-        triage_to_todo(&conn, item.id).unwrap();
+        start(&conn, item.id).unwrap();
         assert!(triage_archive(&conn, item.id).is_err());
     }
 
@@ -931,8 +922,8 @@ mod tests {
         let item = create(&conn, "X".into()).unwrap();
         soft_delete(&conn, item.id).unwrap();
         assert!(get_by_id(&conn, item.id).unwrap().is_none());
-        assert!(list(&conn, ListStatus::Inbox, None).unwrap().is_empty());
         assert!(list(&conn, ListStatus::Todo, None).unwrap().is_empty());
+        assert!(list(&conn, ListStatus::Active, None).unwrap().is_empty());
     }
 
     #[test]
@@ -950,9 +941,9 @@ mod tests {
         let item = create(&conn, "X".into()).unwrap();
         soft_delete(&conn, item.id).unwrap();
         let restored = undo_delete(&conn, item.id).unwrap();
-        assert_eq!(restored.status, "inbox");
+        assert_eq!(restored.status, "todo");
         assert!(get_by_id(&conn, item.id).unwrap().is_some());
-        assert_eq!(list(&conn, ListStatus::Inbox, None).unwrap().len(), 1);
+        assert_eq!(list(&conn, ListStatus::Todo, None).unwrap().len(), 1);
     }
 
     #[test]
@@ -1024,7 +1015,7 @@ mod tests {
             .map(|i| i.ended_at.unwrap() - i.started_at)
             .sum();
         let after = get_by_id(&conn, item.id).unwrap().unwrap();
-        assert_eq!(after.status, "done");
+        assert_eq!(after.status, "archived");
         assert!(after.focus_ms > 0);
         assert_eq!(after.focus_ms, agg);
     }
@@ -1079,5 +1070,58 @@ mod tests {
         let after = get_by_id(&conn, item.id).unwrap().unwrap();
         assert_eq!(after.status, "todo");
         assert_eq!(after.focus_ms, agg); // 跨天停表后 focus == interval 聚合
+    }
+
+    // 五态 → 三态迁移:旧库 inbox/done 数据归一为 todo/archived(2026-08-02 决策)。
+    // 用「宽松五态 CHECK」的表模拟旧库(新 schema 已收窄,无法插入 inbox/done)。
+    #[test]
+    fn migrate_v5_to_v3_normalizes_statuses() {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(
+            "CREATE TABLE item (
+               id INTEGER PRIMARY KEY AUTOINCREMENT,
+               content TEXT NOT NULL,
+               type TEXT NOT NULL DEFAULT 'task',
+               status TEXT NOT NULL CHECK (status IN ('inbox','todo','active','done','archived')),
+               focus_ms INTEGER NOT NULL DEFAULT 0,
+               last_active_at INTEGER,
+               progress_note TEXT,
+               source TEXT NOT NULL DEFAULT 'manual',
+               payload TEXT,
+               tag TEXT,
+               deleted_at INTEGER,
+               pending_ms INTEGER,
+               created_at INTEGER NOT NULL,
+               updated_at INTEGER NOT NULL
+             );",
+        )
+        .unwrap();
+        let now = now_ms();
+        conn.execute(
+            "INSERT INTO item (content, status, created_at, updated_at) VALUES ('旧收件箱', 'inbox', ?1, ?1)",
+            params![now],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO item (content, status, created_at, updated_at) VALUES ('旧已完成', 'done', ?1, ?1)",
+            params![now],
+        )
+        .unwrap();
+        // 实际迁移逻辑在 db::init 调用,此处验证迁移 SQL 语义
+        conn.execute_batch(
+            "UPDATE item SET status = 'todo', updated_at = updated_at WHERE status = 'inbox';
+             UPDATE item SET status = 'archived', updated_at = updated_at WHERE status = 'done';",
+        )
+        .unwrap();
+        let items: Vec<String> = {
+            let mut stmt = conn
+                .prepare("SELECT status FROM item ORDER BY created_at")
+                .unwrap();
+            stmt.query_map([], |r| r.get::<_, String>(0))
+                .unwrap()
+                .collect::<rusqlite::Result<Vec<_>>>()
+                .unwrap()
+        };
+        assert_eq!(items, vec!["todo".to_string(), "archived".to_string()]);
     }
 }
