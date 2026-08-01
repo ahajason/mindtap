@@ -38,20 +38,20 @@ describe("ExpandedPanel(保存 + 开始两按钮)", () => {
     expect(onStart).toHaveBeenCalledTimes(1);
   });
 
-  it("按 Enter 触发 onSave(进收件箱)", () => {
-    const onSave = vi.fn();
-    render(<ExpandedPanel {...baseProps} taskTitle="写代码" onSave={onSave} />);
+  it("按 Enter 触发 onStart(回车即开始)", () => {
+    const onStart = vi.fn();
+    render(<ExpandedPanel {...baseProps} taskTitle="写代码" onStart={onStart} />);
 
-    fireEvent.keyDown(screen.getByPlaceholderText(/做什么/), { key: "Enter" });
+    fireEvent.keyDown(screen.getByRole("textbox"), { key: "Enter" });
 
-    expect(onSave).toHaveBeenCalledTimes(1);
+    expect(onStart).toHaveBeenCalledTimes(1);
   });
 
   it("按 Escape 清空并折叠", () => {
     const onClearAndDismiss = vi.fn();
     render(<ExpandedPanel {...baseProps} onClearAndDismiss={onClearAndDismiss} />);
 
-    fireEvent.keyDown(screen.getByPlaceholderText(/做什么/), { key: "Escape" });
+    fireEvent.keyDown(screen.getByRole("textbox"), { key: "Escape" });
 
     expect(onClearAndDismiss).toHaveBeenCalledTimes(1);
   });

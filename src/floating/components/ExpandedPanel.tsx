@@ -36,9 +36,9 @@ export function ExpandedPanel(props: ExpandedPanelProps) {
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") {
-      // V0.2.1: 回车 = 保存(进待办),不直接开计时。
+      // V0.2.1: 回车 = 开始(捕获 + 直接计时)。用户期望快速进入,回车即开始。
       e.preventDefault();
-      onSave();
+      onStart();
     } else if (e.key === "Escape") {
       // V0.2.0.13 PATCH C-3: Esc 是用户显式取消意图, 清输入 + 折叠。
       e.preventDefault();

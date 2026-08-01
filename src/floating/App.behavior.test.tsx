@@ -100,7 +100,7 @@ describe("浮窗鼠标交互", () => {
       expect(invokeMock).toHaveBeenCalledWith("show_floating_context_menu", undefined);
     });
     expect(startDragging).not.toHaveBeenCalled();
-    expect(screen.queryByPlaceholderText(/做什么/)).toBeNull();
+    expect(screen.queryByPlaceholderText(/回车即开始/)).toBeNull();
     expect(screen.queryByRole("menu", { name: "浮窗右键菜单" })).toBeNull();
   });
 
@@ -110,7 +110,7 @@ describe("浮窗鼠标交互", () => {
     fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
     fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
 
-    expect(await screen.findByPlaceholderText(/做什么/)).toBeVisible();
+    expect(await screen.findByPlaceholderText(/回车即开始/)).toBeVisible();
   });
 
   it("左键移动超过 4px 启动原生拖动且不展开", async () => {
@@ -124,7 +124,7 @@ describe("浮窗鼠标交互", () => {
     fireEvent.mouseUp(document, { button: 0, clientX: 15, clientY: 10 });
 
     await waitFor(() => expect(startDragging).toHaveBeenCalledTimes(1));
-    expect(screen.queryByPlaceholderText(/做什么/)).toBeNull();
+    expect(screen.queryByPlaceholderText(/回车即开始/)).toBeNull();
   });
 
   it("展开态移动超过 4px 也启动原生拖动", async () => {
@@ -135,7 +135,7 @@ describe("浮窗鼠标交互", () => {
     const root = await screen.findByTestId("floating-root");
     fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
     fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
-    await screen.findByPlaceholderText(/做什么/);
+    await screen.findByPlaceholderText(/回车即开始/);
 
     fireEvent.mouseDown(root, { button: 0, clientX: 50, clientY: 50 });
     fireEvent.mouseMove(document, { clientX: 55, clientY: 55 });
@@ -151,7 +151,7 @@ describe("浮窗鼠标交互", () => {
     const root = await screen.findByTestId("floating-root");
     fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
     fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
-    await screen.findByPlaceholderText(/做什么/);
+    await screen.findByPlaceholderText(/回车即开始/);
 
     fireEvent.mouseDown(root, { button: 0, clientX: 20, clientY: 20 });
     fireEvent.mouseMove(document, { clientX: 25, clientY: 20 });
@@ -159,7 +159,7 @@ describe("浮窗鼠标交互", () => {
 
     fireEvent.blur(window);
 
-    expect(screen.getByPlaceholderText(/做什么/)).toBeVisible();
+    expect(screen.getByPlaceholderText(/回车即开始/)).toBeVisible();
     expect(screen.getByRole("button", { name: "开始" })).toBeVisible();
     expect(screen.getByRole("button", { name: "保存" })).toBeVisible();
     expect(root.className).toContain("expanded");
@@ -183,7 +183,7 @@ describe("浮窗任务关键路径", () => {
     expect(await screen.findByText("回邮件")).toBeVisible();
     expect(screen.getByText("接口写完")).toBeVisible();
     expect(screen.getByRole("button", { name: /开始/ })).toBeVisible();
-    expect(screen.queryByPlaceholderText(/做什么/)).toBeNull();
+    expect(screen.queryByPlaceholderText(/回车即开始/)).toBeNull();
   });
 
   it("待办项点开始 → 调 item_start", async () => {
@@ -213,7 +213,7 @@ describe("浮窗任务关键路径", () => {
     fireEvent.click(addBtn);
 
     // 进入 compose 输入面板,而非并行列表
-    expect(await screen.findByPlaceholderText(/做什么/)).toBeVisible();
+    expect(await screen.findByPlaceholderText(/回车即开始/)).toBeVisible();
     expect(screen.queryByText("回邮件")).toBeNull();
   });
 
@@ -226,7 +226,7 @@ describe("浮窗任务关键路径", () => {
     fireEvent.click(status);
 
     expect(await screen.findByText("回邮件")).toBeVisible();
-    expect(screen.queryByPlaceholderText(/做什么/)).toBeNull();
+    expect(screen.queryByPlaceholderText(/回车即开始/)).toBeNull();
   });
 
   it("无卡时空展开显示输入面板", async () => {
@@ -236,7 +236,7 @@ describe("浮窗任务关键路径", () => {
     fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
     fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
 
-    expect(await screen.findByPlaceholderText(/做什么/)).toBeVisible();
+    expect(await screen.findByPlaceholderText(/回车即开始/)).toBeVisible();
   });
 
   it("开始 → item_create + item_start，进入 list 显示新卡(不折叠)", async () => {
@@ -246,7 +246,7 @@ describe("浮窗任务关键路径", () => {
     const root = await screen.findByTestId("floating-root");
     fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
     fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
-    const input = await screen.findByPlaceholderText(/做什么/);
+    const input = await screen.findByPlaceholderText(/回车即开始/);
 
     fireEvent.change(input, { target: { value: "写代码" } });
     fireEvent.click(screen.getByRole("button", { name: "开始" }));
@@ -269,7 +269,7 @@ describe("浮窗任务关键路径", () => {
     const root = await screen.findByTestId("floating-root");
     fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
     fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
-    const input = await screen.findByPlaceholderText(/做什么/);
+    const input = await screen.findByPlaceholderText(/回车即开始/);
 
     fireEvent.change(input, { target: { value: "写代码" } });
     fireEvent.click(screen.getByRole("button", { name: "保存" }));
@@ -442,13 +442,13 @@ describe("新增面板取消回落", () => {
     render(<FloatingApp />);
     await screen.findByText("整理窗口样式");
     fireEvent.click(screen.getByRole("button", { name: "新增任务" }));
-    await screen.findByPlaceholderText(/做什么/);
+    await screen.findByPlaceholderText(/回车即开始/);
 
     fireEvent.keyDown(document, { key: "Escape" });
 
     const root = screen.getByTestId("floating-root");
     await waitFor(() => expect(root.className).toContain("folded"));
-    expect(screen.queryByPlaceholderText(/做什么/)).toBeNull();
+    expect(screen.queryByPlaceholderText(/回车即开始/)).toBeNull();
   });
 
   it("列表中快捷键唤起 compose,Esc 取消 → 回落列表", async () => {
@@ -464,16 +464,16 @@ describe("新增面板取消回落", () => {
     // 折叠条主体点击 → 进并行列表
     fireEvent.click(screen.getByRole("status"));
     await screen.findByText("回邮件");
-    expect(screen.queryByPlaceholderText(/做什么/)).toBeNull();
+    expect(screen.queryByPlaceholderText(/回车即开始/)).toBeNull();
 
     // 快捷键捕获意图 → 新增面板(从列表进)
     act(() => captureHandler?.({ event: "floating:capture", id: 0, payload: undefined }));
-    await screen.findByPlaceholderText(/做什么/);
+    await screen.findByPlaceholderText(/回车即开始/);
 
     // Esc 取消 → 回落列表,不收起
     fireEvent.keyDown(document, { key: "Escape" });
     await waitFor(() => expect(screen.getByText("回邮件")).toBeVisible());
-    expect(screen.queryByPlaceholderText(/做什么/)).toBeNull();
+    expect(screen.queryByPlaceholderText(/回车即开始/)).toBeNull();
     expect(screen.getByTestId("floating-root").className).toContain("expanded");
   });
 });
