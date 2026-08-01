@@ -138,7 +138,7 @@ mod tests {
     #[test]
     fn scan_pauses_stale_active_and_keeps_fresh() {
         let conn = fresh_db();
-        let now = item::now_ms_for_cmd();
+        let now = crate::db::time::now_ms();
         let stale = insert_active(&conn, "老任务", now - 20 * 60 * 1000);
         let fresh = insert_active(&conn, "新任务", now - 1000);
 
@@ -158,7 +158,7 @@ mod tests {
     #[test]
     fn scan_skips_when_idle_unknown() {
         let conn = fresh_db();
-        let now = item::now_ms_for_cmd();
+        let now = crate::db::time::now_ms();
         let stale = insert_active(&conn, "老任务", now - 20 * 60 * 1000);
         let paused = scan_and_auto_pause(&conn, None, now).unwrap();
         assert!(paused.is_empty());

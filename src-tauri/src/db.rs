@@ -6,9 +6,11 @@ use tauri::{AppHandle, Manager};
 use crate::db::schema::CREATE_SQL;
 use crate::error::AppError;
 
+pub mod dormant;
 pub mod item;
 pub mod schema;
 pub mod setting;
+pub mod time;
 
 pub struct DbState(pub Mutex<Connection>);
 

@@ -129,12 +129,12 @@ pub fn run() {
                     // ponytail: 启动一次即可(PRD 跨天停表);空闲自动暂停是周期轮询,见下方 V0.2.1 线程。
                     let app_handle = app.handle().clone();
                     std::thread::spawn(move || {
-                        let now = crate::db::item::now_ms_for_cmd();
+                        let now = crate::db::time::now_ms();
                         let result = {
                         let state = app_handle.state::<crate::db::DbState>();
                         let conn = state.0.lock().map_err(|e| crate::error::AppError(e.to_string()));
                         match conn {
-                            Ok(conn) => crate::db::item::settle_dormant(&conn, now),
+                            Ok(conn) => crate::db::dormant::settle_dormant(&conn, now),
                             Err(e) => Err(e),
                         }
                         };
@@ -143,7 +143,7 @@ pub fn run() {
                                 let state = app_handle.state::<crate::db::DbState>();
                                 let conn = state.0.lock().map_err(|e| crate::error::AppError(e.to_string()));
                                 if let Ok(conn) = conn {
-                                    if let Ok(payloads) = crate::db::item::get_dormant_payloads(
+                                    if let Ok(payloads) = crate::db::dormant::get_dormant_payloads(
                                         &conn,
                                         &dormant.has_pending,
                                     ) {
@@ -163,7 +163,7 @@ pub fn run() {
                     std::thread::spawn(move || loop {
                         std::thread::sleep(std::time::Duration::from_secs(30));
                         let idle = crate::idle::last_input_ms();
-                        let now = crate::db::item::now_ms_for_cmd();
+                        let now = crate::db::time::now_ms();
                         let paused = {
                             let state = app_handle.state::<crate::db::DbState>();
                             let result = match state.0.lock() {

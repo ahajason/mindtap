@@ -3,9 +3,11 @@
 
 use tauri::State;
 
+use crate::db::dormant::{self, DormantPayload};
 use crate::db::item::{
-    self, DormantPayload, FocusInterval, Item, ListStatus, PauseResult, StartResult,
+    self, FocusInterval, Item, ListStatus, PauseResult, StartResult,
 };
+use crate::db::time;
 use crate::db::DbState;
 use crate::error::AppError;
 
@@ -102,9 +104,9 @@ pub fn item_undo_delete(id: i64, state: State<DbState>) -> Result<Item, AppError
 #[tauri::command]
 pub fn item_check_dormant(state: State<DbState>) -> Result<Vec<DormantPayload>, AppError> {
     let conn = state.0.lock().map_err(|e| AppError(e.to_string()))?;
-    let now = item::now_ms_for_cmd();
-    let dormant = item::settle_dormant(&conn, now)?;
-    item::get_dormant_payloads(&conn, &dormant.has_pending)
+    let now = time::now_ms();
+    let dormant = dormant::settle_dormant(&conn, now)?;
+    dormant::get_dormant_payloads(&conn, &dormant.has_pending)
 }
 
 /// 重复捕获检测:同内容已有 todo/active 卡(轻提示,不合并)
@@ -129,7 +131,7 @@ pub fn item_list_intervals(
 #[tauri::command]
 pub fn item_get_idle(state: State<DbState>) -> Result<bool, AppError> {
     let idle = crate::idle::last_input_ms();
-    let now = item::now_ms_for_cmd();
+    let now = time::now_ms();
     let conn = state.0.lock().map_err(|e| AppError(e.to_string()))?;
     let actives = item::list(&conn, ListStatus::Active, None)?;
     Ok(actives
