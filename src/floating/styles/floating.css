@@ -66,22 +66,6 @@
   animation: card-slide-in 400ms ease-out both;
 }
 
-/* V0.2.1 折叠条计时数字:与卡轮换动效一致(下方滑入 + 淡入,400ms),整体缓一点。 */
-@keyframes timer-slide-in {
-  0% {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-timer-slide-in {
-  animation: timer-slide-in 400ms ease-out both;
-}
-
 :root {
   font-family: system-ui, sans-serif;
   background: transparent;
