@@ -127,8 +127,8 @@ git-fetch-with-cli = true
 ## 文件归位（来自 CLAUDE.md）
 | 内容类型 | 去处 |
 |---|---|
-| 新功能「做什么」 | `docs/specs/YYYY-MM-DD-<topic>-design.md` |
-| 新功能「怎么做」 | `docs/plans/YYYY-MM-DD-<topic>.md` |
+| 新功能「做什么」 | `docs/design/<version>-<feature>-design.md`（L3 视觉/交互）；纯业务去 `docs/prd/` |
+| 新功能「怎么做」 | `docs/plans/YYYY-MM-DD-<version>-<feature>.md`（L4） |
 | 阶段交付报告 | `docs/reports/` |
 | 已交付版本完整沙盒 | `docs/archive/v<version>/` |
 | 任务正式档 | `docs/tasks/<version>-<type>-<short-desc>/task.md`（命名/模板见 `.claude/rules/task-directory.md`） |
