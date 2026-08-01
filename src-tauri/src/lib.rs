@@ -128,23 +128,17 @@ pub fn run() {
                     std::thread::spawn(move || {
                         let now = crate::db::item::now_ms_for_cmd();
                         let result = {
-                            let conn = app_handle
-                                .state::<crate::db::DbState>()
-                                .0
-                                .lock()
-                                .map_err(|e| crate::error::AppError(e.to_string()));
-                            match conn {
-                                Ok(conn) => crate::db::item::settle_dormant(&conn, now),
-                                Err(e) => Err(e),
-                            }
+                        let state = app_handle.state::<crate::db::DbState>();
+                        let conn = state.0.lock().map_err(|e| crate::error::AppError(e.to_string()));
+                        match conn {
+                            Ok(conn) => crate::db::item::settle_dormant(&conn, now),
+                            Err(e) => Err(e),
+                        }
                         };
                         if let Ok(dormant) = result {
                             if !dormant.has_pending.is_empty() {
-                                let conn = app_handle
-                                    .state::<crate::db::DbState>()
-                                    .0
-                                    .lock()
-                                    .map_err(|e| crate::error::AppError(e.to_string()));
+                                let state = app_handle.state::<crate::db::DbState>();
+                                let conn = state.0.lock().map_err(|e| crate::error::AppError(e.to_string()));
                                 if let Ok(conn) = conn {
                                     if let Ok(payloads) = crate::db::item::get_dormant_payloads(
                                         &conn,

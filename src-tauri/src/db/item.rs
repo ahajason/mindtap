@@ -1,4 +1,4 @@
-// 深模块 ItemRepo —— 藏住整个五态状态机 + 结算 + 失真闭环。
+﻿// 深模块 ItemRepo —— 藏住整个五态状态机 + 结算 + 失真闭环。
 // 外部 seam: create / start / pause / complete / confirm_pending / list / settle_dormant / list_duplicate。
 // 状态转换正确性(零成本切换 / focus_ms 只增不减 / 跨天停表 / 待确认结算)全部在此模块事务内原子完成。
 // 前端与 commands 层只发意图,不持有状态机。
@@ -141,12 +141,11 @@ pub fn create(conn: &Connection, content: String) -> Result<Item, AppError> {
 pub fn start(conn: &Connection, id: i64) -> Result<StartResult, AppError> {
     let tx = conn.unchecked_transaction()?;
 
-    let target = get_by_id(&tx, id)?;
-    let target = match target {
-        Some(t) if t.status == "inbox" || t.status == "todo" => t,
+    match get_by_id(&tx, id)? {
+        Some(t) if t.status == "inbox" || t.status == "todo" => (),
         Some(t) => return Err(AppError(format!("item {id} 状态 {} 不能开始", t.status))),
         None => return Err(AppError(format!("item {id} 不存在"))),
-    };
+    }
 
     // 零成本切换:所有其他 active → todo(结算)
     let now = now_ms();
@@ -187,8 +186,7 @@ pub fn pause(conn: &Connection, id: i64, pending_ms: Option<i64>) -> Result<Paus
     let tx = conn.unchecked_transaction()?;
     let now = now_ms();
 
-    let target = get_by_id(&tx, id)?;
-    let target = match target {
+    let target = match get_by_id(&tx, id)? {
         Some(t) if t.status == "active" => t,
         Some(t) => return Err(AppError(format!("item {id} 状态 {} 不能暂停", t.status))),
         None => return Err(AppError(format!("item {id} 不存在"))),
@@ -222,8 +220,7 @@ pub fn complete(conn: &Connection, id: i64) -> Result<Item, AppError> {
     let tx = conn.unchecked_transaction()?;
     let now = now_ms();
 
-    let target = get_by_id(&tx, id)?;
-    let target = match target {
+    let target = match get_by_id(&tx, id)? {
         Some(t) if t.status == "active" || t.status == "todo" => t,
         Some(t) => return Err(AppError(format!("item {id} 状态 {} 不能完成", t.status))),
         None => return Err(AppError(format!("item {id} 不存在"))),
@@ -252,8 +249,7 @@ pub fn confirm_pending(conn: &Connection, id: i64, keep: bool) -> Result<Item, A
     let tx = conn.unchecked_transaction()?;
     let now = now_ms();
 
-    let target = get_by_id(&tx, id)?;
-    let target = match target {
+    let target = match get_by_id(&tx, id)? {
         Some(t) if t.pending_ms.is_some() => t,
         Some(_) => return Err(AppError(format!("item {id} 无待确认窗口"))),
         None => return Err(AppError(format!("item {id} 不存在"))),
@@ -400,10 +396,6 @@ pub fn list_recent_titles(conn: &Connection, limit: i64) -> Result<Vec<TitleRec>
 
 // 本地时区"今天 0 点"毫秒。SQLite 无时区概念,用系统本地时区算自然日边界。
 fn local_day_start_ms(now: i64) -> i64 {
-    let secs = now / 1000;
-    let days = secs.div_euclid(86400);
-    // UTC 日边界
-    let utc_day_start = days * 86400 * 1000;
     // 用系统本地偏移近似(不引入 chrono 依赖)
     let local_offset_secs = local_utc_offset_secs(now);
     let local_now = now + local_offset_secs * 1000;
@@ -510,6 +502,7 @@ mod tests {
     fn start_rejects_completed() {
         let conn = fresh_db();
         let item = create(&conn, "X".into()).unwrap();
+        start(&conn, item.id).unwrap();
         complete(&conn, item.id).unwrap();
         assert!(start(&conn, item.id).is_err());
     }
@@ -518,6 +511,7 @@ mod tests {
     fn start_from_done_rejected() {
         let conn = fresh_db();
         let item = create(&conn, "X".into()).unwrap();
+        start(&conn, item.id).unwrap();
         complete(&conn, item.id).unwrap();
         assert!(start(&conn, item.id).is_err());
     }
@@ -551,7 +545,7 @@ mod tests {
         let id = insert_raw(&conn, "X", "active", 1000, now_ms() - 5000);
         let done = complete(&conn, id).unwrap();
         assert_eq!(done.status, "done");
-        assert_eq!(done.focus_ms, 6000); // 1000 + 5000 已结算
+        assert!(done.focus_ms >= 6000 && done.focus_ms < 6200); // 1000 + 5000 已结算 + 运行开销容差
         assert!(done.pending_ms.is_none());
     }
 
@@ -659,6 +653,7 @@ mod tests {
     fn list_duplicate_ignores_done() {
         let conn = fresh_db();
         let item = create(&conn, "写代码".into()).unwrap();
+        start(&conn, item.id).unwrap();
         complete(&conn, item.id).unwrap();
         let dup = list_duplicate(&conn, "写代码").unwrap();
         assert!(dup.is_empty());
@@ -668,8 +663,10 @@ mod tests {
     fn list_recent_titles_dedup() {
         let conn = fresh_db();
         let a = create(&conn, "写周报".into()).unwrap();
+        start(&conn, a.id).unwrap();
         complete(&conn, a.id).unwrap();
         let b = create(&conn, "写周报".into()).unwrap();
+        start(&conn, b.id).unwrap();
         complete(&conn, b.id).unwrap();
         let recs = list_recent_titles(&conn, 5).unwrap();
         assert_eq!(recs.len(), 1);
@@ -681,7 +678,7 @@ mod tests {
         let conn = fresh_db();
         let a = create(&conn, "A".into()).unwrap();
         start(&conn, a.id).unwrap();
-        let b = create(&conn, "B".into()).unwrap();
+        let _b = create(&conn, "B".into()).unwrap();
         let actives = list(&conn, ListStatus::Active, None).unwrap();
         assert_eq!(actives.len(), 1);
         let inboxes = list(&conn, ListStatus::Inbox, None).unwrap();
