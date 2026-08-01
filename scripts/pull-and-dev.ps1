@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Pull latest code + launch Tauri dev (one-shot).
     Windows-native PowerShell. Double-click via pull-and-dev.bat.
@@ -23,6 +23,10 @@ param(
 
 $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+
+# ---- proxy (GitHub SSH 在大陆不稳定, 走本地 HTTP 代理) ----
+$env:HTTP_PROXY = "http://127.0.0.1:7890"
+$env:HTTPS_PROXY = "http://127.0.0.1:7890"
 
 # ---- 1. git pull ----
 Write-Host "[pull-and-dev] git pull origin develop ..." -ForegroundColor Cyan
