@@ -1,8 +1,6 @@
-// 本文件 version label 已按 docs/governance/versioning-rule.md §三 retro-fit:
-// V0.2.3..V0.2.8 单一数字 / "patch" / Issue A/B/C/Bug 5 全部 → V0.2.0.1..V0.2.0.9。
-// 原 V0.2.x 标签含义(何时哪个 commit 修了什么真根因)见 governance §三 mapping 表,
-// 不要再 grep "V0.2.7 patch" 这种历史标签 — 找不到 commit。
-// V0.2.0.14 PATCH 架构变更(单一 root div,FoldedBar 永远渲染):见 fd38127 / a0fc00d。
+// V0.2.1: 浮窗三态折叠 → folded(计数条) / compose(捕获输入) / list(并行卡片列表)。
+// 取代旧单卡三态(folded/compose/controls)。
+// 拖动/位置记忆/dismiss/原生菜单等机制保留 V0.2.0 既有实现。
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { UnlistenFn } from "@tauri-apps/api/event";
@@ -14,48 +12,54 @@ import {
 } from "@tauri-apps/api/window";
 
 import { api } from "../lib/tauri-bridge";
-import { useActiveTask } from "./hooks/useActiveTask";
-import { useFocusTicker } from "./hooks/useFocusTicker";
-import { ControlRow } from "./components/ControlRow";
+import { useActiveTasks } from "./hooks/useActiveTasks";
 import { ExpandedPanel } from "./components/ExpandedPanel";
 import { FoldedBar } from "./components/FoldedBar";
+import { TaskCard } from "./components/TaskCard";
 
-type FloatingPresentation = "folded" | "compose" | "controls";
+type FloatingPresentation = "folded" | "compose" | "list";
 
 const FLOATING_SIZE: Record<FloatingPresentation, { w: number; h: number }> = {
   folded: { w: 360, h: 36 },
   compose: { w: 360, h: 280 },
-  controls: { w: 360, h: 96 },
+  list: { w: 360, h: 280 },
 };
 
-const TASK_TITLE_MAX = 50;
+const TASK_TITLE_MAX = 200;
+const WIP_SOFT_LIMIT = 5;
 
 // FRAME_W/H: 默认右上角位置 clamp 公式用, 折叠态物理窗口尺寸.
 const FRAME_W = 360;
 const FRAME_H = 36;
 const POS_MARGIN = 16;
-// V0.2.0.15 PATCH E-1 fix: 移除 DEFAULT_X/DEFAULT_Y 常量 (旧 fire-and-forget fallback 用,
-// 现 V0.2.0.15 失败时 console.error + 不调 setPosition, 保留 tauri.conf.json 默认位置 —
-// 比任意 (100, 60) 合理). 反模式 15 commit 谎改防御: 不再"假装"失败有 fallback.
 const POS_KEY = "floating-position";
 const DRAG_THRESHOLD_PX = 4;
 
+// 冷却档位:按 last_active_at 时间差派生(ADR-0012)。活跃/冷却/晾着 = 真实性衰减,非状态。
+function coldLevel(la: number | null | undefined, now: number): "cooling" | "stale" | undefined {
+  if (la == null) return undefined;
+  const diff = now - la;
+  if (diff > 24 * 3600 * 1000) return "stale";
+  if (diff > 2 * 3600 * 1000) return "cooling";
+  return undefined;
+}
+
 export function FloatingApp() {
-  const { session, setSession } = useActiveTask();
-  const liveFocusMs = useFocusTicker(session, 1000);
+  const { active, inbox, refresh } = useActiveTasks();
+  const [nowTick, setNowTick] = useState(() => Date.now());
 
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [taskTitle, setTaskTitle] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // 展开态默认:有卡 → list;空 → compose
+  const hasCards = active.length > 0 || inbox.length > 0;
   const presentation: FloatingPresentation = !isPanelOpen
     ? "folded"
-    : session
-      ? "controls"
+    : hasCards
+      ? "list"
       : "compose";
 
-  // V0.2.0.14 PATCH A-2 + B-2-1 + C-3: 单一 root div panelRef 覆盖整个 panel 区域 (FoldedBar + ExpandedPanel/ControlRow).
-  // 之前 V0.2.0.13 PATCH panelRef 只在 ExpandedPanel 内, FoldedBar 区域右键不覆盖 → dismissingRef=true → input blur → onDismiss → 折叠 (B-2-1 race).
-  // V0.2.0.14 把 panelRef 移到 root 上, 整个 root 都是 panel 内, document mousedown 在 panel 外才 dismiss.
   const panelRef = useRef<HTMLDivElement | null>(null);
 
   const dragRef = useRef<{
@@ -65,6 +69,12 @@ export function FloatingApp() {
     dragStarted: boolean;
     win: ReturnType<typeof getCurrentWindow> | null;
   } | null>(null);
+
+  // 每秒刷新 nowTick,驱动冷却档位变化
+  useEffect(() => {
+    const id = setInterval(() => setNowTick(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -76,7 +86,6 @@ export function FloatingApp() {
         if (presentation !== "folded") {
           const pos = await win.outerPosition();
           if (cancelled) return;
-          // V0.2.0.16 PATCH C-rust: 物理 resize 走自定义 rust command (不走 Tauri JS setSize IPC 中转).
           await invoke<void>("set_floating_size", { w, h });
           if (cancelled) return;
           await win.setPosition(new PhysicalPosition(pos.x, pos.y));
@@ -95,14 +104,7 @@ export function FloatingApp() {
     };
   }, [presentation]);
 
-  // V0.2.0.15 PATCH E-1 fix: 浮窗默认右上角 16px (V0.2.0.1 + V0.2.0.4 公式锁).
-  // 旧版 fire-and-forget 模式 (`void setDefaultAtRightBottom()`) 有 2 个真根因:
-  //   1. setPosition 跟 line 69-97 resize useEffect 的 setSize 并发执行, IPC 调度顺序不保证
-  //      setSize 在前 / setPosition 在后; 若 setSize 在后, Tauri 可能用默认 position 重置
-  //   2. availableMonitors() 失败时 catch 静默 fallback 到 (100, 60), 不是右上角
-  // 修法: 整个 useEffect 收成一个 async IIFE, await 所有串行 IPC; 起手 50ms 让 resize useEffect
-  // 先跑完 setSize; 失败时 console.error (不再静默 fallback 到 (100, 60)); cleanup 用 cancelled
-  // flag 防止 unmount 后还在调 setPosition.
+  // 位置记忆(保留 V0.2.0.15 实现)
   useEffect(() => {
     let cancelled = false;
     let unlisten: UnlistenFn | null = null;
@@ -116,8 +118,6 @@ export function FloatingApp() {
       }
       if (!win?.setPosition || !win?.onMoved) return;
 
-      // V0.2.0.15 E-1: 等待 resize useEffect (line 69-97) 完成 setSize, 避免 IPC 调度 race 让 setSize 覆盖 setPosition.
-      // 50ms 是实测够 resize useEffect 的 setSize IPC round-trip + React 重渲染; 不需要精确, 留 buffer.
       await new Promise((r) => setTimeout(r, 50));
       if (cancelled) return;
 
@@ -139,9 +139,6 @@ export function FloatingApp() {
         try {
           monitors = await availableMonitors();
         } catch (err) {
-          // V0.2.0.15 E-1: availableMonitors() 失败不再静默 fallback 到 (100, 60)
-          // (旧 fallback 是 V0.2.0.5 加的, 但放在 catch 里被指为"假修" — 反模式 15 commit 谎改).
-          // 现在: 失败时 console.error + 不调 setPosition (保留 tauri.conf.json 默认位置).
           console.error("[floating-position] availableMonitors failed", err);
           return;
         }
@@ -191,7 +188,6 @@ export function FloatingApp() {
           await setDefaultAtRightBottom();
         }
       } catch (err) {
-        // V0.2.0.15 E-1: 整个 init 流程失败不再静默 (旧 fire-and-forget 模式吞了所有错误)
         console.error("[floating-position] init failed", err);
       }
 
@@ -217,16 +213,13 @@ export function FloatingApp() {
   }, []);
 
   function handleMouseDown(e: React.MouseEvent<HTMLDivElement>) {
-    // V0.2.0.16 PATCH B: 展开态也允许拖 (user L3 实测期望).
-    if (e.button !== 0) return; // V0.2.0.6 A: 右键走原生 contextmenu capture, 不进 drag/toggle 路径.
+    if (e.button !== 0) return;
     if ((e.target as HTMLElement).closest("[data-no-expand], [data-close]")) return;
-    // V0.2.0.5 修: mousedown 时捕获 win, 4px 阈值后调 startDragging 让 OS 开始拖窗
-    // (V0.2.0.3/V0.2.0.4 反复声称"沿用 useDragLongPress.ts:49" 但代码里完全没调 IPC, 反模式 15 谎改)
     let win: ReturnType<typeof getCurrentWindow> | null = null;
     try {
       win = getCurrentWindow();
     } catch {
-      // dev / vitest 环境无 Tauri runtime, win 保持 null, 拖动仍可走纯前端逻辑 (虽然不生效)
+      // dev / vitest 环境无 Tauri runtime, win 保持 null
     }
     dragRef.current = {
       startX: e.clientX,
@@ -237,9 +230,6 @@ export function FloatingApp() {
     };
   }
 
-  // V0.2.0.12 PATCH: 右键调 Rust 原生 Menu IPC (popup_menu + OS HMENU, 独立浮窗外窗口)
-// V0.2.0.4 / V0.2.0.11 误用 HTML React 组件 + viewport-clamp 逻辑都拦不住浮窗 viewport 裁剪
-  // (HTML 元素跑在 WebView2 内, 物理上不可能 "独立窗口")
   async function onContextMenuCapture(e: MouseEvent) {
     if (e.button !== 2) return;
     e.preventDefault();
@@ -256,8 +246,6 @@ export function FloatingApp() {
       if (!dragRef.current?.isDragging) return;
       const dx = e.clientX - dragRef.current.startX;
       const dy = e.clientY - dragRef.current.startY;
-      // V0.2.0.5 修: 4px 阈值满足后调 win.startDragging() 让 OS 开始拖窗
-      // (只调一次, dragStarted 守防止重复触发)
       if (Math.hypot(dx, dy) >= DRAG_THRESHOLD_PX && !dragRef.current.dragStarted) {
         dragRef.current.dragStarted = true;
         try {
@@ -284,9 +272,6 @@ export function FloatingApp() {
     };
   }, []);
 
-  // V0.2.0.14 PATCH C-3: 拆 onCancel → 两个语义不同的 callback:
-  // - handleDismiss: 只折叠 (panel 外 mousedown 用), 保留 taskTitle state 让用户切回不丢输入
-  // - handleClearAndDismiss: 清 taskTitle + 折叠 (用户显式 "取消" button + Esc 用)
   const handleDismiss = useCallback(() => {
     setIsPanelOpen(false);
   }, []);
@@ -295,10 +280,6 @@ export function FloatingApp() {
     setIsPanelOpen(false);
   }, []);
 
-  // V0.2.0.14 PATCH C-3: document mousedown listener (替代 V0.2.0.13 PATCH input blur listener).
-  // panelRef 在 root div 上, 整个 root (FoldedBar + ExpandedPanel/ControlRow) 都是 panel 内.
-  // panel 外 mousedown → handleDismiss (折叠, taskTitle 保留). panel 内 mousedown → 不动.
-  // 比 input blur 更可靠: blur 在某些 race condition 下不触发 (e.g. panel 内 click 不抢 focus, 浮窗 win 切后台等).
   useEffect(() => {
     function onDocMouseDown(e: MouseEvent) {
       const node = panelRef.current;
@@ -313,7 +294,7 @@ export function FloatingApp() {
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape" && presentation === "controls") handleDismiss();
+      if (e.key === "Escape" && presentation !== "folded") handleDismiss();
     }
     function onWindowBlur() {
       if (dragRef.current?.dragStarted) {
@@ -331,18 +312,16 @@ export function FloatingApp() {
     };
   }, [presentation, handleDismiss]);
 
-  // V0.2.0.15 PATCH C-4: 不再用 session 变化自动折叠，避免创建会话时的异步 resize race。
-  // 开始与完成成功后，由各自的成功路径显式折叠。
-
+  // 捕获:内容非空即存,进收件箱(PRD 1.1 + 3.2 规则 1)
   async function handleStart() {
     const title = taskTitle.trim();
     if (!title || submitting) return;
     setSubmitting(true);
     try {
-      const created = await api.timerSession.create(title);
-      setSession(created);
+      await api.item.create(title);
       setTaskTitle("");
       setIsPanelOpen(false);
+      void refresh();
     } catch (err) {
       console.error("[start] failed", err);
     } finally {
@@ -350,21 +329,17 @@ export function FloatingApp() {
     }
   }
 
-  async function act(action: "pause" | "resume" | "complete") {
-    if (!session) return;
+  // 开始/切换:inbox/todo → active,零成本切换(后端事务把其他 active 退回 todo)
+  async function handleStartItem(id: number) {
     try {
-      const updated = await api.timerSession[action](session.id);
-      if (action === "complete") {
-        setSession(null);
-        setIsPanelOpen(false);
-        return;
-      }
-      setSession(updated);
+      await api.item.start(id);
+      void refresh();
     } catch (err) {
-      // 防御闪退: Tauri 2 unhandled promise rejection → React error boundary → tree unmount
-      console.error(`[act:${action}] failed`, err);
+      console.error("[item.start] failed", err);
     }
   }
+
+  const pendingCount = active.filter((a) => a.pending_ms != null).length;
 
   return (
     <div
@@ -375,22 +350,55 @@ export function FloatingApp() {
     >
       <div className="floating-content">
         <FoldedBar
-          taskTitle={session?.task_title ?? ""}
-          focusMs={liveFocusMs}
-          status={session ? session.status : "empty"}
+          inboxCount={inbox.length}
+          activeCount={active.length}
+          pendingCount={pendingCount}
           onClick={() => {
             if (presentation === "folded") setIsPanelOpen(true);
           }}
         />
         {presentation !== "folded" && (
           <div className="floating-body">
-            {presentation === "controls" ? (
-              <ControlRow
-                status={session!.status}
-                onPause={() => act("pause")}
-                onResume={() => act("resume")}
-                onComplete={() => act("complete")}
-              />
+            {presentation === "list" ? (
+              <div className="floating-list">
+                {active.length > WIP_SOFT_LIMIT && (
+                  <div className="px-2 pb-1 text-[12px] text-amber-600">
+                    在推进的事有点多
+                  </div>
+                )}
+                {inbox.map((item) => (
+                  <TaskCard
+                    key={`inbox-${item.id}`}
+                    item={item}
+                    isInbox
+                    onStart={() => handleStartItem(item.id)}
+                  />
+                ))}
+                {active.map((item) => (
+                  <TaskCard
+                    key={`active-${item.id}`}
+                    item={item}
+                    isInbox={false}
+                    cold={coldLevel(item.last_active_at, nowTick)}
+                    onStart={() => handleStartItem(item.id)}
+                  />
+                ))}
+                {inbox.length === 0 && active.length === 0 && (
+                  <div className="px-2 py-2 text-[12px] text-text-2">还没有任务</div>
+                )}
+                {active.length === 0 && inbox.length === 0 && (
+                  <div className="flex justify-end gap-2 px-2 pb-1">
+                    <button
+                      type="button"
+                      data-no-expand
+                      className="h-7 rounded-[8px] bg-primary px-3 text-[12px] font-semibold text-white"
+                      onClick={() => setIsPanelOpen(false)}
+                    >
+                      完成
+                    </button>
+                  </div>
+                )}
+              </div>
             ) : (
               <ExpandedPanel
                 taskTitle={taskTitle}

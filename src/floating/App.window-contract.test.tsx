@@ -3,16 +3,18 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 
 import { FloatingApp } from "./App";
-import type { TimerSession } from "../lib/tauri-bridge";
+import type { Item } from "../lib/tauri-bridge";
 
-const ACTIVE_SESSION: TimerSession = {
+const ACTIVE_ITEM: Item = {
   id: 1,
-  task_title: "整理窗口样式",
+  content: "整理窗口样式",
+  type: "task",
   status: "active",
-  started_at: 0,
-  paused_at: null,
-  completed_at: null,
   focus_ms: 0,
+  last_active_at: 0,
+  progress_note: null,
+  source: "manual",
+  pending_ms: null,
   created_at: 0,
   updated_at: 0,
 };
@@ -38,38 +40,37 @@ describe("浮窗生产契约", () => {
     expect(lib).toContain("commands::floating_cmd::set_floating_size");
   });
 
-  it("活动折叠态只显示一行，展开后才显示控制项", async () => {
+  it("活动折叠态只显示一行计数，展开后才显示并行列表", async () => {
     const { invoke } = await import("@tauri-apps/api/core");
     vi.mocked(invoke).mockImplementation(async (command: string) => {
-      if (command === "timer_session_get_active") return ACTIVE_SESSION;
+      if (command === "item_get_active") return [ACTIVE_ITEM];
+      if (command === "item_get_inbox") return [];
       return null;
     });
 
     render(<FloatingApp />);
     const root = await screen.findByTestId("floating-root");
-    await screen.findByText("整理窗口样式");
+    // 折叠态:计数条显示概览,不显示任务内容
+    await screen.findByText("进行中 1");
+    expect(screen.queryByText("整理窗口样式")).toBeNull();
 
     expect(root.className).toContain("folded");
-    expect(screen.queryByRole("button", { name: "暂停" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "完成" })).toBeNull();
+    expect(screen.queryByRole("button", { name: /开始/ })).toBeNull();
 
     fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
     fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
 
     await waitFor(() => expect(root.className).toContain("expanded"));
-    expect(screen.getByRole("button", { name: "暂停" })).toBeVisible();
-    expect(screen.getByRole("button", { name: "完成" })).toBeVisible();
-    expect(screen.queryByPlaceholderText(/做什么/)).toBeNull();
-    expect(screen.queryByRole("button", { name: "开始" })).toBeNull();
+    expect(screen.getByText("整理窗口样式")).toBeVisible();
   });
 
-  it("呈现状态声明折叠、创建和控制三项固定窗口几何", () => {
+  it("呈现状态声明折叠、创建和列表三项固定窗口几何", () => {
     const app = readFileSync("src/floating/App.tsx", "utf8");
 
-    expect(app).toContain('type FloatingPresentation = "folded" | "compose" | "controls"');
+    expect(app).toContain('type FloatingPresentation = "folded" | "compose" | "list"');
     expect(app).toMatch(/folded:\s*\{\s*w:\s*360,\s*h:\s*36\s*\}/);
     expect(app).toMatch(/compose:\s*\{\s*w:\s*360,\s*h:\s*280\s*\}/);
-    expect(app).toMatch(/controls:\s*\{\s*w:\s*360,\s*h:\s*96\s*\}/);
+    expect(app).toMatch(/list:\s*\{\s*w:\s*360,\s*h:\s*280\s*\}/);
   });
 
   it("折叠与展开复用固定几何的状态条，展开内容不改变状态条间距", () => {

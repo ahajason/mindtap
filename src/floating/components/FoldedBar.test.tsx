@@ -3,21 +3,28 @@ import { describe, expect, it } from "vitest";
 
 import { FoldedBar } from "./FoldedBar";
 
-describe("FoldedBar", () => {
-  it("活动任务显示标题、格式化计时和聚合状态语义", () => {
-    render(<FoldedBar taskTitle="写代码" focusMs={3_661_000} status="active" />);
+describe("FoldedBar(并行计数条)", () => {
+  it("显示收件箱数与活跃任务数", () => {
+    render(<FoldedBar inboxCount={3} activeCount={2} pendingCount={0} />);
 
-    expect(screen.getByText("写代码")).toBeVisible();
-    expect(screen.getByText("01:01:01")).toBeVisible();
+    expect(screen.getByText("收件箱 3")).toBeVisible();
+    expect(screen.getByText("进行中 2")).toBeVisible();
     expect(screen.getByRole("status")).toHaveAccessibleName(
-      "当前任务 写代码，已计时 01:01:01",
+      "Mindtap 工作台账，收件箱 3，进行中 2",
     );
   });
 
-  it("空闲状态提供未开始任务语义", () => {
-    render(<FoldedBar taskTitle="" focusMs={0} status="empty" />);
+  it("零活跃时显示为空", () => {
+    render(<FoldedBar inboxCount={0} activeCount={0} pendingCount={0} />);
 
-    expect(screen.getByText("未命名任务")).toBeVisible();
-    expect(screen.getByRole("status")).toHaveAccessibleName("Mindtap 计时器，未开始任务");
+    expect(screen.getByRole("status")).toHaveAccessibleName(
+      "Mindtap 工作台账，收件箱 0，进行中 0",
+    );
+  });
+
+  it("有待确认时折叠条显示待确认标记", () => {
+    render(<FoldedBar inboxCount={1} activeCount={1} pendingCount={2} />);
+
+    expect(screen.getByText("待确认 2")).toBeVisible();
   });
 });
