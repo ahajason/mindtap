@@ -313,7 +313,7 @@ pub fn settle_dormant(conn: &Connection, now: i64) -> Result<DormantResult, AppE
     drop(stmt);
     for id in day_cross {
         tx.execute(
-            "UPDATE item SET status = 'todo', focus_ms = focus_ms + (CASE WHEN last_active_at IS NOT NULL THEN ?1 - last_active_at ELSE 0 END), last_active_at = ?1, updated_at = ?1 WHERE id = ?2 AND status = 'active'",
+            "UPDATE item SET status = 'todo', focus_ms = focus_ms + (CASE WHEN last_active_at IS NOT NULL THEN ?1 - last_active_at ELSE 0 END), last_active_at = ?1, pending_ms = NULL, updated_at = ?1 WHERE id = ?2 AND status = 'active'",
             params![now, id],
         )?;
         if !paused.contains(&id) {
@@ -584,16 +584,19 @@ mod tests {
     }
 
     #[test]
-    fn settle_dormant_day_cross_returns_todo() {
+    fn settle_dormant_day_cross_returns_todo_and_clears_pending() {
         let conn = fresh_db();
-        // 昨天活跃的 active → 跨天退回(UTC 日边界近似)
+        // 昨天活跃的 active → 跨天退回(UTC 日边界近似);且清空已挂 pending_ms(避免双重结算)
         let now = now_ms();
         let yesterday = now - 25 * 3600 * 1000;
         let id = insert_raw(&conn, "X", "active", 0, yesterday);
+        conn.execute("UPDATE item SET pending_ms = 1000 WHERE id = ?1", params![id])
+            .unwrap();
         let res = settle_dormant(&conn, now).unwrap();
         assert!(res.paused.contains(&id));
         let after = get_by_id(&conn, id).unwrap().unwrap();
         assert_eq!(after.status, "todo");
+        assert_eq!(after.pending_ms, None);
     }
 
     #[test]
