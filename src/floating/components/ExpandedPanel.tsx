@@ -62,7 +62,7 @@ export function ExpandedPanel(props: ExpandedPanelProps) {
         <button
           type="button"
           data-no-expand
-          className="h-9 rounded-[10px] px-4 text-[13px] font-medium text-text-2 transition-colors hover:bg-white/40 hover:text-text-1 disabled:opacity-50"
+          className="h-8 rounded-[10px] px-4 text-[13px] font-medium text-text-2 transition-colors hover:bg-white/40 hover:text-text-1 disabled:opacity-50"
           onClick={onSave}
           disabled={empty || submitting}
         >
@@ -71,7 +71,7 @@ export function ExpandedPanel(props: ExpandedPanelProps) {
         <button
           type="button"
           data-no-expand
-          className="h-9 rounded-[10px] bg-primary px-4 text-[13px] font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover disabled:opacity-50"
+          className="h-8 rounded-[10px] bg-primary px-4 text-[13px] font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover disabled:opacity-50"
           onClick={onStart}
           disabled={empty || submitting}
         >
