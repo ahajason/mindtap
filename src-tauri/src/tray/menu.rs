@@ -39,20 +39,8 @@ pub fn build_main_menu(app: &AppHandle, state: &MenuState) -> tauri::Result<Menu
     } else {
         "显示主窗"
     };
-    let floating = MenuItem::with_id(
-        app,
-        ID_FLOATING_TOGGLE,
-        floating_label,
-        true,
-        None::<&str>,
-    )?;
-    let main = MenuItem::with_id(
-        app,
-        ID_MAIN_TOGGLE,
-        main_label,
-        true,
-        None::<&str>,
-    )?;
+    let floating = MenuItem::with_id(app, ID_FLOATING_TOGGLE, floating_label, true, None::<&str>)?;
+    let main = MenuItem::with_id(app, ID_MAIN_TOGGLE, main_label, true, None::<&str>)?;
     let sep1 = PredefinedMenuItem::separator(app)?;
     let autostart = CheckMenuItem::with_id(
         app,
@@ -65,10 +53,7 @@ pub fn build_main_menu(app: &AppHandle, state: &MenuState) -> tauri::Result<Menu
     let sep2 = PredefinedMenuItem::separator(app)?;
     let quit = MenuItem::with_id(app, ID_QUIT, "退出 Mindtap", true, None::<&str>)?;
 
-    Menu::with_items(
-        app,
-        &[&floating, &main, &sep1, &autostart, &sep2, &quit],
-    )
+    Menu::with_items(app, &[&floating, &main, &sep1, &autostart, &sep2, &quit])
 }
 
 /// 由 window.on_menu_event 回调;按 menu id 路由到具体动作。

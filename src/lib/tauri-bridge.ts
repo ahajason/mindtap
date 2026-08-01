@@ -36,6 +36,14 @@ export type DormantPayload = {
   pending_ms: number;
 };
 
+// V0.2.1 3.3: 激活日志明细(一次 start → 结算)。ended_at null = 进行中。
+export type FocusInterval = {
+  id: number;
+  item_id: number;
+  started_at: number;
+  ended_at: number | null;
+};
+
 export type TitleRec = {
   content: string;
   last_used: number;
@@ -69,5 +77,16 @@ export const api = {
       invoke<Item[]>("item_list_duplicate", { content }),
     getHistoryTitles: (limit?: number) =>
       invoke<TitleRec[]>("item_get_history_titles", { limit: limit ?? 5 }),
+    // V0.2.1 1.3 收进:收件箱整理 + 软删除 5 秒撤销 + 重新激活。
+    triageToTodo: (id: number) => invoke<Item>("item_triage_todo", { id }),
+    triageArchive: (id: number) => invoke<Item>("item_triage_archive", { id }),
+    softDelete: (id: number) => invoke<Item>("item_soft_delete", { id }),
+    reactivate: (id: number) => invoke<Item>("item_reactivate", { id }),
+    undoDelete: (id: number) => invoke<Item>("item_undo_delete", { id }),
+    // V0.2.1 1.4 收进:空闲检测(当前是否有 active 卡空闲超自动暂停阈值,供前端显示"自动暂停"标识)。
+    getIdle: () => invoke<boolean>("item_get_idle"),
+    // V0.2.1 3.3: 某卡的激活明细。
+    listIntervals: (itemId: number) =>
+      invoke<FocusInterval[]>("item_list_intervals", { itemId }),
   },
 };

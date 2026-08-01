@@ -1,5 +1,6 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { describe, expect, it, vi } from "vitest";
 
 import { FloatingApp } from "./App";
@@ -33,11 +34,26 @@ const INBOX_ITEM: Item = {
   updated_at: 0,
 };
 
-function mockData(active: Item[], inbox: Item[]) {
+const TODO_ITEM: Item = {
+  id: 3,
+  content: "整理文档",
+  type: "task",
+  status: "todo",
+  focus_ms: 0,
+  last_active_at: null,
+  progress_note: "补充第 3 节",
+  source: "manual",
+  pending_ms: null,
+  created_at: 0,
+  updated_at: 0,
+};
+
+function mockData(active: Item[], inbox: Item[], todo: Item[] = []) {
   const inboxState = [...inbox];
   vi.mocked(invoke).mockImplementation(async (command: string, args) => {
     if (command === "item_get_active") return active;
     if (command === "item_get_inbox") return inboxState;
+    if (command === "item_get_todo") return todo;
     // 捕获成功 → inbox 追加新卡(贴近真实 create 后行为)
     if (
       command === "item_create" &&
@@ -145,28 +161,27 @@ describe("浮窗鼠标交互", () => {
 
     expect(screen.getByPlaceholderText(/做什么/)).toBeVisible();
     expect(screen.getByRole("button", { name: "开始" })).toBeVisible();
-    expect(screen.getByRole("button", { name: "取消" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "保存" })).toBeVisible();
     expect(root.className).toContain("expanded");
   });
 });
 
 describe("浮窗任务关键路径", () => {
-  it("有进行中卡时展开为并行列表,显示卡内容/备注/收件箱开始按钮", async () => {
+  it("有进行中卡时折叠条滚动展示卡内容，展开后显示并行列表", async () => {
     mockData([ACTIVE_ITEM], [INBOX_ITEM]);
     render(<FloatingApp />);
     const root = await screen.findByTestId("floating-root");
-    // 折叠态:计数条显示概览,不显示任务内容
-    await screen.findByText("收件箱 1");
-    expect(screen.getByText("进行中 1")).toBeVisible();
-    expect(screen.queryByText("整理窗口样式")).toBeNull();
+    // 折叠态:一行展示进行中卡内容(滚动),不显示并行列表
+    expect(await screen.findByText("整理窗口样式")).toBeVisible();
+    expect(screen.queryByText("回邮件")).toBeNull();
+    expect(root.className).toContain("folded");
 
     fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
     fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
 
-    // 展开态:收件箱项显示"开始"按钮,进行中卡显示内容/备注
-    expect(await screen.findByText("整理窗口样式")).toBeVisible();
+    // 展开态:并行列表显示收件箱项 + 进行中卡备注 + 收件箱开始按钮
+    expect(await screen.findByText("回邮件")).toBeVisible();
     expect(screen.getByText("接口写完")).toBeVisible();
-    expect(screen.getByText("回邮件")).toBeVisible();
     expect(screen.getByRole("button", { name: /开始/ })).toBeVisible();
     expect(screen.queryByPlaceholderText(/做什么/)).toBeNull();
   });
@@ -188,12 +203,30 @@ describe("浮窗任务关键路径", () => {
     });
   });
 
-  it("折叠条显示收件箱数与进行中数", async () => {
+  it("折叠条「+」进入新增面板(compose)", async () => {
     mockData([ACTIVE_ITEM], [INBOX_ITEM]);
     render(<FloatingApp />);
+    // 等待刷新完成(折叠条进入进行中卡滚动态)后再点「+」,避免点到刷新前临时节点
+    await screen.findByText("整理窗口样式");
+    const addBtn = screen.getByRole("button", { name: "新增任务" });
 
-    expect(await screen.findByText("收件箱 1")).toBeVisible();
-    expect(screen.getByText("进行中 1")).toBeVisible();
+    fireEvent.click(addBtn);
+
+    // 进入 compose 输入面板,而非并行列表
+    expect(await screen.findByPlaceholderText(/做什么/)).toBeVisible();
+    expect(screen.queryByText("回邮件")).toBeNull();
+  });
+
+  it("折叠条内容区点击进入并行列表(list)", async () => {
+    mockData([ACTIVE_ITEM], [INBOX_ITEM]);
+    render(<FloatingApp />);
+    await screen.findByText("整理窗口样式");
+    const status = screen.getByRole("status");
+
+    fireEvent.click(status);
+
+    expect(await screen.findByText("回邮件")).toBeVisible();
+    expect(screen.queryByPlaceholderText(/做什么/)).toBeNull();
   });
 
   it("无卡时空展开显示输入面板", async () => {
@@ -206,7 +239,7 @@ describe("浮窗任务关键路径", () => {
     expect(await screen.findByPlaceholderText(/做什么/)).toBeVisible();
   });
 
-  it("捕获后调 item_create 并进入 list 显示新卡(不折叠)", async () => {
+  it("开始 → item_create + item_start，进入 list 显示新卡(不折叠)", async () => {
     mockData([], []);
     const invokeMock = vi.mocked(invoke);
     render(<FloatingApp />);
@@ -221,11 +254,34 @@ describe("浮窗任务关键路径", () => {
     await waitFor(() => {
       expect(invokeMock).toHaveBeenCalledWith("item_create", { content: "写代码" });
     });
-    // V0.2.1 QA 补全:捕获后进入 list 显示新卡,不折叠(消除"任务去哪了"困惑)
+    // 开始 = 捕获 + 直接计时:先落库再切换 active;进入 list 显示新卡,不折叠
     await waitFor(() => {
+      expect(invokeMock).toHaveBeenCalledWith("item_start", { id: 100 });
       expect(root.className).toContain("expanded");
       expect(screen.getByText("写代码")).toBeVisible();
     });
+  });
+
+  it("保存 → item_create 进收件箱并收起(折叠回状态条)", async () => {
+    mockData([], []);
+    const invokeMock = vi.mocked(invoke);
+    render(<FloatingApp />);
+    const root = await screen.findByTestId("floating-root");
+    fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
+    fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
+    const input = await screen.findByPlaceholderText(/做什么/);
+
+    fireEvent.change(input, { target: { value: "写代码" } });
+    fireEvent.click(screen.getByRole("button", { name: "保存" }));
+
+    await waitFor(() => {
+      expect(invokeMock).toHaveBeenCalledWith("item_create", { content: "写代码" });
+    });
+    // 保存 = 进收件箱 + 收起(回到折叠态状态条)
+    await waitFor(() => {
+      expect(root.className).toContain("folded");
+    });
+    expect(invokeMock).not.toHaveBeenCalledWith("item_start", expect.anything());
   });
 
   it("空输入时开始按钮禁用", async () => {
@@ -248,10 +304,117 @@ describe("浮窗任务关键路径", () => {
     mockData(manyActive, []);
     render(<FloatingApp />);
     const root = await screen.findByTestId("floating-root");
-    await screen.findByText("进行中 6");
+    await screen.findByText("任务1");
     fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
     fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
 
     expect(await screen.findByText("在推进的事有点多")).toBeVisible();
+  });
+});
+
+describe("浮窗列表分区与动作", () => {
+  it("列表按 进行中/待办/收件箱 分区,各卡带对应动作按钮", async () => {
+    mockData([ACTIVE_ITEM], [INBOX_ITEM], [TODO_ITEM]);
+    render(<FloatingApp />);
+    const root = await screen.findByTestId("floating-root");
+    await screen.findByText("整理窗口样式");
+    fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
+    fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
+
+    // 进行中卡:暂停 + 完成
+    expect(screen.getByRole("button", { name: "暂停 整理窗口样式" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "完成 整理窗口样式" })).toBeVisible();
+    // 待办卡:开始 + 完成
+    expect(screen.getByRole("button", { name: "完成 整理文档" })).toBeVisible();
+    // 收件箱卡:开始 + 仅留档 + 删除
+    expect(screen.getByRole("button", { name: "仅留档 回邮件" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "删除 回邮件" })).toBeVisible();
+    // 待办 + 收件箱各一个「开始」;进行中卡没有「开始」
+    expect(screen.getAllByRole("button", { name: "开始" })).toHaveLength(2);
+  });
+
+  it("完成/仅留档/删除/暂停 → item_complete/triage_archive/soft_delete/pause", async () => {
+    mockData([ACTIVE_ITEM], [INBOX_ITEM], [TODO_ITEM]);
+    const invokeMock = vi.mocked(invoke);
+    render(<FloatingApp />);
+    const root = await screen.findByTestId("floating-root");
+    await screen.findByText("整理窗口样式");
+    fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
+    fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
+    await screen.findByRole("button", { name: "完成 整理文档" });
+
+    fireEvent.click(screen.getByRole("button", { name: "完成 整理文档" }));
+    await waitFor(() => {
+      expect(invokeMock).toHaveBeenCalledWith("item_complete", { id: 3 });
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "仅留档 回邮件" }));
+    await waitFor(() => {
+      expect(invokeMock).toHaveBeenCalledWith("item_triage_archive", { id: 2 });
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "删除 回邮件" }));
+    await waitFor(() => {
+      expect(invokeMock).toHaveBeenCalledWith("item_soft_delete", { id: 2 });
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "暂停 整理窗口样式" }));
+    await waitFor(() => {
+      expect(invokeMock).toHaveBeenCalledWith("item_pause", { id: 1, pendingMs: null });
+    });
+  });
+
+  it("列表有卡时不显示空态文案", async () => {
+    mockData([ACTIVE_ITEM], [INBOX_ITEM]);
+    render(<FloatingApp />);
+    const root = await screen.findByTestId("floating-root");
+    await screen.findByText("整理窗口样式");
+    fireEvent.mouseDown(root, { button: 0, clientX: 10, clientY: 10 });
+    fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
+
+    await screen.findByText("回邮件");
+    expect(screen.queryByText(/暂无任务/)).toBeNull();
+  });
+});
+
+describe("新增面板取消回落", () => {
+  it("从折叠条「+」进 compose,Esc 取消 → 收起", async () => {
+    mockData([ACTIVE_ITEM], [INBOX_ITEM]);
+    render(<FloatingApp />);
+    await screen.findByText("整理窗口样式");
+    fireEvent.click(screen.getByRole("button", { name: "新增任务" }));
+    await screen.findByPlaceholderText(/做什么/);
+
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    const root = screen.getByTestId("floating-root");
+    await waitFor(() => expect(root.className).toContain("folded"));
+    expect(screen.queryByPlaceholderText(/做什么/)).toBeNull();
+  });
+
+  it("列表中快捷键唤起 compose,Esc 取消 → 回落列表", async () => {
+    let captureHandler: Parameters<typeof listen>[1] | null = null;
+    vi.mocked(listen).mockImplementation((event: string, cb: Parameters<typeof listen>[1]) => {
+      if (event === "floating:capture") captureHandler = cb;
+      return Promise.resolve(() => {});
+    });
+    mockData([ACTIVE_ITEM], [INBOX_ITEM]);
+    render(<FloatingApp />);
+    await screen.findByText("整理窗口样式");
+
+    // 折叠条主体点击 → 进并行列表
+    fireEvent.click(screen.getByRole("status"));
+    await screen.findByText("回邮件");
+    expect(screen.queryByPlaceholderText(/做什么/)).toBeNull();
+
+    // 快捷键捕获意图 → 新增面板(从列表进)
+    act(() => captureHandler?.({ event: "floating:capture", id: 0, payload: undefined }));
+    await screen.findByPlaceholderText(/做什么/);
+
+    // Esc 取消 → 回落列表,不收起
+    fireEvent.keyDown(document, { key: "Escape" });
+    await waitFor(() => expect(screen.getByText("回邮件")).toBeVisible());
+    expect(screen.queryByPlaceholderText(/做什么/)).toBeNull();
+    expect(screen.getByTestId("floating-root").className).toContain("expanded");
   });
 });

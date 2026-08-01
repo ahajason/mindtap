@@ -16,14 +16,18 @@ import { SwitchDropdownSection } from "./SwitchDropdownSection";
 type ExpandedPanelProps = {
   taskTitle: string;
   onTaskTitleChange: (v: string) => void;
+  /** 开始:捕获 + 直接计时(active) */
   onStart: () => void;
+  /** 保存:捕获进收件箱 + 收起 */
+  onSave: () => void;
   onClearAndDismiss: () => void;
   maxLength: number;
   submitting: boolean;
 };
 
 export function ExpandedPanel(props: ExpandedPanelProps) {
-  const { taskTitle, onTaskTitleChange, onStart, onClearAndDismiss, maxLength, submitting } = props;
+  const { taskTitle, onTaskTitleChange, onStart, onSave, onClearAndDismiss, maxLength, submitting } =
+    props;
 
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -35,14 +39,17 @@ export function ExpandedPanel(props: ExpandedPanelProps) {
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") {
+      // V0.2.1: 回车 = 保存(进收件箱),不直接开计时。
       e.preventDefault();
-      onStart();
+      onSave();
     } else if (e.key === "Escape") {
       // V0.2.0.13 PATCH C-3: Esc 是用户显式取消意图, 清输入 + 折叠。
       e.preventDefault();
       onClearAndDismiss();
     }
   }
+
+  const empty = taskTitle.trim().length === 0;
 
   return (
     <>
@@ -67,17 +74,18 @@ export function ExpandedPanel(props: ExpandedPanelProps) {
         <button
           type="button"
           data-no-expand
-          className="h-8 rounded-[10px] px-4 text-[13px] font-medium text-text-2 transition-colors hover:bg-white/40 hover:text-text-1"
-          onClick={onClearAndDismiss}
+          className="h-8 rounded-[10px] px-4 text-[13px] font-medium text-text-2 transition-colors hover:bg-white/40 hover:text-text-1 disabled:opacity-50"
+          onClick={onSave}
+          disabled={empty || submitting}
         >
-          取消
+          保存
         </button>
         <button
           type="button"
           data-no-expand
           className="h-8 rounded-[10px] bg-primary px-4 text-[13px] font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover disabled:opacity-50"
           onClick={onStart}
-          disabled={taskTitle.trim().length === 0 || submitting}
+          disabled={empty || submitting}
         >
           开始
         </button>

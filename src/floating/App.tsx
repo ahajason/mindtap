@@ -55,6 +55,8 @@ export function FloatingApp() {
   const [submitting, setSubmitting] = useState(false);
   const [duplicateHint, setDuplicateHint] = useState<string | null>(null);
   const [forceCompose, setForceCompose] = useState(false);
+  // compose 进入来源:从列表进(true)→ 取消回落列表;从折叠条「+」/快捷键进(false)→ 取消收起。
+  const [composeFromList, setComposeFromList] = useState(false);
 
   // ADR-0013: 重复捕获轻提示(不阻止不合并)。输入变化时检测同名已有卡。
   useEffect(() => {
@@ -79,7 +81,7 @@ export function FloatingApp() {
   }, [taskTitle]);
 
   // 展开态默认:有卡 → list;空 → compose;捕获意图/手动新增 → compose
-  const hasCards = active.length > 0 || inbox.length > 0;
+  const hasCards = active.length > 0 || inbox.length > 0 || todo.length > 0;
   const presentation: FloatingPresentation = !isPanelOpen
     ? "folded"
     : forceCompose || intent
@@ -88,9 +90,13 @@ export function FloatingApp() {
         ? "list"
         : "compose";
 
-  // 捕获意图到达:强制展开进入 compose(PRD 1.1:快捷键唤起输入框聚焦)
+  // 捕获意图到达:强制展开进入 compose(PRD 1.1:快捷键唤起输入框聚焦)。
+  // 已在列表(展开有卡)时快捷键唤起 → 取消回落列表;折叠/无卡时唤起 → 取消收起。
   useEffect(() => {
-    if (intent) setIsPanelOpen(true);
+    if (intent) {
+      setComposeFromList(isPanelOpen && !forceCompose && hasCards);
+      setIsPanelOpen(true);
+    }
   }, [intent]);
 
   const panelRef = useRef<HTMLDivElement | null>(null);
@@ -310,12 +316,18 @@ export function FloatingApp() {
     setForceCompose(false);
     setIsPanelOpen(false);
   }, [clear]);
+  // V0.2.1 design §2.2: 取消/Esc → 从列表进面板时回落列表,从折叠条进面板时收起。
   const handleClearAndDismiss = useCallback(() => {
+    const fromList = composeFromList;
     clear();
     setForceCompose(false);
     setTaskTitle("");
-    setIsPanelOpen(false);
-  }, [clear]);
+    if (fromList) {
+      setIsPanelOpen(active.length > 0 || inbox.length > 0 || todo.length > 0);
+    } else {
+      setIsPanelOpen(false);
+    }
+  }, [clear, composeFromList, active, inbox, todo]);
 
   useEffect(() => {
     function onDocMouseDown(e: MouseEvent) {
@@ -331,7 +343,7 @@ export function FloatingApp() {
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape" && presentation !== "folded") handleDismiss();
+      if (e.key === "Escape" && presentation !== "folded") handleClearAndDismiss();
     }
     function onWindowBlur() {
       if (dragRef.current?.dragStarted) {
@@ -347,16 +359,35 @@ export function FloatingApp() {
       document.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("blur", onWindowBlur);
     };
-  }, [presentation, handleDismiss]);
+  }, [presentation, handleDismiss, handleClearAndDismiss]);
 
-  // 捕获:内容非空即存,进收件箱(PRD 1.1 + 3.2 规则 1)。
-  // V0.2.1 QA 补全:捕获后进入 list 显示新卡(不折叠),消除"任务去哪了"困惑。
-  async function handleStart() {
+  // 保存:捕获 → 收件箱 + 收起(PRD 1.1 + 3.2 规则 1)。
+  async function handleSave() {
     const title = taskTitle.trim();
     if (!title || submitting) return;
     setSubmitting(true);
     try {
       await api.item.create(title);
+      clear();
+      setForceCompose(false);
+      setTaskTitle("");
+      await refresh();
+      setIsPanelOpen(false);
+    } catch (err) {
+      console.error("[save] failed", err);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  // 开始:捕获 + 直接计时(先落库,再切换 active)。进入 list 显示新进行中卡(不折叠)。
+  async function handleStart() {
+    const title = taskTitle.trim();
+    if (!title || submitting) return;
+    setSubmitting(true);
+    try {
+      const item = await api.item.create(title);
+      await api.item.start(item.id);
       clear();
       setForceCompose(false);
       setTaskTitle("");
@@ -389,6 +420,36 @@ export function FloatingApp() {
     }
   }
 
+  // 完成:active/todo → done(收进 1.3)。done 不进浮窗列表,刷新后自然消失。
+  async function handleCompleteItem(id: number) {
+    try {
+      await api.item.complete(id);
+      void refresh();
+    } catch (err) {
+      console.error("[item.complete] failed", err);
+    }
+  }
+
+  // 仅留档:inbox → archived,不转待办(收进 1.3)。
+  async function handleArchiveItem(id: number) {
+    try {
+      await api.item.triageArchive(id);
+      void refresh();
+    } catch (err) {
+      console.error("[item.triageArchive] failed", err);
+    }
+  }
+
+  // 软删除:inbox 项删除(收进 1.3,5 秒撤销在 BubbleApp/归档入口)。
+  async function handleDeleteItem(id: number) {
+    try {
+      await api.item.softDelete(id);
+      void refresh();
+    } catch (err) {
+      console.error("[item.softDelete] failed", err);
+    }
+  }
+
   // 捕获意图到达:强制展开进入 compose(PRD 1.1:快捷键唤起输入框聚焦)
   function openCompose() {
     setTaskTitle("");
@@ -399,6 +460,15 @@ export function FloatingApp() {
   // 待确认 = 有 pending_ms 的卡(active 冷却挂 pending + todo 超时停表挂 pending)
   const pendingCount = [...active, ...todo].filter((i) => i.pending_ms != null).length;
 
+  // 折叠条滚动展示的进行中卡视图:实时时长 = focus_ms + (now - last_active_at)(决策 9)。
+  const activeCards = active.map((item) => ({
+    content: item.content,
+    focusMs:
+      item.status === "active" && item.last_active_at != null
+        ? item.focus_ms + Math.max(0, nowTick - item.last_active_at)
+        : item.focus_ms,
+  }));
+
   return (
     <div
       ref={panelRef}
@@ -408,11 +478,13 @@ export function FloatingApp() {
     >
       <div className="floating-content">
         <FoldedBar
+          activeCards={activeCards}
           inboxCount={inbox.length}
-          activeCount={active.length}
           pendingCount={pendingCount}
-          onClick={() => {
-            if (presentation === "folded") setIsPanelOpen(true);
+          onAdd={openCompose}
+          onOpenList={() => {
+            setForceCompose(false);
+            setIsPanelOpen(true);
           }}
         />
         {presentation !== "folded" && (
@@ -424,36 +496,55 @@ export function FloatingApp() {
                     在推进的事有点多
                   </div>
                 )}
-                {/* V0.2.1 QA 补全:list → compose 新增入口(折叠条点击只会进 list,鼠标路径进不了输入) */}
-                <button
-                  type="button"
-                  data-no-expand
-                  onClick={openCompose}
-                  className="mb-1 flex w-full items-center gap-1.5 rounded-[10px] px-2 py-1.5 text-[13px] font-medium text-text-2 transition-colors hover:bg-white/40 hover:text-text-1"
-                >
-                  <span className="text-[14px] leading-none">+</span> 记一下
-                </button>
+                {/* V0.2.1: 列表不再有「记一下」入口,新增移到折叠条右侧「+」 */}
+                {active.length > 0 && (
+                  <div className="px-2 pb-1 pt-1.5 text-[11px] font-medium text-text-3">
+                    进行中
+                  </div>
+                )}
+                {active.map((item) => (
+                  <TaskCard
+                    key={`active-${item.id}`}
+                    item={item}
+                    cold={coldLevel(item.last_active_at, nowTick)}
+                    now={nowTick}
+                    onStart={() => handleStartItem(item.id)}
+                    onPause={() => handlePauseItem(item.id)}
+                    onComplete={() => handleCompleteItem(item.id)}
+                  />
+                ))}
+                {todo.length > 0 && (
+                  <div className="px-2 pb-1 pt-1.5 text-[11px] font-medium text-text-3">
+                    待办
+                  </div>
+                )}
+                {todo.map((item) => (
+                  <TaskCard
+                    key={`todo-${item.id}`}
+                    item={item}
+                    onStart={() => handleStartItem(item.id)}
+                    onComplete={() => handleCompleteItem(item.id)}
+                  />
+                ))}
+                {inbox.length > 0 && (
+                  <div className="px-2 pb-1 pt-1.5 text-[11px] font-medium text-text-3">
+                    收件箱
+                  </div>
+                )}
                 {inbox.map((item) => (
                   <TaskCard
                     key={`inbox-${item.id}`}
                     item={item}
                     isInbox
                     onStart={() => handleStartItem(item.id)}
+                    onArchive={() => handleArchiveItem(item.id)}
+                    onDelete={() => handleDeleteItem(item.id)}
                   />
                 ))}
-                {active.map((item) => (
-                  <TaskCard
-                    key={`active-${item.id}`}
-                    item={item}
-                    isInbox={false}
-                    cold={coldLevel(item.last_active_at, nowTick)}
-                    now={nowTick}
-                    onStart={() => handleStartItem(item.id)}
-                    onPause={() => handlePauseItem(item.id)}
-                  />
-                ))}
-                {inbox.length === 0 && active.length === 0 && (
-                  <div className="px-2 py-2 text-[12px] text-text-2">还没有任务</div>
+                {active.length === 0 && todo.length === 0 && inbox.length === 0 && (
+                  <div className="px-2 py-2 text-[12px] text-text-2">
+                    暂无任务，点「+」记一笔
+                  </div>
                 )}
               </div>
             ) : (
@@ -462,6 +553,7 @@ export function FloatingApp() {
                   taskTitle={taskTitle}
                   onTaskTitleChange={setTaskTitle}
                   onStart={handleStart}
+                  onSave={handleSave}
                   onClearAndDismiss={handleClearAndDismiss}
                   maxLength={TASK_TITLE_MAX}
                   submitting={submitting}

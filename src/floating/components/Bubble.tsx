@@ -1,5 +1,6 @@
 // V0.2.1: 失真确认气泡(ADR-0012)。独立小窗呈现。
-// 两种态:询问态(还在进行中,还要继续吗)→ 待确认态(刚才这段时间要计入吗)。
+// 三种态:询问态(还在进行中,还要继续吗)→ 待确认态(刚才这段时间要计入吗)/
+// 已自动暂停·待确认态(空闲超阈值自动暂停后一键记入/丢弃,复用待确认按钮)。
 import { formatFocusMs } from "./TaskCard";
 
 type BubbleProps = {
@@ -11,6 +12,8 @@ type BubbleProps = {
   onPause?: () => void;
   /** 待确认态 */
   pendingConfirm?: boolean;
+  /** 已自动暂停·待确认(文案区别于失真待确认,按钮复用) */
+  autoPaused?: boolean;
   onKeep?: () => void;
   onDiscard?: () => void;
 };
@@ -21,6 +24,7 @@ export function Bubble({
   onContinue,
   onPause,
   pendingConfirm,
+  autoPaused,
   onKeep,
   onDiscard,
 }: BubbleProps) {
@@ -33,9 +37,15 @@ export function Bubble({
     >
       {pendingConfirm ? (
         <>
-          <p className="text-[13px] font-medium text-text-1">
-            刚才这 {formatFocusMs(pendingMs ?? 0)} 要计入吗？
-          </p>
+          {autoPaused ? (
+            <p className="text-[13px] font-medium text-text-1">
+              {content} 已自动暂停，刚才是专注吗？
+            </p>
+          ) : (
+            <p className="text-[13px] font-medium text-text-1">
+              刚才这 {formatFocusMs(pendingMs ?? 0)} 要计入吗？
+            </p>
+          )}
           <div className="mt-2 flex items-center justify-end gap-2">
             <button
               type="button"

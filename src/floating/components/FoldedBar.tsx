@@ -1,34 +1,120 @@
-// V0.2.1: 折叠态 = 并行计数条(收件箱数 + 活跃任务数 + 待确认数)。
-// 存在感最低,展示"未整理 + 在推进"的概览。取代旧单任务状态条。
+// V0.2.1: 折叠态 = 进行中卡滚动展示(内容 + 实时计时) + 新增「+」入口。
+// 有进行中卡:每 2.5 秒轮换展示一张,「+N」指示其余卡;右侧「+」进入新增面板。
+// 无进行中卡:退化为「收件箱 N · [+]」计数条。
+// 实时时长由父级按 focus_ms + (now - last_active_at) 算好传入,本组件只展示 + 轮换。
+import { useEffect, useState } from "react";
+
 import { StatusDot } from "./StatusDot";
+import { formatFocusMs } from "./TaskCard";
+
+type ActiveCardView = { content: string; focusMs: number };
 
 type FoldedBarProps = {
+  activeCards: ActiveCardView[];
   inboxCount: number;
-  activeCount: number;
   pendingCount: number;
-  onClick?: () => void;
+  /** 右侧「+」→ 新增面板(compose) */
+  onAdd: () => void;
+  /** 内容区点击 → 并行列表(list) */
+  onOpenList: () => void;
 };
 
-export function FoldedBar({ inboxCount, activeCount, pendingCount, onClick }: FoldedBarProps) {
+const ROTATE_INTERVAL_MS = 2500;
+
+export function FoldedBar({
+  activeCards,
+  inboxCount,
+  pendingCount,
+  onAdd,
+  onOpenList,
+}: FoldedBarProps) {
+  const [index, setIndex] = useState(0);
+  const activeCount = activeCards.length;
+
+  // 卡数量变化时回到第一张,避免越界 / 停留在已消失的卡。
+  useEffect(() => setIndex(0), [activeCount]);
+
+  // 轮换:2.5 秒推进一张,数量为 1 时无需轮换。
+  useEffect(() => {
+    if (activeCount <= 1) return;
+    const id = setInterval(
+      () => setIndex((i) => (i + 1) % activeCount),
+      ROTATE_INTERVAL_MS,
+    );
+    return () => clearInterval(id);
+  }, [activeCount]);
+
+  if (activeCount === 0) {
+    return (
+      <div
+        className="floating-status-bar"
+        onClick={onOpenList}
+        role="status"
+        aria-label={`Mindtap 工作台账，收件箱 ${inboxCount}`}
+      >
+        <StatusDot status="empty" size="sm" />
+        <span className="floating-status-title" title={`收件箱 ${inboxCount}`}>
+          收件箱 {inboxCount}
+        </span>
+        <span className="shrink-0 text-text-3">·</span>
+        {pendingCount > 0 && (
+          <span className="shrink-0 rounded-full bg-amber-400/20 px-1.5 text-[11px] font-medium text-amber-700">
+            待确认 {pendingCount}
+          </span>
+        )}
+        <button
+          type="button"
+          data-no-expand
+          aria-label="新增任务"
+          onClick={(e) => {
+            e.stopPropagation();
+            onAdd();
+          }}
+          className="flex h-5 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[12px] font-semibold leading-none text-primary transition-colors hover:bg-primary/20"
+        >
+          [+]
+        </button>
+      </div>
+    );
+  }
+
+  const card = activeCards[index % activeCount];
+  const rest = activeCount - 1;
+
   return (
     <div
       className="floating-status-bar"
-      onClick={onClick}
+      onClick={onOpenList}
       role="status"
-      aria-label={`Mindtap 工作台账，收件箱 ${inboxCount}，进行中 ${activeCount}`}
+      aria-label={`Mindtap 工作台账，收件箱 ${inboxCount}，进行中 ${activeCount}，当前 ${card.content}`}
     >
-      <StatusDot status={activeCount > 0 ? "active" : "empty"} size="sm" />
-      <span className="floating-status-title" title={`收件箱 ${inboxCount}`}>
-        收件箱 {inboxCount}
+      <StatusDot status="active" size="sm" />
+      <span className="floating-status-title" title={card.content}>
+        {card.content}
       </span>
-      <span className="floating-status-timer" aria-label="进行中">
-        进行中 {activeCount}
-      </span>
+      <span className="floating-status-timer">{formatFocusMs(card.focusMs)}</span>
+      {rest > 0 && (
+        <span className="shrink-0 rounded-full bg-primary/10 px-1.5 text-[11px] font-medium text-primary">
+          +{rest}
+        </span>
+      )}
       {pendingCount > 0 && (
-        <span className="ml-1 rounded-full bg-amber-400/20 px-1.5 text-[11px] font-medium text-amber-700">
+        <span className="shrink-0 rounded-full bg-amber-400/20 px-1.5 text-[11px] font-medium text-amber-700">
           待确认 {pendingCount}
         </span>
       )}
+      <button
+        type="button"
+        data-no-expand
+        aria-label="新增任务"
+        onClick={(e) => {
+          e.stopPropagation();
+          onAdd();
+        }}
+        className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[14px] font-semibold leading-none text-primary transition-colors hover:bg-primary/20"
+      >
+        +
+      </button>
     </div>
   );
 }

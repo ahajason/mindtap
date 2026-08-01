@@ -2,10 +2,12 @@ use tauri::{Emitter, Manager, WindowEvent};
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
+use tauri_plugin_notification::NotificationExt;
 
 pub mod commands;
 pub mod db;
 pub mod error;
+pub mod idle;
 pub mod tray;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -20,6 +22,9 @@ pub fn run() {
             MacosLauncher::LaunchAgent,
             Some(vec!["--floating"]),
         ))
+        // V0.2.1 自动计时空闲保护:后台线程发系统通知。
+        // capabilities 里的 notification:default 权限在 B4 加(前端请求权限),Rust 侧 show 不依赖 IPC。
+        .plugin(tauri_plugin_notification::init())
         .setup(|app| {
             if cfg!(debug_assertions) {
                 if let Err(e) = app.handle().plugin(
@@ -123,7 +128,7 @@ pub fn run() {
                     app.manage(state);
                     // V0.2.1: 启动失真检测(跨天/冷却 active → 退回 todo + 挂待确认)。
                     // 对每个失真项 emit floating:dormant,由 bubble 窗口监听。
-                    // ponytail: 启动一次即可(PRD 跨天停表),周期轮询留给 V0.2.2 空闲检测。
+                    // ponytail: 启动一次即可(PRD 跨天停表);空闲自动暂停是周期轮询,见下方 V0.2.1 线程。
                     let app_handle = app.handle().clone();
                     std::thread::spawn(move || {
                         let now = crate::db::item::now_ms_for_cmd();
@@ -152,6 +157,42 @@ pub fn run() {
                             }
                         }
                     });
+
+                    // V0.2.1 自动计时空闲保护:每 30s 扫描 active,空闲超阈值 → 主动暂停 + 系统通知。
+                    // 锁屏/休眠兜底:锁屏后无键鼠输入,idle 必然超阈值,下个周期自动暂停
+                    // (不单独监听电源事件,见 tech §1 不在范围)。
+                    let app_handle = app.handle().clone();
+                    std::thread::spawn(move || loop {
+                        std::thread::sleep(std::time::Duration::from_secs(30));
+                        let idle = crate::idle::last_input_ms();
+                        let now = crate::db::item::now_ms_for_cmd();
+                        let paused = {
+                            let state = app_handle.state::<crate::db::DbState>();
+                            match state.0.lock() {
+                                Ok(conn) => {
+                                    match crate::idle::scan_and_auto_pause(&conn, idle, now) {
+                                        Ok(items) => items,
+                                        Err(e) => {
+                                            log::warn!("[idle] auto-pause scan failed: {e}");
+                                            Vec::new()
+                                        }
+                                    }
+                                }
+                                Err(e) => {
+                                    log::warn!("[idle] db lock poisoned: {e}");
+                                    Vec::new()
+                                }
+                            }
+                        };
+                        for it in paused {
+                            let _ = app_handle
+                                .notification()
+                                .builder()
+                                .title("Mindtap")
+                                .body(format!("{} 已自动暂停", it.content))
+                                .show();
+                        }
+                    });
                 }
                 Err(e) => {
                     eprintln!("[setup] db init failed: {e}");
@@ -178,9 +219,18 @@ pub fn run() {
             commands::item::item_pause,
             commands::item::item_complete,
             commands::item::item_confirm_pending,
+            commands::item::item_triage_todo,
+            commands::item::item_triage_archive,
+            commands::item::item_soft_delete,
+            commands::item::item_reactivate,
+            commands::item::item_undo_delete,
             commands::item::item_check_dormant,
             commands::item::item_list_duplicate,
             commands::item::item_get_history_titles,
+            // V0.2.1 自动计时空闲保护:前端轮询 idle 是否超自动暂停阈值。
+            commands::item::item_get_idle,
+            // V0.2.1 3.3:某卡的激活明细(供并行统计/合并)。
+            commands::item::item_list_intervals,
             commands::app::app_exit,
             commands::app::app_show_main_window,
             // V0.2.0.12 PATCH 对象 B:浮窗右键弹原生菜单 command。前端 IPC 调用入口。

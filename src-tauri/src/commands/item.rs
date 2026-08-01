@@ -3,7 +3,9 @@
 
 use tauri::State;
 
-use crate::db::item::{self, DormantPayload, Item, ListStatus, PauseResult, StartResult, TitleRec};
+use crate::db::item::{
+    self, DormantPayload, FocusInterval, Item, ListStatus, PauseResult, StartResult, TitleRec,
+};
 use crate::db::DbState;
 use crate::error::AppError;
 
@@ -59,6 +61,36 @@ pub fn item_confirm_pending(id: i64, keep: bool, state: State<DbState>) -> Resul
     item::confirm_pending(&conn, id, keep)
 }
 
+#[tauri::command]
+pub fn item_triage_todo(id: i64, state: State<DbState>) -> Result<Item, AppError> {
+    let conn = state.0.lock().map_err(|e| AppError(e.to_string()))?;
+    item::triage_to_todo(&conn, id)
+}
+
+#[tauri::command]
+pub fn item_triage_archive(id: i64, state: State<DbState>) -> Result<Item, AppError> {
+    let conn = state.0.lock().map_err(|e| AppError(e.to_string()))?;
+    item::triage_archive(&conn, id)
+}
+
+#[tauri::command]
+pub fn item_soft_delete(id: i64, state: State<DbState>) -> Result<Item, AppError> {
+    let conn = state.0.lock().map_err(|e| AppError(e.to_string()))?;
+    item::soft_delete(&conn, id)
+}
+
+#[tauri::command]
+pub fn item_reactivate(id: i64, state: State<DbState>) -> Result<Item, AppError> {
+    let conn = state.0.lock().map_err(|e| AppError(e.to_string()))?;
+    item::reactivate(&conn, id)
+}
+
+#[tauri::command]
+pub fn item_undo_delete(id: i64, state: State<DbState>) -> Result<Item, AppError> {
+    let conn = state.0.lock().map_err(|e| AppError(e.to_string()))?;
+    item::undo_delete(&conn, id)
+}
+
 /// 失真检测 + 跨天停表。返回失真卡 payload(供前端轮询显示气泡)
 #[tauri::command]
 pub fn item_check_dormant(state: State<DbState>) -> Result<Vec<DormantPayload>, AppError> {
@@ -83,4 +115,27 @@ pub fn item_get_history_titles(
 ) -> Result<Vec<TitleRec>, AppError> {
     let conn = state.0.lock().map_err(|e| AppError(e.to_string()))?;
     item::list_recent_titles(&conn, limit.unwrap_or(5))
+}
+
+/// 某卡的激活明细(供并行统计 / 合并)
+#[tauri::command]
+pub fn item_list_intervals(
+    item_id: i64,
+    state: State<DbState>,
+) -> Result<Vec<FocusInterval>, AppError> {
+    let conn = state.0.lock().map_err(|e| AppError(e.to_string()))?;
+    item::list_intervals(&conn, item_id)
+}
+
+/// 自动暂停状态:当前是否有 active 卡空闲超阈值(供前端轮询显示"自动暂停"标识)。
+/// 非 Windows(无 idle 检测)恒返回 false。
+#[tauri::command]
+pub fn item_get_idle(state: State<DbState>) -> Result<bool, AppError> {
+    let idle = crate::idle::last_input_ms();
+    let now = item::now_ms_for_cmd();
+    let conn = state.0.lock().map_err(|e| AppError(e.to_string()))?;
+    let actives = item::list(&conn, ListStatus::Active, None)?;
+    Ok(actives
+        .iter()
+        .any(|it| crate::idle::should_auto_pause(it.last_active_at, idle, now)))
 }

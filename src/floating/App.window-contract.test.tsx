@@ -40,7 +40,7 @@ describe("浮窗生产契约", () => {
     expect(lib).toContain("commands::floating_cmd::set_floating_size");
   });
 
-  it("活动折叠态只显示一行计数，展开后才显示并行列表", async () => {
+  it("活动折叠态单行滚动展示进行中卡，展开后才显示并行列表", async () => {
     const { invoke } = await import("@tauri-apps/api/core");
     vi.mocked(invoke).mockImplementation(async (command: string) => {
       if (command === "item_get_active") return [ACTIVE_ITEM];
@@ -50,9 +50,9 @@ describe("浮窗生产契约", () => {
 
     render(<FloatingApp />);
     const root = await screen.findByTestId("floating-root");
-    // 折叠态:计数条显示概览,不显示任务内容
-    await screen.findByText("进行中 1");
-    expect(screen.queryByText("整理窗口样式")).toBeNull();
+    // 折叠态:单行滚动展示进行中卡内容,不显示并行列表
+    await screen.findByText("整理窗口样式");
+    expect(screen.queryByText("回邮件")).toBeNull();
 
     expect(root.className).toContain("folded");
     expect(screen.queryByRole("button", { name: /开始/ })).toBeNull();
@@ -61,7 +61,8 @@ describe("浮窗生产契约", () => {
     fireEvent.mouseUp(document, { button: 0, clientX: 10, clientY: 10 });
 
     await waitFor(() => expect(root.className).toContain("expanded"));
-    expect(screen.getByText("整理窗口样式")).toBeVisible();
+    // 展开后并行列表出现进行中卡
+    expect(screen.getByRole("button", { name: "整理窗口样式，切换到进行中" })).toBeVisible();
   });
 
   it("呈现状态声明折叠、创建和列表三项固定窗口几何", () => {
@@ -105,13 +106,13 @@ describe("浮窗生产契约", () => {
     expect(css).not.toMatch(/\.folded-bar-inner/);
   });
 
-  it("输入提示使用可读的次级文字色，取消操作保持同一色阶", () => {
+  it("输入提示使用可读的次级文字色，保存操作保持同一色阶", () => {
     const inputBar = readFileSync("src/floating/components/InputBar.tsx", "utf8");
     const expandedPanel = readFileSync("src/floating/components/ExpandedPanel.tsx", "utf8");
 
     expect(inputBar).toContain("placeholder:text-text-2");
     expect(inputBar).not.toContain("placeholder:text-text-3");
-    expect(expandedPanel).toMatch(/>\s*取消\s*<\/button>/);
+    expect(expandedPanel).toMatch(/>\s*保存\s*<\/button>/);
     expect(expandedPanel).toContain("text-text-2");
   });
 });

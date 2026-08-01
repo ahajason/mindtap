@@ -66,4 +66,25 @@ describe("Bubble(失真确认气泡)", () => {
     fireEvent.click(screen.getByRole("button", { name: "丢弃" }));
     expect(onDiscard).toHaveBeenCalledTimes(1);
   });
+
+  it("已自动暂停态(复用待确认按钮)显示'已自动暂停'文案并支持记入/丢弃", () => {
+    const onKeep = vi.fn();
+    const onDiscard = vi.fn();
+    render(
+      <Bubble
+        content="写代码"
+        pendingMs={7200000}
+        pendingConfirm
+        autoPaused
+        onKeep={onKeep}
+        onDiscard={onDiscard}
+      />,
+    );
+
+    expect(screen.getByText("写代码 已自动暂停，刚才是专注吗？")).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "记入" }));
+    expect(onKeep).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole("button", { name: "丢弃" }));
+    expect(onDiscard).toHaveBeenCalledTimes(1);
+  });
 });

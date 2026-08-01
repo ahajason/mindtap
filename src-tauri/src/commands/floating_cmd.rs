@@ -45,11 +45,7 @@ pub fn show_floating_context_menu(
 /// 走自定义 rust command 走 `tauri::Window::set_size(LogicalSize)` → `tao::window::Window::set_inner_size`
 /// → Win32 `SetWindowPos`, 不经 Tauri JS API 中转, 物理窗口尺寸立即跟随.
 #[tauri::command]
-pub fn set_floating_size(
-    window: tauri::WebviewWindow,
-    w: f64,
-    h: f64,
-) -> Result<(), String> {
+pub fn set_floating_size(window: tauri::WebviewWindow, w: f64, h: f64) -> Result<(), String> {
     window
         .set_size(Size::Logical(LogicalSize::new(w, h)))
         .map_err(|e| format!("[set_floating_size] {}x{}: {}", w, h, e))

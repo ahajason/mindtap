@@ -32,9 +32,21 @@ serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
 rusqlite = { version = "0.32", features = ["bundled"] }
 thiserror = "1"
+# V0.2.1 自动计时空闲保护:后台线程发系统通知"XX 已自动暂停"。capabilities 权限在 B4 处理。
+tauri-plugin-notification = "2"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6"
+
+# V0.2.1 空闲检测:GetLastInputInfo(上次键鼠输入 tick) + GetTickCount64(当前 tick)。
+# 仅 Windows 编译;非 Windows fallback 不检测(idle.rs)。任务注"若太重换轻方案"——
+# 只开 3 个 feature,编译面窄,可接受。
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.58", features = [
+    "Win32_Foundation",
+    "Win32_UI_InputKeyboardAndMouse",
+    "Win32_System_SystemInformation",
+] }
 
 [dev-dependencies]
 tempfile = "3"

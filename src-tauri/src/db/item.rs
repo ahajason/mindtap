@@ -1,4 +1,4 @@
-﻿// 深模块 ItemRepo —— 藏住整个五态状态机 + 结算 + 失真闭环。
+// 深模块 ItemRepo —— 藏住整个五态状态机 + 结算 + 失真闭环。
 // 外部 seam: create / start / pause / complete / confirm_pending / list / settle_dormant / list_duplicate。
 // 状态转换正确性(零成本切换 / focus_ms 只增不减 / 跨天停表 / 待确认结算)全部在此模块事务内原子完成。
 // 前端与 commands 层只发意图,不持有状态机。
@@ -22,6 +22,15 @@ pub struct Item {
     pub pending_ms: Option<i64>,
     pub created_at: i64,
     pub updated_at: i64,
+}
+
+/// 一次从 start 到结算的激活明细。ended_at NULL = 进行中。
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct FocusInterval {
+    pub id: i64,
+    pub item_id: i64,
+    pub started_at: i64,
+    pub ended_at: Option<i64>,
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -88,6 +97,34 @@ fn now_ms() -> i64 {
 /// 供 commands 层取当前时间戳(测试注入用 `settle_dormant(conn, now)`)
 pub fn now_ms_for_cmd() -> i64 {
     now_ms()
+}
+
+/// 列出某卡的激活明细,按开始时间升序。
+pub fn list_intervals(conn: &Connection, item_id: i64) -> Result<Vec<FocusInterval>, AppError> {
+    let mut stmt = conn.prepare(
+        "SELECT id, item_id, started_at, ended_at FROM focus_interval
+         WHERE item_id = ?1 ORDER BY started_at ASC",
+    )?;
+    let rows = stmt.query_map(params![item_id], |row| {
+        Ok(FocusInterval {
+            id: row.get(0)?,
+            item_id: row.get(1)?,
+            started_at: row.get(2)?,
+            ended_at: row.get(3)?,
+        })
+    })?;
+    rows.collect::<rusqlite::Result<Vec<_>>>()
+        .map_err(AppError::from)
+}
+
+/// 结算某卡所有进行中 interval(ended_at IS NULL → now)。所有结算路径必须调用,否则
+/// 卡退出 active 后 ended_at 仍为 NULL(违反"NULL=进行中")。调用方已按同一 now 把时长计入 focus_ms。
+fn settle_open_intervals(conn: &Connection, item_id: i64, now: i64) -> Result<(), AppError> {
+    conn.execute(
+        "UPDATE focus_interval SET ended_at = ?1 WHERE item_id = ?2 AND ended_at IS NULL",
+        params![now, item_id],
+    )?;
+    Ok(())
 }
 
 fn row_to_item(row: &Row<'_>) -> rusqlite::Result<Item> {
@@ -165,11 +202,18 @@ pub fn start(conn: &Connection, id: i64) -> Result<StartResult, AppError> {
              last_active_at = ?1, updated_at = ?1 WHERE id = ?2 AND status = 'active'",
             params![now, sid],
         )?;
+        // 切走结算:旧卡进行中 interval 记 ended_at = now
+        settle_open_intervals(&tx, *sid, now)?;
     }
 
     tx.execute(
         "UPDATE item SET status = 'active', last_active_at = ?1, updated_at = ?1 WHERE id = ?2",
         params![now, id],
+    )?;
+    // 开一段进行中 interval(started_at = now, ended_at = NULL)
+    tx.execute(
+        "INSERT INTO focus_interval (item_id, started_at, ended_at, created_at) VALUES (?1, ?2, NULL, ?2)",
+        params![id, now],
     )?;
     tx.commit()?;
 
@@ -206,6 +250,8 @@ pub fn pause(conn: &Connection, id: i64, pending_ms: Option<i64>) -> Result<Paus
         "UPDATE item SET status = 'todo', focus_ms = focus_ms + ?1, pending_ms = ?2, updated_at = ?3 WHERE id = ?4",
         params![focus_delta, pending_to_write, now, id],
     )?;
+    // 结算 interval:ended_at = now(失真暂停下 interval 如实记真实时长,账已挂 pending_ms 待确认)
+    settle_open_intervals(&tx, id, now)?;
     tx.commit()?;
 
     let item = get_by_id(conn, id)?.ok_or_else(|| AppError(format!("item {id} not found")))?;
@@ -235,6 +281,9 @@ pub fn complete(conn: &Connection, id: i64) -> Result<Item, AppError> {
         0
     };
 
+    // 结算 interval:ended_at = now(active 段时长与 settled_ms 同源,不重复计入)
+    settle_open_intervals(&tx, id, now)?;
+
     tx.execute(
         "UPDATE item SET status = 'done', focus_ms = focus_ms + ?1, pending_ms = NULL, updated_at = ?2 WHERE id = ?3",
         params![settled_ms, now, id],
@@ -261,6 +310,159 @@ pub fn confirm_pending(conn: &Connection, id: i64, keep: bool) -> Result<Item, A
         "UPDATE item SET focus_ms = focus_ms + ?1, pending_ms = NULL, updated_at = ?2 WHERE id = ?3",
         params![focus_delta, now, id],
     )?;
+    tx.commit()?;
+
+    get_by_id(conn, id)?.ok_or_else(|| AppError(format!("item {id} not found")))
+}
+
+/// 收件箱整理 → 待办:inbox/todo/active → todo。active 先结算当前段(计时不丢)。done/archived 不可。
+pub fn triage_to_todo(conn: &Connection, id: i64) -> Result<Item, AppError> {
+    let tx = conn.unchecked_transaction()?;
+    let now = now_ms();
+
+    let target = match get_by_id(&tx, id)? {
+        Some(t) if t.status == "inbox" || t.status == "todo" || t.status == "active" => t,
+        Some(t) => {
+            return Err(AppError(format!(
+                "item {id} 状态 {} 不能转入待办",
+                t.status
+            )))
+        }
+        None => return Err(AppError(format!("item {id} 不存在"))),
+    };
+
+    if target.status == "active" {
+        let settled_ms = target
+            .last_active_at
+            .map(|la| now.saturating_sub(la))
+            .unwrap_or(0);
+        tx.execute(
+            "UPDATE item SET status = 'todo', focus_ms = focus_ms + ?1, last_active_at = ?2, updated_at = ?2 WHERE id = ?3",
+            params![settled_ms, now, id],
+        )?;
+        settle_open_intervals(&tx, id, now)?;
+    } else {
+        tx.execute(
+            "UPDATE item SET status = 'todo', updated_at = ?1 WHERE id = ?2",
+            params![now, id],
+        )?;
+    }
+    tx.commit()?;
+
+    get_by_id(conn, id)?.ok_or_else(|| AppError(format!("item {id} not found")))
+}
+
+/// 收件箱整理 → 归档:仅 inbox → archived,留档不删。done/todo/active 不可。
+pub fn triage_archive(conn: &Connection, id: i64) -> Result<Item, AppError> {
+    let tx = conn.unchecked_transaction()?;
+    let now = now_ms();
+
+    match get_by_id(&tx, id)? {
+        Some(t) if t.status == "inbox" => {}
+        Some(t) => return Err(AppError(format!("item {id} 状态 {} 不能归档", t.status))),
+        None => return Err(AppError(format!("item {id} 不存在"))),
+    }
+    tx.execute(
+        "UPDATE item SET status = 'archived', updated_at = ?1 WHERE id = ?2",
+        params![now, id],
+    )?;
+    tx.commit()?;
+
+    get_by_id(conn, id)?.ok_or_else(|| AppError(format!("item {id} not found")))
+}
+
+/// 软删除:任意状态 → deleted_at = now(非空即视为删除,get_by_id/list 已过滤)。
+/// active 先结算当前段。
+pub fn soft_delete(conn: &Connection, id: i64) -> Result<Item, AppError> {
+    let tx = conn.unchecked_transaction()?;
+    let now = now_ms();
+
+    let target = match get_by_id(&tx, id)? {
+        Some(t) => t,
+        None => return Err(AppError(format!("item {id} 不存在"))),
+    };
+
+    let settled_ms = if target.status == "active" {
+        target
+            .last_active_at
+            .map(|la| now.saturating_sub(la))
+            .unwrap_or(0)
+    } else {
+        0
+    };
+    tx.execute(
+        "UPDATE item SET deleted_at = ?1, focus_ms = focus_ms + ?2, updated_at = ?1 WHERE id = ?3",
+        params![now, settled_ms, id],
+    )?;
+    // 软删也结算进行中 interval,保证卡离开 active 后 ended_at 非 NULL
+    settle_open_intervals(&tx, id, now)?;
+    tx.commit()?;
+
+    // 软删除后 get_by_id 过滤 deleted_at IS NULL 读不到,基于已读 target 返回
+    let mut out = target;
+    out.focus_ms += settled_ms;
+    out.updated_at = now;
+    Ok(out)
+}
+
+/// 重新激活:archived → todo。
+pub fn reactivate(conn: &Connection, id: i64) -> Result<Item, AppError> {
+    let tx = conn.unchecked_transaction()?;
+    let now = now_ms();
+
+    match get_by_id(&tx, id)? {
+        Some(t) if t.status == "archived" => {}
+        Some(t) => {
+            return Err(AppError(format!(
+                "item {id} 状态 {} 不能重新激活",
+                t.status
+            )))
+        }
+        None => return Err(AppError(format!("item {id} 不存在"))),
+    }
+    tx.execute(
+        "UPDATE item SET status = 'todo', updated_at = ?1 WHERE id = ?2",
+        params![now, id],
+    )?;
+    tx.commit()?;
+
+    get_by_id(conn, id)?.ok_or_else(|| AppError(format!("item {id} not found")))
+}
+
+/// 撤销删除:清空 deleted_at,恢复原状态。状态在软删时未变,只需清 deleted_at。
+/// ponytail: 5 秒撤销窗口由前端 toast 控制(超时即不再发 undo),DB 不校验时间窗,
+/// 避免前端定时器与 DB 时钟偏差导致合法撤销被拒。
+pub fn undo_delete(conn: &Connection, id: i64) -> Result<Item, AppError> {
+    let tx = conn.unchecked_transaction()?;
+    let now = now_ms();
+    // 先读被删记录的原始状态(用于恢复 active 时重开 interval)
+    let orig_status = {
+        let mut stmt =
+            tx.prepare("SELECT status FROM item WHERE id = ?1 AND deleted_at IS NOT NULL")?;
+        let mut rows = stmt.query(params![id])?;
+        match rows.next()? {
+            Some(row) => row.get::<_, String>(0)?,
+            None => {
+                return Err(AppError(format!("item {id} 不存在或未删除")));
+            }
+        }
+    };
+    let affected = tx.execute(
+        "UPDATE item SET deleted_at = NULL, updated_at = ?1 WHERE id = ?2 AND deleted_at IS NOT NULL",
+        params![now, id],
+    )?;
+    if affected == 0 {
+        return Err(AppError(format!("item {id} 不存在或未删除")));
+    }
+    // 恢复出 active 的卡:soft_delete 已结算其 interval(ended_at 已填)。
+    // 重开一条进行中 interval,维持「active 必有 ended_at IS NULL 的 interval」不变量(tech §3.3)。
+    if orig_status == "active" {
+        tx.execute(
+            "INSERT INTO focus_interval (item_id, started_at, ended_at, created_at)
+             VALUES (?1, ?2, NULL, ?2)",
+            params![id, now],
+        )?;
+    }
     tx.commit()?;
 
     get_by_id(conn, id)?.ok_or_else(|| AppError(format!("item {id} not found")))
@@ -332,6 +534,8 @@ pub fn settle_dormant(conn: &Connection, now: i64) -> Result<DormantResult, AppE
             "UPDATE item SET status = 'todo', focus_ms = focus_ms + (CASE WHEN last_active_at IS NOT NULL THEN ?1 - last_active_at ELSE 0 END), last_active_at = ?1, pending_ms = NULL, updated_at = ?1 WHERE id = ?2 AND status = 'active'",
             params![now, id],
         )?;
+        // 跨天停表:结算进行中 interval
+        settle_open_intervals(&tx, id, now)?;
         if !paused.contains(&id) {
             paused.push(id);
         }
@@ -683,5 +887,219 @@ mod tests {
         assert_eq!(actives.len(), 1);
         let inboxes = list(&conn, ListStatus::Inbox, None).unwrap();
         assert_eq!(inboxes.len(), 1);
+    }
+
+    #[test]
+    fn triage_to_todo_from_inbox() {
+        let conn = fresh_db();
+        let item = create(&conn, "X".into()).unwrap();
+        assert_eq!(item.status, "inbox");
+        let t = triage_to_todo(&conn, item.id).unwrap();
+        assert_eq!(t.status, "todo");
+        let inboxes = list(&conn, ListStatus::Inbox, None).unwrap();
+        assert!(inboxes.is_empty());
+        let todos = list(&conn, ListStatus::Todo, None).unwrap();
+        assert_eq!(todos.len(), 1);
+    }
+
+    #[test]
+    fn triage_to_todo_settles_active() {
+        let conn = fresh_db();
+        let id = insert_raw(&conn, "X", "active", 1000, now_ms() - 5000);
+        let t = triage_to_todo(&conn, id).unwrap();
+        assert_eq!(t.status, "todo");
+        assert!(t.focus_ms >= 6000 && t.focus_ms < 6200); // 1000 + 5000 已结算 + 开销容差
+    }
+
+    #[test]
+    fn triage_to_todo_rejects_done_and_archived() {
+        let conn = fresh_db();
+        // done 不可
+        let item = create(&conn, "X".into()).unwrap();
+        start(&conn, item.id).unwrap();
+        complete(&conn, item.id).unwrap();
+        assert!(triage_to_todo(&conn, item.id).is_err());
+        // archived 不可
+        let item2 = create(&conn, "Y".into()).unwrap();
+        triage_archive(&conn, item2.id).unwrap();
+        assert!(triage_to_todo(&conn, item2.id).is_err());
+    }
+
+    #[test]
+    fn triage_archive_moves_inbox_to_archived() {
+        let conn = fresh_db();
+        let item = create(&conn, "X".into()).unwrap();
+        let a = triage_archive(&conn, item.id).unwrap();
+        assert_eq!(a.status, "archived");
+        assert!(list(&conn, ListStatus::Inbox, None).unwrap().is_empty());
+        let archived = list(&conn, ListStatus::Archived, None).unwrap();
+        assert_eq!(archived.len(), 1);
+    }
+
+    #[test]
+    fn triage_archive_rejects_non_inbox() {
+        let conn = fresh_db();
+        let item = create(&conn, "X".into()).unwrap();
+        triage_to_todo(&conn, item.id).unwrap();
+        assert!(triage_archive(&conn, item.id).is_err());
+    }
+
+    #[test]
+    fn soft_delete_hides_from_list_and_get() {
+        let conn = fresh_db();
+        let item = create(&conn, "X".into()).unwrap();
+        soft_delete(&conn, item.id).unwrap();
+        assert!(get_by_id(&conn, item.id).unwrap().is_none());
+        assert!(list(&conn, ListStatus::Inbox, None).unwrap().is_empty());
+        assert!(list(&conn, ListStatus::Todo, None).unwrap().is_empty());
+    }
+
+    #[test]
+    fn soft_delete_settles_active() {
+        let conn = fresh_db();
+        let id = insert_raw(&conn, "X", "active", 1000, now_ms() - 5000);
+        let del = soft_delete(&conn, id).unwrap();
+        assert!(del.focus_ms >= 6000 && del.focus_ms < 6200);
+        assert!(get_by_id(&conn, id).unwrap().is_none());
+    }
+
+    #[test]
+    fn soft_delete_then_undo_restores() {
+        let conn = fresh_db();
+        let item = create(&conn, "X".into()).unwrap();
+        soft_delete(&conn, item.id).unwrap();
+        let restored = undo_delete(&conn, item.id).unwrap();
+        assert_eq!(restored.status, "inbox");
+        assert!(get_by_id(&conn, item.id).unwrap().is_some());
+        assert_eq!(list(&conn, ListStatus::Inbox, None).unwrap().len(), 1);
+    }
+
+    #[test]
+    fn undo_delete_rejects_not_deleted_or_missing() {
+        let conn = fresh_db();
+        let item = create(&conn, "X".into()).unwrap();
+        assert!(undo_delete(&conn, item.id).is_err());
+        assert!(undo_delete(&conn, 99999).is_err());
+    }
+
+    #[test]
+    fn reactivate_archived_to_todo() {
+        let conn = fresh_db();
+        let item = create(&conn, "X".into()).unwrap();
+        triage_archive(&conn, item.id).unwrap();
+        let re = reactivate(&conn, item.id).unwrap();
+        assert_eq!(re.status, "todo");
+        assert!(list(&conn, ListStatus::Archived, None).unwrap().is_empty());
+    }
+
+    #[test]
+    fn reactivate_rejects_non_archived() {
+        let conn = fresh_db();
+        let item = create(&conn, "X".into()).unwrap();
+        assert!(reactivate(&conn, item.id).is_err());
+    }
+
+    #[test]
+    fn start_creates_open_interval() {
+        let conn = fresh_db();
+        let item = create(&conn, "X".into()).unwrap();
+        start(&conn, item.id).unwrap();
+        let intervals = list_intervals(&conn, item.id).unwrap();
+        assert_eq!(intervals.len(), 1);
+        assert_eq!(intervals[0].item_id, item.id);
+        assert!(intervals[0].ended_at.is_none()); // 进行中
+    }
+
+    #[test]
+    fn pause_settles_interval_and_matches_focus() {
+        let conn = fresh_db();
+        let item = create(&conn, "X".into()).unwrap();
+        start(&conn, item.id).unwrap();
+        pause(&conn, item.id, None).unwrap();
+        let intervals = list_intervals(&conn, item.id).unwrap();
+        assert_eq!(intervals.len(), 1);
+        let iv = &intervals[0];
+        let ended = iv.ended_at.expect("主动暂停应结算 ended_at");
+        assert!(ended >= iv.started_at);
+        let agg: i64 = intervals
+            .iter()
+            .map(|i| i.ended_at.unwrap() - i.started_at)
+            .sum();
+        let after = get_by_id(&conn, item.id).unwrap().unwrap();
+        assert_eq!(after.focus_ms, agg); // 结算后 focus == interval 聚合
+    }
+
+    #[test]
+    fn complete_settles_interval_and_matches_focus() {
+        let conn = fresh_db();
+        let item = create(&conn, "X".into()).unwrap();
+        start(&conn, item.id).unwrap();
+        complete(&conn, item.id).unwrap();
+        let intervals = list_intervals(&conn, item.id).unwrap();
+        assert_eq!(intervals.len(), 1);
+        assert!(intervals[0].ended_at.is_some());
+        let agg: i64 = intervals
+            .iter()
+            .map(|i| i.ended_at.unwrap() - i.started_at)
+            .sum();
+        let after = get_by_id(&conn, item.id).unwrap().unwrap();
+        assert_eq!(after.status, "done");
+        assert!(after.focus_ms > 0);
+        assert_eq!(after.focus_ms, agg);
+    }
+
+    #[test]
+    fn start_switch_settles_old_card_interval() {
+        let conn = fresh_db();
+        let a = create(&conn, "A".into()).unwrap();
+        let b = create(&conn, "B".into()).unwrap();
+        start(&conn, a.id).unwrap();
+        let res = start(&conn, b.id).unwrap(); // 切走 A
+        assert!(res.switched_from.contains(&a.id));
+        let a_ivs = list_intervals(&conn, a.id).unwrap();
+        assert_eq!(a_ivs.len(), 1);
+        assert!(a_ivs[0].ended_at.is_some()); // 旧卡 interval 已结算
+        let b_ivs = list_intervals(&conn, b.id).unwrap();
+        assert_eq!(b_ivs.len(), 1);
+        assert!(b_ivs[0].ended_at.is_none()); // 新卡进行中
+        let agg: i64 = a_ivs
+            .iter()
+            .map(|i| i.ended_at.unwrap() - i.started_at)
+            .sum();
+        let a_after = get_by_id(&conn, a.id).unwrap().unwrap();
+        assert_eq!(a_after.status, "todo");
+        assert_eq!(a_after.focus_ms, agg);
+    }
+
+    #[test]
+    fn settle_dormant_day_cross_settles_interval() {
+        let conn = fresh_db();
+        let item = create(&conn, "X".into()).unwrap();
+        start(&conn, item.id).unwrap();
+        let now = now_ms();
+        let yesterday = now - 25 * 3600 * 1000;
+        // 模拟"昨天开始跑进今天":last_active_at 与 interval 起点同源,都挪到昨天
+        conn.execute(
+            "UPDATE item SET last_active_at = ?1 WHERE id = ?2",
+            params![yesterday, item.id],
+        )
+        .unwrap();
+        conn.execute(
+            "UPDATE focus_interval SET started_at = ?1 WHERE item_id = ?2",
+            params![yesterday, item.id],
+        )
+        .unwrap();
+        let res = settle_dormant(&conn, now).unwrap();
+        assert!(res.paused.contains(&item.id));
+        let intervals = list_intervals(&conn, item.id).unwrap();
+        assert_eq!(intervals.len(), 1);
+        assert!(intervals[0].ended_at.is_some());
+        let agg: i64 = intervals
+            .iter()
+            .map(|i| i.ended_at.unwrap() - i.started_at)
+            .sum();
+        let after = get_by_id(&conn, item.id).unwrap().unwrap();
+        assert_eq!(after.status, "todo");
+        assert_eq!(after.focus_ms, agg); // 跨天停表后 focus == interval 聚合
     }
 }
