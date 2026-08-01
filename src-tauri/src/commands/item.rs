@@ -54,11 +54,7 @@ pub fn item_complete(id: i64, state: State<DbState>) -> Result<Item, AppError> {
 }
 
 #[tauri::command]
-pub fn item_confirm_pending(
-    id: i64,
-    keep: bool,
-    state: State<DbState>,
-) -> Result<Item, AppError> {
+pub fn item_confirm_pending(id: i64, keep: bool, state: State<DbState>) -> Result<Item, AppError> {
     let conn = state.0.lock().map_err(|e| AppError(e.to_string()))?;
     item::confirm_pending(&conn, id, keep)
 }
@@ -74,10 +70,7 @@ pub fn item_check_dormant(state: State<DbState>) -> Result<Vec<DormantPayload>, 
 
 /// 重复捕获检测:同内容已有 inbox/todo/active 卡(轻提示,不合并)
 #[tauri::command]
-pub fn item_list_duplicate(
-    content: String,
-    state: State<DbState>,
-) -> Result<Vec<Item>, AppError> {
+pub fn item_list_duplicate(content: String, state: State<DbState>) -> Result<Vec<Item>, AppError> {
     let conn = state.0.lock().map_err(|e| AppError(e.to_string()))?;
     item::list_duplicate(&conn, &content)
 }

@@ -109,7 +109,9 @@ fn row_to_item(row: &Row<'_>) -> rusqlite::Result<Item> {
 const COLS: &str = "id, content, type, status, focus_ms, last_active_at, progress_note, source, pending_ms, created_at, updated_at";
 
 pub fn get_by_id(conn: &Connection, id: i64) -> Result<Option<Item>, AppError> {
-    let mut stmt = conn.prepare(&format!("SELECT {COLS} FROM item WHERE id = ?1 AND deleted_at IS NULL"))?;
+    let mut stmt = conn.prepare(&format!(
+        "SELECT {COLS} FROM item WHERE id = ?1 AND deleted_at IS NULL"
+    ))?;
     let mut rows = stmt.query(params![id])?;
     match rows.next()? {
         Some(row) => Ok(Some(row_to_item(row)?)),
@@ -150,7 +152,9 @@ pub fn start(conn: &Connection, id: i64) -> Result<StartResult, AppError> {
     let now = now_ms();
     let mut switched: Vec<i64> = Vec::new();
     {
-        let mut stmt = tx.prepare("SELECT id FROM item WHERE status = 'active' AND id != ?1 AND deleted_at IS NULL")?;
+        let mut stmt = tx.prepare(
+            "SELECT id FROM item WHERE status = 'active' AND id != ?1 AND deleted_at IS NULL",
+        )?;
         let rows = stmt.query_map(params![id], |r| r.get::<_, i64>(0))?;
         for r in rows {
             switched.push(r?);
@@ -171,7 +175,10 @@ pub fn start(conn: &Connection, id: i64) -> Result<StartResult, AppError> {
     tx.commit()?;
 
     let item = get_by_id(conn, id)?.ok_or_else(|| AppError(format!("item {id} not found")))?;
-    Ok(StartResult { item, switched_from: switched })
+    Ok(StartResult {
+        item,
+        switched_from: switched,
+    })
 }
 
 /// 暂停:active → todo。失真时(pending_ms 传入)把失真窗口挂到待确认,结算到失真点。
@@ -204,7 +211,10 @@ pub fn pause(conn: &Connection, id: i64, pending_ms: Option<i64>) -> Result<Paus
     tx.commit()?;
 
     let item = get_by_id(conn, id)?.ok_or_else(|| AppError(format!("item {id} not found")))?;
-    Ok(PauseResult { item, pending_ms: pending_to_write })
+    Ok(PauseResult {
+        item,
+        pending_ms: pending_to_write,
+    })
 }
 
 /// 完成:active/todo → done。结算 active 段,清空待确认。
@@ -220,7 +230,10 @@ pub fn complete(conn: &Connection, id: i64) -> Result<Item, AppError> {
     };
 
     let settled_ms = if target.status == "active" {
-        target.last_active_at.map(|la| now.saturating_sub(la)).unwrap_or(0)
+        target
+            .last_active_at
+            .map(|la| now.saturating_sub(la))
+            .unwrap_or(0)
     } else {
         0
     };
@@ -257,12 +270,19 @@ pub fn confirm_pending(conn: &Connection, id: i64, keep: bool) -> Result<Item, A
     get_by_id(conn, id)?.ok_or_else(|| AppError(format!("item {id} not found")))
 }
 
-pub fn list(conn: &Connection, status: ListStatus, limit: Option<i64>) -> Result<Vec<Item>, AppError> {
+pub fn list(
+    conn: &Connection,
+    status: ListStatus,
+    limit: Option<i64>,
+) -> Result<Vec<Item>, AppError> {
     let mut stmt = conn.prepare(&format!(
         "SELECT {COLS} FROM item WHERE status = ?1 AND deleted_at IS NULL ORDER BY created_at DESC LIMIT ?2"
     ))?;
-    let rows = stmt.query_map(params![status.as_str(), limit.unwrap_or(100)], |row| row_to_item(row))?;
-    rows.collect::<rusqlite::Result<Vec<_>>>().map_err(AppError::from)
+    let rows = stmt.query_map(params![status.as_str(), limit.unwrap_or(100)], |row| {
+        row_to_item(row)
+    })?;
+    rows.collect::<rusqlite::Result<Vec<_>>>()
+        .map_err(AppError::from)
 }
 
 /// 失真检测 + 跨天停表。返回:退回 todo 的 id + 有待确认的 id。
@@ -322,7 +342,10 @@ pub fn settle_dormant(conn: &Connection, now: i64) -> Result<DormantResult, AppE
     }
 
     tx.commit()?;
-    Ok(DormantResult { paused, has_pending })
+    Ok(DormantResult {
+        paused,
+        has_pending,
+    })
 }
 
 /// 取一批卡的失真 payload(bubble 窗口 emit 用)。
@@ -350,7 +373,8 @@ pub fn list_duplicate(conn: &Connection, content: &str) -> Result<Vec<Item>, App
         "SELECT {COLS} FROM item WHERE content = ?1 AND status IN ('inbox','todo','active') AND deleted_at IS NULL ORDER BY created_at DESC"
     ))?;
     let rows = stmt.query_map(params![content], |row| row_to_item(row))?;
-    rows.collect::<rusqlite::Result<Vec<_>>>().map_err(AppError::from)
+    rows.collect::<rusqlite::Result<Vec<_>>>()
+        .map_err(AppError::from)
 }
 
 /// 历史任务名复用(改自 timer_session_list_recent_task_titles)
@@ -358,7 +382,8 @@ pub fn list_duplicate(conn: &Connection, content: &str) -> Result<Vec<Item>, App
 pub struct TitleRec {
     pub content: String,
     pub last_used: i64,
-}pub fn list_recent_titles(conn: &Connection, limit: i64) -> Result<Vec<TitleRec>, AppError> {
+}
+pub fn list_recent_titles(conn: &Connection, limit: i64) -> Result<Vec<TitleRec>, AppError> {
     let mut stmt = conn.prepare(
         "SELECT content, MAX(updated_at) AS last_used FROM item
          WHERE status = 'done' GROUP BY content ORDER BY last_used DESC LIMIT ?1",
@@ -369,7 +394,8 @@ pub struct TitleRec {
             last_used: row.get(1)?,
         })
     })?;
-    rows.collect::<rusqlite::Result<Vec<_>>>().map_err(AppError::from)
+    rows.collect::<rusqlite::Result<Vec<_>>>()
+        .map_err(AppError::from)
 }
 
 // 本地时区"今天 0 点"毫秒。SQLite 无时区概念,用系统本地时区算自然日边界。
@@ -404,15 +430,24 @@ mod tests {
 
     fn fresh_db() -> Connection {
         let id = COUNTER.fetch_add(1, Ordering::SeqCst);
-        let path =
-            std::env::temp_dir().join(format!("mindtap_item_test_{}_{}.db", std::process::id(), id));
+        let path = std::env::temp_dir().join(format!(
+            "mindtap_item_test_{}_{}.db",
+            std::process::id(),
+            id
+        ));
         let _ = std::fs::remove_file(&path);
         let conn = Connection::open(&path).unwrap();
         conn.execute_batch(crate::db::schema::CREATE_SQL).unwrap();
         conn
     }
 
-    fn insert_raw(conn: &Connection, content: &str, status: &str, focus_ms: i64, last_active_at: i64) -> i64 {
+    fn insert_raw(
+        conn: &Connection,
+        content: &str,
+        status: &str,
+        focus_ms: i64,
+        last_active_at: i64,
+    ) -> i64 {
         conn.execute(
             "INSERT INTO item (content, status, focus_ms, last_active_at, created_at, updated_at)
              VALUES (?1, ?2, ?3, ?4, ?4, ?4)",
@@ -532,7 +567,11 @@ mod tests {
     fn confirm_pending_keep_adds_focus() {
         let conn = fresh_db();
         let id = insert_raw(&conn, "X", "todo", 1000, now_ms());
-        conn.execute("UPDATE item SET pending_ms = 2000 WHERE id = ?1", params![id]).unwrap();
+        conn.execute(
+            "UPDATE item SET pending_ms = 2000 WHERE id = ?1",
+            params![id],
+        )
+        .unwrap();
         let after = confirm_pending(&conn, id, true).unwrap();
         assert_eq!(after.focus_ms, 3000); // 1000 + 2000
         assert!(after.pending_ms.is_none());
@@ -542,7 +581,11 @@ mod tests {
     fn confirm_pending_discard_keeps_focus() {
         let conn = fresh_db();
         let id = insert_raw(&conn, "X", "todo", 1000, now_ms());
-        conn.execute("UPDATE item SET pending_ms = 2000 WHERE id = ?1", params![id]).unwrap();
+        conn.execute(
+            "UPDATE item SET pending_ms = 2000 WHERE id = ?1",
+            params![id],
+        )
+        .unwrap();
         let after = confirm_pending(&conn, id, false).unwrap();
         assert_eq!(after.focus_ms, 1000);
         assert!(after.pending_ms.is_none());
@@ -590,8 +633,11 @@ mod tests {
         let now = now_ms();
         let yesterday = now - 25 * 3600 * 1000;
         let id = insert_raw(&conn, "X", "active", 0, yesterday);
-        conn.execute("UPDATE item SET pending_ms = 1000 WHERE id = ?1", params![id])
-            .unwrap();
+        conn.execute(
+            "UPDATE item SET pending_ms = 1000 WHERE id = ?1",
+            params![id],
+        )
+        .unwrap();
         let res = settle_dormant(&conn, now).unwrap();
         assert!(res.paused.contains(&id));
         let after = get_by_id(&conn, id).unwrap().unwrap();
