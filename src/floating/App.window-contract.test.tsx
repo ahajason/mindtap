@@ -70,7 +70,7 @@ describe("浮窗生产契约", () => {
 
     expect(app).toContain('type FloatingPresentation = "folded" | "compose" | "list"');
     expect(app).toMatch(/folded:\s*\{\s*w:\s*360,\s*h:\s*36\s*\}/);
-    expect(app).toMatch(/compose:\s*\{\s*w:\s*360,\s*h:\s*280\s*\}/);
+    expect(app).toMatch(/compose:\s*\{\s*w:\s*360,\s*h:\s*165\s*\}/);
     expect(app).toMatch(/list:\s*\{\s*w:\s*360,\s*h:\s*280\s*\}/);
   });
 

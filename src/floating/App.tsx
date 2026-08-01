@@ -22,7 +22,8 @@ type FloatingPresentation = "folded" | "compose" | "list";
 
 const FLOATING_SIZE: Record<FloatingPresentation, { w: number; h: number }> = {
   folded: { w: 360, h: 36 },
-  compose: { w: 360, h: 280 },
+  // V0.2.1 compose 高度贴合内容(状态条36 + 输入框36 + 按钮36 + padding):历史下拉移除后无需 280。
+  compose: { w: 360, h: 165 },
   list: { w: 360, h: 280 },
 };
 
