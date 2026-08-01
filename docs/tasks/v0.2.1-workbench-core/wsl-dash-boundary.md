@@ -11,6 +11,8 @@
 | 前端 vitest | `npm test` | ✅ 27 文件 / 93 测试通过(含批次1-3 新增 23 个) |
 | 前端类型检查 | `npx tsc --noEmit` | ✅(build 一部分) |
 | 模块边界检查 | `npm run lint:boundaries` | ✅ |
+| **前端完整 build** | `npm run build` | ✅ tsc + vite + boundaries 一体化,双入口产出 dist/ |
+| **Rust 格式检查** | `cargo fmt --check` | ✅ **纯语法检查,不需编译链接**——WSL 可跑;已修 item.rs 16 处 |
 | 写代码 / 写文档 | — | ✅ |
 | git commit / push | — | ✅ |
 | 前端 TDD 红绿循环 | vitest watch | ✅ 可即时闭环 |
@@ -19,12 +21,14 @@
 
 | 能力 | 失败原因 | 处理 |
 |---|---|---|
-| `cargo test`(Rust 编译) | `tauri-plugin-autostart` build script 失败,`could not execute process ... build-script-build (No such file)` | **必须 D:\ 端跑** |
-| `cargo clippy` / `cargo fmt` | 同上,依赖编译 | D:\ 端跑 |
+| `cargo test` / `cargo check`(Rust 编译) | `tauri-plugin-autostart` build script 失败,`could not execute process ... build-script-build (No such file)`;`--lib` 也会编译整个 crate,无法隔离 | **必须 D:\ 端跑** |
+| `cargo clippy` | 依赖编译 | D:\ 端跑 |
+| `cargo fmt --check` | ✅ **可用**(纯语法,不需编译) | WSL 已跑通 |
 | `npm run tauri dev` | Tauri 需 Windows WebView2 | D:\ 端跑 |
+| vitest coverage | `@vitest/coverage-v8` 未装(收益低,未装) | 跳过 |
 | 视觉 / 交互实测 | Windows-only 透明/菜单/焦点 | D:\ 端跑 |
 
-> **结论**:Rust 后端 TDD 的"红→绿"闭环在 WSL 不可用,只能 WSL 写代码 → D:\ 端 `cargo test` 验证 → 反馈回 WSL 修。前端 vitest 是 WSL 唯一即时闭环。
+> **结论**:Rust 后端 TDD 的"红→绿"闭环在 WSL 不可用,只能 WSL 写代码 → D:\ 端 `cargo test` 验证 → 反馈回 WSL 修。前端 vitest 是 WSL 唯一即时闭环;`cargo fmt --check` 是 Rust 侧唯一可跑的检查(已用于格式修复)。
 
 ## 三、D:\ 端执行清单(每次批次交付后)
 
