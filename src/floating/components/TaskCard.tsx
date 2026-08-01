@@ -7,6 +7,8 @@ type TaskCardProps = {
   item: Item;
   onStart: () => void;
   isInbox: boolean;
+  /** 进行中卡可手动暂停(退回待办,PRD 1.3 能力,V0.2.1 闭环补全) */
+  onPause?: () => void;
   /** 冷却档位: 'active' | 'cooling' | 'stale',决定透明度 */
   cold?: "cooling" | "stale";
   /** 当前时间戳(秒级 tick):active 卡实时滚动时长用 */
@@ -26,7 +28,7 @@ const COLD_OPACITY: Record<string, string> = {
   stale: "opacity-35",
 };
 
-export function TaskCard({ item, onStart, isInbox, cold, now }: TaskCardProps) {
+export function TaskCard({ item, onStart, isInbox, onPause, cold, now }: TaskCardProps) {
   const opacity = cold ? COLD_OPACITY[cold] : "";
   // 决策9: 后端主导。active 卡实时时长 = focus_ms + (now - last_active_at),不写库。
   const displayMs =
@@ -57,7 +59,7 @@ export function TaskCard({ item, onStart, isInbox, cold, now }: TaskCardProps) {
             {formatFocusMs(displayMs)}
           </span>
         )}
-        {isInbox && (
+        {isInbox ? (
           <button
             type="button"
             data-no-expand
@@ -69,6 +71,21 @@ export function TaskCard({ item, onStart, isInbox, cold, now }: TaskCardProps) {
           >
             开始
           </button>
+        ) : (
+          onPause && (
+            <button
+              type="button"
+              data-no-expand
+              onClick={(e) => {
+                e.stopPropagation();
+                onPause();
+              }}
+              className="h-6 rounded-[8px] px-2 text-[12px] font-medium text-text-2 transition-colors hover:bg-white/40 hover:text-text-1"
+              aria-label={`暂停 ${item.content}`}
+            >
+              暂停
+            </button>
+          )
         )}
       </div>
     </div>

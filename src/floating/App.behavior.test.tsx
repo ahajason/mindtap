@@ -34,9 +34,34 @@ const INBOX_ITEM: Item = {
 };
 
 function mockData(active: Item[], inbox: Item[]) {
-  vi.mocked(invoke).mockImplementation(async (command: string) => {
+  const inboxState = [...inbox];
+  vi.mocked(invoke).mockImplementation(async (command: string, args) => {
     if (command === "item_get_active") return active;
-    if (command === "item_get_inbox") return inbox;
+    if (command === "item_get_inbox") return inboxState;
+    // 捕获成功 → inbox 追加新卡(贴近真实 create 后行为)
+    if (
+      command === "item_create" &&
+      args &&
+      typeof args === "object" &&
+      !Array.isArray(args) &&
+      typeof (args as { content?: unknown }).content === "string"
+    ) {
+      const content = (args as { content: string }).content;
+      inboxState.push({
+        id: inboxState.length + 100,
+        content,
+        type: "task",
+        status: "inbox",
+        focus_ms: 0,
+        last_active_at: null,
+        progress_note: null,
+        source: "manual",
+        pending_ms: null,
+        created_at: 0,
+        updated_at: 0,
+      });
+      return inboxState[inboxState.length - 1];
+    }
     if (command === "set_floating_size") return null;
     return null;
   });
@@ -181,7 +206,7 @@ describe("浮窗任务关键路径", () => {
     expect(await screen.findByPlaceholderText(/做什么/)).toBeVisible();
   });
 
-  it("捕获后调 item_create 并折叠", async () => {
+  it("捕获后调 item_create 并进入 list 显示新卡(不折叠)", async () => {
     mockData([], []);
     const invokeMock = vi.mocked(invoke);
     render(<FloatingApp />);
@@ -196,7 +221,11 @@ describe("浮窗任务关键路径", () => {
     await waitFor(() => {
       expect(invokeMock).toHaveBeenCalledWith("item_create", { content: "写代码" });
     });
-    await waitFor(() => expect(root.className).toContain("folded"));
+    // V0.2.1 QA 补全:捕获后进入 list 显示新卡,不折叠(消除"任务去哪了"困惑)
+    await waitFor(() => {
+      expect(root.className).toContain("expanded");
+      expect(screen.getByText("写代码")).toBeVisible();
+    });
   });
 
   it("空输入时开始按钮禁用", async () => {

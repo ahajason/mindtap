@@ -54,6 +54,7 @@ export function FloatingApp() {
   const [taskTitle, setTaskTitle] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [duplicateHint, setDuplicateHint] = useState<string | null>(null);
+  const [forceCompose, setForceCompose] = useState(false);
 
   // ADR-0013: 重复捕获轻提示(不阻止不合并)。输入变化时检测同名已有卡。
   useEffect(() => {
@@ -77,11 +78,11 @@ export function FloatingApp() {
     };
   }, [taskTitle]);
 
-  // 展开态默认:有卡 → list;空 → compose;捕获意图强制 compose
+  // 展开态默认:有卡 → list;空 → compose;捕获意图/手动新增 → compose
   const hasCards = active.length > 0 || inbox.length > 0;
   const presentation: FloatingPresentation = !isPanelOpen
     ? "folded"
-    : intent
+    : forceCompose || intent
       ? "compose"
       : hasCards
         ? "list"
@@ -306,10 +307,12 @@ export function FloatingApp() {
 
   const handleDismiss = useCallback(() => {
     clear();
+    setForceCompose(false);
     setIsPanelOpen(false);
   }, [clear]);
   const handleClearAndDismiss = useCallback(() => {
     clear();
+    setForceCompose(false);
     setTaskTitle("");
     setIsPanelOpen(false);
   }, [clear]);
@@ -346,7 +349,8 @@ export function FloatingApp() {
     };
   }, [presentation, handleDismiss]);
 
-  // 捕获:内容非空即存,进收件箱(PRD 1.1 + 3.2 规则 1)
+  // 捕获:内容非空即存,进收件箱(PRD 1.1 + 3.2 规则 1)。
+  // V0.2.1 QA 补全:捕获后进入 list 显示新卡(不折叠),消除"任务去哪了"困惑。
   async function handleStart() {
     const title = taskTitle.trim();
     if (!title || submitting) return;
@@ -354,9 +358,10 @@ export function FloatingApp() {
     try {
       await api.item.create(title);
       clear();
+      setForceCompose(false);
       setTaskTitle("");
-      setIsPanelOpen(false);
-      void refresh();
+      await refresh();
+      setIsPanelOpen(true);
     } catch (err) {
       console.error("[start] failed", err);
     } finally {
@@ -372,6 +377,23 @@ export function FloatingApp() {
     } catch (err) {
       console.error("[item.start] failed", err);
     }
+  }
+
+  // 手动暂停:active → todo(退回待办)。后端 pause 已就绪(失真气泡在用),此按钮让它闭环可用。
+  async function handlePauseItem(id: number) {
+    try {
+      await api.item.pause(id, null);
+      void refresh();
+    } catch (err) {
+      console.error("[item.pause] failed", err);
+    }
+  }
+
+  // 捕获意图到达:强制展开进入 compose(PRD 1.1:快捷键唤起输入框聚焦)
+  function openCompose() {
+    setTaskTitle("");
+    setForceCompose(true);
+    setIsPanelOpen(true);
   }
 
   // 待确认 = 有 pending_ms 的卡(active 冷却挂 pending + todo 超时停表挂 pending)
@@ -402,6 +424,15 @@ export function FloatingApp() {
                     在推进的事有点多
                   </div>
                 )}
+                {/* V0.2.1 QA 补全:list → compose 新增入口(折叠条点击只会进 list,鼠标路径进不了输入) */}
+                <button
+                  type="button"
+                  data-no-expand
+                  onClick={openCompose}
+                  className="mb-1 flex w-full items-center gap-1.5 rounded-[10px] px-2 py-1.5 text-[13px] font-medium text-text-2 transition-colors hover:bg-white/40 hover:text-text-1"
+                >
+                  <span className="text-[14px] leading-none">+</span> 记一下
+                </button>
                 {inbox.map((item) => (
                   <TaskCard
                     key={`inbox-${item.id}`}
@@ -418,22 +449,11 @@ export function FloatingApp() {
                     cold={coldLevel(item.last_active_at, nowTick)}
                     now={nowTick}
                     onStart={() => handleStartItem(item.id)}
+                    onPause={() => handlePauseItem(item.id)}
                   />
                 ))}
                 {inbox.length === 0 && active.length === 0 && (
                   <div className="px-2 py-2 text-[12px] text-text-2">还没有任务</div>
-                )}
-                {active.length === 0 && inbox.length === 0 && (
-                  <div className="flex justify-end gap-2 px-2 pb-1">
-                    <button
-                      type="button"
-                      data-no-expand
-                      className="h-7 rounded-[8px] bg-primary px-3 text-[12px] font-semibold text-white"
-                      onClick={() => setIsPanelOpen(false)}
-                    >
-                      完成
-                    </button>
-                  </div>
                 )}
               </div>
             ) : (
