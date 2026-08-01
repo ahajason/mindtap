@@ -5,16 +5,12 @@ import { useEffect, useRef, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { listen } from "@tauri-apps/api/event";
 
-import { api } from "../lib/tauri-bridge";
+import { api, type DormantPayload } from "../lib/tauri-bridge";
 import { Bubble } from "./components/Bubble";
+import { useDormantCheck } from "./hooks/useDormantCheck";
 
 const TIMEOUT_MS = 5000;
-
-type DormantPayload = {
-  id: number;
-  content: string;
-  pending_ms: number;
-};
+const POLL_MS = 300_000; // 5 分钟
 
 export function BubbleApp() {
   const [payload, setPayload] = useState<DormantPayload | null>(null);
@@ -22,7 +18,16 @@ export function BubbleApp() {
   const [dismissed, setDismissed] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // 监听失真事件
+  // 运行期轮询失真(tech §4.2):不依赖 Rust emit,active 静置 2h 也能触发
+  useDormantCheck(POLL_MS, (payloads) => {
+    if (payloads.length > 0) {
+      setPayload(payloads[0]);
+      setPendingConfirm(false);
+      setDismissed(false);
+    }
+  });
+
+  // 监听 Rust 启动 emit 的失真事件
   useEffect(() => {
     let unlisten: (() => void) | null = null;
     (async () => {

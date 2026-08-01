@@ -30,9 +30,10 @@ export type PauseResult = {
   pending_ms: number | null; // 失真窗口毫秒(若非主动暂停)
 };
 
-export type DormantResult = {
-  paused: number[]; // 因失真退回待办的卡 id
-  has_pending: number[]; // 有待确认窗口的卡 id
+export type DormantPayload = {
+  id: number;
+  content: string;
+  pending_ms: number;
 };
 
 export type TitleRec = {
@@ -63,7 +64,7 @@ export const api = {
     complete: (id: number) => invoke<Item>("item_complete", { id }),
     confirmPending: (id: number, keep: boolean) =>
       invoke<Item>("item_confirm_pending", { id, keep }),
-    checkDormant: () => invoke<DormantResult>("item_check_dormant"),
+    checkDormant: () => invoke<DormantPayload[]>("item_check_dormant"),
     listDuplicate: (content: string) =>
       invoke<Item[]>("item_list_duplicate", { content }),
     getHistoryTitles: (limit?: number) =>

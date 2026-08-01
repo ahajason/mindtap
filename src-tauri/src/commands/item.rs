@@ -3,7 +3,7 @@
 
 use tauri::State;
 
-use crate::db::item::{self, DormantResult, Item, ListStatus, PauseResult, StartResult, TitleRec};
+use crate::db::item::{self, DormantPayload, Item, ListStatus, PauseResult, StartResult, TitleRec};
 use crate::db::DbState;
 use crate::error::AppError;
 
@@ -63,11 +63,13 @@ pub fn item_confirm_pending(
     item::confirm_pending(&conn, id, keep)
 }
 
-/// 失真检测 + 跨天停表(启动/定时调用)
+/// 失真检测 + 跨天停表。返回失真卡 payload(供前端轮询显示气泡)
 #[tauri::command]
-pub fn item_check_dormant(state: State<DbState>) -> Result<DormantResult, AppError> {
+pub fn item_check_dormant(state: State<DbState>) -> Result<Vec<DormantPayload>, AppError> {
     let conn = state.0.lock().map_err(|e| AppError(e.to_string()))?;
-    item::settle_dormant(&conn, item::now_ms_for_cmd())
+    let now = item::now_ms_for_cmd();
+    let dormant = item::settle_dormant(&conn, now)?;
+    item::get_dormant_payloads(&conn, &dormant.has_pending)
 }
 
 /// 重复捕获检测:同内容已有 inbox/todo/active 卡(轻提示,不合并)
