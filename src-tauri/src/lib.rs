@@ -1,4 +1,4 @@
-use tauri::{Manager, WindowEvent};
+use tauri::{Emitter, Manager, WindowEvent};
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
@@ -40,14 +40,18 @@ pub fn run() {
                             if let Some(floating) = app.get_webview_window("floating") {
                                 match floating.is_visible() {
                                     Ok(true) => {
+                                        // 浮窗可见 → 隐藏(toggle)
                                         let _ = floating.hide();
                                     }
                                     Ok(false) => {
+                                        // 浮窗不可见 → 显示 + 发捕获意图(前端聚焦输入框, PRD 1.1)
                                         let _ = floating.show();
+                                        let _ = app.emit("floating:capture", ());
                                     }
                                     Err(err) => {
                                         eprintln!("[shortcut] floating is_visible failed: {err}");
                                         let _ = floating.show();
+                                        let _ = app.emit("floating:capture", ());
                                     }
                                 }
                             } else {
@@ -117,6 +121,43 @@ pub fn run() {
             match db_state {
                 Ok(state) => {
                     app.manage(state);
+                    // V0.2.1: 启动失真检测(跨天/冷却 active → 退回 todo + 挂待确认)。
+                    // 对每个失真项 emit floating:dormant,由 bubble 窗口监听。
+                    // ponytail: 启动一次即可(PRD 跨天停表),周期轮询留给 V0.2.2 空闲检测。
+                    let app_handle = app.handle().clone();
+                    std::thread::spawn(move || {
+                        let now = crate::db::item::now_ms_for_cmd();
+                        let result = {
+                            let conn = app_handle
+                                .state::<crate::db::DbState>()
+                                .0
+                                .lock()
+                                .map_err(|e| crate::error::AppError(e.to_string()));
+                            match conn {
+                                Ok(conn) => crate::db::item::settle_dormant(&conn, now),
+                                Err(e) => Err(e),
+                            }
+                        };
+                        if let Ok(dormant) = result {
+                            if !dormant.has_pending.is_empty() {
+                                let conn = app_handle
+                                    .state::<crate::db::DbState>()
+                                    .0
+                                    .lock()
+                                    .map_err(|e| crate::error::AppError(e.to_string()));
+                                if let Ok(conn) = conn {
+                                    if let Ok(payloads) = crate::db::item::get_dormant_payloads(
+                                        &conn,
+                                        &dormant.has_pending,
+                                    ) {
+                                        for p in payloads {
+                                            let _ = app_handle.emit("floating:dormant", &p);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
                 }
                 Err(e) => {
                     eprintln!("[setup] db init failed: {e}");

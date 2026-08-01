@@ -46,6 +46,14 @@ pub struct DormantResult {
     pub has_pending: Vec<i64>,
 }
 
+/// 失真确认气泡的 emit payload(bubble 窗口监听)
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct DormantPayload {
+    pub id: i64,
+    pub content: String,
+    pub pending_ms: i64,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ListStatus {
     Active,
@@ -100,7 +108,7 @@ fn row_to_item(row: &Row<'_>) -> rusqlite::Result<Item> {
 
 const COLS: &str = "id, content, type, status, focus_ms, last_active_at, progress_note, source, pending_ms, created_at, updated_at";
 
-fn get_by_id(conn: &Connection, id: i64) -> Result<Option<Item>, AppError> {
+pub fn get_by_id(conn: &Connection, id: i64) -> Result<Option<Item>, AppError> {
     let mut stmt = conn.prepare(&format!("SELECT {COLS} FROM item WHERE id = ?1 AND deleted_at IS NULL"))?;
     let mut rows = stmt.query(params![id])?;
     match rows.next()? {
@@ -313,6 +321,24 @@ pub fn settle_dormant(conn: &Connection, now: i64) -> Result<DormantResult, AppE
     Ok(DormantResult { paused, has_pending })
 }
 
+/// 取一批卡的失真 payload(bubble 窗口 emit 用)。
+pub fn get_dormant_payloads(
+    conn: &Connection,
+    ids: &[i64],
+) -> Result<Vec<DormantPayload>, AppError> {
+    let mut out = Vec::new();
+    for id in ids {
+        if let Some(item) = get_by_id(conn, *id)? {
+            out.push(DormantPayload {
+                id: item.id,
+                content: item.content.clone(),
+                pending_ms: item.pending_ms.unwrap_or(0),
+            });
+        }
+    }
+    Ok(out)
+}
+
 /// 重复捕获检测:同内容已有 inbox/todo/active 卡(不合并,轻提示)。
 pub fn list_duplicate(conn: &Connection, content: &str) -> Result<Vec<Item>, AppError> {
     let content = content.trim();
@@ -328,9 +354,7 @@ pub fn list_duplicate(conn: &Connection, content: &str) -> Result<Vec<Item>, App
 pub struct TitleRec {
     pub content: String,
     pub last_used: i64,
-}
-
-pub fn list_recent_titles(conn: &Connection, limit: i64) -> Result<Vec<TitleRec>, AppError> {
+}pub fn list_recent_titles(conn: &Connection, limit: i64) -> Result<Vec<TitleRec>, AppError> {
     let mut stmt = conn.prepare(
         "SELECT content, MAX(updated_at) AS last_used FROM item
          WHERE status = 'done' GROUP BY content ORDER BY last_used DESC LIMIT ?1",

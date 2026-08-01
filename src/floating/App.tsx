@@ -13,6 +13,7 @@ import {
 
 import { api } from "../lib/tauri-bridge";
 import { useActiveTasks } from "./hooks/useActiveTasks";
+import { useCaptureIntent } from "./hooks/useCaptureIntent";
 import { ExpandedPanel } from "./components/ExpandedPanel";
 import { FoldedBar } from "./components/FoldedBar";
 import { TaskCard } from "./components/TaskCard";
@@ -46,19 +47,27 @@ function coldLevel(la: number | null | undefined, now: number): "cooling" | "sta
 
 export function FloatingApp() {
   const { active, inbox, refresh } = useActiveTasks();
+  const { intent, clear } = useCaptureIntent();
   const [nowTick, setNowTick] = useState(() => Date.now());
 
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [taskTitle, setTaskTitle] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // 展开态默认:有卡 → list;空 → compose
+  // 展开态默认:有卡 → list;空 → compose;捕获意图强制 compose
   const hasCards = active.length > 0 || inbox.length > 0;
   const presentation: FloatingPresentation = !isPanelOpen
     ? "folded"
-    : hasCards
-      ? "list"
-      : "compose";
+    : intent
+      ? "compose"
+      : hasCards
+        ? "list"
+        : "compose";
+
+  // 捕获意图到达:强制展开进入 compose(PRD 1.1:快捷键唤起输入框聚焦)
+  useEffect(() => {
+    if (intent) setIsPanelOpen(true);
+  }, [intent]);
 
   const panelRef = useRef<HTMLDivElement | null>(null);
 
@@ -273,12 +282,14 @@ export function FloatingApp() {
   }, []);
 
   const handleDismiss = useCallback(() => {
+    clear();
     setIsPanelOpen(false);
-  }, []);
+  }, [clear]);
   const handleClearAndDismiss = useCallback(() => {
+    clear();
     setTaskTitle("");
     setIsPanelOpen(false);
-  }, []);
+  }, [clear]);
 
   useEffect(() => {
     function onDocMouseDown(e: MouseEvent) {
@@ -319,6 +330,7 @@ export function FloatingApp() {
     setSubmitting(true);
     try {
       await api.item.create(title);
+      clear();
       setTaskTitle("");
       setIsPanelOpen(false);
       void refresh();
