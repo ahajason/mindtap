@@ -27,12 +27,12 @@
   ↓
 问:这个 bug 的"代码/UI/数据/事件"在哪一层 feature 的范围内?
   │
-  ├─ 读对应 MINOR 的 docs/tech/<v.minor>.*-tech.md §1 范围边界
+  ├─ 读对应版本的 docs/tasks/<version>-<type>-<topic>/task.md 「范围边界」段
   │
-  ├─ §1.1 "在范围内" → 本 MINOR 的 PATCH
+  ├─ "在范围内" → 本 MINOR 的 PATCH
   │   └─ 版本号:V<MINOR>.0.<N+1>(N 是该 MINOR 已发的 PATCH 数)
   │
-  └─ §1.2 "不在范围内" → 不归本 MINOR
+  └─ "不在范围内" → 不归本 MINOR
       ├─ 是另一个 MINOR 范围内的 → 那个 MINOR 的 PATCH
       └─ 是跨 MINOR 的 → 重新评估归属,可能需要新 MINOR
   ↓
@@ -45,8 +45,8 @@
 
 ### 判断不出来时
 
-**反向问**:"修这个 bug 不修,对应 MINOR 的 `docs/tech/` §5 DoD 哪一条会 FAIL?"
-- 能定位到 §5 任一条 → 在范围内
+**反向问**:"修这个 bug 不修,对应 task 的 Done when 哪一条会 FAIL?"
+- 能定位到任一条 → 在范围内
 - 定位不到 → 不在范围内,需要新 MINOR 或归其他 MINOR
 
 ## 三、当前版本归属历史(V0.2 项目)
@@ -109,7 +109,7 @@ docs/reports/
 
 1. `docs/reports/v<X>-release-notes.md` 写完(用户视角 5 行摘要)
 2. `docs/reports/v<X>-retrospective.md` 写完(若为 MINOR 收尾)
-3. `docs/tech/v<X>-<feature>-tech.md` §5 DoD 全勾选
+3. 对应 task 的 `Done when` 全勾选(含 L1/L2/L3)
 4. `docs/governance/l3-gating.md` §L3 全 PASS
 5. D:\ 端 `npm run tauri dev` 实测签字
 6. **同步 bump 3 个 config file `version` 字段**(在 lockstep 单个 commit 内):

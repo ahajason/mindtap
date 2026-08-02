@@ -30,8 +30,24 @@ docs/tasks/v<X.Y>[.<Z>]-<type>-<topic>/
 > 创建: YYYY-MM-DD
 > 版本: V<X.Y>[.<Z>]
 > 优先级: P0 / P1 / P2
-> 归属判定: 见 `docs/tech/v<X.Y>-<feature>-tech.md` §1 范围边界
 > 关联 retro: `docs/reports/v<X.Y>-retrospective.md`
+
+## 范围边界(bug 归属用)
+
+> 技术实现细节以 `src/lib/tauri-bridge.ts`、`src-tauri/src/db/schema.rs`、单元测试为准,不写文档。
+
+### 在范围内(本版本管)
+- <业务功能 1>
+- <业务功能 2>
+
+### 不在范围内(归其他版本)
+- <功能 A> → V<X'.Y'>
+- <功能 B> → V<X'.Y'>
+
+### bug 归属规则
+任何「在范围内」代码 / UI / 数据 / 事件路径上的 bug → 本版本 PATCH(V<X.Y>.0.<N+1>)。
+任何「不在范围内」的 → 不归本版本,另开 task + 版本号。
+判断不出来时:问"修这个 bug 不修,本 task Done when 哪一条会 FAIL?"——能定位 → 在范围内;否则 → 不在。
 
 ## Why
 
@@ -54,7 +70,7 @@ docs/tasks/v<X.Y>[.<Z>]-<type>-<topic>/
 
 ## 关联
 - PRD: `docs/prd/v<X.Y>-<feature>-prd.md`
-- Tech: `docs/tech/v<X.Y>-<feature>-tech.md` §1.3 §6
+- Domain: `docs/domain/v<X.Y>-domain-model.md`
 - 验收证据: `<evidence path>`(实测截图 / 录屏)
 ```
 
@@ -85,7 +101,7 @@ docs/tasks/v<X.Y>[.<Z>]-<type>-<topic>/
 **V0.1 入口文档**(2026-07-13 新建):
 - 业务: [`../prd/v0.1.0-style-guide-prd.md`](../prd/v0.1.0-style-guide-prd.md)
 - 领域: [`../domain/v0.1-design-system-domain.md`](../domain/v0.1-design-system-domain.md)
-- 技术: [`../tech/v0.1.0-style-guide-tech.md`](../tech/v0.1.0-style-guide-tech.md)
+- 技术(已归档): [`../archive/v0.1/tech/v0.1.0-style-guide-tech.md`](../archive/v0.1/tech/v0.1.0-style-guide-tech.md)
 
 **V0.1 14 个 task**(按 git commit 时间序):
 

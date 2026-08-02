@@ -12,7 +12,7 @@
 |---|---|---|---|
 | **L0 PRD** | `docs/prd/` | 纯业务(用户故事 / 场景 / 规则 / 验收 / 反需求 / NFR / 里程碑 / 术语) | 表名 / 字段 / API / 模块名 / 命令名 / SQLite / Rust / React / Tauri / 文件路径 |
 | **L1 Domain** | `docs/domain/` | 业务实体 / 状态机 / 用户流程 / 业务不变量 / 业务级 ADR | `INTEGER` / `partial unique index` / `invoke` / `Mutex` / `src-tauri/` / `tauri-bridge.ts` / SQL 语句 |
-| **L2 Tech** | `docs/tech/` | 接口契约(IPC + 参数 + 返回 + 异常)/ 数据模型(表 / 字段 / 索引)/ 模块边界 / DoD / **bug 归属边界** | 用户故事 / 产品愿景 / 视觉稿 / 字体 |
+| **L2 已移除** | — | 技术实现由单元测试承载,范围边界/bug 归属入 task.md「范围边界」段 | 用户故事 / 产品愿景 / 视觉稿 / 字体 |
 | **L3 Design** | `docs/design/` | 视觉稿 / 组件契约 / 交互细节 / token 引用 / a11y 注解 | 表 / 字段 / IPC 命令 / SQL 语句 / 模块文件路径 |
 | **L4 Plan** | `docs/plans/` | 步骤 / commit 计划 / 回归测试 / DoD 勾选 / 风险登记 | 业务规则 / 用户故事 / 产品愿景 |
 | **L5 Reports** | `docs/reports/` | L1/L2/L3 三层证据 / release notes / retro / bug 列表 | 设计意图(已归档) |
@@ -28,7 +28,7 @@
 |---|---|---|
 | 用户故事 / 业务规则 / 验收 | `docs/prd/<version>-<feature>-prd.md` | 纯业务,无技术名词 |
 | 业务实体 / 状态 / 业务 ADR | `docs/domain/<version>-domain-model.md` | 无表名 / 字段 / IPC 命令 |
-| 技术方案 / IPC / 数据 / bug 边界 | `docs/tech/<version>-<feature>-tech.md` | 必须含 §1 范围边界 + §6 bug 归属 |
+| 技术方案 / 范围边界 / bug 归属 | task.md「范围边界」段(技术实现细节入单元测试) | 接口/IPC/表结构以代码为准 |
 | 视觉 / 交互 / 组件契约 / a11y | `docs/design/<version>-<feature>-design.md` | 无表 / IPC / 模块路径 |
 | 实施步骤 / commit 计划 / DoD 勾选 | `docs/plans/YYYY-MM-DD-<version>-<feature>.md` | 不写业务规则 |
 | 阶段交付报告 / retro / release notes | `docs/reports/` | 含 L1/L2/L3 证据 |
@@ -38,10 +38,11 @@
 
 **已弃用旧路径**(内容已迁到对应 L 层,见 `doc-layers.md §六`):
 
-- ❌ `docs/specs/` → design/ + tech/
-- ❌ `docs/architecture/` → tech/ §DoD + governance/l3-gating.md
+- ❌ `docs/specs/` → design/ + task.md 范围边界段
+- ❌ `docs/architecture/` → governance/l3-gating.md(技术细节入测试)
+- ❌ `docs/tech/` → 已移除(2026-08-02),技术入测试,范围边界入 task.md
 - ❌ `docs/projects/<v>/CONTEXT.md` → domain/<v>-domain-model.md
-- ❌ `docs/projects/<v>/README.md` → prd/ + domain/ + tech/
+- ❌ `docs/projects/<v>/README.md` → prd/ + domain/
 
 ---
 
@@ -54,7 +55,6 @@ docs/
 ├── governance/   # 跨版本规则:doc-layers / versioning-rule / l3-gating
 ├── prd/          # L0 纯业务(用户故事 / 验收)
 ├── domain/       # L1 业务实体 / 状态 / ADR
-├── tech/         # L2 技术方案 / IPC / 数据 / bug 边界
 ├── design/       # L3 视觉 / 交互 / 组件契约
 ├── plans/        # L4 实施步骤 / commit 计划
 ├── reports/      # L5 交付报告 / retro / release notes
@@ -78,10 +78,9 @@ docs/
 
 ## 四、引用与依赖
 
-- **L0 可引用任何下层**(PRD 验收章节引用 Tech DoD 允许)
-- **L1 不可引用 L2**(领域模型不应知道技术实现)
-- **L2 不可引用 L3/L4**(技术方案不应被视觉稿污染)
-- **L3 不可引用 L2**(设计 spec 不应绑定到具体 IPC)
+- **L0 可引用任何下层**(PRD 验收章节引用测试 DoD 允许)
+- **L1 不可引用 L3/L4**(领域模型不应知道设计/实施细节)
+- **L3 不可引用 L1 的技术面**(设计 spec 不应绑定到具体实现)
 - **任何层都可引用 `docs/governance/`**(治理横向贯穿)
 
 完整规则 + 违规检测 → `docs/governance/doc-layers.md §四 / §八`。

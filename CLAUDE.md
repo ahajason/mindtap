@@ -158,13 +158,13 @@ Rust 依赖的 macOS 分支在 `Cargo.toml` `[target.'cfg(target_os = "macos")'.
 
 ## 文档分层与归位
 
-> 权威细则：`docs/governance/doc-layers.md`。docs/ 下文件按 L0-L5 分层，**严禁跨层污染**（L0 纯业务不许出现表名/IPC/模块路径；L2 技术不许写用户故事/视觉稿）。
+> 权威细则：`docs/governance/doc-layers.md`。docs/ 下文件按 L0-L5 分层（**L2 tech 层已移除 2026-08-02**），**严禁跨层污染**（L0 纯业务不许出现表名/IPC/模块路径）。技术实现细节入单元测试 + 代码（`src/lib/tauri-bridge.ts` 类型 / `src-tauri/src/db/schema.rs` / vitest / cargo test），范围边界/bug 归属入 task.md「范围边界」段。
 
 | 内容类型 | 去处 |
 |---|---|
 | 产品需求 / 用户故事 / 验收 | `docs/prd/<version>-<feature>-prd.md`（纯业务，无技术名词） |
 | 业务实体 / 状态机 / ADR | `docs/domain/<version>-domain-model.md` |
-| 技术方案 / IPC / 数据 / bug 归属 | `docs/tech/<version>-<feature>-tech.md`（必须含 §1 范围边界 + §6 bug 归属） |
+| 范围边界 / bug 归属 | task.md「范围边界」段（技术实现细节入单元测试，不写文档） |
 | 视觉 / 交互 / 组件契约 | `docs/design/<version>-<feature>-design.md` |
 | 实施步骤 / commit 计划 | `docs/plans/YYYY-MM-DD-<version>-<feature>.md` |
 | 交付报告 / retro / release notes | `docs/reports/` |
