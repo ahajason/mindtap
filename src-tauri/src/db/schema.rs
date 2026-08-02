@@ -25,7 +25,8 @@ CREATE TABLE IF NOT EXISTS focus_interval (
   item_id    INTEGER NOT NULL,
   started_at INTEGER NOT NULL,
   ended_at   INTEGER,
-  created_at INTEGER NOT NULL
+  created_at INTEGER NOT NULL,
+  source     TEXT NOT NULL DEFAULT 'start' CHECK (source IN ('start','idle_pause','manual_pause','dormant','manual_gap'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_focus_interval_item

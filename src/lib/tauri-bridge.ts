@@ -42,6 +42,33 @@ export type FocusInterval = {
   item_id: number;
   started_at: number;
   ended_at: number | null;
+  source: string;
+};
+
+// V0.2.2 复盘视图:每日专注回顾(2026-08-03)。
+export type FocusDistribution = {
+  item_id: number;
+  content: string;
+  /** 今日专注时长(毫秒) */
+  focus_ms: number;
+};
+
+export type TimeRange = {
+  start: number;
+  end: number;
+  /** 持续时长(毫秒) */
+  duration_ms: number;
+};
+
+export type DailyReview = {
+  /** 今天已完成的卡 */
+  completed: Item[];
+  /** 专注分布 */
+  distribution: FocusDistribution[];
+  /** 待确认卡 */
+  stale: Item[];
+  /** 今天未被覆盖的时段 */
+  uncovered_gaps: TimeRange[];
 };
 
 async function invoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
@@ -88,5 +115,11 @@ export const api = {
     // V0.2.1 3.3: 某卡的激活明细。
     listIntervals: (itemId: number) =>
       invoke<FocusInterval[]>("item_list_intervals", { itemId }),
+  },
+  // V0.2.2 复盘视图:每日专注回顾 + 关联空档。
+  review: {
+    getDaily: () => invoke<DailyReview>("review_get_daily"),
+    associateGap: (itemId: number, gapStart: number, gapEnd: number) =>
+      invoke<void>("review_associate_gap", { itemId, gapStart, gapEnd }),
   },
 };

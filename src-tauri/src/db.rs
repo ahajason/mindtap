@@ -8,6 +8,7 @@ use crate::error::AppError;
 
 pub mod dormant;
 pub mod item;
+pub mod review;
 pub mod schema;
 pub mod setting;
 pub mod time;
@@ -24,6 +25,7 @@ pub fn init(app: &AppHandle) -> Result<DbState, AppError> {
     let conn = Connection::open(&db_path)?;
     conn.execute_batch(CREATE_SQL)?;
     migrate_v5_to_v3(&conn)?;
+    migrate_focus_interval_source(&conn)?;
     // V0.2.2: 将当前时区偏移写入 app_setting(local_tz_offset_secs)
     time::persist_tz_offset(&conn);
     Ok(DbState(Mutex::new(conn)))
@@ -40,5 +42,23 @@ fn migrate_v5_to_v3(conn: &Connection) -> Result<(), AppError> {
         "UPDATE item SET status = 'todo', updated_at = updated_at WHERE status = 'inbox';
          UPDATE item SET status = 'archived', updated_at = updated_at WHERE status = 'done';",
     )?;
+    Ok(())
+}
+
+/// V0.2.2: focus_interval 表新增 source 列。幂等:列已存在则跳过。
+fn migrate_focus_interval_source(conn: &Connection) -> Result<(), AppError> {
+    // 检查 source 列是否存在
+    let has_col: bool = conn
+        .prepare("PRAGMA table_info(focus_interval)")?
+        .query_map([], |row| row.get::<_, String>(1))?
+        .filter_map(|r| r.ok())
+        .any(|name| name == "source");
+
+    if !has_col {
+        conn.execute_batch(
+            "ALTER TABLE focus_interval ADD COLUMN source TEXT NOT NULL DEFAULT 'start'
+             CHECK (source IN ('start','idle_pause','manual_pause','dormant','manual_gap'));",
+        )?;
+    }
     Ok(())
 }

@@ -31,6 +31,7 @@ pub struct FocusInterval {
     pub item_id: i64,
     pub started_at: i64,
     pub ended_at: Option<i64>,
+    pub source: String,
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -68,7 +69,7 @@ impl ListStatus {
 /// 列出某卡的激活明细,按开始时间升序。
 pub fn list_intervals(conn: &Connection, item_id: i64) -> Result<Vec<FocusInterval>, AppError> {
     let mut stmt = conn.prepare(
-        "SELECT id, item_id, started_at, ended_at FROM focus_interval
+        "SELECT id, item_id, started_at, ended_at, source FROM focus_interval
          WHERE item_id = ?1 ORDER BY started_at ASC",
     )?;
     let rows = stmt.query_map(params![item_id], |row| {
@@ -77,6 +78,7 @@ pub fn list_intervals(conn: &Connection, item_id: i64) -> Result<Vec<FocusInterv
             item_id: row.get(1)?,
             started_at: row.get(2)?,
             ended_at: row.get(3)?,
+            source: row.get(4)?,
         })
     })?;
     rows.collect::<rusqlite::Result<Vec<_>>>()
@@ -160,7 +162,7 @@ pub fn start(conn: &Connection, id: i64) -> Result<StartResult, AppError> {
     )?;
     // 开一段进行中 interval(started_at = now, ended_at = NULL)
     tx.execute(
-        "INSERT INTO focus_interval (item_id, started_at, ended_at, created_at) VALUES (?1, ?2, NULL, ?2)",
+        "INSERT INTO focus_interval (item_id, started_at, ended_at, created_at, source) VALUES (?1, ?2, NULL, ?2, 'start')",
         params![id, now],
     )?;
     tx.commit()?;
@@ -422,8 +424,7 @@ pub fn undo_delete(conn: &Connection, id: i64) -> Result<Item, AppError> {
     // 重开一条进行中 interval,维持「active 必有 ended_at IS NULL 的 interval」不变量(tech §3.3)。
     if orig_status == "active" {
         tx.execute(
-            "INSERT INTO focus_interval (item_id, started_at, ended_at, created_at)
-             VALUES (?1, ?2, NULL, ?2)",
+            "INSERT INTO focus_interval (item_id, started_at, ended_at, created_at, source) VALUES (?1, ?2, NULL, ?2, 'start')",
             params![id, now],
         )?;
     }

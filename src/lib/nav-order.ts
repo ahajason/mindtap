@@ -1,6 +1,7 @@
 import {
   Sparkles, Square, MousePointerClick, TextCursorInput,
-  MessageSquare, Layout, Palette, type LucideIcon,
+  MessageSquare, Layout, Palette, CalendarCheck,
+  type LucideIcon,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -18,4 +19,5 @@ export const navOrder: readonly NavItem[] = [
   { to: '/feedback', label: 'Badge / Toast / Dialog',   icon: MessageSquare },
   { to: '/overlay',  label: 'Tooltip / Tabs',           icon: Layout },
   { to: '/tokens',   label: 'Token 速查',               icon: Palette },
+  { to: '/review',   label: '每日复盘',                   icon: CalendarCheck },
 ] as const;

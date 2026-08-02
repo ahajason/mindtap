@@ -254,6 +254,9 @@ pub fn run() {
             // 反馈后, 走自定义 rust command 绕过 Tauri JS setSize API 中转竞争, 直接
             // tauri::Window::set_size 调 tao set_inner_size → Win32 SetWindowPos)。
             commands::floating_cmd::set_floating_size,
+            // V0.2.2 复盘视图:每日复盘 + 关联空档。
+            commands::review::review_get_daily,
+            commands::review::review_associate_gap,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

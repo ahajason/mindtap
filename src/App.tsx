@@ -7,6 +7,7 @@ import InputRoute from './routes/Input';
 import FeedbackRoute from './routes/Feedback';
 import OverlayRoute from './routes/Overlay';
 import TokensRoute from './routes/Tokens';
+import ReviewRoute from './routes/Review';
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
         <Route path="/feedback" element={<FeedbackRoute />} />
         <Route path="/overlay" element={<OverlayRoute />} />
         <Route path="/tokens" element={<TokensRoute />} />
+        <Route path="/review" element={<ReviewRoute />} />
       </Route>
     </Routes>
   );
