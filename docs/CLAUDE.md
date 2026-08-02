@@ -30,13 +30,12 @@ docs/
 │   ├── glassic-ui-spec.md       # 玻璃规范（唯一）
 │   ├── glass-tokens.md          # Token 索引
 │   └── component-format.md      # 组件契约
-├── tasks/                       # 进行中任务（每个 task 目录含 task.md）
 ├── governance/                  # 跨版本规则（doc-layers / versioning-rule / l3-gating）
 ├── plans/                       # 实施计划（当前需求 plan）
 └── reports/                     # 发版记录（release notes / retro）
 ```
 
-> **需求目录命名**：`<编号>-<单词>`（如 `L-1-workbench`）。编号前缀（`L-1` / `L-2` / `M-1`）用于与通用目录（design-system / governance / tasks 等）区分；单词表达业务语义。文档内不逐个编号，靠目录名隔离。
+> **需求目录命名**：`<编号>-<单词>`（如 `L-1-workbench`）。编号前缀（`L-1` / `L-2` / `M-1`）用于与通用目录（design-system / governance / plans / reports 等）区分；单词表达业务语义。文档内不逐个编号，靠目录名隔离。
 
 ## 二、写入规则
 
@@ -47,7 +46,7 @@ docs/
 | 视觉 / 交互 / 组件契约 | 对应需求目录 `design.md` |
 | 范围边界 / bug 归属 | task.md「范围边界」段 |
 | 技术实现细节 | **单元测试 + 代码**（`src/lib/tauri-bridge.ts` / `schema.rs` / vitest / cargo test），不写文档 |
-| 进行中任务 | `docs/tasks/<name>/task.md` |
+| 进行中任务 | `docs/<需求>/tasks/<name>/task.md` |
 | 跨版本规则 | `docs/governance/` |
 
 **不互相引用**：目录内文档不互相贴路径链接，只引用本目录 `index.md` 与共享规范（`design-system/`）。改动一个需求只碰对应目录，不四处更新链接。

@@ -27,7 +27,7 @@
   ↓
 问:这个 bug 的"代码/UI/数据/事件"在哪一层 feature 的范围内?
   │
-  ├─ 读对应版本的 docs/tasks/<version>-<type>-<topic>/task.md 「范围边界」段
+  ├─ 读对应版本的 docs/<需求>/tasks/<name>/task.md 「范围边界」段
   │
   ├─ "在范围内" → 本 MINOR 的 PATCH
   │   └─ 版本号:V<MINOR>.0.<N+1>(N 是该 MINOR 已发的 PATCH 数)
@@ -36,7 +36,7 @@
       ├─ 是另一个 MINOR 范围内的 → 那个 MINOR 的 PATCH
       └─ 是跨 MINOR 的 → 重新评估归属,可能需要新 MINOR
   ↓
-开 docs/tasks/<version>-<type>-<topic>/task.md
+开 docs/<需求>/tasks/<name>/task.md
   ↓
 按 L1 + L2 + L3 三层验证修
   ↓
@@ -70,7 +70,7 @@
 ### task 目录命名
 
 ```
-docs/tasks/
+docs/<需求>/tasks/
 ├── v<MINOR>.<PATCH>-fix-<topic>/          # 该 MINOR 的 PATCH bug fix
 ├── v<MINOR>.<PATCH>-feat-<topic>/         # 该 MINOR 的小特性增量(可选)
 ├── v<MINOR>-feat-<topic>/                 # 新 MINOR 的 feature
@@ -78,9 +78,9 @@ docs/tasks/
 ```
 
 例:
-- `docs/tasks/v0.2.0.6-fix-contextmenu-right-click/` — V0.2.0 第 6 个 PATCH
-- `docs/tasks/v0.3.0-feat-native-dynamic-material/` — V0.2.1 的 feature
-- `docs/tasks/v0.2-chore-ponytail-shrink/` — V0.2 阶段的杂项
+- `docs/<需求>/tasks/v0.2.0.6-fix-contextmenu-right-click/` — V0.2.0 第 6 个 PATCH
+- `docs/<需求>/tasks/v0.3.0-feat-native-dynamic-material/` — V0.2.1 的 feature
+- `docs/<需求>/tasks/v0.2-chore-ponytail-shrink/` — V0.2 阶段的杂项
 
 ### release notes 命名
 

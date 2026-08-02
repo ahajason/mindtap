@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **产品北极星**（来自唯一产品需求文档 `docs/轻念Mindtap产品需求文档.md`）：**个人工作台账** —— 随时低成本记下任务、多线并行推进、忘记有兜底、随时看得见"我的工作进行到哪了"。四条不可妥协基因：**3 秒记录、1 秒查看、0 思考成本、全量本地存储**。
 
-**当前版本状态**：V0.2.0.x PATCH 是浮窗回归阶段；V0.2.0.14 收回 V0.2.0.13 重测 4 deviation + 反 C-4 自动折叠。**下一步**：等用户开启新的 V0.2.1 MINOR。版本历史详见 `docs/governance/versioning-rule.md` §三 + §四。产品/开发各阶段推进状态看 `docs/tasks/`（在跑 task）与 `docs/reports/`（历史交付）。
+**当前版本状态**：V0.2.0.x PATCH 是浮窗回归阶段；V0.2.0.14 收回 V0.2.0.13 重测 4 deviation + 反 C-4 自动折叠。**下一步**：等用户开启新的 V0.2.1 MINOR。版本历史详见 `docs/governance/versioning-rule.md` §三 + §四。产品/开发各阶段推进状态看各需求目录 `tasks/`（在跑 task）与 `docs/reports/`（历史交付）。
 
 ## Quick Start
 
@@ -167,7 +167,7 @@ Rust 依赖的 macOS 分支在 `Cargo.toml` `[target.'cfg(target_os = "macos")'.
 | 范围边界 / bug 归属 | task.md「范围边界」段（技术实现细节入单元测试，不写文档） |
 | 视觉 / 交互 / 组件契约 | 对应需求目录 `design.md` |
 | 实施步骤 / commit 计划 | `docs/plans/YYYY-MM-DD-<version>-<feature>.md` |
-| 进行中 task | `docs/tasks/<version>-<type>-<short-desc>/task.md` |
+| 进行中 task | `docs/<需求>/tasks/<name>/task.md` |
 | 跨版本规则 | `docs/governance/` |
 | 发版记录 | `docs/reports/`（release notes / retro） |
 

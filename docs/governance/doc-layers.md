@@ -22,9 +22,9 @@ docs/
 │   ├── index.md                 # 唯一入口(唯一允许引用的文件)
 │   ├── prd.md                   # 需求(如有独立需求)
 │   ├── domain.md                # 领域模型 / 状态机 / ADR
-│   └── design.md                # 视觉 / 交互 / 组件契约
+│   ├── design.md                # 视觉 / 交互 / 组件契约
+│   └── tasks/                   # 该需求的进行中任务(task.md 含「范围边界」段)
 ├── design-system/               # 跨需求共享视觉规范(glassic-ui-spec 等)
-├── tasks/                       # 进行中任务(task.md 含「范围边界」段)
 ├── governance/                  # 跨版本规则(doc-structure / versioning-rule / l3-gating)
 ├── plans/                       # 实施计划
 └── reports/                     # 发版记录(release notes / retro)
@@ -59,7 +59,7 @@ docs/
 2. 开 docs/<编号>-<需求>/ 目录(或复用已有)
 3. 写 domain.md(如新实体/状态) + design.md(如有 UI)
 4. 写 index.md(唯一入口,列出目录内文档)
-5. 开 docs/tasks/<name>/task.md(含「范围边界」段)
+5. 开 docs/<编号>-<需求>/tasks/<name>/task.md(含「范围边界」段)
 ```
 
 ### 新 bug
@@ -69,7 +69,7 @@ docs/
   ↓
 读对应任务的 task.md 「范围边界」段
   ↓
-├─ 在范围内 → 开 docs/tasks/<version>.X-fix-<topic>/task.md
+├─ 在范围内 → 开 docs/<需求>/tasks/<name>-fix-<topic>/task.md
 └─ 不在范围内 → 不归本任务,另开 task
 ```
 

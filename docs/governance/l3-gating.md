@@ -61,7 +61,7 @@ scripts\dev.bat
 # 或:npm run tauri dev
 
 # 4. 手工跑 7 层 checklist + PRD 用户场景
-# 5. 在 docs/tasks/<task>/evidence.md 写实测截图 + 步骤
+# 5. 在 docs/<需求>/tasks/<task>/evidence.md 写实测截图 + 步骤
 ```
 
 ### D:\ 端不可达时(罕见)

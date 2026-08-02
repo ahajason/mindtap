@@ -61,7 +61,7 @@ docs/plans/YYYY-MM-DD-v<X.Y>-<feature>.md
 
 ## 4. 关联
 - 需求目录: `docs/<编号>-<需求>/index.md`
-- 进行中任务: `docs/tasks/<name>/task.md`（含范围边界段）
+- 进行中任务: `docs/<需求>/tasks/<name>/task.md`（含范围边界段）
 ```
 
 ## 三、写作纪律

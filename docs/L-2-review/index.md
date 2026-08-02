@@ -12,4 +12,4 @@
 
 - 产品真值：`../轻念Mindtap产品需求文档.md` 阶段二（每日复盘 / 活动信号 / 主窗管理）
 - 领域基础：`../L-1-workbench/index.md`（复用三态模型与 focus_interval 激活日志）
-- 进行中任务：`../tasks/v0.2.2-phase2-core/`
+- 进行中任务：`tasks/phase2-core/` + `tasks/main-window-startup-flash/`

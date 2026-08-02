@@ -14,4 +14,3 @@
 
 - 产品真值：`../轻念Mindtap产品需求文档.md` 阶段一（捕获 / 并行任务条 / 待办整理 / 自动计时）
 - 玻璃规范：`../design-system/glassic-ui-spec.md`
-- 进行中任务：`../tasks/v0.2.1-workbench-core/`

@@ -14,4 +14,4 @@
 
 - 产品真值：`../轻念Mindtap产品需求文档.md`（材质是独立视觉能力）
 - 玻璃规范：`../design-system/glassic-ui-spec.md`
-- 进行中任务：`../tasks/v0.3.0-feat-native-dynamic-material/` + `../tasks/v0.3.0-chore-material-l3-evidence/`
+- 进行中任务：`tasks/feat-native-dynamic-material/` + `tasks/chore-material-l3-evidence/`
