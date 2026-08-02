@@ -8,6 +8,7 @@ pub mod commands;
 pub mod db;
 pub mod error;
 pub mod idle;
+pub mod foreground;
 pub mod tray;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -203,7 +204,11 @@ pub fn run() {
                                 }
                             }
 
-                            // 3. 前台监听(预留,V0.2.2 P5 实现)
+                            // 3. 前台监听(V0.2.2 P5):检测活跃应用变化
+                            if let Some(app_info) = crate::foreground::get_foreground_app() {
+                                // 前端可通过 `floating:activity_signal` 事件响应
+                                let _ = app_handle.emit("floating:activity_signal", &app_info);
+                            }
                         }
                     });
                 }
