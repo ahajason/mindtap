@@ -11,7 +11,7 @@ docs/plans/YYYY-MM-DD-v<X.Y>-<feature>.md
 ```
 
 例:
-- `docs/plans/2026-07-11-v0.2.0-floating-window.md`
+- `docs/plans/2026-07-28-v0.3.0-native-dynamic-material.md`
 
 ## 二、模板
 
@@ -19,9 +19,7 @@ docs/plans/YYYY-MM-DD-v<X.Y>-<feature>.md
 # V<X.Y> <feature> — 实施计划
 
 > 创建: YYYY-MM-DD
-> 对应 PRD: `docs/prd/v<X.Y>-<feature>-prd.md`
-> 对应 Tech: `docs/tech/v<X.Y>-<feature>-tech.md`
-> 对应 Design: `docs/design/v<X.Y>-<feature>-design.md`
+> 对应需求: `docs/<编号>-<需求>/`（index.md 入口）
 
 ## 1. 阶段切分
 
@@ -42,7 +40,7 @@ docs/plans/YYYY-MM-DD-v<X.Y>-<feature>.md
 ### 阶段 2: <阶段名>(<估时>)
 (同上结构)
 
-## 2. DoD 勾选(对应 tech §5)
+## 2. DoD 勾选(对应 task.md Done when)
 
 ### L1
 - [ ] <N> tests PASS
@@ -53,7 +51,7 @@ docs/plans/YYYY-MM-DD-v<X.Y>-<feature>.md
 
 ### L3
 - [ ] 7 层 visibility checklist
-- [ ] PRD 用户场景实测
+- [ ] 需求场景实测
 
 ## 3. 风险登记
 
@@ -62,11 +60,8 @@ docs/plans/YYYY-MM-DD-v<X.Y>-<feature>.md
 | | | |
 
 ## 4. 关联
-- PRD: `docs/prd/v<X.Y>-<feature>-prd.md`
-- Tech: `docs/tech/v<X.Y>-<feature>-tech.md`
-- Design: `docs/design/v<X.Y>-<feature>-design.md`
-- 验收: `docs/reports/v<X.Y>-<feature>-windows-qa.md`
-- retro: `docs/reports/v<X.Y>-retrospective.md`
+- 需求目录: `docs/<编号>-<需求>/index.md`
+- 进行中任务: `docs/tasks/<name>/task.md`（含范围边界段）
 ```
 
 ## 三、写作纪律

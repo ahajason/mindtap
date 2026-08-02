@@ -1,64 +1,57 @@
 ---
-description: 文档分层纪律 — 新功能/新 bug 必须先按 6 层文档结构走完才能开 task,缺一层不开
+description: 文档结构纪律 — 新功能/新 bug 必须按「大需求目录 + index.md」结构走完才能开 task,缺 index 不开
 globs: ["docs/**/*.md"]
 ---
 
-# 文档分层纪律(Doc Layer Discipline)
+# 文档结构纪律(Doc Structure Discipline)
 
-> 强制执行入口:任何新功能、新 bug、新 doc 都必须先读 `docs/governance/doc-layers.md`,按 6 层结构走。
+> 强制执行入口:任何新功能、新 bug、新 doc 都必须先读 `docs/governance/doc-layers.md`,按「按大需求分目录」结构走。
 
 ## 触发条件
 
 以下任一动作前**必读**本规则:
 
-1. 创建 `docs/prd/ domain/ tech/ design/ plans/ reports/ tasks/` 下任何新文件
+1. 创建 `docs/` 下任何新文件
 2. 接到"做新 feature"任务
 3. 接到"修 bug"任务
 4. 发版前(`chore(release):` commit 前)
-5. 评审 PRD/Tech/Design/Plan 文档
+5. 评审需求 / 设计文档
 
 ## 强制流程
 
-### 新功能(走全 6 步)
+### 新功能
 
 ```
-1. docs/prd/<version>-<feature>-prd.md       (L0,纯业务,无技术名词)
-2. docs/domain/<version>-domain-model.md      (L1,业务实体/状态)
-3. docs/tech/<version>-<feature>-tech.md      (L2,含 §1 范围边界 + §6 bug 边界)
-4. docs/design/<version>-<feature>-design.md  (L3,如有 UI)
-5. docs/plans/YYYY-MM-DD-<version>-<feature>.md (L4,步骤)
-6. docs/tasks/<version>-<type>-<topic>/task.md  (执行单元)
+1. 主文档补需求(如有新场景)
+2. 开 docs/<编号>-<需求>/ 目录(或复用已有需求目录)
+3. 写 domain.md(如新实体/状态) + design.md(如有 UI)
+4. 写 index.md(唯一入口,列出目录内文档)
+5. 开 docs/tasks/<name>/task.md(含「范围边界」段)
 ```
 
-**6 步缺一不开 task**。
+**缺 index.md 不开 task**。
 
-### 新 bug(走 bug 归属判断)
+### 新 bug
 
 ```
-1. 读 docs/tech/<v.minor>.*-tech.md §1 范围边界
-2. 在范围内 → 开 docs/tasks/<v.minor>.<N+1>-fix-<topic>/task.md
-3. 不在范围内 → 不归本版本,另开 version 的 PRD/Tech + task
+1. 读对应任务 task.md 「范围边界」段
+2. 在范围内 → 开 docs/tasks/<version>.<N+1>-fix-<topic>/task.md
+3. 不在范围内 → 不归本任务,另开 task
 ```
 
 ## 关键词自检(写到文档后必跑)
 
-每写完一个文档,grep 检查是否违反了 doc-layers.md §三 "严禁出现" 列:
-
 ```bash
-# L0 PRD 检查
-grep -iE "INTEGER|TEXT|partial unique|invoke|Mutex|src-tauri|tauri-bridge|Rust|React|Tauri" docs/prd/<file>.md
+# domain.md(业务层,禁技术名词)
+grep -iE "INTEGER|TEXT|partial unique|invoke|Mutex|src-tauri|tauri-bridge|SQL " docs/<需求>/domain.md
 # 命中即违规
 
-# L1 Domain 检查
-grep -iE "INTEGER|TEXT|partial unique|invoke|Mutex|src-tauri|tauri-bridge|SQL " docs/domain/<file>.md
+# design.md(视觉层,禁表/IPC)
+grep -iE "INTEGER|TEXT|partial unique|invoke|SQL |src-tauri/" docs/<需求>/design.md
 # 命中即违规
 
-# L2 Tech 检查
-grep -E "用户故事|产品愿景|视觉稿|字体" docs/tech/<file>.md
-# 命中即违规
-
-# L3 Design 检查
-grep -iE "INTEGER|TEXT|partial unique|invoke|SQL |src-tauri/" docs/design/<file>.md
+# task.md(禁技术实现细节)
+grep -E "接口契约|表结构|模块边界" docs/tasks/<name>/task.md
 # 命中即违规
 ```
 
@@ -68,11 +61,11 @@ grep -iE "INTEGER|TEXT|partial unique|invoke|SQL |src-tauri/" docs/design/<file>
 
 | 违规等级 | 处理 |
 |---|---|
-| **L0 出现技术名词** | 必须删除技术段落,只留业务内容 |
-| **L2 出现用户故事** | 必须移到 PRD,Tech 只留接口/数据/DoD |
-| **L3 出现 IPC 命令** | 必须移到 Tech,Design 只留视觉/交互 |
-| **新 feature 缺文档** | 不开 task,先补齐 5 层文档 |
-| **新 bug 没走归属判断** | 必须先读 tech §1,不能直接开 task |
+| 需求目录缺 index.md | 不开 task,先补 index.md |
+| domain.md 出现技术名词 | 删除技术段落,只留业务内容 |
+| design.md 出现 IPC 命令 | 删掉,只留视觉/交互 |
+| 文档内互相引用路径 | 改为语义描述,引用收敛到 index.md |
+| 写入已废弃路径(prd/domain/tech/reports) | 移到需求目录或归档 |
 
 ## 关联
 
@@ -80,9 +73,8 @@ grep -iE "INTEGER|TEXT|partial unique|invoke|SQL |src-tauri/" docs/design/<file>
 - `docs/governance/versioning-rule.md` — bug 归属 + PATCH 命名
 - `docs/governance/l3-gating.md` — L3 实测硬约束
 - `.claude/rules/task-directory.mdc` — task slug 命名
-- `.claude/rules/dev-verify-before-commit.mdc` — 系统 API 改动 L3 强制
 
 ## 历史
 
 - 创建: 2026-07-13
-- 触发: V0.2.7 retro §3 反模式 14/15/16 + 用户对文档职责不清的反馈
+- 更新: 2026-08-02 — 从 6 层改为大需求目录结构

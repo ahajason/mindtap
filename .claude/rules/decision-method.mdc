@@ -12,7 +12,7 @@ alwaysApply: true
 | Layer | 内容 | 来源 |
 |---|---|---|
 | **L1 原始权威** | Apple HIG / WCAG / MDN / Tauri 官方文档 / 库官方 API 文档 | WebFetch / context7 |
-| **L2 统一设计** | `docs/design/glassic-ui-spec.md` / 已立 convention / 项目 rule | `docs/design/` + `.claude/rules/` |
+| **L2 统一设计** | `docs/design-system/glassic-ui-spec.md` / 已立 convention / 项目 rule | `docs/design-system/` + `.claude/rules/` |
 | **L3 具体问题** | 当前 issue / bug / 需求 + **所有 user-facing 副作用** | 用户描述 + **主动枚举**(不只是用户说的) |
 
 **任一层缺失 = 停下来补查再动手**。V0.1.1 漏 L3 副作用 → V0.1.4 发现 3 症状同根因。

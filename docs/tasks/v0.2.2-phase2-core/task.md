@@ -4,7 +4,7 @@
 > 版本: V0.2.2
 > 优先级: P1
 > 归属判定: 见下文「范围边界」
-> 关联 retro: `docs/archive/history/reports/v0.2.2-retrospective.md`(待补)
+> 关联 retro: `docs/reports/v0.2.2-retrospective.md`(待补)
 
 ## 范围边界(bug 归属用)
 

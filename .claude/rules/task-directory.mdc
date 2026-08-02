@@ -16,7 +16,7 @@ alwaysApply: true
 
 `docs/tasks/<version>-<type>-<short-desc>/`
 
-(与现有 `docs/specs/` / `docs/plans/` / `docs/reports/` / `docs/architecture/` 同级)
+(与 `docs/plans/` / `docs/governance/` 同级;task 归入对应需求目录 `docs/<编号>-<需求>/tasks/` 或 `docs/tasks/`)
 
 ## 命名
 
@@ -46,6 +46,10 @@ alwaysApply: true
 
 <!-- 1 句业务边界 -->
 
+## 范围边界
+
+<!-- 在范围内 / 不在范围内 / bug 归属规则 -->
+
 ## Done when
 
 - [ ] 业务行为 X 正确
@@ -59,7 +63,7 @@ alwaysApply: true
 | `## Files` 段       | git 知道(`git log -- <path>` 反查)                        |
 | `## 提交记录` 段    | commit hash 会过期(squash / rebase 后失效); 鸡生蛋问题   |
 | `## 状态` 字段      | git 事实推断(看到 commit 就算"已交付")                   |
-| `## 关联` 段        | 路径自解释                                                |
+| `## 关联` 段        | 文档不互相引用;索引职责由需求目录 `index.md` 承担         |
 | Refs: / See also:   | 不是任何标准 footer; 反向追溯用 git log/show/diff       |
 
 ## 跟 commit 的关系

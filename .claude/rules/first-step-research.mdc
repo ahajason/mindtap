@@ -32,11 +32,11 @@ description: 接到 bug 反馈 / "X 不工作" / 改 system API 前的尽职调�
 | # | 路径 | 怎么查 | 用途 |
 |---|---|---|---|
 | 1 | 内部调研 / 文档缓存 | `grep -rl "<keyword>" <项目调研缓存目录>/` | 本地已 fetch 的官方文档,比 web 重新 fetch 快 |
-| 2 | 历史 retro | `grep "<keyword>" docs/reports/...` | 之前类似问题怎么解决 + 失败模式 |
-| 3 | 旧 plan / spec | `grep -rl "<keyword>" docs/archive/.../plans/ docs/specs/` | 当时的设计决策 + 未执行的 step |
-| 4 | Release notes / TODO 段 | `grep "<keyword>" docs/reports/.../release-notes` | 是否标"待用户验证"等 TODO |
+| 2 | 历史 retro / 报告 | `grep "<keyword>" docs/archive/history/reports/...` | 之前类似问题怎么解决 + 失败模式 |
+| 3 | 旧 plan / spec | `grep -rl "<keyword>" docs/archive/.../plans/ docs/archive/.../specs/` | 当时的设计决策 + 未执行的 step |
+| 4 | Release notes / TODO 段 | `grep "<keyword>" docs/archive/history/reports/.../release-notes` | 是否标"待用户验证"等 TODO |
 | 5 | 旧 commit 验证段 | `git log --format="%H %s%n%b" \| grep -A 3 "验证"` | 之前 commit 是否真的 dev 实测过 |
-| 6 | **项目归档 codebase**(如有) | grep 项目自己的归档目录(`.archive/src/` / `legacy/` / `v0/` 等) | 完整历史 codebase,看已踩坑 + 已修过的实现 |
+| 6 | **项目归档 codebase**(如有) | grep 项目自己的归档目录(`docs/archive/` / `legacy/` / `v0/` 等) | 完整历史 codebase,看已踩坑 + 已修过的实现 |
 
 **项目内部历史 > web search**。本地缓存成本已付;旧 retro 是已反思;旧 commit 验证段是当时的 dev 实测证据。
 

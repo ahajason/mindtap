@@ -33,7 +33,7 @@ docs/
 ├── tasks/                       # 进行中任务（每个 task 目录含 task.md）
 ├── governance/                  # 跨版本规则（doc-layers / versioning-rule / l3-gating）
 ├── plans/                       # 实施计划（当前需求 plan）
-└── archive/                     # 历史沙盒（v0.1 / v0.2 已交付 + history/）
+└── reports/                     # 发版记录（release notes / retro）
 ```
 
 > **需求目录命名**：`<编号>-<单词>`（如 `L-1-workbench`）。编号前缀（`L-1` / `L-2` / `M-1`）用于与通用目录（design-system / governance / tasks 等）区分；单词表达业务语义。文档内不逐个编号，靠目录名隔离。
@@ -49,19 +49,11 @@ docs/
 | 技术实现细节 | **单元测试 + 代码**（`src/lib/tauri-bridge.ts` / `schema.rs` / vitest / cargo test），不写文档 |
 | 进行中任务 | `docs/tasks/<name>/task.md` |
 | 跨版本规则 | `docs/governance/` |
-| 历史交付 | `docs/archive/` |
 
 **不互相引用**：目录内文档不互相贴路径链接，只引用本目录 `index.md` 与共享规范（`design-system/`）。改动一个需求只碰对应目录，不四处更新链接。
 
-## 三、已移除 / 弃用
-
-- ❌ `docs/tech/` — 已移除（2026-08-02），技术入测试，范围边界入 task.md
-- ❌ `docs/prd/` `docs/domain/` `docs/design/` — 已并入各需求目录
-- ❌ `docs/specs/` `docs/architecture/` `docs/projects/` `docs/references/` `docs/research/` `docs/superpowers/` — 已归档或删除
-- ❌ `docs/reports/` — 已归档到 `docs/archive/history/reports/`
-
 ## 四、治理
 
-- 分层与违规检测 → `docs/governance/doc-layers.md`
+- 文档结构规则 → `docs/governance/doc-layers.md`
 - 版本语义 / bug 归属 → `docs/governance/versioning-rule.md`
 - L3 实测硬约束 → `docs/governance/l3-gating.md`

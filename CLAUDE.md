@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **产品北极星**（来自唯一产品需求文档 `docs/轻念Mindtap产品需求文档.md`）：**个人工作台账** —— 随时低成本记下任务、多线并行推进、忘记有兜底、随时看得见"我的工作进行到哪了"。四条不可妥协基因：**3 秒记录、1 秒查看、0 思考成本、全量本地存储**。
 
-**当前版本状态**：V0.2.0.x PATCH 是浮窗回归阶段；V0.2.0.14 收回 V0.2.0.13 重测 4 deviation + 反 C-4 自动折叠。**下一步**：等用户开启新的 V0.2.1 MINOR。版本历史详见 `docs/governance/versioning-rule.md` §三 + §四。产品/开发各阶段推进状态看 `docs/tasks/`（在跑 task）与 `docs/archive/history/reports/`（历史交付）。
+**当前版本状态**：V0.2.0.x PATCH 是浮窗回归阶段；V0.2.0.14 收回 V0.2.0.13 重测 4 deviation + 反 C-4 自动折叠。**下一步**：等用户开启新的 V0.2.1 MINOR。版本历史详见 `docs/governance/versioning-rule.md` §三 + §四。产品/开发各阶段推进状态看 `docs/tasks/`（在跑 task）与 `docs/reports/`（历史交付）。
 
 ## Quick Start
 
@@ -22,7 +22,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | 验证前端类型 | `npx tsc --noEmit`（`npm run build` 的 `tsc` 即类型检查，是 build 的一部分） |
 | 模块边界检查 | `npm run lint:boundaries`（`depcruise src/packages`，build 已含） |
 | 跑 vitest | `npm test`（单次）/ `npm run test:watch`（监听） |
-| 跑 Rust 测试 | `cd src-tauri && cargo test`（WSL 可直接跑，覆盖 db 状态机 + 不变量；2026-08-02 假 cc 修复后 40 passed，详见 `docs/archive/history/tasks/v0.2.1-workbench-core/wsl-dash-boundary.md` §七） |
+| 跑 Rust 测试 | `cd src-tauri && cargo test`（WSL 可直接跑，覆盖 db 状态机 + 不变量；2026-08-02 假 cc 修复后 40 passed） |
 | 回看 git（按场景） | `git show <sha>` 查 commit / `git log -- <path>` 查文件历史 / `git diff` 查未提交改动 |
 
 ## 双工作树 (WSL + D:\)
@@ -59,7 +59,7 @@ CLAUDE.md 是 session 入口上下文；子规则放在 `.claude/rules/*.mdc`（
 - **纯 git + ssh (本仓库约束)**：默认 `git push origin develop` + D:\ `git pull`；**禁用 gh CLI**（无 auth）和 **GitHub MCP `issue_write`/`create_pull_request`**（classifier 拦）；要 PR 走 web（https://github.com/ahajason/mindtap/compare/develop...<branch>）
 - **多 issue 并行修**：派 N 个 subagent，每个 subagent 自己用 `Skill superpowers:using-git-worktrees` 起 worktree（isolation）；主 agent 留 develop，fetch + merge 集成；不要主 agent 串行跑多个 fix
 - **CSS 静态扫描 regex**：写 `.floating-root[...]` 这类 selector 匹配时**先剥 `@media` / `@supports` / `@keyframes` 嵌套块**，否则后加的 @media 内嵌同名选择器会让测试误通过或 FAIL（见反模式 18 / 实际归属 V0.2.0.7~0.9 PATCH，见 versioning-rule §三）
-- **Tailwind 扫描边界**：遇到来源不明的生成 utility 或 esbuild CSS warning，先检查 Tailwind 是否扫描了 `docs/archive` 中的字面量；通过 source exclusion 收紧生产扫描范围，不修改历史归档或无关组件
+- **Tailwind 扫描边界**：遇到来源不明的生成 utility 或 esbuild CSS warning，先检查 Tailwind 是否扫描了超出 `src/` 的范围（如 docs/ 或历史目录）；通过 source exclusion 收紧生产扫描范围，不修改无关文件
 
 ### Worktree 治理（三种场景分开）
 
@@ -158,7 +158,7 @@ Rust 依赖的 macOS 分支在 `Cargo.toml` `[target.'cfg(target_os = "macos")'.
 
 ## 文档分层与归位
 
-> 权威细则：`docs/governance/doc-layers.md`。docs/ 下文件按 L0-L5 分层（**L2 tech 层已移除 2026-08-02**），**严禁跨层污染**（L0 纯业务不许出现表名/IPC/模块路径）。技术实现细节入单元测试 + 代码（`src/lib/tauri-bridge.ts` 类型 / `src-tauri/src/db/schema.rs` / vitest / cargo test），范围边界/bug 归属入 task.md「范围边界」段。
+> 权威细则：`docs/governance/doc-layers.md`。docs/ 按「大需求目录」组织（每个需求一个目录，`index.md` 唯一入口）；技术实现细节入单元测试 + 代码（`src/lib/tauri-bridge.ts` 类型 / `src-tauri/src/db/schema.rs` / vitest / cargo test），范围边界/bug 归属入 task.md「范围边界」段。
 
 | 内容类型 | 去处 |
 |---|---|
@@ -169,9 +169,7 @@ Rust 依赖的 macOS 分支在 `Cargo.toml` `[target.'cfg(target_os = "macos")'.
 | 实施步骤 / commit 计划 | `docs/plans/YYYY-MM-DD-<version>-<feature>.md` |
 | 进行中 task | `docs/tasks/<version>-<type>-<short-desc>/task.md` |
 | 跨版本规则 | `docs/governance/` |
-| 历史交付 | `docs/archive/` |
-
-**已弃用旧路径**：`docs/specs/`、`docs/architecture/`、`docs/projects/`、`docs/prd/`、`docs/domain/`、`docs/design/`、`docs/tech/`、`docs/reports/` —— 已并入各需求目录或归档，**不要**再往旧路径写。
+| 发版记录 | `docs/reports/`（release notes / retro） |
 
 ## 项目里**没有**的东西（避免误找）
 
