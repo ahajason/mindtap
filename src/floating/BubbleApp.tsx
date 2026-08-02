@@ -29,26 +29,38 @@ export function BubbleApp() {
       setPendingConfirm(false);
       setAutoPaused(false);
       setDismissed(false);
+      // 轮询路径也需 show bubble 窗口(兜底)
+      const win = getCurrentWindow();
+      void win.show();
     }
   });
 
   // 监听 Rust 启动 emit 的失真事件
+  // 用 useRef 存 unlisten 避免 async gap 导致的竞态(组件卸载时 unlisten 可能尚未赋值)
+  const unlistenRef = useRef<(() => void) | null>(null);
   useEffect(() => {
-    let unlisten: (() => void) | null = null;
+    let cancelled = false;
     (async () => {
       try {
-        unlisten = await listen<DormantPayload>("floating:dormant", (event) => {
+        const unlisten = await listen<DormantPayload>("floating:dormant", (event) => {
           setPayload(event.payload);
           setPendingConfirm(false);
           setAutoPaused(false);
           setDismissed(false);
         });
+        if (cancelled) {
+          unlisten();
+        } else {
+          unlistenRef.current = unlisten;
+        }
       } catch (err) {
         console.error("[bubble] listen failed", err);
       }
     })();
     return () => {
-      unlisten?.();
+      cancelled = true;
+      unlistenRef.current?.();
+      unlistenRef.current = null;
     };
   }, []);
 

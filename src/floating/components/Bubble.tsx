@@ -43,7 +43,7 @@ export function Bubble({
             </p>
           ) : (
             <p className="text-[13px] font-medium text-text-1">
-              刚才这 {formatFocusMs(pendingMs ?? 0)} 要计入吗？
+              刚才 {formatFocusMs(pendingMs ?? 0)} 计入专注吗？
             </p>
           )}
           <div className="mt-2 flex items-center justify-end gap-2">
@@ -66,7 +66,7 @@ export function Bubble({
       ) : (
         <>
           <p className="text-[13px] font-medium text-text-1">
-            {content} 还在进行中，还要继续吗？
+            {content} 还在进行中吗？
           </p>
           <div className="mt-2 flex items-center justify-end gap-2">
             <button

@@ -16,7 +16,7 @@ export default function AppLayout() {
         className="absolute top-0 left-0 w-[252px] h-10"
       />
       <AppSidebar />
-      <main className="flex-1 mr-3 mt-3 mb-3 overflow-y-auto p-[var(--spacing-6)]">
+      <main className="flex-1 mr-3 mt-3 mb-3 overflow-y-auto app-main-scroll p-[var(--spacing-6)]" style={{ scrollbarGutter: 'stable' }}>
         <div
           data-tauri-drag-region
           className="h-9 -mx-[var(--spacing-6)] -mt-[var(--spacing-6)] mb-3"

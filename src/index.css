@@ -126,3 +126,28 @@ body {
   user-select: none;
   -webkit-user-select: none;
 }
+
+/* === AppLayout 主内容区 Mac 风格滚动条 (REQ-11 V0.2.2)
+   细窄半透明圆角,贴合玻璃材质。scrollbar-gutter:stable 预留空间防抖动。
+   参考 floating.css .floating-list 滚动条样式。 */
+.app-main-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 30, 80, 0.18) transparent;
+}
+
+.app-main-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.app-main-scroll::-webkit-scrollbar-thumb {
+  background: rgba(0, 30, 80, 0.18);
+  border-radius: 3px;
+}
+
+.app-main-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 30, 80, 0.28);
+}
+
+.app-main-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}

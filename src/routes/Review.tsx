@@ -3,6 +3,7 @@
 // P3 路由重构后会移到业务路由,目前挂在 StyleGuideLayout 下。
 
 import { useEffect, useState } from 'react';
+import { listen } from '@tauri-apps/api/event';
 import { api, type DailyReview } from '@/lib/tauri-bridge';
 import PageHeader from '@/components/style-guide/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -51,6 +52,28 @@ export default function ReviewRoute() {
 
   useEffect(() => {
     fetchReview();
+
+    // 监听跨窗口数据变更事件 -> 自动刷新复盘视图
+    let cancelled = false;
+    let cleanup: (() => void) | null = null;
+    (async () => {
+      try {
+        const unlisten = await listen('floating:data_changed', () => {
+          if (!cancelled) fetchReview();
+        });
+        if (cancelled) {
+          unlisten();
+        } else {
+          cleanup = unlisten;
+        }
+      } catch {
+        // 无 Tauri runtime -> 静默降级
+      }
+    })();
+    return () => {
+      cancelled = true;
+      cleanup?.();
+    };
   }, []);
 
   if (loading) {
@@ -96,7 +119,7 @@ export default function ReviewRoute() {
           已完成 ({data.completed.length})
         </h2>
         {data.completed.length === 0 ? (
-          <p className="text-text-2 text-sm">今天还没有完成的任务。</p>
+          <p className="text-text-2 text-sm">今天还没有完成的任务，继续加油。</p>
         ) : (
           <ul className="space-y-1">
             {data.completed.map(item => (
@@ -117,7 +140,7 @@ export default function ReviewRoute() {
           专注分布
         </h2>
         {data.distribution.length === 0 ? (
-          <p className="text-text-2 text-sm">今天还没有专注记录。</p>
+          <p className="text-text-2 text-sm">今天还没有专注记录，开始一个任务吧。</p>
         ) : (
           <div className="space-y-2">
             {data.distribution.map(d => (
@@ -144,7 +167,7 @@ export default function ReviewRoute() {
           待确认 ({data.stale.length})
         </h2>
         {data.stale.length === 0 ? (
-          <p className="text-text-2 text-sm">没有待确认的卡。</p>
+          <p className="text-text-2 text-sm">没有待确认的任务。</p>
         ) : (
           <ul className="space-y-2">
             {data.stale.map(item => (
@@ -177,13 +200,13 @@ export default function ReviewRoute() {
         )}
       </section>
 
-      {/* 面板4: 未覆盖时段(空档) */}
+      {/* 面板4: 未记录时段(空档) */}
       <section className="glass-l2 rounded-[var(--radius-card)] p-[var(--spacing-4)]">
         <h2 className="text-lg font-semibold text-text-1 mb-2">
-          未覆盖时段 ({data.uncovered_gaps.length})
+          未记录时段 ({data.uncovered_gaps.length})
         </h2>
         {data.uncovered_gaps.length === 0 ? (
-          <p className="text-text-2 text-sm">今天没有未覆盖的时段。</p>
+          <p className="text-text-2 text-sm">今天没有未记录的时段。</p>
         ) : (
           <ul className="space-y-1">
             {data.uncovered_gaps.map((gap) => (

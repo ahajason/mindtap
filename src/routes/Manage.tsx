@@ -1,11 +1,14 @@
 // V0.2.2 P4 主窗管理:搜索/筛选/回收站(2026-08-03)。
 // 四视图:进行中 / 待办 / 归档 / 回收站。软删 5 秒撤销 toast。
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { listen } from '@tauri-apps/api/event';
 import { api, type Item } from '@/lib/tauri-bridge';
 import PageHeader from '@/components/style-guide/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
+import { MoreHorizontal, Trash2 } from 'lucide-react';
 
 type ViewTab = 'active' | 'todo' | 'archived' | 'deleted';
 
@@ -21,8 +24,6 @@ export default function ManageRoute() {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [undoId, setUndoId] = useState<number | null>(null);
-  const [undoTimer, setUndoTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchItems = useCallback(() => {
     setLoading(true);
@@ -48,34 +49,61 @@ export default function ManageRoute() {
     fetchItems();
   }, [fetchItems]);
 
-  // 清理 undo timer
+  // 监听跨窗口数据变更事件 -> 自动刷新管理列表
   useEffect(() => {
+    let cancelled = false;
+    let cleanup: (() => void) | null = null;
+    (async () => {
+      try {
+        const unlisten = await listen('floating:data_changed', () => {
+          if (!cancelled) fetchItems();
+        });
+        if (cancelled) {
+          unlisten();
+        } else {
+          cleanup = unlisten;
+        }
+      } catch {
+        // 无 Tauri runtime -> 静默降级
+      }
+    })();
     return () => {
-      if (undoTimer) clearTimeout(undoTimer);
+      cancelled = true;
+      cleanup?.();
     };
-  }, [undoTimer]);
+  }, [fetchItems]);
 
   const handleSoftDelete = (id: number) => {
     api.item.softDelete(id).then(() => {
-      setUndoId(id);
-      const timer = setTimeout(() => {
-        setUndoId(null);
-        // 不调 fetchItems(): 用户可能已切 tab,以当前 tab 为准
-      }, 5000);
-      setUndoTimer(timer);
+      toast('已删除', {
+        duration: 5000,
+        action: {
+          label: '撤销',
+          onClick: () => handleUndoDelete(id),
+        },
+      });
+      fetchItems();
+    }).catch((err) => {
+      toast.error('删除失败: ' + (err instanceof Error ? err.message : String(err)));
     });
   };
 
   const handleUndoDelete = (id: number) => {
-    if (undoTimer) clearTimeout(undoTimer);
     api.item.undoDelete(id).then(() => {
-      setUndoId(null);
       fetchItems();
+    }).catch((err) => {
+      toast.error('撤销失败: ' + (err instanceof Error ? err.message : String(err)));
     });
   };
 
   const handleHardDelete = (id: number) => {
-    api.item.hardDelete(id).then(() => fetchItems());
+    if (!window.confirm('确定永久删除？此操作不可撤销。')) return;
+    api.item.hardDelete(id).then(() => {
+      toast.success('已永久删除');
+      fetchItems();
+    }).catch((err) => {
+      toast.error('删除失败: ' + (err instanceof Error ? err.message : String(err)));
+    });
   };
 
   const filtered = search.trim()
@@ -110,16 +138,6 @@ export default function ManageRoute() {
           </Button>
         ))}
       </div>
-
-      {/* 5 秒撤销条 */}
-      {undoId !== null && (
-        <div className="mb-4 p-3 rounded-lg bg-warning-1/10 border border-warning-1/30 flex items-center justify-between">
-          <span className="text-sm text-text-1">已删除，5 秒后可永久消失</span>
-          <Button variant="secondary" size="sm" onClick={() => handleUndoDelete(undoId)}>
-            撤销
-          </Button>
-        </div>
-      )}
 
       {/* 任务列表 */}
       {loading ? (
@@ -159,14 +177,57 @@ export default function ManageRoute() {
                       </Button>
                     </>
                   ) : (
-                    <Button variant="ghost" size="sm" onClick={() => handleSoftDelete(item.id)}>
-                      删除
-                    </Button>
+                    <MoreMenu onDelete={() => handleSoftDelete(item.id)} />
                   )}
                 </div>
               </li>
             ))}
           </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** 三点下拉菜单:删除操作默认隐藏,点击展开后确认 */
+function MoreMenu({ onDelete }: { onDelete: () => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        aria-label="更多操作"
+        onClick={() => setOpen(v => !v)}
+        className="h-8 w-8 flex items-center justify-center rounded-[8px] text-text-3 hover:bg-glass-2 transition-colors"
+      >
+        <MoreHorizontal className="h-4 w-4" />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-9 z-10 w-32 rounded-[8px] border border-glass-2 bg-glass-l2 shadow-lg p-1">
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              onDelete();
+            }}
+            className="w-full flex items-center gap-2 rounded-[6px] px-2 py-1.5 text-sm text-danger hover:bg-danger/10 transition-colors"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            删除
+          </button>
         </div>
       )}
     </div>

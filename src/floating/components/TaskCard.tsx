@@ -16,6 +16,10 @@ type TaskCardProps = {
   onArchive?: () => void;
   /** 双击改名(3a):提交新内容 */
   onRename?: (content: string) => void;
+  /** 测试辅助:手动触发失真确认气泡(仅开发者选项开启时可见) */
+  onTriggerDormant?: () => void;
+  /** 开发者选项是否开启(控制失真按钮可见性) */
+  developerMode?: boolean;
   /** 冷却档位: 'cooling' | 'stale',决定透明度 */
   cold?: "cooling" | "stale";
   /** 当前时间戳(秒级 tick):active 卡实时滚动时长用 */
@@ -49,6 +53,8 @@ export function TaskCard({
   onPause,
   onArchive,
   onRename,
+  onTriggerDormant,
+  developerMode,
   cold,
   now,
 }: TaskCardProps) {
@@ -227,6 +233,22 @@ export function TaskCard({
             className={ARCHIVE_BTN}
           >
             归档
+          </button>
+        )}
+        {/* 测试辅助:手动触发失真确认气泡(仅开发者选项开启 + active 卡)。 */}
+        {isActiveCard && onTriggerDormant && developerMode && (
+          <button
+            type="button"
+            data-no-expand
+            aria-label={`触发失真确认 ${item.content}`}
+            title="测试:触发失真确认气泡"
+            onClick={(e) => {
+              e.stopPropagation();
+              onTriggerDormant();
+            }}
+            className="h-6 rounded-[8px] px-1.5 text-[11px] font-medium text-purple-500 transition-colors hover:bg-purple-400/15"
+          >
+            失真
           </button>
         )}
       </div>

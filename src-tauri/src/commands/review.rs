@@ -1,5 +1,6 @@
 // 薄 adapter: 复盘视图命令(2026-08-03)。
-use tauri::State;
+// V0.2.2: associate_gap 是写操作,emit 数据变更事件。
+use tauri::{AppHandle, Emitter, State};
 
 use crate::db::review;
 use crate::db::time;
@@ -19,7 +20,10 @@ pub fn review_associate_gap(
     gap_start: i64,
     gap_end: i64,
     state: State<DbState>,
+    app: AppHandle,
 ) -> Result<(), AppError> {
     let conn = state.0.lock().map_err(|e| AppError(e.to_string()))?;
-    review::associate_gap(&conn, item_id, gap_start, gap_end)
+    review::associate_gap(&conn, item_id, gap_start, gap_end)?;
+    let _ = app.emit("floating:data_changed", ());
+    Ok(())
 }

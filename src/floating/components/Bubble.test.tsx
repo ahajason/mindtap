@@ -14,7 +14,7 @@ describe("Bubble(失真确认气泡)", () => {
       />,
     );
 
-    expect(screen.getByText("写代码 还在进行中，还要继续吗？")).toBeVisible();
+    expect(screen.getByText("写代码 还在进行中吗？")).toBeVisible();
   });
 
   it("点继续 → onContinue 回调", () => {
@@ -60,7 +60,7 @@ describe("Bubble(失真确认气泡)", () => {
       />,
     );
 
-    expect(screen.getByText("刚才这 02:00:00 要计入吗？")).toBeVisible();
+    expect(screen.getByText("刚才 02:00:00 计入专注吗？")).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "记入" }));
     expect(onKeep).toHaveBeenCalledTimes(1);
     fireEvent.click(screen.getByRole("button", { name: "丢弃" }));

@@ -71,6 +71,8 @@ export function FloatingApp() {
   // V0.2.2 P5.4: 前台活动信号 — 浮窗视觉强化(呼吸动画 + 建议文案)
   const [activitySignal, setActivitySignal] = useState<AppInfo | null>(null);
   const [activityIgnored, setActivityIgnored] = useState(false);
+  // V0.2.2 开发者选项:控制失真测试按钮可见性
+  const [developerMode, setDeveloperMode] = useState(false);
 
   // ADR-0013: 重复捕获轻提示(不阻止不合并)。输入变化时检测同名已有卡。
   useEffect(() => {
@@ -135,6 +137,9 @@ export function FloatingApp() {
     (async () => {
       try {
         const raw = await api.setting.get(LIST_H_KEY);
+        // 同步读取开发者选项设置
+        const devMode = await api.setting.get("developer_mode_enabled");
+        setDeveloperMode(devMode === "true");
         if (cancelled) return;
         const n = raw != null ? Number(raw) : NaN;
         setListHeight(
@@ -647,6 +652,8 @@ export function FloatingApp() {
                     onPause={() => handlePauseItem(item.id)}
                     onArchive={() => handleArchiveItem(item.id)}
                     onRename={(content) => handleRenameItem(item.id, content)}
+                    onTriggerDormant={() => void api.item.triggerDormant(item.id).catch((err) => console.error('[dormant] trigger failed', err))}
+                    developerMode={developerMode}
                   />
                 ))}
                 {todo.length > 0 && (

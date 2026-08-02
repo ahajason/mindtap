@@ -109,6 +109,9 @@ export const api = {
     rename: (id: number, content: string) =>
       invoke<Item>("item_rename", { id, content }),
     checkDormant: () => invoke<DormantPayload[]>("item_check_dormant"),
+    /** 测试辅助:手动触发失真确认气泡(仅 dev 模式) */
+    triggerDormant: (id: number) =>
+      invoke<DormantPayload>("item_trigger_dormant", { id }),
     listDuplicate: (content: string) =>
       invoke<Item[]>("item_list_duplicate", { content }),
     // V0.2.1 三态:整理动作 —— triageToTodo 仅 active→todo 兜底;triageArchive 待办直接归档。

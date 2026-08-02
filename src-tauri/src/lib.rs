@@ -130,6 +130,14 @@ pub fn run() {
                     // 2. 每 30s: 空闲自动暂停 + 失真检测 + 预留前台监听
                     let app_handle = app.handle().clone();
                     std::thread::spawn(move || {
+                        // 辅助:emit floating:dormant + show bubble 窗口
+                        fn emit_dormant(ah: &tauri::AppHandle, p: &crate::db::dormant::DormantPayload) {
+                            let _ = ah.emit("floating:dormant", p);
+                            if let Some(bubble) = ah.get_webview_window("bubble") {
+                                let _ = bubble.show();
+                            }
+                        }
+
                         // --- 辅助:持有锁执行->返回结果 ---
                         fn with_conn<F, R>(ah: &tauri::AppHandle, f: F) -> Result<R, ()>
                         where
@@ -149,7 +157,8 @@ pub fn run() {
                         // 启动时立即执行一次失真检测
                         let now = crate::db::time::now_ms();
                         let dormant = with_conn(&app_handle, |conn| {
-                            crate::db::dormant::settle_dormant(conn, now)
+                            let cooling = crate::db::dormant::get_cooling_ms(conn);
+                            crate::db::dormant::settle_dormant(conn, now, cooling)
                         }).ok();
                         if let Some(dormant) = dormant {
                             if !dormant.has_pending.is_empty() {
@@ -157,7 +166,7 @@ pub fn run() {
                                     crate::db::dormant::get_dormant_payloads(conn, &dormant.has_pending)
                                 }) {
                                     for p in payloads {
-                                        let _ = app_handle.emit("floating:dormant", &p);
+                                        emit_dormant(&app_handle, &p);
                                     }
                                 }
                             }
@@ -179,7 +188,7 @@ pub fn run() {
                                     content: r.item.content.clone(),
                                     pending_ms: r.pending_ms.unwrap_or(0),
                                 };
-                                let _ = app_handle.emit("floating:dormant", &payload);
+                                emit_dormant(&app_handle, &payload);
                                 let _ = app_handle
                                     .notification()
                                     .builder()
@@ -190,7 +199,8 @@ pub fn run() {
 
                             // 2. 失真检测(冷却/跨天) — 每周期执行
                             let dormant = with_conn(&app_handle, |conn| {
-                                crate::db::dormant::settle_dormant(conn, now)
+                                let cooling = crate::db::dormant::get_cooling_ms(conn);
+                                crate::db::dormant::settle_dormant(conn, now, cooling)
                             }).ok();
                             if let Some(dormant) = dormant {
                                 if !dormant.has_pending.is_empty() {
@@ -198,7 +208,7 @@ pub fn run() {
                                         crate::db::dormant::get_dormant_payloads(conn, &dormant.has_pending)
                                     }) {
                                         for p in payloads {
-                                            let _ = app_handle.emit("floating:dormant", &p);
+                                            emit_dormant(&app_handle, &p);
                                         }
                                     }
                                 }
@@ -247,6 +257,7 @@ pub fn run() {
             commands::item::item_reactivate,
             commands::item::item_undo_delete,
             commands::item::item_check_dormant,
+            commands::item::item_trigger_dormant,
             commands::item::item_list_duplicate,
             // V0.2.1 自动计时空闲保护:前端轮询 idle 是否超自动暂停阈值。
             commands::item::item_get_idle,

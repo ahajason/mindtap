@@ -76,11 +76,11 @@ test.describe('复盘视图 (P2)', () => {
     await expect(page.getByText('已完成任务').first()).toBeVisible({ timeout: 5000 });
   });
 
-  test('未覆盖时段显示', async ({ page }) => {
-    await expect(page.getByText('未覆盖时段')).toBeVisible({ timeout: 5000 });
+  test('未记录时段显示', async ({ page }) => {
+    await expect(page.getByText('未记录时段')).toBeVisible({ timeout: 5000 });
   });
 
-  test('待确认卡显示确认/忽略按钮', async ({ page }) => {
+  test('待确认任务显示确认/忽略按钮', async ({ page }) => {
     await expect(page.getByText('待确认 (1)')).toBeVisible({ timeout: 5000 });
     await expect(page.getByRole('button', { name: '确认' }).first()).toBeVisible({ timeout: 3000 });
     await expect(page.getByRole('button', { name: '忽略' })).toBeVisible({ timeout: 3000 });

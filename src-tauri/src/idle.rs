@@ -9,8 +9,18 @@ use rusqlite::Connection;
 use crate::db::item::{self, ListStatus, PauseResult};
 use crate::error::AppError;
 
-/// 自动暂停空闲阈值:10 分钟无键鼠输入
-pub const IDLE_AUTO_PAUSE_MS: i64 = 10 * 60 * 1000;
+/// 自动暂停默认空闲阈值:10 分钟无键鼠输入
+pub const DEFAULT_IDLE_AUTO_PAUSE_MS: i64 = 10 * 60 * 1000;
+
+/// 从 app_setting 读取空闲超时(分钟),失败用默认值。
+pub fn get_idle_ms(conn: &Connection) -> i64 {
+    crate::db::setting::get(conn, "idle_auto_pause_min")
+        .ok()
+        .flatten()
+        .and_then(|s| s.parse::<i64>().ok())
+        .map(|min| min * 60 * 1000)
+        .unwrap_or(DEFAULT_IDLE_AUTO_PAUSE_MS)
+}
 
 /// 距上次键鼠输入的空闲毫秒。None = 当前平台不支持检测(fallback 不检测)。
 pub fn last_input_ms() -> Option<i64> {
@@ -27,9 +37,10 @@ pub fn last_input_ms() -> Option<i64> {
 /// 自动暂停判定(纯逻辑,单测入口):idle 严格超阈值,且卡 last_active_at 早于 idle 起点。
 /// - last_active_at / now:UNIX epoch 毫秒
 /// - idle:空闲时长毫秒(与 now 相减得 idle 起点,不同时钟域但在同一扫描时刻取数)
-pub fn should_auto_pause(last_active_at: Option<i64>, idle: Option<i64>, now: i64) -> bool {
+/// - idle_threshold_ms:空闲暂停阈值毫秒(由调用方从 app_setting 读取)
+pub fn should_auto_pause(last_active_at: Option<i64>, idle: Option<i64>, now: i64, idle_threshold_ms: i64) -> bool {
     let Some(idle) = idle else { return false };
-    if idle <= IDLE_AUTO_PAUSE_MS {
+    if idle <= idle_threshold_ms {
         return false;
     }
     let Some(la) = last_active_at else {
@@ -45,10 +56,11 @@ pub fn scan_and_auto_pause(
     idle: Option<i64>,
     now: i64,
 ) -> Result<Vec<PauseResult>, AppError> {
+    let idle_threshold = get_idle_ms(conn);
     let actives = item::list(conn, ListStatus::Active, None)?;
     let mut paused = Vec::new();
     for it in actives {
-        if should_auto_pause(it.last_active_at, idle, now) {
+        if should_auto_pause(it.last_active_at, idle, now, idle_threshold) {
             // pending_ms 为卡自上次活跃起的实际时长(now - last_active_at)
             let pending_ms = it.last_active_at.map(|la| now.saturating_sub(la));
             // 单卡失败跳过(可能已被其他路径完成/暂停),不阻塞整轮扫描
@@ -117,23 +129,25 @@ mod tests {
         let now = 1_000_000_000;
         let old_la = now - 20 * 60 * 1000;
         // 未超阈值(9 分钟 / 恰好 10 分钟)→ 不暂停
-        assert!(!should_auto_pause(Some(old_la), Some(9 * 60 * 1000), now));
+        assert!(!should_auto_pause(Some(old_la), Some(9 * 60 * 1000), now, DEFAULT_IDLE_AUTO_PAUSE_MS));
         assert!(!should_auto_pause(
             Some(old_la),
-            Some(IDLE_AUTO_PAUSE_MS),
-            now
+            Some(DEFAULT_IDLE_AUTO_PAUSE_MS),
+            now,
+            DEFAULT_IDLE_AUTO_PAUSE_MS
         ));
         // 超阈值 → 暂停
-        assert!(should_auto_pause(Some(old_la), Some(11 * 60 * 1000), now));
+        assert!(should_auto_pause(Some(old_la), Some(11 * 60 * 1000), now, DEFAULT_IDLE_AUTO_PAUSE_MS));
         // 卡 last_active_at 在 idle 起点之后(空闲前还在动)→ 不暂停
         assert!(!should_auto_pause(
             Some(now - 5 * 60 * 1000),
             Some(11 * 60 * 1000),
-            now
+            now,
+            DEFAULT_IDLE_AUTO_PAUSE_MS
         ));
         // 无 last_active_at / 无 idle(非 Windows fallback)→ 不暂停
-        assert!(!should_auto_pause(None, Some(11 * 60 * 1000), now));
-        assert!(!should_auto_pause(Some(old_la), None, now));
+        assert!(!should_auto_pause(None, Some(11 * 60 * 1000), now, DEFAULT_IDLE_AUTO_PAUSE_MS));
+        assert!(!should_auto_pause(Some(old_la), None, now, DEFAULT_IDLE_AUTO_PAUSE_MS));
     }
 
     // 自动暂停调用路径:mock last_input(idle 固定值) → 陈旧卡被 pause,新卡保持 active

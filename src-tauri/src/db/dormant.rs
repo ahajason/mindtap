@@ -8,8 +8,18 @@ use crate::db::item::{get_by_id, settle_open_intervals};
 use crate::error::AppError;
 use crate::db::time;
 
-/// 失真检测阈值:冷却 2 小时无更新(ADR-0012)
-pub const DISTORTION_IDLE_MS: i64 = 2 * 60 * 60 * 1000;
+/// 失真检测默认阈值:冷却 2 小时无更新(ADR-0012)
+pub const DEFAULT_DISTORTION_IDLE_MS: i64 = 2 * 60 * 60 * 1000;
+
+/// 从 app_setting 读取冷却阈值(分钟),失败用默认值。
+pub fn get_cooling_ms(conn: &Connection) -> i64 {
+    crate::db::setting::get(conn, "dormant_cooling_min")
+        .ok()
+        .flatten()
+        .and_then(|s| s.parse::<i64>().ok())
+        .map(|min| min * 60 * 1000)
+        .unwrap_or(DEFAULT_DISTORTION_IDLE_MS)
+}
 
 /// 失真检测结果:退回待办的卡 id + 有待确认窗口的卡 id。
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -29,7 +39,8 @@ pub struct DormantPayload {
 }
 
 /// 失真检测 + 跨天停表。返回:退回 todo 的 id + 有待确认的 id。
-pub fn settle_dormant(conn: &Connection, now: i64) -> Result<DormantResult, AppError> {
+/// cooling_ms: 冷却阈值(毫秒),由调用方从 app_setting 读取后传入。
+pub fn settle_dormant(conn: &Connection, now: i64, cooling_ms: i64) -> Result<DormantResult, AppError> {
     let tx = conn.unchecked_transaction()?;
     let mut paused: Vec<i64> = Vec::new();
     let mut has_pending: Vec<i64> = Vec::new();
@@ -45,7 +56,7 @@ pub fn settle_dormant(conn: &Connection, now: i64) -> Result<DormantResult, AppE
     for r in rows {
         let (id, la) = r?;
         if let Some(la) = la {
-            if now - la > DISTORTION_IDLE_MS {
+            if now - la > cooling_ms {
                 to_settle.push((id, la));
             }
         }
@@ -155,14 +166,18 @@ mod tests {
         let conn = fresh_db();
         // 失真:4 小时前活跃 → 冷却
         let now = time::now_ms();
-        let id = insert_raw(&conn, "X", "active", 1000, now - 4 * 3600 * 1000);
-        let res = settle_dormant(&conn, now).unwrap();
+        let day_start = time::local_day_start_ms(now);
+        // 确保 la 在今天且 now-la > 2h(冷却阈值):用今天 0 点 + 1ms,now 设为 day_start + 5h
+        let la = day_start + 1;
+        let now = day_start + 5 * 3600 * 1000; // 今天 05:00(确保 > 2h 冷却)
+        let id = insert_raw(&conn, "X", "active", 1000, la);
+        let res = settle_dormant(&conn, now, DEFAULT_DISTORTION_IDLE_MS).unwrap();
         // 冷却只挂 pending,不转 todo(卡保持 active,计时继续,等气泡超时再停)
         assert!(res.has_pending.contains(&id));
         assert!(!res.paused.contains(&id));
         let after = get_by_id(&conn, id).unwrap().unwrap();
         assert_eq!(after.status, "active");
-        assert_eq!(after.pending_ms, Some(4 * 3600 * 1000));
+        assert_eq!(after.pending_ms, Some(now - la));
         // ADR-0012: 失真窗口未确认前不入账 → focus 保持 1000
         assert_eq!(after.focus_ms, 1000);
     }
@@ -172,7 +187,7 @@ mod tests {
         let conn = fresh_db();
         let now = time::now_ms();
         let id = insert_raw(&conn, "X", "active", 0, now - 1000); // 1 秒前
-        let res = settle_dormant(&conn, now).unwrap();
+        let res = settle_dormant(&conn, now, DEFAULT_DISTORTION_IDLE_MS).unwrap();
         assert!(res.paused.is_empty());
         let after = get_by_id(&conn, id).unwrap().unwrap();
         assert_eq!(after.status, "active");
@@ -190,7 +205,7 @@ mod tests {
             params![id],
         )
         .unwrap();
-        let res = settle_dormant(&conn, now).unwrap();
+        let res = settle_dormant(&conn, now, DEFAULT_DISTORTION_IDLE_MS).unwrap();
         assert!(res.paused.contains(&id));
         let after = get_by_id(&conn, id).unwrap().unwrap();
         assert_eq!(after.status, "todo");
@@ -230,7 +245,7 @@ mod tests {
             params![yesterday, item.id],
         )
         .unwrap();
-        let res = settle_dormant(&conn, now).unwrap();
+        let res = settle_dormant(&conn, now, DEFAULT_DISTORTION_IDLE_MS).unwrap();
         assert!(res.paused.contains(&item.id));
         let intervals = list_intervals(&conn, item.id).unwrap();
         assert_eq!(intervals.len(), 1);
