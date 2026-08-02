@@ -1,4 +1,5 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import Sidebar from '@/components/layout/Sidebar';
 import { useWindowActive } from '@/hooks/useWindowActive';
 
@@ -11,6 +12,7 @@ import { useWindowActive } from '@/hooks/useWindowActive';
  */
 export default function StyleGuideLayout() {
   useWindowActive();
+  const navigate = useNavigate();
 
   return (
     <div className="fixed inset-0 z-0 rounded-2xl glass-l1 overflow-hidden flex gap-3">
@@ -22,8 +24,18 @@ export default function StyleGuideLayout() {
       <main className="flex-1 mr-3 mt-3 mb-3 overflow-y-auto p-[var(--spacing-6)]">
         <div
           data-tauri-drag-region
-          className="h-9 -mx-[var(--spacing-6)] -mt-[var(--spacing-6)] mb-3"
-        />
+          className="h-9 -mx-[var(--spacing-6)] -mt-[var(--spacing-6)] mb-3 flex items-center"
+        >
+          <button
+            onClick={() => navigate('/')}
+            data-tauri-drag-region="false"
+            className="flex items-center gap-1 px-2 py-1 rounded-md text-sm text-text-2 hover:bg-black/[0.04] hover:text-text-1 transition-colors duration-150"
+            aria-label="返回"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>返回</span>
+          </button>
+        </div>
         <Outlet />
       </main>
     </div>

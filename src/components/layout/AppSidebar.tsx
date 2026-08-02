@@ -1,7 +1,7 @@
-// V0.2.2 业务侧边栏:复盘 + 管理 + 设置(2026-08-03)。
+// V0.2.2 业务侧边栏:复盘 + 管理 + 设置 + 设计指南(2026-08-03)。
 // 与 StyleGuide 的 Sidebar 共用视觉结构,但用独立 nav 项。
 
-import { businessNav } from '@/lib/nav-order';
+import { businessNav, toolNav } from '@/lib/nav-order';
 import { SidebarNavLink } from './SidebarNavLink';
 import { Separator } from '@/components/ui/separator';
 
@@ -19,6 +19,14 @@ export default function AppSidebar() {
 
       <nav data-tauri-drag-region="false" className="flex flex-col gap-1">
         {businessNav.map((item) => (
+          <SidebarNavLink key={item.to} item={item} />
+        ))}
+      </nav>
+
+      <Separator className="bg-white/40" />
+
+      <nav data-tauri-drag-region="false" className="flex flex-col gap-1">
+        {toolNav.map((item) => (
           <SidebarNavLink key={item.to} item={item} />
         ))}
       </nav>

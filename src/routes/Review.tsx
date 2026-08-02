@@ -5,13 +5,40 @@
 import { useEffect, useState } from 'react';
 import { api, type DailyReview } from '@/lib/tauri-bridge';
 import PageHeader from '@/components/style-guide/PageHeader';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 export default function ReviewRoute() {
   const [data, setData] = useState<DailyReview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pendingId, setPendingId] = useState<number | null>(null);
+
+  const handleConfirm = async (id: number) => {
+    setPendingId(id);
+    try {
+      await api.item.confirmPending(id, true);
+      toast.success('已确认专注时间');
+      fetchReview();
+    } catch (e) {
+      toast.error('确认失败: ' + String(e));
+    } finally {
+      setPendingId(null);
+    }
+  };
+
+  const handleIgnore = async (id: number) => {
+    setPendingId(id);
+    try {
+      await api.item.confirmPending(id, false);
+      toast.success('已忽略待确认时间');
+      fetchReview();
+    } catch (e) {
+      toast.error('忽略失败: ' + String(e));
+    } finally {
+      setPendingId(null);
+    }
+  };
 
   const fetchReview = () => {
     setLoading(true);
@@ -119,13 +146,31 @@ export default function ReviewRoute() {
         {data.stale.length === 0 ? (
           <p className="text-text-2 text-sm">没有待确认的卡。</p>
         ) : (
-          <ul className="space-y-1">
+          <ul className="space-y-2">
             {data.stale.map(item => (
-              <li key={item.id} className="flex items-center justify-between text-sm">
-                <span className="text-text-1 truncate">{item.content}</span>
-                <Badge variant="warning">
+              <li key={item.id} className="flex items-center justify-between gap-2 text-sm">
+                <span className="text-text-1 truncate flex-1">{item.content}</span>
+                <span className="text-text-3 text-xs shrink-0">
                   {item.pending_ms ? `${(item.pending_ms / 60000).toFixed(0)} 分钟` : '待处理'}
-                </Badge>
+                </span>
+                <div className="flex gap-1 shrink-0">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={pendingId === item.id}
+                    onClick={() => handleConfirm(item.id)}
+                  >
+                    {pendingId === item.id ? '确认中…' : '确认'}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={pendingId === item.id}
+                    onClick={() => handleIgnore(item.id)}
+                  >
+                    {pendingId === item.id ? '处理中…' : '忽略'}
+                  </Button>
+                </div>
               </li>
             ))}
           </ul>

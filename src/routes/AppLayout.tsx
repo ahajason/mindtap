@@ -3,6 +3,7 @@
 
 import { Outlet } from 'react-router-dom';
 import AppSidebar from '@/components/layout/AppSidebar';
+import { DormantConfirmDialog } from '@/components/DormantConfirmDialog';
 import { useWindowActive } from '@/hooks/useWindowActive';
 
 export default function AppLayout() {
@@ -22,6 +23,7 @@ export default function AppLayout() {
         />
         <Outlet />
       </main>
+      <DormantConfirmDialog />
     </div>
   );
 }

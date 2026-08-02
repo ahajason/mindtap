@@ -28,3 +28,8 @@ export const businessNav: readonly NavItem[] = [
   { to: '/manage',   label: '任务管理',                 icon: ListTodo },
   { to: '/settings', label: '设置',                     icon: Settings },
 ] as const;
+
+/** 工具导航(用于 AppLayout 侧边栏,与业务导航分隔) */
+export const toolNav: readonly NavItem[] = [
+  { to: '/style-guide', label: '设计指南',               icon: Palette },
+] as const;
