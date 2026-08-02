@@ -13,7 +13,7 @@ docs/prd/v<MAJOR>.<MINOR>-<feature>-prd.md
 
 例:
 - `docs/prd/v0.2.0-floating-window-prd.md`
-- `docs/prd/v0.2.1-native-dynamic-material-prd.md`
+- `docs/prd/v0.3.0-native-dynamic-material-prd.md`
 - `docs/prd/v0.2.1-task-switching-prd.md`（历史参考，已 superseded）
 
 ## 二、模板

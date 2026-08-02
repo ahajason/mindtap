@@ -586,7 +586,7 @@ Toggl 允许**不关联任何项目也能保存时间条目**（Clockify 强制�
 
 ## 关联文档
 
-- 前序实现：`docs/prd/v0.2.0-floating-window-prd.md`、`docs/prd/v0.2.1-native-dynamic-material-prd.md`（旧 `docs/prd/v0.2.2-pomodoro-notification-prd.md` 为时间盒方案，已 superseded 被阶段二取代，见 ADR-0014）
+- 前序实现：`docs/prd/v0.2.0-floating-window-prd.md`、`docs/prd/v0.3.0-native-dynamic-material-prd.md`（旧 `docs/prd/v0.2.2-pomodoro-notification-prd.md` 为时间盒方案，已 superseded 被阶段二取代，见 ADR-0014）
 - 领域模型（工作台账核心）：`docs/domain/v0.2.1-workbench-core-domain.md`（Item 统一实体 / 三态状态机 / 多并行 / 失真确认闭环）
 - 领域决策 ADR：`docs/domain/adr/0011-item-as-unified-entity.md`、`docs/domain/adr/0012-active-means-being-invested.md`、`docs/domain/adr/0013-duplicate-capture-not-blocked.md`、`docs/domain/adr/0014-v0.2.2-phase2-scope.md`
 - 技术方案（工作台账核心）：`docs/tech/v0.2.1-workbench-core-tech.md`

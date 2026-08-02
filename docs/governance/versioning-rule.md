@@ -79,7 +79,7 @@ docs/tasks/
 
 例:
 - `docs/tasks/v0.2.0.6-fix-contextmenu-right-click/` — V0.2.0 第 6 个 PATCH
-- `docs/tasks/v0.2.1-feat-native-dynamic-material/` — V0.2.1 的 feature
+- `docs/tasks/v0.3.0-feat-native-dynamic-material/` — V0.2.1 的 feature
 - `docs/tasks/v0.2-chore-ponytail-shrink/` — V0.2 阶段的杂项
 
 ### release notes 命名

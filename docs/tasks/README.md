@@ -19,7 +19,7 @@ docs/tasks/v<X.Y>[.<Z>]-<type>-<topic>/
 
 例:
 - `docs/tasks/v0.2.0.6-fix-contextmenu-right-click/`
-- `docs/tasks/v0.2.1-feat-native-dynamic-material/`
+- `docs/tasks/v0.3.0-feat-native-dynamic-material/`
 - `docs/tasks/v0.2-chore-ponytail-shrink/`
 
 ## 二、task.md 模板
