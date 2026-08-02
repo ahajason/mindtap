@@ -60,7 +60,7 @@ export default function ManageRoute() {
       setUndoId(id);
       const timer = setTimeout(() => {
         setUndoId(null);
-        fetchItems();
+        // 不调 fetchItems(): 用户可能已切 tab,以当前 tab 为准
       }, 5000);
       setUndoTimer(timer);
     });

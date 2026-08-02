@@ -219,13 +219,25 @@ export function FloatingApp() {
   }, [presentation, listHeight]);
 
   // V0.2.2 P5.4: 监听前台活动信号
+  // 使用 useRef 避免关闭闭包,不依赖 activityIgnored 重建监听器(Review #1 fix)
+  const activityIgnoredRef = useRef(false);
+  activityIgnoredRef.current = activityIgnored;
   useEffect(() => {
     let unlisten: (() => void) | null = null;
     (async () => {
       try {
         const { listen } = await import("@tauri-apps/api/event");
         unlisten = await listen<AppInfo>("floating:activity_signal", (event) => {
-          if (activityIgnored) return;
+          if (activityIgnoredRef.current) {
+            // 已忽略,但来自不同应用的信号可以重置
+            setActivitySignal((prev) => {
+              if (prev && prev.exe_path === event.payload.exe_path) return prev;
+              // 不同应用→重置忽略,显示新信号
+              setActivityIgnored(false);
+              return event.payload;
+            });
+            return;
+          }
           setActivitySignal(event.payload);
         });
       } catch (err) {
@@ -235,7 +247,7 @@ export function FloatingApp() {
     return () => {
       unlisten?.();
     };
-  }, [activityIgnored]);
+  }, []);
 
   // 位置记忆(保留 V0.2.0.15 实现)
   useEffect(() => {

@@ -141,8 +141,8 @@ export default function ReviewRoute() {
           <p className="text-text-2 text-sm">今天没有未覆盖的时段。</p>
         ) : (
           <ul className="space-y-1">
-            {data.uncovered_gaps.map((gap, i) => (
-              <li key={i} className="flex items-center justify-between text-sm">
+            {data.uncovered_gaps.map((gap) => (
+              <li key={gap.start} className="flex items-center justify-between text-sm">
                 <span className="text-text-2">
                   {formatTime(gap.start)} — {formatTime(gap.end)}
                 </span>
