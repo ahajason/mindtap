@@ -956,4 +956,60 @@ mod tests {
         };
         assert_eq!(items, vec!["todo".to_string(), "archived".to_string()]);
     }
+
+    #[test]
+    fn list_deleted_returns_soft_deleted_items() {
+        let conn = fresh_db();
+        let now = now_ms();
+        let id = insert_raw(&conn, "待删除", "todo", 0, now);
+        soft_delete(&conn, id).unwrap();
+
+        let deleted = list_deleted(&conn, None).unwrap();
+        assert_eq!(deleted.len(), 1);
+        assert_eq!(deleted[0].id, id);
+    }
+
+    #[test]
+    fn list_deleted_empty_when_no_items() {
+        let conn = fresh_db();
+        let deleted = list_deleted(&conn, None).unwrap();
+        assert!(deleted.is_empty());
+    }
+
+    #[test]
+    fn hard_delete_rejects_not_deleted() {
+        let conn = fresh_db();
+        let now = now_ms();
+        let id = insert_raw(&conn, "未删除", "todo", 0, now);
+        let err = hard_delete(&conn, id).unwrap_err();
+        assert!(err.0.contains("未软删除"));
+    }
+
+    #[test]
+    fn hard_delete_rejects_missing() {
+        let conn = fresh_db();
+        let err = hard_delete(&conn, 999).unwrap_err();
+        assert!(err.0.contains("不存在"));
+    }
+
+    #[test]
+    fn hard_delete_removes_item_and_intervals() {
+        let conn = fresh_db();
+        let now = now_ms();
+        let id = insert_raw(&conn, "永久删除", "todo", 0, now);
+        soft_delete(&conn, id).unwrap();
+        // 添加一个 focus_interval
+        conn.execute("INSERT INTO focus_interval (item_id, started_at, created_at, source) VALUES (?1, ?2, ?2, 'start')", params![id, now]).unwrap();
+
+        hard_delete(&conn, id).unwrap();
+        // 验证 item 已删除
+        assert!(get_by_id(&conn, id).unwrap().is_none());
+        // 验证 interval 级联删除
+        let count: i64 = conn.query_row(
+            "SELECT COUNT(*) FROM focus_interval WHERE item_id = ?1",
+            params![id],
+            |r| r.get(0),
+        ).unwrap();
+        assert_eq!(count, 0);
+    }
 }
