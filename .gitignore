@@ -93,3 +93,4 @@ prototype/
 # Playwright 运行产物(不入仓)
 test-results/
 playwright-report/
+.reasonix/
