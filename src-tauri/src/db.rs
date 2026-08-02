@@ -24,6 +24,8 @@ pub fn init(app: &AppHandle) -> Result<DbState, AppError> {
     let conn = Connection::open(&db_path)?;
     conn.execute_batch(CREATE_SQL)?;
     migrate_v5_to_v3(&conn)?;
+    // V0.2.2: 将当前时区偏移写入 app_setting(local_tz_offset_secs)
+    time::persist_tz_offset(&conn);
     Ok(DbState(Mutex::new(conn)))
 }
 

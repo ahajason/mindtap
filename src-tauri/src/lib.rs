@@ -124,72 +124,86 @@ pub fn run() {
             match db_state {
                 Ok(state) => {
                     app.manage(state);
-                    // V0.2.1: 启动失真检测(跨天/冷却 active → 退回 todo + 挂待确认)。
-                    // 对每个失真项 emit floating:dormant,由 bubble 窗口监听。
-                    // ponytail: 启动一次即可(PRD 跨天停表);空闲自动暂停是周期轮询,见下方 V0.2.1 线程。
+                    // V0.2.2: 统一后台线程,每 30s 执行多路扫描。
+                    // 1. 启动时: 立即执行一次失真检测(settle_dormant)
+                    // 2. 每 30s: 空闲自动暂停 + 失真检测 + 预留前台监听
                     let app_handle = app.handle().clone();
                     std::thread::spawn(move || {
-                        let now = crate::db::time::now_ms();
-                        let result = {
-                        let state = app_handle.state::<crate::db::DbState>();
-                        let conn = state.0.lock().map_err(|e| crate::error::AppError(e.to_string()));
-                        match conn {
-                            Ok(conn) => crate::db::dormant::settle_dormant(&conn, now),
-                            Err(e) => Err(e),
+                        // --- 辅助:持有锁执行->返回结果 ---
+                        fn with_conn<F, R>(ah: &tauri::AppHandle, f: F) -> Result<R, ()>
+                        where
+                            F: FnOnce(&rusqlite::Connection) -> Result<R, crate::error::AppError>,
+                        {
+                            let state = ah.state::<crate::db::DbState>();
+                            let result = match state.0.lock() {
+                                Ok(conn) => f(&conn).map_err(|e| log::warn!("[bg] db error: {e}")),
+                                Err(e) => {
+                                    log::warn!("[bg] db lock poisoned: {e}");
+                                    Err(())
+                                }
+                            };
+                            result
                         }
-                        };
-                        if let Ok(dormant) = result {
+
+                        // 启动时立即执行一次失真检测
+                        let now = crate::db::time::now_ms();
+                        let dormant = with_conn(&app_handle, |conn| {
+                            crate::db::dormant::settle_dormant(conn, now)
+                        }).ok();
+                        if let Some(dormant) = dormant {
                             if !dormant.has_pending.is_empty() {
-                                let state = app_handle.state::<crate::db::DbState>();
-                                let conn = state.0.lock().map_err(|e| crate::error::AppError(e.to_string()));
-                                if let Ok(conn) = conn {
-                                    if let Ok(payloads) = crate::db::dormant::get_dormant_payloads(
-                                        &conn,
-                                        &dormant.has_pending,
-                                    ) {
+                                if let Ok(payloads) = with_conn(&app_handle, |conn| {
+                                    crate::db::dormant::get_dormant_payloads(conn, &dormant.has_pending)
+                                }) {
+                                    for p in payloads {
+                                        let _ = app_handle.emit("floating:dormant", &p);
+                                    }
+                                }
+                            }
+                        }
+
+                        // 周期性扫描
+                        loop {
+                            std::thread::sleep(std::time::Duration::from_secs(30));
+                            let now = crate::db::time::now_ms();
+
+                            // 1. 空闲自动暂停扫描
+                            let idle = crate::idle::last_input_ms();
+                            let paused = with_conn(&app_handle, |conn| {
+                                crate::idle::scan_and_auto_pause(conn, idle, now)
+                            }).unwrap_or_default();
+                            for r in &paused {
+                                let payload = crate::db::dormant::DormantPayload {
+                                    id: r.item.id,
+                                    content: r.item.content.clone(),
+                                    pending_ms: r.pending_ms.unwrap_or(0),
+                                };
+                                let _ = app_handle.emit("floating:dormant", &payload);
+                                let _ = app_handle
+                                    .notification()
+                                    .builder()
+                                    .title("Mindtap")
+                                    .body(format!("{} 已自动暂停", r.item.content))
+                                    .show();
+                            }
+
+                            // 2. 失真检测(冷却/跨天) — 每周期执行
+                            let dormant = with_conn(&app_handle, |conn| {
+                                crate::db::dormant::settle_dormant(conn, now)
+                            }).ok();
+                            if let Some(dormant) = dormant {
+                                if !dormant.has_pending.is_empty() {
+                                    if let Ok(payloads) = with_conn(&app_handle, |conn| {
+                                        crate::db::dormant::get_dormant_payloads(conn, &dormant.has_pending)
+                                    }) {
                                         for p in payloads {
                                             let _ = app_handle.emit("floating:dormant", &p);
                                         }
                                     }
                                 }
                             }
-                        }
-                    });
 
-                    // V0.2.1 自动计时空闲保护:每 30s 扫描 active,空闲超阈值 → 主动暂停 + 系统通知。
-                    // 锁屏/休眠兜底:锁屏后无键鼠输入,idle 必然超阈值,下个周期自动暂停
-                    // (不单独监听电源事件,见 tech §1 不在范围)。
-                    let app_handle = app.handle().clone();
-                    std::thread::spawn(move || loop {
-                        std::thread::sleep(std::time::Duration::from_secs(30));
-                        let idle = crate::idle::last_input_ms();
-                        let now = crate::db::time::now_ms();
-                        let paused = {
-                            let state = app_handle.state::<crate::db::DbState>();
-                            let result = match state.0.lock() {
-                                Ok(conn) => {
-                                    match crate::idle::scan_and_auto_pause(&conn, idle, now) {
-                                        Ok(items) => items,
-                                        Err(e) => {
-                                            log::warn!("[idle] auto-pause scan failed: {e}");
-                                            Vec::new()
-                                        }
-                                    }
-                                }
-                                Err(e) => {
-                                    log::warn!("[idle] db lock poisoned: {e}");
-                                    Vec::new()
-                                }
-                            };
-                            result
-                        };
-                        for it in paused {
-                            let _ = app_handle
-                                .notification()
-                                .builder()
-                                .title("Mindtap")
-                                .body(format!("{} 已自动暂停", it.content))
-                                .show();
+                            // 3. 前台监听(预留,V0.2.2 P5 实现)
                         }
                     });
                 }

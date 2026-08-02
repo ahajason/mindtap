@@ -6,7 +6,7 @@
 
 use rusqlite::Connection;
 
-use crate::db::item::{self, Item, ListStatus};
+use crate::db::item::{self, ListStatus, PauseResult};
 use crate::error::AppError;
 
 /// 自动暂停空闲阈值:10 分钟无键鼠输入
@@ -38,20 +38,22 @@ pub fn should_auto_pause(last_active_at: Option<i64>, idle: Option<i64>, now: i6
     la < now.saturating_sub(idle)
 }
 
-/// 自动暂停扫描:遍历 active 卡,命中 should_auto_pause 的主动暂停(不计失真,退回 todo)。
-/// 返回被暂停的卡(供发通知)。conn 由调用方持 DbState 锁。
+/// 自动暂停扫描:遍历 active 卡,命中 should_auto_pause 的失真暂停(挂 pending_ms 待确认)。
+/// 返回被暂停的 PauseResult(含 pending_ms 供前端气泡确认)。conn 由调用方持 DbState 锁。
 pub fn scan_and_auto_pause(
     conn: &Connection,
     idle: Option<i64>,
     now: i64,
-) -> Result<Vec<Item>, AppError> {
+) -> Result<Vec<PauseResult>, AppError> {
     let actives = item::list(conn, ListStatus::Active, None)?;
     let mut paused = Vec::new();
     for it in actives {
         if should_auto_pause(it.last_active_at, idle, now) {
+            // pending_ms 为卡自上次活跃起的实际时长(now - last_active_at)
+            let pending_ms = it.last_active_at.map(|la| now.saturating_sub(la));
             // 单卡失败跳过(可能已被其他路径完成/暂停),不阻塞整轮扫描
-            if let Ok(res) = item::pause(conn, it.id, None) {
-                paused.push(res.item);
+            if let Ok(res) = item::pause(conn, it.id, pending_ms) {
+                paused.push(res);
             }
         }
     }
@@ -144,13 +146,15 @@ mod tests {
 
         let paused = scan_and_auto_pause(&conn, Some(11 * 60 * 1000), now).unwrap();
 
-        let paused_ids: Vec<i64> = paused.iter().map(|it| it.id).collect();
+        let paused_ids: Vec<i64> = paused.iter().map(|r| r.item.id).collect();
         assert!(paused_ids.contains(&stale));
         assert!(!paused_ids.contains(&fresh));
 
         let stale_after = item::get_by_id(&conn, stale).unwrap().unwrap();
         assert_eq!(stale_after.status, "todo");
-        assert!(stale_after.pending_ms.is_none());
+        // pending_ms 应 ≈ 20 分钟(now - last_active_at)
+        assert!(stale_after.pending_ms.is_some());
+        assert!(stale_after.pending_ms.unwrap() > 19 * 60 * 1000);
         let fresh_after = item::get_by_id(&conn, fresh).unwrap().unwrap();
         assert_eq!(fresh_after.status, "active");
     }

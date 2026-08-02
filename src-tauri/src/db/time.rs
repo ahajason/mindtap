@@ -4,6 +4,9 @@
 
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use crate::db::setting;
+use rusqlite::Connection;
+
 /// 当前毫秒时间戳。
 pub fn now_ms() -> i64 {
     SystemTime::now()
@@ -23,11 +26,51 @@ pub fn local_day_start_ms(now: i64) -> i64 {
 
 // ponytail: 用 libc localtime 拿当前时区偏移,避免引入 chrono。
 fn local_utc_offset_secs(_now: i64) -> i64 {
-    // Linux/macOS 用 libc 的 localtime_r;Windows 用 _timezone。
-    // 保守实现:直接用 UTC 日边界(偏差 = 本地时区小时数)。V0.2.1 跨天检测用 UTC 自然日近似,
-    // 时区偏差(如 UTC+8 的"今天"早 8 小时)会让"跨天"在本地 0 点前 8 小时触发,轻微偏早。
-    // 对台账可接受:晚间的 active 在本地 0 点前被停表,更接近"不跨天"意图。
-    0
+    #[cfg(target_os = "windows")]
+    {
+        return windows_tz::utc_offset_secs();
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        // Linux/macOS 未实现,用 UTC 日边界近似
+        0
+    }
+}
+
+/// 将当前时区偏移写入 app_setting(local_tz_offset_secs),供前端/复盘计算使用。
+pub fn persist_tz_offset(conn: &Connection) {
+    let offset = local_utc_offset_secs(now_ms());
+    let _ = setting::set(conn, "local_tz_offset_secs", &offset.to_string());
+}
+
+#[cfg(target_os = "windows")]
+mod windows_tz {
+    pub(super) fn utc_offset_secs() -> i64 {
+        use windows::Win32::System::Time::{GetTimeZoneInformation, TIME_ZONE_INFORMATION};
+        let mut tz = TIME_ZONE_INFORMATION::default();
+        // SAFETY: GetTimeZoneInformation 写入栈上结构体,无内存安全风险
+        let result = unsafe { GetTimeZoneInformation(&mut tz) };
+        match result {
+            // TIME_ZONE_ID_DAYLIGHT = 2: 夏令时生效,用 DaylightBias
+            2 => {
+                // Bias = UTC 偏移(分钟),Windows 约定:UTC = Local + Bias
+                // 东八区 Bias = -480 → UTC = Local - 480min → 本地比 UTC 早 8 小时
+                // 要得到 local_offset = -Bias
+                let bias = tz.Bias.saturating_add(tz.DaylightBias).saturating_neg();
+                (bias as i64) * 60
+            }
+            // TIME_ZONE_ID_STANDARD = 1: 标准时间,用 StandardBias
+            1 => {
+                let bias = tz.Bias.saturating_add(tz.StandardBias).saturating_neg();
+                (bias as i64) * 60
+            }
+            // 未知/错误:fallback 用 StandardBias
+            _ => {
+                let bias = tz.Bias.saturating_neg();
+                (bias as i64) * 60
+            }
+        }
+    }
 }
 
 #[cfg(test)]
@@ -49,5 +92,33 @@ mod tests {
         let start = local_day_start_ms(now);
         assert!(start <= now);
         assert!(now - start < 86400 * 1000);
+    }
+
+    #[test]
+    #[cfg(target_os = "windows")]
+    fn local_utc_offset_is_reasonable() {
+        // Windows 上应返回真实偏移(东八区 28800,其他时区 ≠ 0)
+        let offset = local_utc_offset_secs(now_ms());
+        // 偏移应在 -12h ~ +14h 范围内
+        assert!(offset > -43200, "offset={offset} should be > -12h");
+        assert!(offset < 50400, "offset={offset} should be < +14h");
+        // 非零:Windows 有真实时区,不会返回 0 除非 UTC+0
+        // 不 assert_eq!(0) 因为 UTC+0 是合法时区,只检查范围
+    }
+
+    #[test]
+    fn persist_tz_offset_writes_to_app_setting() {
+        use rusqlite::Connection;
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(crate::db::schema::CREATE_SQL).unwrap();
+
+        persist_tz_offset(&conn);
+
+        let saved = setting::get(&conn, "local_tz_offset_secs").unwrap();
+        assert!(saved.is_some(), "persist_tz_offset should write to app_setting");
+        let offset: i64 = saved.unwrap().parse().unwrap();
+        // 偏移应在合理范围内
+        assert!(offset > -43200, "offset={offset} should be > -12h");
+        assert!(offset < 50400, "offset={offset} should be < +14h");
     }
 }
