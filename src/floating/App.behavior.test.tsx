@@ -476,4 +476,27 @@ describe("新增面板取消回落", () => {
     expect(screen.queryByPlaceholderText(/回车即开始/)).toBeNull();
     expect(screen.getByTestId("floating-root").className).toContain("expanded");
   });
+
+  it("活动信号显示建议文案,确认后创建任务并开始计时,忽略后隐藏", async () => {
+    let activityHandler: Parameters<typeof listen>[1] | null = null;
+    vi.mocked(listen).mockImplementation((event: string, cb: Parameters<typeof listen>[1]) => {
+      if (event === "floating:activity_signal") activityHandler = cb;
+      return Promise.resolve(() => {});
+    });
+    mockData([], []);
+    render(<FloatingApp />);
+    await screen.findByTestId("floating-root");
+
+    // 触发活动信号
+    act(() => {
+      activityHandler?.({ event: "floating:activity_signal", id: 0, payload: { exe_path: "C:\\Windows\\notepad.exe", window_title: "无标题 - 记事本" } });
+    });
+    expect(screen.getByText(/要记一下吗/)).toBeVisible();
+    expect(screen.getByText("记一笔")).toBeVisible();
+    expect(screen.getByText("忽略")).toBeVisible();
+
+    // 点击忽略 → 信号隐藏
+    fireEvent.click(screen.getByText("忽略"));
+    await waitFor(() => expect(screen.queryByText(/要记一下吗/)).toBeNull());
+  });
 });
