@@ -19,17 +19,6 @@
 
 **设计语言**: Apple Liquid Glass（仅作视觉灵感参考；具体落地用项目自有 spec `docs/design/glassic-ui-spec.md` + Tailwind tokens）。
 
-## ⚠️ 关键规则：.archive/ 仅作参考，不作事实依据
-
-**核心警示**: `.archive/` 目录（含 `.archive/src/`、`.archive/docs/`、`.archive/docs/projects/v1.0/`、`feat/floating-auto-collapse` worktree）是 V1.0 时代的**归档快照**，**整体不是事实**——既不是当前项目代码，也不是当前文档。文件存在 / 内容 / 设计意图 / 实装代码 / bugfix 报告，**全部属于非事实**。
-
-**铁律**:
-- **当前项目代码事实** = 当前 `src/`、`src-tauri/src/`、`docs/`、`CONTEXT.md`、ADR、spec、plan 里**已落地**的内容；当前 git 事实；通用技术事实
-- `.archive/` **任何内容** = **非事实**，**必须经用户独立确认**才能作为 V0.x 决策依据
-- AGENTS.md 自身可能失同步（§"项目"段当前描述的是 V1.0 状态，与 develop 不同步），冲突时以**用户当前口径**为准
-- 引用前**先分类**（当前项目事实 / `.archive/` 非事实）→ `.archive/` 内容**先问用户** → 用户确认后落到 CONTEXT.md / ADR → 才能作为依据
-- 详见 `.claude/rules/archive-reference-only.md`（完整规则 + 8 个反模式 + 事实/非事实边界细化表）
-
 ## 技术栈
 - Tauri 2 (Rust 1.96+) + React 19 + TypeScript 5.8 + Vite 7
 - 两个 Web 入口：`index.html`（主窗口）+ `floating.html`（浮动面板 320×36）
@@ -96,7 +85,7 @@ cd src-tauri && cargo test    # 40 个测试，覆盖 db 状态机 + 不变量�
 玻璃表面（`topbar`、`sidebar`、`fab`、`floating/*`）**只**承载控件/导航。**内容必须落在非玻璃背景上**（在 `RecordTimeline` 内部）。这是硬性设计规则（参见 `src/App.tsx` 注释 + `docs/M-1-material/apple/liquid-glass/`），不是建议。
 
 ## 跨环境开发（D43）—— 修改路径前必读
-WSL 没有 MSVC 工具链 → 无法 `cargo build`（但 `cargo test` / `cargo clippy` 可跑，假 cc 修复后 2026-08-02，见 `docs/tasks/v0.2.1-workbench-core/wsl-dash-boundary.md` §七）。仓库在**两个独立副本**中存在：WSL 端用于编辑/开发，Windows 端用于原生构建。**禁止软链** —— 9P + Windows 软链会破坏 npm（`EISDIR`）和 UNC 路径（E13/E14）。每次会话选一个环境。
+WSL 没有 MSVC 工具链 → 无法 `cargo build`（但 `cargo test` / `cargo clippy` 可跑，假 cc 修复后 2026-08-02）。仓库在**两个独立副本**中存在：WSL 端用于编辑/开发，Windows 端用于原生构建。**禁止软链** —— 9P + Windows 软链会破坏 npm（`EISDIR`）和 UNC 路径（E13/E14）。每次会话选一个环境。
 
 ## 中国大陆 Rust 镜像（D45）
 `crates.io` 官方源在大陆几乎不可用（3.86 KiB/s）。首次 `cargo build` 前配置 `~/.cargo/config.toml` 用 rsproxy.cn：
@@ -111,45 +100,28 @@ registry = "https://rsproxy.cn/crates.io-index"
 git-fetch-with-cli = true
 ```
 
-## 文档约定
-- `docs/projects/v1.0/task_plan.md` 是项目的"工作记忆磁盘" —— 任何非琐碎任务开工前**先读这里**。包含 D1-D45 决策 + E1-E20 错误记录。
-- `docs/projects/v1.0/INDEX.md` 是 V1.0 所有文档的索引。
-- V1.0 设计参考：`docs/M-1-material/apple/liquid-glass/`、`hig/`、`swiftui/`、`wwdc/`。
-- V1.0 即"FlashMind"；V1.2 是上游 PRD 基线，保留为决策审计日志。
-- Sprint 计划（`agile-sprint-plan.md`）是 D28 —— 上次编辑时仍待用户批准。
-
 ## 设计语言铁律
-- 所有 UI 改动必须参考 `docs/design/glassic-ui-spec.md`（项目自有 Liquid Glass spec）。
-- 接入 UI 前确认 spec 已落到 `docs/design/`；**未 cp spec 之前不要起 `tauri dev` 跑 UI**（缺 Tailwind token 会编译报错）。
-- 组件落地策略：shadcn 源码拷 + Tailwind token + Radix primitive。
+- 所有 UI 改动必须参考 `docs/design-system/glassic-ui-spec.md`（项目自有 Liquid Glass spec）。
+- 组件落地策略：shadcn 源码拷 + Tailwind token + 原生 primitive。
 - **不**自创颜色 / 阴影 / 模糊 token —— 查 spec 拿现有值。
 
 ## 文件归位（来自 CLAUDE.md）
 | 内容类型 | 去处 |
 |---|---|
-| 新功能「做什么」 | `docs/design/<version>-<feature>-design.md`（L3 视觉/交互）；纯业务去 `docs/prd/` |
-| 新功能「怎么做」 | `docs/plans/YYYY-MM-DD-<version>-<feature>.md`（L4） |
-| 阶段交付报告 | `docs/reports/` |
-| 已交付版本完整沙盒 | `docs/archive/v<version>/` |
-| 任务正式档 | `docs/tasks/<version>-<type>-<short-desc>/task.md`（命名/模板见 `.claude/rules/task-directory.md`） |
+| 新功能「做什么」 | 对应需求目录 `docs/<编号>-<需求>/`（domain / design，index.md 入口） |
+| 新功能「怎么做」 | `docs/plans/YYYY-MM-DD-<version>-<feature>.md` |
+| 范围边界 / bug 归属 | 对应 task.md「范围边界」段 |
+| 进行中任务 | `docs/<需求>/tasks/<name>/task.md` |
+| 发版记录 | `docs/reports/` |
 
-## 详细规则索引（位于 `.claude/rules/`）
-opencode 通过项目级 `opencode.jsonc` 的 `instructions` 字段自动加载这些规则（每次会话注入 context，无 frontmatter，纯 markdown）：
-
+## 规则（位于 `.claude/rules/`）
 | 规则 | 何时查阅 |
 |---|---|
-| `decision-method.md` | **任何代码/文档改动前必查**（三层穷举 L1/L2/L3 + 闭环复盘） |
-| `ask-user-question-threshold.md` | 决定是否用 `question` 工具时（2-4 离散互斥选项才用） |
-| `commit-style.md` | 写 `git commit -m "..."` 前（业务层粒度 + 完整性门槛） |
-| `comment-style.md` | 给函数/类加注释前（注释只写 why，代码即注释） |
-| `task-directory.md` | 写任务正式档 `task.md` 前（slug 命名 + 模板） |
-| `codegraph.md` | 跨文件结构查询时（vs grep） |
-| `dev-verify-before-commit.md` | 改 system API / OS 集成 / 框架 runtime 后 commit 前 |
-| `first-step-research.md` | 接到 bug 反馈 / "X 不工作" / 改 system API 前（双层调研） |
-| `self-apply-after-write.md` | 写完 rule / memory / AGENTS.md 后做 7 项 self-apply 检验 |
-| `archive-reference-only.md` | 引用 `.archive/` 或 V1.0 PRD 任何非事实内容前（**归档不是规范**，必须用户确认） |
-
-> 原始 .mdc 文件保留在 `.claude/rules/`，作为 Claude Code 兼容源（如果以后回退用 Claude Code 时仍可工作）。
+| `workflow.mdc` | 任何代码/文档改动前后（三层决策 + 调研 + 根因倒推 + 任务拆解） |
+| `docs.mdc` | 写 docs/ 任何文件前（归位 + 结构纪律 + task 模板） |
+| `git-verify.mdc` | Windows-side runtime 改动后（WSL→D:\ 同步 + dev 实测） |
+| `style.mdc` | 写 commit message / 加注释前 |
+| `misc.mdc` | 设计语言 / 提问阈值 / 任务收尾 / Tauri 多窗口坑 |
 
 ## 工作流铁律（贯穿所有任务）
 - **三层决策法（改前必走）**：
@@ -161,14 +133,12 @@ opencode 通过项目级 `opencode.jsonc` 的 `instructions` 字段自动加载�
 - **避免决策疲劳**：2-4 离散互斥选项才用 `question` 工具；spec / convention / rule 优先查 → 查不到才问
 - **穷举再下手**：多个 root cause 不分散修
 - **dev 实测 = System API 改动的 hard gate**：改 system API / OS 集成 / 框架 runtime 后，必须 dev 环境实测新机制本身在工作再 commit
-- **写完规则 self-apply**：7 项检验（路径 / 触发条件 / 反模式 / 与相邻规则冲突等），规则漏路径 = 规则无效
-- **归档不是规范**：引用 `.archive/` 或 V1.0 PRD 任何**非事实**内容（设计意图 / 决策 / 用户画像 / 排期等）前，必须先与用户确认 → 落到 CONTEXT.md / ADR → 才能作为依据。AGENTS.md 自身可能失同步，冲突时以用户当前口径为准
+- **写完规则 self-apply**：自检关键路径列全 / 反模式例子 / 触发条件
 
 ## 项目里**没有**的东西
 - 没有 CI / `.github/workflows/` — 未配置。
 - `package.json` 中没有 linter / formatter 脚本 — 仅 TS strict。
 - 没有 pre-commit 钩子。
-- 有项目级 `opencode.jsonc`（仅声明 `instructions: .claude/rules/*.md`，其他配置继承 `~/.config/opencode/opencode.jsonc`）。
 - `Cargo.lock` 已 gitignore（Tauri app 默认）。
 - 除 README 自称 MIT 外没有 license 文件。
 

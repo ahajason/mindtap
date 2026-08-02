@@ -46,7 +46,7 @@ CLAUDE.md 是 session 入口上下文；子规则放在 `.claude/rules/*.mdc`（
 
 **不互相引用**：不在 CLAUDE.md / rules / memory 里交叉列出文件名 — Claude 自动发现，列名反而成冗余。需要在 CLAUDE.md 表达"请遵守规则 X"时，直接讲**原则**（像下面"工作流铁律"段），不写"见 `.claude/rules/X.mdc`"。
 
-新增 / 修改 rule 或 memory 前用 `/claude-md-management:claude-md-improver`，改完跑 `self-apply-after-write.mdc` 7 项。
+新增 / 修改 rule 或 memory 前用 `/claude-md-management:claude-md-improver`，改完跑 `misc.mdc` 的规则自检。
 
 ## 工作流铁律（贯穿所有任务 — 强约束，自动加载后不再需要"看 X 规则"提示）
 

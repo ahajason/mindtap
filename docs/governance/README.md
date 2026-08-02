@@ -27,4 +27,4 @@
 ## 关联
 
 - CLAUDE.md 顶部速查表
-- `.claude/rules/doc-layer-discipline.mdc` — 强制执行入口
+- `.claude/rules/docs.mdc` — 强制执行入口

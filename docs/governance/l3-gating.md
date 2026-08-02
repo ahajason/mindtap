@@ -52,7 +52,7 @@ cd /home/jason/workspace/mindtap
 git commit -m "fix(floating): V0.2.0.6 右键被折叠态根 div 抢占"
 git push origin develop
 
-# 2. D:\ 端 pull(强制 — 详见 .claude/rules/dev-sync-before-windows-verify.mdc)
+# 2. D:\ 端 pull(强制 — 详见 .claude/rules/git-verify.mdc)
 cd D:\workspace\mindtap
 git pull
 
@@ -140,6 +140,5 @@ L3 FAIL 不要"假装没看见":
 
 - [versioning-rule.md](./versioning-rule.md) — bug 归属 + PATCH 命名
 - [doc-layers.md](./doc-layers.md) — 文档分层
-- `.claude/rules/dev-verify-before-commit.mdc` — 本规则的 agent 强制入口
-- `.claude/rules/dev-sync-before-windows-verify.mdc` — WSL → D:\ 同步
+- `.claude/rules/git-verify.mdc` — 本规则的 agent 强制入口（WSL → D:\ 同步 + dev 实测）
 - V0.2.7 retro §3 反模式 14/15/16 触发本规则

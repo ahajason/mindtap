@@ -1,0 +1,47 @@
+---
+description: Windows-side runtime 改动后必走 — WSL→D:\ 同步 + dev 实测硬 gate
+alwaysApply: true
+---
+
+# Git-Verify — 同步 + dev 实测
+
+## WSL → D:\ 同步(Windows-side 验证前置)
+
+**反模式**: WSL commit → 没 push → D:\ 没 pull → 跑 `scripts\dev.bat` → WebView2 跑旧 commit → debug 一个不存在的 bug。
+
+| 改动 | 是否同步 D:\ |
+|---|---|
+| Tauri config / WebView2 / 原生菜单 / transparent / overlay | ✅ |
+| 浮窗 / IPC / `commands/*.rs` / `db/*.rs` | ✅ |
+| `Cargo.toml` / 影响 Windows 构建的依赖 | ✅ |
+| 仅 vitest / tsc / cargo check / 纯文档 | ❌ |
+
+```bash
+git add -A && git commit -m "<type>(scope): <subject>"
+git push origin develop
+git -C /mnt/d/workspace/mindtap pull --no-edit origin develop
+```
+
+**反模式**: 让用户手工 D:\ pull / dev.bat 行为不对先怀疑 D:\ 是否同步 / 两端各自 commit+push。
+
+## Dev 实测 = System API 改动的 hard gate
+
+**反模式**: 改 system API → tsc/cargo check/vitest 全绿 → commit → 新机制根本没运行。
+
+**症状消失 ≠ 修复成功**: 反向/替代性修复时,症状消失有两种解释——新机制替代旧机制且无副作用,或新机制根本没运行。
+
+| 信号 | 真实? | 原因 |
+|---|---|---|
+| `tsc --noEmit` 无输出 | ✗ | 只证 type 正确 |
+| `cargo check` Finished | ✗ | 只证 compile 成功 |
+| `vitest` 全绿 | ✗ | 只证 mock 内逻辑 |
+| **dev 实际触发 API,看行为符合预期** | ✓ | runtime 真接受 |
+
+**区分唯一可靠手段: dev 实测新机制本身在工作**。
+
+| 场景 | 用 |
+|---|---|
+| 改任何 system API(OS / 框架 / runtime) | ✅ 必用 |
+| 引入跨进程 IPC | ✅ 必用 |
+| 纯前端业务逻辑(UI state / transform) | 弱用 — vitest 够 |
+| 单行 typo | 不用 |
