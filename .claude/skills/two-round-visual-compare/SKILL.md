@@ -13,7 +13,7 @@ The methodology is grounded in the insight that **"AI slop" aesthetic** (purple 
 
 The skill depends on Apple HIG materials for the **correct definition of Liquid Glass** (if the user's design language is glass). Check whether the project has Apple HIG materials locally and read them before producing any page — if you skip this step you will produce AI-slop glass:
 
-- Look for `docs/material/apple/`, `docs/design/hig/`, or any local Apple HIG collection
+- Look for `docs/M-1-material/apple/`, `docs/design/hig/`, or any local Apple HIG collection
 - If present, read: liquid-glass overview, materials, sidebar, toolbar, color, full reference app
 - If absent, fall back to: developer.apple.com/design/human-interface-guidelines/materials and /adopting-liquid-glass
 

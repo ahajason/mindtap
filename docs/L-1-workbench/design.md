@@ -1,18 +1,12 @@
 ---
-title: V0.2.1 工作台账核心 — 设计契约
-version: v0.1
-status: draft（grill 对齐后）
-related:
-  - glassic-ui-spec.md（玻璃视觉规范真值）
-  - glass-tokens.md（token 真值）
+title: Workbench — 设计契约（工作台账核心）
+status: active
 ---
 
-# V0.2.1 工作台账核心 — 设计 spec
+# Workbench — 设计契约（工作台账核心）
 
-> **定位**：浮窗「捕获 + 并行任务条 + 待办整理」的视觉、交互、可访问性设计契约。玻璃参数只引用共享规范，不在此重复定义。
-> **对应 Domain**：`docs/domain/v0.2.1-workbench-core-domain.md`
-> **对应 Tech**：`docs/tech/v0.2.1-workbench-core-tech.md`
-> **术语**：`UBIQUITOUS_LANGUAGE.md`(捕获/保存/开始/暂停/归档)
+> **定位**：浮窗「捕获 + 并行任务条 + 待办整理」的视觉、交互、可访问性设计契约。玻璃参数引用共享玻璃规范，不在此重复定义。
+> **术语**：捕获 / 保存 / 开始 / 暂停 / 归档（统一术语见 `UBIQUITOUS_LANGUAGE.md`）
 
 ## 一、屏幕与状态
 
@@ -139,10 +133,6 @@ related:
 - 待确认小圆点：琥珀色状态点同款
 - 气泡：玻璃拟态 token 同浮窗
 
-## 五、关联
+---
 
-- 视觉规范：`docs/design/glassic-ui-spec.md`
-- Token：`docs/design/glass-tokens.md`
-- PRD：`docs/轻念Mindtap产品需求文档.md` 阶段一
-- Domain：`docs/domain/v0.2.1-workbench-core-domain.md`
-- Tech：`docs/tech/v0.2.1-workbench-core-tech.md`
+> 视觉规范与 token 见设计系统；产品场景见主文档阶段一；业务实体与决策见本目录 `index.md` 索引。

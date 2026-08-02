@@ -7,7 +7,7 @@
 
 ```
 业务: 极简记录 APP（标题 + 文本 + 标签 + 时间戳，本地存储）
-铁律: docs/material/apple/liquid-glass/01-overview.md
+铁律: docs/M-1-material/apple/liquid-glass/01-overview.md
      + 03-hig-materials.md（Standard material 5 变体）
 N: 4
 输出: prototype/v2-scaffold-live/scaffold-live-v2.html

@@ -35,7 +35,7 @@ description: 接收"业务描述 + 铁律文件路径"，输出 3-5 个不同方
 调用示例：
 
 ```
-基于 docs/material/apple/liquid-glass/01-overview.md 这份铁律，
+基于 docs/M-1-material/apple/liquid-glass/01-overview.md 这份铁律，
 为"极简记录 APP"做 4 个不同方向的视觉原型，输出到 prototype/v3-explore/。
 ```
 
@@ -183,7 +183,7 @@ prototype/
 
 输入：
 - 业务：极简记录 APP（标题 + 文本 + 标签 + 时间戳）
-- 铁律：`docs/material/apple/liquid-glass/01-overview.md`（玻璃只在 chrome / ≤4 玻璃元素 / clear 变体只在富背景 / 区分 Standard 与 Glass material）
+- 铁律：`docs/M-1-material/apple/liquid-glass/01-overview.md`（玻璃只在 chrome / ≤4 玻璃元素 / clear 变体只在富背景 / 区分 Standard 与 Glass material）
 - N = 4
 
 输出：4 行 × 2 列变体

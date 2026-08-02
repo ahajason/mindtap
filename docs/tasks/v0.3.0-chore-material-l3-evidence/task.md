@@ -3,7 +3,6 @@
 > 状态：pending（延后到 100% CSS fallback 复验通过后）
 > 版本：V0.3.0
 > 优先级：P1
-> 归属判定：`docs/tech/v0.3.0-native-dynamic-material-tech.md` §6
 > 阻塞关系：不阻塞当前 100% fallback 修复；阻塞原生候选完整 L3 与 V0.3.0 发布
 
 ## Why

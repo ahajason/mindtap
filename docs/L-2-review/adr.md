@@ -6,7 +6,7 @@
 
 ## 背景
 
-- V0.2.0 立项时，ADR-0008 把 V0.2.2 定义为「时间盒（番茄）+ 完成通知」，并配套 `docs/prd/v0.2.2-pomodoro-notification-prd.md` / `docs/tech/v0.2.2-pomodoro-notification-tech.md`。
+- V0.2.0 立项时，ADR-0008 把 V0.2.2 定义为「时间盒（番茄）+ 完成通知」，配套旧 pomodoro PRD/tech（已 superseded 并废弃）。
 - V0.2.1 三态重构后，产品方向演进为「个人工作台账」（PRD 主文档），阶段一（工作台账核心）已落地并实机验证通过。
 - PRD 主文档 L46 明确「不做番茄钟 / 倒计时 / 专注训练（计时只为'看见投入'）」——**番茄工作法（时间盒）与 Mindtap 基因冲突**。
 - 阶段二定义为「可信台账与复盘」（PRD 阶段二 2.1 每日复盘 / 2.2 活动信号与智能提示 / 2.3 主窗管理）。
@@ -31,8 +31,6 @@
 - 如果将来用户需要「专注节奏」（番茄钟），需作为**新增方向**重新立项（阶段三候选），不复用时间盒旧方案。
 - 完成通知若在归档时弹太多会扰民——需 grill「哪些归档值得通知」，作为 2.2 打扰级别配置的一部分收敛。
 
-## 关联
+---
 
-- PRD: `docs/轻念Mindtap产品需求文档.md` 阶段二
-- 取代 ADR: `0008-v0.2.2-scope-pomodoro-and-notification.md`（历史参考，保留）
-- 旧方案标记: `docs/prd/v0.2.2-pomodoro-notification-prd.md` / `docs/tech/v0.2.2-pomodoro-notification-tech.md`（已 superseded）
+> 本需求为「可信台账与复盘」（阶段二）。产品场景见主文档阶段二；领域基础复用工作台账三态模型与激活日志。

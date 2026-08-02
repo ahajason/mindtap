@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **产品北极星**（来自唯一产品需求文档 `docs/轻念Mindtap产品需求文档.md`）：**个人工作台账** —— 随时低成本记下任务、多线并行推进、忘记有兜底、随时看得见"我的工作进行到哪了"。四条不可妥协基因：**3 秒记录、1 秒查看、0 思考成本、全量本地存储**。
 
-**当前版本状态**：V0.2.0.x PATCH 是浮窗回归阶段；V0.2.0.14 收回 V0.2.0.13 重测 4 deviation + 反 C-4 自动折叠。**下一步**：等用户开启新的 V0.2.1 MINOR。版本历史详见 `docs/governance/versioning-rule.md` §三 + §四。产品/开发各阶段推进状态看 `docs/tasks/`（在跑 task）与 `docs/reports/`（历史交付）。
+**当前版本状态**：V0.2.0.x PATCH 是浮窗回归阶段；V0.2.0.14 收回 V0.2.0.13 重测 4 deviation + 反 C-4 自动折叠。**下一步**：等用户开启新的 V0.2.1 MINOR。版本历史详见 `docs/governance/versioning-rule.md` §三 + §四。产品/开发各阶段推进状态看 `docs/tasks/`（在跑 task）与 `docs/archive/history/reports/`（历史交付）。
 
 ## Quick Start
 
@@ -22,7 +22,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | 验证前端类型 | `npx tsc --noEmit`（`npm run build` 的 `tsc` 即类型检查，是 build 的一部分） |
 | 模块边界检查 | `npm run lint:boundaries`（`depcruise src/packages`，build 已含） |
 | 跑 vitest | `npm test`（单次）/ `npm run test:watch`（监听） |
-| 跑 Rust 测试 | `cd src-tauri && cargo test`（WSL 可直接跑，覆盖 db 状态机 + 不变量；2026-08-02 假 cc 修复后 40 passed，详见 `docs/tasks/v0.2.1-workbench-core/wsl-dash-boundary.md` §七） |
+| 跑 Rust 测试 | `cd src-tauri && cargo test`（WSL 可直接跑，覆盖 db 状态机 + 不变量；2026-08-02 假 cc 修复后 40 passed，详见 `docs/archive/history/tasks/v0.2.1-workbench-core/wsl-dash-boundary.md` §七） |
 | 回看 git（按场景） | `git show <sha>` 查 commit / `git log -- <path>` 查文件历史 / `git diff` 查未提交改动 |
 
 ## 双工作树 (WSL + D:\)
@@ -152,7 +152,7 @@ Rust 依赖的 macOS 分支在 `Cargo.toml` `[target.'cfg(target_os = "macos")'.
 
 ## 设计语言
 
-所有 UI 改动必须参考 `docs/design/glassic-ui-spec.md`（项目自有 Liquid Glass spec）。**不**自创颜色 / 阴影 / 模糊 token —— 查 spec 拿现有值。组件落地策略：shadcn 源码拷 + Tailwind token + 原生 primitive。
+所有 UI 改动必须参考 `docs/design-system/glassic-ui-spec.md`（项目自有 Liquid Glass spec）。**不**自创颜色 / 阴影 / 模糊 token —— 查 spec 拿现有值。组件落地策略：shadcn 源码拷 + Tailwind token + 原生 primitive。
 
 **Liquid Glass 铁律**：玻璃表面（`topbar`、`sidebar`、`fab`、`floating/*`）**只**承载控件/导航。**内容必须落在非玻璃背景上**。这是硬性设计规则，不是建议。
 
@@ -162,17 +162,16 @@ Rust 依赖的 macOS 分支在 `Cargo.toml` `[target.'cfg(target_os = "macos")'.
 
 | 内容类型 | 去处 |
 |---|---|
-| 产品需求 / 用户故事 / 验收 | `docs/prd/<version>-<feature>-prd.md`（纯业务，无技术名词） |
-| 业务实体 / 状态机 / ADR | `docs/domain/<version>-domain-model.md` |
+| 产品需求 / 用户故事 / 验收 | `docs/轻念Mindtap产品需求文档.md`（唯一真值） |
+| 业务实体 / 状态机 / ADR | 对应需求目录 `domain.md` / `adr/` |
 | 范围边界 / bug 归属 | task.md「范围边界」段（技术实现细节入单元测试，不写文档） |
-| 视觉 / 交互 / 组件契约 | `docs/design/<version>-<feature>-design.md` |
+| 视觉 / 交互 / 组件契约 | 对应需求目录 `design.md` |
 | 实施步骤 / commit 计划 | `docs/plans/YYYY-MM-DD-<version>-<feature>.md` |
-| 交付报告 / retro / release notes | `docs/reports/` |
-| 已交付版本完整沙盒 | `docs/archive/v<version>/` |
 | 进行中 task | `docs/tasks/<version>-<type>-<short-desc>/task.md` |
 | 跨版本规则 | `docs/governance/` |
+| 历史交付 | `docs/archive/` |
 
-**已弃用旧路径**：`docs/specs/`、`docs/architecture/`、`docs/projects/<v>/`、`docs/projects/<v>/CONTEXT.md`、`docs/projects/<v>/README.md` —— 内容已迁到 L 层，**不要**再往旧路径写。
+**已弃用旧路径**：`docs/specs/`、`docs/architecture/`、`docs/projects/`、`docs/prd/`、`docs/domain/`、`docs/design/`、`docs/tech/`、`docs/reports/` —— 已并入各需求目录或归档，**不要**再往旧路径写。
 
 ## 项目里**没有**的东西（避免误找）
 

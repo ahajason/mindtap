@@ -93,7 +93,7 @@ cd src-tauri && cargo test    # 40 个测试，覆盖 db 状态机 + 不变量�
 `src-tauri/src/floating/platform.rs` + `Cargo.toml` 依赖里的 `#[cfg(target_os = "macos")]`。macOS 用 `objc`/`cocoa` 调 NSVisualEffectView；其他平台用 CSS `backdrop-filter`。**没有**按平台拆分的源码目录 —— 单一代码库 + 条件编译（D10/D43）。
 
 ### Liquid Glass 铁律
-玻璃表面（`topbar`、`sidebar`、`fab`、`floating/*`）**只**承载控件/导航。**内容必须落在非玻璃背景上**（在 `RecordTimeline` 内部）。这是硬性设计规则（参见 `src/App.tsx` 注释 + `docs/material/apple/liquid-glass/`），不是建议。
+玻璃表面（`topbar`、`sidebar`、`fab`、`floating/*`）**只**承载控件/导航。**内容必须落在非玻璃背景上**（在 `RecordTimeline` 内部）。这是硬性设计规则（参见 `src/App.tsx` 注释 + `docs/M-1-material/apple/liquid-glass/`），不是建议。
 
 ## 跨环境开发（D43）—— 修改路径前必读
 WSL 没有 MSVC 工具链 → 无法 `cargo build`（但 `cargo test` / `cargo clippy` 可跑，假 cc 修复后 2026-08-02，见 `docs/tasks/v0.2.1-workbench-core/wsl-dash-boundary.md` §七）。仓库在**两个独立副本**中存在：WSL 端用于编辑/开发，Windows 端用于原生构建。**禁止软链** —— 9P + Windows 软链会破坏 npm（`EISDIR`）和 UNC 路径（E13/E14）。每次会话选一个环境。
@@ -114,7 +114,7 @@ git-fetch-with-cli = true
 ## 文档约定
 - `docs/projects/v1.0/task_plan.md` 是项目的"工作记忆磁盘" —— 任何非琐碎任务开工前**先读这里**。包含 D1-D45 决策 + E1-E20 错误记录。
 - `docs/projects/v1.0/INDEX.md` 是 V1.0 所有文档的索引。
-- V1.0 设计参考：`docs/material/apple/liquid-glass/`、`hig/`、`swiftui/`、`wwdc/`。
+- V1.0 设计参考：`docs/M-1-material/apple/liquid-glass/`、`hig/`、`swiftui/`、`wwdc/`。
 - V1.0 即"FlashMind"；V1.2 是上游 PRD 基线，保留为决策审计日志。
 - Sprint 计划（`agile-sprint-plan.md`）是 D28 —— 上次编辑时仍待用户批准。
 

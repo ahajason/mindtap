@@ -15,7 +15,7 @@
 | 类型 | 位置 | 生命周期 |
 |---|---|---|
 | **治理规则** | `docs/governance/` | 跨版本不变,改前必须 review |
-| **项目文档** | `docs/prd/ domain/ tech/ design/ plans/ reports/ tasks/` | 随版本演进 |
+| **项目文档** | `docs/L-*`(需求目录)+ `docs/tasks/`(进行中任务)+ `docs/plans/`(计划) | 随需求演进 |
 | **历史归档** | `docs/archive/` | 只读,参考 |
 
 ## 改治理规则前的硬约束

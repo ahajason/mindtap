@@ -4,8 +4,7 @@
 > 版本: V0.2.2
 > 优先级: P1
 > 归属判定: 见下文「范围边界」
-> 关联 ADR: `docs/domain/adr/0014-v0.2.2-phase2-scope.md`
-> 关联 retro: `docs/reports/v0.2.2-retrospective.md`(待补)
+> 关联 retro: `docs/archive/history/reports/v0.2.2-retrospective.md`(待补)
 
 ## 范围边界(bug 归属用)
 
@@ -75,9 +74,6 @@
 
 ## 关联
 
-- PRD: `docs/轻念Mindtap产品需求文档.md` 阶段二
-- Domain: `docs/domain/v0.2.1-workbench-core-domain.md`(三态模型,阶段二复用)
-- ADR: `docs/domain/adr/0014-v0.2.2-phase2-scope.md`
-- 旧方案: `docs/prd/v0.2.2-pomodoro-notification-prd.md` / `docs/tech/v0.2.2-pomodoro-notification-tech.md`(superseded)
-- Tech: `docs/tech/v0.2.2-phase2-core-tech.md`(待创建)
+- 需求目录入口: `docs/L-2-review/index.md`（阶段二范围决策 + 设计）
+- 领域基础: `docs/L-1-workbench/index.md`（三态模型复用）
 - 实施 plan: `docs/plans/YYYY-MM-DD-v0.2.2-phase2-core.md`(待创建)

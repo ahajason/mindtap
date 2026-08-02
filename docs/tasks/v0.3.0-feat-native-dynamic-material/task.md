@@ -3,9 +3,7 @@
 > 创建: 2026-08-02
 > 版本: V0.3.0
 > 优先级: P1
-> 归属判定: 见 `docs/tech/v0.3.0-native-dynamic-material-tech.md` §6
-> 关联 ADR: `docs/domain/adr/0010-v0.3.0-native-dynamic-material.md`
-> 前置: V0.2.0 浮动窗四状态与交互基线
+> 前置: 浮窗四状态与交互基线（已交付）
 
 ## Why
 
@@ -71,8 +69,5 @@
 
 ## 关联
 
-- PRD: `docs/prd/v0.3.0-native-dynamic-material-prd.md`
-- Domain ADR: `docs/domain/adr/0010-v0.3.0-native-dynamic-material.md`
-- Tech: `docs/tech/v0.3.0-native-dynamic-material-tech.md`
-- Design: `docs/design/v0.3.0-native-dynamic-material-design.md`
-- L3 证据: `docs/tasks/v0.3.0-chore-material-l3-evidence/task.md`
+- 需求目录入口: `docs/M-1-material/index.md`（需求 / 决策 / 设计契约）
+- L3 证据: `docs/tasks/v0.3.0-chore-material-l3-evidence/`
