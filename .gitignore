@@ -73,8 +73,14 @@ workspace.lnk
 # Git worktrees（隔离开发工作区）
 .worktrees/
 
-# 工具运行时数据(不入仓)
-.codegraph/
+# planning-with-files 中间态(本地规划,不入仓)
+.planning/
+
+# OpenCode(已卸载,防重现时再次跟踪)
+.opencode/
+
+# throwaway 原型(选完即弃,不留 git)
+prototype/
 
 # IDE 个人配置(不入仓)
 .cursor/
@@ -86,11 +92,3 @@ workspace.lnk
 # Playwright 运行产物(不入仓)
 test-results/
 playwright-report/
-
-# 上游代码快照(参考用,不编辑、不入仓;分析文档 `_analysis.md` 仍跟踪)
-# 详见 docs/references/README.md
-docs/references/source/*/
-
-# 归档目录(2026-06-21 起);还原: git checkout pre-archive-2026-06-21 -- .
-.archive/
-/.archive/docs/archive

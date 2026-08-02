@@ -48,6 +48,7 @@ docs/
 | 技术实现细节 | **单元测试 + 代码**（`src/lib/tauri-bridge.ts` / `schema.rs` / vitest / cargo test），不写文档 |
 | 进行中任务 | `docs/<需求>/tasks/<name>/task.md` |
 | 跨版本规则 | `docs/governance/` |
+| 发版记录 | `docs/reports/`（release notes / retro） |
 
 **不互相引用**：目录内文档不互相贴路径链接，只引用本目录 `index.md` 与共享规范（`design-system/`）。改动一个需求只碰对应目录，不四处更新链接。
 

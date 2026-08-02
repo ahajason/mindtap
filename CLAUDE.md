@@ -158,18 +158,9 @@ Rust 依赖的 macOS 分支在 `Cargo.toml` `[target.'cfg(target_os = "macos")'.
 
 ## 文档分层与归位
 
-> 权威细则：`docs/governance/doc-layers.md`。docs/ 按「大需求目录」组织（每个需求一个目录，`index.md` 唯一入口）；技术实现细节入单元测试 + 代码（`src/lib/tauri-bridge.ts` 类型 / `src-tauri/src/db/schema.rs` / vitest / cargo test），范围边界/bug 归属入 task.md「范围边界」段。
+> 权威细则：`docs/governance/doc-layers.md`（结构）+ `docs/CLAUDE.md`（写入规则）。docs/ 按「大需求目录」组织（每个需求一个目录，`index.md` 唯一入口）；技术实现细节入单元测试 + 代码，范围边界/bug 归属入 task.md「范围边界」段。
 
-| 内容类型 | 去处 |
-|---|---|
-| 产品需求 / 用户故事 / 验收 | `docs/轻念Mindtap产品需求文档.md`（唯一真值） |
-| 业务实体 / 状态机 / ADR | 对应需求目录 `domain.md` / `adr/` |
-| 范围边界 / bug 归属 | task.md「范围边界」段（技术实现细节入单元测试，不写文档） |
-| 视觉 / 交互 / 组件契约 | 对应需求目录 `design.md` |
-| 实施步骤 / commit 计划 | `docs/plans/YYYY-MM-DD-<version>-<feature>.md` |
-| 进行中 task | `docs/<需求>/tasks/<name>/task.md` |
-| 跨版本规则 | `docs/governance/` |
-| 发版记录 | `docs/reports/`（release notes / retro） |
+**写入任何文档前，先读 `docs/CLAUDE.md` 的写入规则表**——它列出每类内容该去哪，真值只在那一处维护。
 
 ## 项目里**没有**的东西（避免误找）
 
