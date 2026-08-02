@@ -1,6 +1,7 @@
 # 用户本地配置（不进 git）
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
+reasonix.toml
 
 # worktree（每个开发者本地路径不同，不进 git）
 .claude/worktrees/
