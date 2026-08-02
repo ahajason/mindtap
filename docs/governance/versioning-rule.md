@@ -111,7 +111,7 @@ docs/reports/
 2. `docs/reports/v<X>-retrospective.md` 写完(若为 MINOR 收尾)
 3. 对应 task 的 `Done when` 全勾选(含 L1/L2/L3)
 4. `docs/governance/l3-gating.md` §L3 全 PASS
-5. D:\ 端 `npm run tauri dev` 实测签字
+5. Windows 端 `npm run tauri dev` 实测签字
 6. **同步 bump 3 个 config file `version` 字段**(在 lockstep 单个 commit 内):
    - `package.json` → `"version": "<new>"`
    - `src-tauri/Cargo.toml` → `[package] version = "<new>"`

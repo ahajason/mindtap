@@ -70,18 +70,19 @@ CLAUDE.md 是 session 入口上下文；子规则放在 `.claude/rules/*.mdc`（
 - 两窗口都在 `src-tauri/tauri.conf.json` `app.windows[]` 注册；Vite 多入口在 `vite.config.ts` `rollupOptions.input` 显式声明（否则 Vite 7 不会产出 `dist/floating.html`）。
 - 全局快捷键 `Ctrl+Shift+Space` 切换浮窗显示/隐藏（`src-tauri/src/lib.rs` setup，macOS 用 SUPER）。
 
-### 当前业务模型（浮窗计时器）
+### 当前业务模型（Item 统一实体）
 
-**正在从「计时器」演进为产品需求文档的「任务族 Item + 状态机」** —— 计时 session 雏形存在，但业务核心需按产品需求文档重构。
+**Item 三态状态机**（`src-tauri/src/db/item.rs`）：`todo` / `active` / `archived`，取代旧 timer_session。
 
-- 单表 **`timer_session`**（`src-tauri/src/db/schema.rs`）：`id / task_title / status ('active'|'paused'|'completed') / started_at / paused_at / completed_at / focus_ms / created_at / updated_at`。
-- 不变量：同表只允许 1 条 `active`（`CREATE UNIQUE INDEX ... WHERE status='active'`）；`completed` 有独立索引。
-- Rust 端状态机在 `src-tauri/src/commands/timer_session.rs`；db 模块在 `src-tauri/src/db.rs` + `src-tauri/src/db/schema.rs` + `src-tauri/src/db/timer_session.rs`。连接存于 Tauri 受管状态 `DbState(Mutex<Connection>)`。每个命令都会锁互斥锁 —— handler 保持简短，**不要**跨 `.await` 持有锁。
-- 前端状态：`src/floating/hooks/useActiveTask.ts`（拉取当前 active session）+ `src/floating/hooks/useFocusTicker.ts`（秒级 focus_ms 滚动，不写库）。
+- 三张表：**`item`**（任务实体）、**`focus_interval`**（激活明细）、**`app_setting`**（用户设置）
+- 支持多卡并行 active（不建唯一索引），`focus_ms` 只增不减（已结算值），实时时长前端按 `now - last_active_at` 推导
+- 失真检测（冷却 2h / 跨天）在 `dormant.rs`，空闲自动暂停（10min）在 `idle.rs`
+- 连接存于 Tauri 受管状态 `DbState(Mutex<Connection>)`。每个命令都会锁互斥锁 —— handler 保持简短，**不要**跨 `.await` 持有锁。
+- 前端状态：`useActiveTasks` hook（拉取 active + todo 列表）
 
 ### IPC 桥接
 
-所有前端→后端调用走 `src/lib/tauri-bridge.ts`（类型化 `api.*` + 事件监听）。后端 handler 在 `src-tauri/src/lib.rs` 的 `invoke_handler!` 中注册（共 11 个命令：`timer_session_*` 7 个 + `app_*` 2 个 + `floating_cmd::*` 2 个）。**新增命令 = 三处都要改**：`tauri-bridge.ts` + `invoke_handler!` 宏 + `commands/<name>_cmd.rs`。
+所有前端→后端调用走 `src/lib/tauri-bridge.ts`（类型化 `api.*` + 事件监听）。后端 handler 在 `src-tauri/src/lib.rs` 的 `invoke_handler!` 中注册（共 23 个命令：`item_*` 18 个 + `setting_*` 2 个 + `app_*` 2 个 + `floating_cmd` 2 个）。**新增命令 = 三处都要改**：`tauri-bridge.ts` + `invoke_handler!` 宏 + `commands/<name>_cmd.rs`。
 
 ### 托盘 / 原生菜单
 

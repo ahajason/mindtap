@@ -47,30 +47,17 @@ PRD §3 列出的每个用户场景都要在 L3 跑一遍,确认用户视角不�
 ### 改代码后
 
 ```bash
-# 1. WSL 内 push
-cd /home/jason/workspace/mindtap
+# 1. 提交
+cd /path/to/project
 git commit -m "fix(floating): V0.2.0.6 右键被折叠态根 div 抢占"
-git push origin develop
 
-# 2. D:\ 端 pull(强制 — 详见 .claude/rules/git-verify.mdc)
-cd D:\workspace\mindtap
-git pull
+# 2. 跑 dev（Windows 侧）
+npm run tauri dev
+# 或: npm run dev（仅前端）
 
-# 3. D:\ 端跑 dev
-scripts\dev.bat
-# 或:npm run tauri dev
-
-# 4. 手工跑 7 层 checklist + PRD 用户场景
-# 5. 在 docs/<需求>/tasks/<task>/evidence.md 写实测截图 + 步骤
+# 3. 手工跑 7 层 checklist + PRD 用户场景
+# 4. 在 docs/<需求>/tasks/<task>/evidence.md 写实测截图 + 步骤
 ```
-
-### D:\ 端不可达时(罕见)
-
-如 D:\ 端不可达,**严禁** commit `chore(release):` 或合并 release 分支。
-可以在 commit message 里写 `[L3-deferred]` 但必须:
-1. 同时开 follow-up task 跟踪 L3
-2. release notes 里标注"待 L3 验证"
-3. 不允许这个版本号被其他人复用
 
 ## 五、L3 失败的处理
 
@@ -140,5 +127,5 @@ L3 FAIL 不要"假装没看见":
 
 - [versioning-rule.md](./versioning-rule.md) — bug 归属 + PATCH 命名
 - [doc-layers.md](./doc-layers.md) — 文档分层
-- `.claude/rules/git-verify.mdc` — 本规则的 agent 强制入口（WSL → D:\ 同步 + dev 实测）
+- `.claude/rules/git-verify.mdc` — 本规则的 agent 强制入口（dev 实测 gate）
 - V0.2.7 retro §3 反模式 14/15/16 触发本规则
