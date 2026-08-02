@@ -459,6 +459,34 @@ pub fn list_duplicate(conn: &Connection, content: &str) -> Result<Vec<Item>, App
         .map_err(AppError::from)
 }
 
+/// 列出已软删除的卡(回收站视图)。
+pub fn list_deleted(conn: &Connection, limit: Option<i64>) -> Result<Vec<Item>, AppError> {
+    let mut stmt = conn.prepare(&format!(
+        "SELECT {COLS} FROM item WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC LIMIT ?1"
+    ))?;
+    let rows = stmt.query_map(params![limit.unwrap_or(100)], row_to_item)?;
+    rows.collect::<rusqlite::Result<Vec<_>>>()
+        .map_err(AppError::from)
+}
+
+/// 永久删除(仅限已软删除的卡)。幂等:重复删除同一 id 报"不存在"。
+pub fn hard_delete(conn: &Connection, id: i64) -> Result<(), AppError> {
+    // 检查是否存在且已软删除(deleted_at IS NOT NULL)
+    let deleted_at: Option<i64> = conn.query_row(
+        "SELECT deleted_at FROM item WHERE id = ?1",
+        params![id],
+        |row| row.get(0),
+    ).map_err(|_| AppError(format!("item {id} 不存在")))?;
+
+    if deleted_at.is_none() {
+        return Err(AppError(format!("item {id} 未软删除,不可永久删除")));
+    }
+    // 级联删除关联的 focus_interval
+    conn.execute("DELETE FROM focus_interval WHERE item_id = ?1", params![id])?;
+    conn.execute("DELETE FROM item WHERE id = ?1", params![id])?;
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

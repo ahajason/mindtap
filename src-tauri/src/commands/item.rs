@@ -138,3 +138,24 @@ pub fn item_get_idle(state: State<DbState>) -> Result<bool, AppError> {
         .iter()
         .any(|it| crate::idle::should_auto_pause(it.last_active_at, idle, now)))
 }
+
+/// 列出已归档的卡(archived)。
+#[tauri::command]
+pub fn item_get_archived(state: State<DbState>) -> Result<Vec<Item>, AppError> {
+    let conn = state.0.lock().map_err(|e| AppError(e.to_string()))?;
+    item::list(&conn, ListStatus::Archived, None)
+}
+
+/// 列出已软删除的卡(回收站视图)。
+#[tauri::command]
+pub fn item_list_deleted(state: State<DbState>) -> Result<Vec<Item>, AppError> {
+    let conn = state.0.lock().map_err(|e| AppError(e.to_string()))?;
+    item::list_deleted(&conn, None)
+}
+
+/// 永久删除(仅限已软删除的卡)。
+#[tauri::command]
+pub fn item_hard_delete(id: i64, state: State<DbState>) -> Result<(), AppError> {
+    let conn = state.0.lock().map_err(|e| AppError(e.to_string()))?;
+    item::hard_delete(&conn, id)
+}

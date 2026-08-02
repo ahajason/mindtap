@@ -241,6 +241,8 @@ pub fn run() {
             commands::item::item_list_duplicate,
             // V0.2.1 自动计时空闲保护:前端轮询 idle 是否超自动暂停阈值。
             commands::item::item_get_idle,
+            // V0.2.2 P4 管理:归档视图。
+            commands::item::item_get_archived,
             // V0.2.1 3.3:某卡的激活明细(供并行统计/合并)。
             commands::item::item_list_intervals,
             // V0.2.1 设置 KV:浮窗展开高度等用户偏好。
@@ -257,6 +259,9 @@ pub fn run() {
             // V0.2.2 复盘视图:每日复盘 + 关联空档。
             commands::review::review_get_daily,
             commands::review::review_associate_gap,
+            // V0.2.2 P4 管理:回收站 + 永久删除。
+            commands::item::item_list_deleted,
+            commands::item::item_hard_delete,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

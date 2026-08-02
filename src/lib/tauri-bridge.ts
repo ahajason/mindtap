@@ -115,6 +115,11 @@ export const api = {
     // V0.2.1 3.3: 某卡的激活明细。
     listIntervals: (itemId: number) =>
       invoke<FocusInterval[]>("item_list_intervals", { itemId }),
+    // V0.2.2 P4 管理:回收站 + 永久删除。
+    listDeleted: () => invoke<Item[]>("item_list_deleted"),
+    hardDelete: (id: number) => invoke<void>("item_hard_delete", { id }),
+    // V0.2.2 P4 管理:归档视图。
+    getArchived: () => invoke<Item[]>("item_get_archived"),
   },
   // V0.2.2 复盘视图:每日专注回顾 + 关联空档。
   review: {
