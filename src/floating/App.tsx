@@ -12,6 +12,7 @@ import {
 } from "@tauri-apps/api/window";
 
 import { api } from "../lib/tauri-bridge";
+import type { AppInfo } from "../lib/tauri-bridge";
 import { useActiveTasks } from "./hooks/useActiveTasks";
 import { useCaptureIntent } from "./hooks/useCaptureIntent";
 import { ExpandedPanel } from "./components/ExpandedPanel";
@@ -67,6 +68,9 @@ export function FloatingApp() {
   const [listHeight, setListHeight] = useState<number | null>(null);
   // compose 进入来源:从列表进(true)→ 取消回落列表;从折叠条「+」/快捷键进(false)→ 取消收起。
   const [composeFromList, setComposeFromList] = useState(false);
+  // V0.2.2 P5.4: 前台活动信号 — 浮窗视觉强化(呼吸动画 + 建议文案)
+  const [activitySignal, setActivitySignal] = useState<AppInfo | null>(null);
+  const [activityIgnored, setActivityIgnored] = useState(false);
 
   // ADR-0013: 重复捕获轻提示(不阻止不合并)。输入变化时检测同名已有卡。
   useEffect(() => {
@@ -213,6 +217,25 @@ export function FloatingApp() {
       cancelled = true;
     };
   }, [presentation, listHeight]);
+
+  // V0.2.2 P5.4: 监听前台活动信号
+  useEffect(() => {
+    let unlisten: (() => void) | null = null;
+    (async () => {
+      try {
+        const { listen } = await import("@tauri-apps/api/event");
+        unlisten = await listen<AppInfo>("floating:activity_signal", (event) => {
+          if (activityIgnored) return;
+          setActivitySignal(event.payload);
+        });
+      } catch (err) {
+        // dev / vitest 环境无 Tauri runtime
+      }
+    })();
+    return () => {
+      unlisten?.();
+    };
+  }, [activityIgnored]);
 
   // 位置记忆(保留 V0.2.0.15 实现)
   useEffect(() => {
@@ -528,13 +551,53 @@ export function FloatingApp() {
         : item.focus_ms,
   }));
 
+  const handleActivityConfirm = useCallback(async () => {
+    if (!activitySignal) return;
+    const title = activitySignal.window_title || "新任务";
+    try {
+      const item = await api.item.create(title);
+      await api.item.start(item.id);
+      setActivitySignal(null);
+      setActivityIgnored(false);
+      await refresh();
+    } catch (err) {
+      console.error("[activity] confirm failed", err);
+    }
+  }, [activitySignal, refresh]);
+
+  const handleActivityIgnore = useCallback(() => {
+    setActivitySignal(null);
+    setActivityIgnored(true);
+  }, []);
+
   return (
     <div
       ref={panelRef}
       data-testid="floating-root"
-      className={`floating-root ${presentation === "folded" ? "folded" : "expanded"}`}
+      className={`floating-root ${presentation === "folded" ? "folded" : "expanded"} ${activitySignal ? "has-activity-signal" : ""}`}
       onMouseDown={handleMouseDown}
     >
+      {activitySignal && (
+        <div className="activity-suggestion px-2 py-1.5 bg-primary/10 border-b border-primary/20 text-xs flex items-center justify-between animate-pulse">
+          <span className="text-text-1 truncate mr-2">
+            看起来你在做「{activitySignal.window_title || activitySignal.exe_path.split('\\').pop() || '其他'}」，要记一下吗？
+          </span>
+          <div className="flex gap-1 shrink-0">
+            <button
+              className="px-2 py-0.5 rounded bg-primary text-white text-xs hover:bg-primary/80"
+              onClick={handleActivityConfirm}
+            >
+              记一笔
+            </button>
+            <button
+              className="px-2 py-0.5 rounded bg-glass-1 text-text-2 text-xs hover:bg-glass-2"
+              onClick={handleActivityIgnore}
+            >
+              忽略
+            </button>
+          </div>
+        </div>
+      )}
       <div className="floating-content">
         <FoldedBar
           activeCards={activeCards}

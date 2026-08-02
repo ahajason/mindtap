@@ -46,6 +46,13 @@ export type FocusInterval = {
 };
 
 // V0.2.2 复盘视图:每日专注回顾(2026-08-03)。
+export type AppInfo = {
+  /** 可执行文件路径 */
+  exe_path: string;
+  /** 窗口标题 */
+  window_title: string;
+};
+
 export type FocusDistribution = {
   item_id: number;
   content: string;

@@ -204,10 +204,14 @@ pub fn run() {
                                 }
                             }
 
-                            // 3. 前台监听(V0.2.2 P5):检测活跃应用变化
-                            if let Some(app_info) = crate::foreground::get_foreground_app() {
-                                // 前端可通过 `floating:activity_signal` 事件响应
-                                let _ = app_handle.emit("floating:activity_signal", &app_info);
+                            // 3. 前台监听(V0.2.2 P5):检测活跃应用变化(仅 activity_monitor_enabled=true 时)
+                            let monitor_enabled = with_conn(&app_handle, |conn| {
+                                crate::db::setting::get(conn, "activity_monitor_enabled")
+                            }).ok().flatten().unwrap_or_default();
+                            if monitor_enabled == "true" {
+                                if let Some(app_info) = crate::foreground::get_foreground_app() {
+                                    let _ = app_handle.emit("floating:activity_signal", &app_info);
+                                }
                             }
                         }
                     });
