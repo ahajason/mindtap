@@ -16,29 +16,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 |---|---|
 | 装前端依赖 | `npm install`（Node 24 LTS 严格版本，`.nvmrc` = `24`） |
 | 起 Vite 开发服务器 | `npm run dev`（固定端口 1420，strictPort） |
-| 起 Tauri 桌面应用 | Windows 侧运行 `scripts\dev.bat` |
-| 同步 WSL → D:\ | WSL 内 `git push origin develop` + `git -C /mnt/d/workspace/mindtap pull` |
-| 验证 Rust / Tauri | `cargo test` 可在 **WSL 直接跑**(假 cc 已修,`~/.cargo/config.toml` 持久化 gcc 链接器);Tauri dev 仍 Windows 侧 `scripts\dev.bat` |
+| 起 Tauri 桌面应用 | `npm run tauri dev` |
+| 验证 Rust / Tauri | `cd src-tauri && cargo test`（覆盖 db 状态机 + 不变量；2026-08-02 假 cc 修复后 49 passed） |
 | 验证前端类型 | `npx tsc --noEmit`（`npm run build` 的 `tsc` 即类型检查，是 build 的一部分） |
 | 模块边界检查 | `npm run lint:boundaries`（`depcruise src/packages`，build 已含） |
 | 跑 vitest | `npm test`（单次）/ `npm run test:watch`（监听） |
-| 跑 Rust 测试 | `cd src-tauri && cargo test`（WSL 可直接跑，覆盖 db 状态机 + 不变量；2026-08-02 假 cc 修复后 40 passed） |
+| 跑 Rust 测试 | `cd src-tauri && cargo test`（覆盖 db 状态机 + 不变量；2026-08-02 假 cc 修复后 49 passed） |
 | 回看 git（按场景） | `git show <sha>` 查 commit / `git log -- <path>` 查文件历史 / `git diff` 查未提交改动 |
-
-## 双工作树 (WSL + D:\)
-
-代码在两个 fs 各放一份，共用 `origin/develop`（单源真值），不要两边各自 commit + push 互相覆盖：
-
-| 角色 | 路径 | 用法 |
-|---|---|---|
-| WSL 端 | `/home/jason/workspace/mindtap` | 代码 / 前端单测与静态检查 / **Rust cargo test 与 clippy（假 cc 修复后，2026-08-02）** / Claude Code / OpenCode；不执行 Tauri dev |
-| D:\ 端 | `D:\workspace\mindtap` | Tauri dev / WebView2 调试 / 视觉稿 QA（Windows-only 实机验证） |
-
-**同步流向**：WSL 内 `git commit` → **默认立即** `git push origin develop`（用户约定：每次提交默认推送，不待提醒）→ `git -C /mnt/d/workspace/mindtap pull`。
-
-**Tauri dev 必须在 Windows 侧**：`WebView2` 是 Windows 原生 COM 组件，WSL 启动它得绕 WSLg，debug 信号会断在 syscall 边界。WebView2 透明 / 原生菜单 / Overlay titleBar 这类 Windows-only bug，在 WSL 里复现不到——只能从 D:\ 端验证。
-
-`scripts/dev.bat` / `scripts/dev.ps1` 是 Windows 侧一键启动器：自动定位项目根、拒在 WSL 内误跑、`cargo tauri` 优先、`CARGO_TARGET_DIR` 自动切到 Windows fs。详见 [scripts/README.md](./scripts/README.md)。
 
 ## 规则文件
 
@@ -56,7 +40,7 @@ CLAUDE.md 是 session 入口上下文；子规则放在 `.claude/rules/*.mdc`（
 - **Worktree 基线校验**：调查当前修复链前先用 `git log -1 --oneline` + `git merge-base --is-ancestor develop HEAD` 确认 worktree 包含本地 `develop` HEAD；不满足先对齐，禁止基于旧快照下结论
 - **样式 bug 反馈环**：修复前先建立能在旧实现判红的测试契约，直接读取生产 config/CSS/DOM 公共行为；`css: false` 的 jsdom 测试和测试内手写源码字符串不得作为视觉修复证据
 - **跨窗口视觉修复**：不为颜色、色调或"风格一致"新增 E2E、截图断言或源码色值测试；视觉改动优先收敛到一个既有材质 owner。若需同时改 token、多个组件或业务逻辑，先停止并回到实机视觉反馈，不以多文件同步伪造修复
-- **纯 git + ssh (本仓库约束)**：默认 `git push origin develop` + D:\ `git pull`；**禁用 gh CLI**（无 auth）和 **GitHub MCP `issue_write`/`create_pull_request`**（classifier 拦）；要 PR 走 web（https://github.com/ahajason/mindtap/compare/develop...<branch>）
+- **纯 git + ssh (本仓库约束)**：**禁用 gh CLI**（无 auth）和 **GitHub MCP `issue_write`/`create_pull_request`**（classifier 拦）；要 PR 走 web（https://github.com/ahajason/mindtap/compare/develop...<branch>）
 - **多 issue 并行修**：派 N 个 subagent，每个 subagent 自己用 `Skill superpowers:using-git-worktrees` 起 worktree（isolation）；主 agent 留 develop，fetch + merge 集成；不要主 agent 串行跑多个 fix
 - **CSS 静态扫描 regex**：写 `.floating-root[...]` 这类 selector 匹配时**先剥 `@media` / `@supports` / `@keyframes` 嵌套块**，否则后加的 @media 内嵌同名选择器会让测试误通过或 FAIL（见反模式 18 / 实际归属 V0.2.0.7~0.9 PATCH，见 versioning-rule §三）
 - **Tailwind 扫描边界**：遇到来源不明的生成 utility 或 esbuild CSS warning，先检查 Tailwind 是否扫描了超出 `src/` 的范围（如 docs/ 或历史目录）；通过 source exclusion 收紧生产扫描范围，不修改无关文件
@@ -122,7 +106,7 @@ Rust 依赖的 macOS 分支在 `Cargo.toml` `[target.'cfg(target_os = "macos")'.
 ## 测试
 
 - **vitest**：jsdom 环境，`css: false`（不加载真实 CSS），`src/test/setup.ts`。单测覆盖浮窗 UI 组件 / hooks / packages。**`css: false` 意味着测试看不到真实样式** —— 视觉修复证据必须来自实机或直接读生产 CSS，不能用测试断言颜色。
-- **Rust**：`cd src-tauri && cargo test`（WSL 可直接跑，2026-08-02 假 cc 修复后 40 passed；覆盖 db 状态机 + 不变量）。
+- **Rust**：`cd src-tauri && cargo test`（2026-08-02 假 cc 修复后 49 passed；覆盖 db 状态机 + 不变量）。
 
 ### 用例 ↔ 测试映射（行为细节归测试，文档只留意图）
 

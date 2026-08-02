@@ -1,28 +1,9 @@
 ---
-description: Windows-side runtime 改动后必走 — WSL→D:\ 同步 + dev 实测硬 gate
+description: Windows-side runtime 改动后必走 — dev 实测硬 gate
 alwaysApply: true
 ---
 
-# Git-Verify — 同步 + dev 实测
-
-## WSL → D:\ 同步(Windows-side 验证前置)
-
-**反模式**: WSL commit → 没 push → D:\ 没 pull → 跑 `scripts\dev.bat` → WebView2 跑旧 commit → debug 一个不存在的 bug。
-
-| 改动 | 是否同步 D:\ |
-|---|---|
-| Tauri config / WebView2 / 原生菜单 / transparent / overlay | ✅ |
-| 浮窗 / IPC / `commands/*.rs` / `db/*.rs` | ✅ |
-| `Cargo.toml` / 影响 Windows 构建的依赖 | ✅ |
-| 仅 vitest / tsc / cargo check / 纯文档 | ❌ |
-
-```bash
-git add -A && git commit -m "<type>(scope): <subject>"
-git push origin develop
-git -C /mnt/d/workspace/mindtap pull --no-edit origin develop
-```
-
-**反模式**: 让用户手工 D:\ pull / dev.bat 行为不对先怀疑 D:\ 是否同步 / 两端各自 commit+push。
+# Git-Verify — dev 实测
 
 ## Dev 实测 = System API 改动的 hard gate
 
