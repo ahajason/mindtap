@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import StyleGuideLayout from './routes/StyleGuideLayout';
 import AppLayout from './routes/AppLayout';
 import Overview from './routes/Overview';
@@ -13,6 +14,20 @@ import ManageRoute from './routes/Manage';
 import SettingsRoute from './routes/Settings';
 
 export default function App() {
+  // V0.2.2 P6.2: 首次启动时请求通知权限
+  useEffect(() => {
+    (async () => {
+      try {
+        const { isPermissionGranted, requestPermission } = await import('@tauri-apps/plugin-notification');
+        if (!(await isPermissionGranted())) {
+          await requestPermission();
+        }
+      } catch {
+        // 无 Tauri runtime 或插件不可用 → 静默降级
+      }
+    })();
+  }, []);
+
   return (
     <Routes>
       {/* 业务页面:AppLayout */}
