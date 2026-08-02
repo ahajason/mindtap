@@ -10,6 +10,7 @@ import OverlayRoute from './routes/Overlay';
 import TokensRoute from './routes/Tokens';
 import ReviewRoute from './routes/Review';
 import ManageRoute from './routes/Manage';
+import SettingsRoute from './routes/Settings';
 
 export default function App() {
   return (
@@ -18,7 +19,7 @@ export default function App() {
       <Route element={<AppLayout />}>
         <Route index element={<ReviewRoute />} />
         <Route path="/manage" element={<ManageRoute />} />
-        <Route path="/settings" element={<div className="text-text-2">设置 — 待实现</div>} />
+        <Route path="/settings" element={<SettingsRoute />} />
       </Route>
 
       {/* 设计语言:StyleGuideLayout */}
