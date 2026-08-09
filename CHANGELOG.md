@@ -22,9 +22,9 @@
 
 详见 `docs/reports/` 完整 release notes。
 
-## ⏳ 待同步(2026-07-13)
+## 开发中版本
 
-V0.2.0.13 / V0.2.0.14 PATCH release notes 已补,但 **3 config field bump 仍待执行** (`package.json` + `src-tauri/Cargo.toml` + `src-tauri/tauri.conf.json` 当前 `version` 字段仍为 `0.2.0.12`)。这是 versioning-rule §六 硬约束 #6 的最后一步 — `chore(release): v0.2.0.14` 单个 commit 内 lockstep 完成。注:`V0.2.1` SwitchDropdown 旧计划已 ⛔(`docs/reports/v0.2.1-release-notes.md` 顶部 banner 已加),不等同于本 PATCH chain,后续"开启新的 0.2.1" MINOR 是新 feature 切片。
+当前构建版本为 **V0.2.2**（`package.json`、`package-lock.json`、`src-tauri/Cargo.toml` 与 `src-tauri/tauri.conf.json` 已同步）。它尚未完成完整发版验收，因此不列入上方“当前已发布版本”表。
 
 ## 增量维护规则
 

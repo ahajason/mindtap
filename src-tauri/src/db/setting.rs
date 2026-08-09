@@ -43,7 +43,7 @@ mod tests {
 
     fn fresh_db() -> Connection {
         let conn = Connection::open_in_memory().unwrap();
-        conn.execute_batch(crate::db::schema::CREATE_SQL).unwrap();
+        crate::db::init_connection(&conn).unwrap();
         conn
     }
 

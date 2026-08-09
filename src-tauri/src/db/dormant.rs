@@ -5,8 +5,8 @@
 use rusqlite::{params, Connection};
 
 use crate::db::item::{get_by_id, settle_open_intervals};
-use crate::error::AppError;
 use crate::db::time;
+use crate::error::AppError;
 
 /// 失真检测默认阈值:冷却 2 小时无更新(ADR-0012)
 pub const DEFAULT_DISTORTION_IDLE_MS: i64 = 2 * 60 * 60 * 1000;
@@ -40,7 +40,11 @@ pub struct DormantPayload {
 
 /// 失真检测 + 跨天停表。返回:退回 todo 的 id + 有待确认的 id。
 /// cooling_ms: 冷却阈值(毫秒),由调用方从 app_setting 读取后传入。
-pub fn settle_dormant(conn: &Connection, now: i64, cooling_ms: i64) -> Result<DormantResult, AppError> {
+pub fn settle_dormant(
+    conn: &Connection,
+    now: i64,
+    cooling_ms: i64,
+) -> Result<DormantResult, AppError> {
     let tx = conn.unchecked_transaction()?;
     let mut paused: Vec<i64> = Vec::new();
     let mut has_pending: Vec<i64> = Vec::new();
@@ -126,7 +130,6 @@ pub fn get_dormant_payloads(
 mod tests {
     use super::*;
     use crate::db::item::{create, get_by_id, list_intervals, start};
-    use crate::db::schema::CREATE_SQL;
     use rusqlite::Connection;
     use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -141,7 +144,7 @@ mod tests {
         ));
         let _ = std::fs::remove_file(&path);
         let conn = Connection::open(&path).unwrap();
-        conn.execute_batch(CREATE_SQL).unwrap();
+        crate::db::init_connection(&conn).unwrap();
         conn
     }
 

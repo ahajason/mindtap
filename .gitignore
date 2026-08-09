@@ -41,6 +41,9 @@ dist-ssr/
 .vite/
 *.local
 
+# Windows 生产打包产物（scripts/build-windows.ps1 输出）
+build/
+
 # Rust / Tauri
 src-tauri/target/
 src-tauri/Cargo.lock

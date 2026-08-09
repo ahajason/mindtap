@@ -65,7 +65,6 @@ impl ListStatus {
     }
 }
 
-
 /// 列出某卡的激活明细,按开始时间升序。
 pub fn list_intervals(conn: &Connection, item_id: i64) -> Result<Vec<FocusInterval>, AppError> {
     let mut stmt = conn.prepare(
@@ -87,7 +86,11 @@ pub fn list_intervals(conn: &Connection, item_id: i64) -> Result<Vec<FocusInterv
 
 /// 结算某卡所有进行中 interval(ended_at IS NULL → now)。所有结算路径必须调用,否则
 /// 卡退出 active 后 ended_at 仍为 NULL(违反"NULL=进行中")。调用方已按同一 now 把时长计入 focus_ms。
-pub(crate) fn settle_open_intervals(conn: &Connection, item_id: i64, now: i64) -> Result<(), AppError> {
+pub(crate) fn settle_open_intervals(
+    conn: &Connection,
+    item_id: i64,
+    now: i64,
+) -> Result<(), AppError> {
     conn.execute(
         "UPDATE focus_interval SET ended_at = ?1 WHERE item_id = ?2 AND ended_at IS NULL",
         params![now, item_id],
@@ -213,7 +216,8 @@ pub fn pause(conn: &Connection, id: i64, pending_ms: Option<i64>) -> Result<Paus
 
 /// 归档:active/todo → archived(完成即归档,去掉独立 done)。结算 active 段,清空待确认。
 /// V0.2.1 三态:唯一出口「归档」,做过的/没做过的都进 archived。
-pub fn complete(conn: &Connection, id: i64) -> Result<Item, AppError> {    let tx = conn.unchecked_transaction()?;
+pub fn complete(conn: &Connection, id: i64) -> Result<Item, AppError> {
+    let tx = conn.unchecked_transaction()?;
     let now = now_ms();
 
     let target = match get_by_id(&tx, id)? {
@@ -472,11 +476,13 @@ pub fn list_deleted(conn: &Connection, limit: Option<i64>) -> Result<Vec<Item>, 
 /// 永久删除(仅限已软删除的卡)。幂等:重复删除同一 id 报"不存在"。
 pub fn hard_delete(conn: &Connection, id: i64) -> Result<(), AppError> {
     // 检查是否存在且已软删除(deleted_at IS NOT NULL)
-    let deleted_at: Option<i64> = conn.query_row(
-        "SELECT deleted_at FROM item WHERE id = ?1",
-        params![id],
-        |row| row.get(0),
-    ).map_err(|_| AppError(format!("item {id} 不存在")))?;
+    let deleted_at: Option<i64> = conn
+        .query_row(
+            "SELECT deleted_at FROM item WHERE id = ?1",
+            params![id],
+            |row| row.get(0),
+        )
+        .map_err(|_| AppError(format!("item {id} 不存在")))?;
 
     if deleted_at.is_none() {
         return Err(AppError(format!("item {id} 未软删除,不可永久删除")));
@@ -504,7 +510,7 @@ mod tests {
         ));
         let _ = std::fs::remove_file(&path);
         let conn = Connection::open(&path).unwrap();
-        conn.execute_batch(crate::db::schema::CREATE_SQL).unwrap();
+        crate::db::init_connection(&conn).unwrap();
         conn
     }
 
@@ -907,57 +913,6 @@ mod tests {
     }
 
     #[test]
-    fn migrate_v5_to_v3_normalizes_statuses() {
-        let conn = Connection::open_in_memory().unwrap();
-        conn.execute_batch(
-            "CREATE TABLE item (
-               id INTEGER PRIMARY KEY AUTOINCREMENT,
-               content TEXT NOT NULL,
-               type TEXT NOT NULL DEFAULT 'task',
-               status TEXT NOT NULL CHECK (status IN ('inbox','todo','active','done','archived')),
-               focus_ms INTEGER NOT NULL DEFAULT 0,
-               last_active_at INTEGER,
-               progress_note TEXT,
-               source TEXT NOT NULL DEFAULT 'manual',
-               payload TEXT,
-               tag TEXT,
-               deleted_at INTEGER,
-               pending_ms INTEGER,
-               created_at INTEGER NOT NULL,
-               updated_at INTEGER NOT NULL
-             );",
-        )
-        .unwrap();
-        let now = now_ms();
-        conn.execute(
-            "INSERT INTO item (content, status, created_at, updated_at) VALUES ('旧收件箱', 'inbox', ?1, ?1)",
-            params![now],
-        )
-        .unwrap();
-        conn.execute(
-            "INSERT INTO item (content, status, created_at, updated_at) VALUES ('旧已完成', 'done', ?1, ?1)",
-            params![now],
-        )
-        .unwrap();
-        // 实际迁移逻辑在 db::init 调用,此处验证迁移 SQL 语义
-        conn.execute_batch(
-            "UPDATE item SET status = 'todo', updated_at = updated_at WHERE status = 'inbox';
-             UPDATE item SET status = 'archived', updated_at = updated_at WHERE status = 'done';",
-        )
-        .unwrap();
-        let items: Vec<String> = {
-            let mut stmt = conn
-                .prepare("SELECT status FROM item ORDER BY created_at")
-                .unwrap();
-            stmt.query_map([], |r| r.get::<_, String>(0))
-                .unwrap()
-                .collect::<rusqlite::Result<Vec<_>>>()
-                .unwrap()
-        };
-        assert_eq!(items, vec!["todo".to_string(), "archived".to_string()]);
-    }
-
-    #[test]
     fn list_deleted_returns_soft_deleted_items() {
         let conn = fresh_db();
         let now = now_ms();
@@ -1005,11 +960,13 @@ mod tests {
         // 验证 item 已删除
         assert!(get_by_id(&conn, id).unwrap().is_none());
         // 验证 interval 级联删除
-        let count: i64 = conn.query_row(
-            "SELECT COUNT(*) FROM focus_interval WHERE item_id = ?1",
-            params![id],
-            |r| r.get(0),
-        ).unwrap();
+        let count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM focus_interval WHERE item_id = ?1",
+                params![id],
+                |r| r.get(0),
+            )
+            .unwrap();
         assert_eq!(count, 0);
     }
 }

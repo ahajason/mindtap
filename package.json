@@ -1,7 +1,7 @@
 {
   "name": "mindtap",
   "private": true,
-  "version": "0.2.0-12",
+  "version": "0.2.2",
   "type": "module",
   "description": "极简记录 APP · 跨平台桌面（Tauri 2 + React 19）",
   "author": "AhaJason <Jason-c1@outlook.com>",
@@ -15,32 +15,33 @@
     "lint:boundaries": "depcruise src/packages --config .dependency-cruiser.cjs",
     "preview": "vite preview",
     "tauri": "tauri",
+    "build:win": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/build-windows.ps1",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "test:release-startup": "node ./scripts/repro-review-state.mjs"
   },
   "dependencies": {
-    "@base-ui/react": "^1.6.0",
-    "@tailwindcss/vite": "^4.3.1",
-    "@tauri-apps/api": "^2",
-    "@tauri-apps/plugin-dialog": "^2",
+    "@base-ui/react": "^1.7.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@tauri-apps/api": "^2.11.1",
+    "@tauri-apps/plugin-dialog": "^2.7.2",
     "@tauri-apps/plugin-notification": "^2.3.3",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "react-router-dom": "^7.18.0",
-    "shadcn": "^4.11.0"
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-router-dom": "^7.18.2",
+    "shadcn": "^4.16.2"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
-    "@tauri-apps/cli": "^2",
-    "@tauri-apps/plugin-dialog": "^2",
-    "@testing-library/jest-dom": "^6.9.1",
+    "@tauri-apps/cli": "^2.11.4",
+    "@testing-library/jest-dom": "^6.10.0",
     "@testing-library/react": "^16.3.2",
-    "@types/node": "^26.1.2",
-    "@types/react": "^19.1.8",
-    "@types/react-dom": "^19.1.6",
-    "@vitejs/plugin-react": "^4.6.0",
+    "@types/node": "^26.2.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^4.7.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dependency-cruiser": "^17.4.3",
@@ -48,9 +49,9 @@
     "lucide-react": "^0.469.0",
     "sonner": "^1.7.4",
     "tailwind-merge": "^2.6.1",
-    "tailwindcss": "^4.3.1",
+    "tailwindcss": "^4.3.3",
     "typescript": "~5.8.3",
-    "vite": "^7.0.4",
-    "vitest": "^4.1.9"
+    "vite": "^7.3.6",
+    "vitest": "^4.1.10"
   }
 }

@@ -1,6 +1,6 @@
 [package]
 name = "mindtap"
-version = "0.2.0-12"
+version = "0.2.2"
 description = "极简记录 APP · 跨平台桌面"
 authors = ["AhaJason <Jason-c1@outlook.com>"]
 license = "MIT"
@@ -15,32 +15,24 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2.6.3", features = [] }
 
 [dependencies]
-tauri = { version = "2.11.3", features = ["macos-private-api"] }
-tauri-plugin-log = "2"
-tauri-plugin-global-shortcut = "2"
-tauri-plugin-dialog = "2"
-# V0.2.0.12 PATCH 对象 B:浮窗右键原生菜单 + 开机自启 toggle。
-# V1.0 archive `.archive/src-tauri/Cargo.toml` 已有 tauri-plugin-autostart = "2";
-# 当前仓库 Cargo.toml 漏装,补回(tray/menu.rs 的 autostart_toggle 走
-# tauri_plugin_autostart::ManagerExt::autolaunch().enable()/disable())。
-tauri-plugin-autostart = "2"
-# V1.0 archive `.archive/src-tauri/src/tray/confirm.rs` 用 tokio::sync::oneshot
-# 把 MessageDialogBuilder 的 FnOnce(bool) 回调转 future;sync feature 必需。
-# Tauri 2.11 自身用 tokio runtime,加这个 dep 不引入新 runtime,仅多一个类型。
+tauri = { version = "2.11.5", features = ["macos-private-api"] }
+tauri-plugin-log = "2.9"
+tauri-plugin-global-shortcut = "2.3"
+tauri-plugin-dialog = "2.7"
+tauri-plugin-autostart = "2.5"
+# MessageDialogBuilder 回调转 future 需要 oneshot；不引入独立 runtime。
 tokio = { version = "1", features = ["sync"] }
 serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
+# 0.32 与当前业务 SQL 绑定稳定；不跨到 0.3x/0.4x 以免改 API。
 rusqlite = { version = "0.32", features = ["bundled"] }
-thiserror = "1"
-# V0.2.1 自动计时空闲保护:后台线程发系统通知"XX 已自动暂停"。capabilities 权限在 B4 处理。
-tauri-plugin-notification = "2"
+thiserror = "2"
+tauri-plugin-notification = "2.3"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6"
 
-# V0.2.1 空闲检测:GetLastInputInfo(上次键鼠输入 tick) + GetTickCount64(当前 tick)。
-# 仅 Windows 编译;非 Windows fallback 不检测(idle.rs)。任务注"若太重换轻方案"——
-# 只开 3 个 feature,编译面窄,可接受。
+# 空闲检测仅 Windows；feature 面保持最小。
 [target.'cfg(windows)'.dependencies]
 windows = { version = "0.58", features = [
     "Win32_Foundation",

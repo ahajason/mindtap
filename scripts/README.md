@@ -6,6 +6,11 @@ Windows 侧开发脚本胶水。**从 Windows 原生 PowerShell 跑,不要在 WS
 |---|---|
 | `dev.bat` | 在 Windows Explorer 里双击;等价于 `dev.ps1` 但绕开执行策略限制 |
 | `dev.ps1` | 在 PowerShell 里跑:`.\scripts\dev.ps1`,加 `-Reinstall` 重新装 deps |
+| `build-windows.bat` | 双击跑生产打包;等价于 `build-windows.ps1` |
+| `build-windows.ps1` | Windows 生产打包 → 产物写入项目根 `build\`（已 gitignore） |
+| `verify-install-data-safety.ps1` | 隔离验收：NSIS 静态断言 + 静默装/卸不删 SQLite（不碰真实 AppData） |
+| `repro-review-state.mjs` | release EXE 主窗启动冒烟（`npm run test:release-startup`） |
+| `pull-and-dev.bat` / `pull-and-dev.ps1` | `git pull origin develop` 后立刻起 dev |
 
 ---
 
@@ -39,20 +44,66 @@ cargo tauri --version
 **方式 1:双击**(最省事)
 
 ```
-在 Windows 资源管理器里打开 \\wsl$\Ubuntu\home\jason\workspace\mindtap\scripts\,
+在 Windows 资源管理器里打开项目 scripts\,
 双击 dev.bat
 ```
 
 **方式 2:命令行**
 
 ```powershell
-cd C:\Users\jason   # 任意位置都可以
-\\wsl$\Ubuntu\home\jason\workspace\mindtap\scripts\dev.ps1
+cd <项目根>
+.\scripts\dev.ps1
 # 或带参数:
-\\wsl$\Ubuntu\home\jason\workspace\mindtap\scripts\dev.ps1 -Reinstall
+.\scripts\dev.ps1 -Reinstall
 ```
 
 **Pin 到任务栏**:右键 `dev.bat` → 创建快捷方式 → 拖到任务栏。
+
+---
+
+## 生产打包（Windows）
+
+**前置**：与开发相同（Node 24 / Rust / MSVC C++ workload / WebView2）。`tauri.conf.json` 的 `bundle.targets` 已固定为 `["nsis"]`。
+
+```powershell
+cd <项目根>
+
+# 默认：release 构建 + 收集产物到 build\
+.\scripts\build-windows.ps1
+
+# 重装依赖 + 清空 build\ 再打包
+.\scripts\build-windows.ps1 -Reinstall -Clean
+
+# 只要裸 exe，不要 NSIS 安装包
+.\scripts\build-windows.ps1 -SkipBundle
+
+# 强制全量重编 cargo release（慢）
+.\scripts\build-windows.ps1 -CleanTarget
+```
+
+或双击 `scripts\build-windows.bat`。
+
+**产物**（均在项目根 `build\`，已写入 `.gitignore`）：
+
+| 文件 | 说明 |
+|---|---|
+| `mindtap.exe` | 便携裸二进制，可直接 `Start-Process` |
+| `mindtap_<version>_x64-setup.exe` | NSIS 安装包 |
+| `build-info.txt` | 版本 / git sha / 构建时间戳 |
+
+脚本会优先 `cargo tauri build`，没有 cargo-tauri 时 fallback 到 `npm run tauri -- build`；`beforeBuildCommand` 会自动跑 `npm run build`（tsc + 边界检查 + vite）。
+
+### 安装数据保护验收（隔离）
+
+**不启动**真实用户 profile 下的 mindtap.exe（Tauri 走 Known Folder，忽略 `APPDATA` 环境变量重定向）。
+
+```powershell
+# 先有 build\mindtap_*_x64-setup.exe
+npm run build:win
+.\scripts\verify-install-data-safety.ps1
+```
+
+覆盖：生成 NSIS 无 AppData 删除路径；沙箱 fixture → 静默安装/完整卸载字节不变；`init_connection` 语义保留。
 
 ---
 

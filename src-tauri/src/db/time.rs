@@ -110,12 +110,15 @@ mod tests {
     fn persist_tz_offset_writes_to_app_setting() {
         use rusqlite::Connection;
         let conn = Connection::open_in_memory().unwrap();
-        conn.execute_batch(crate::db::schema::CREATE_SQL).unwrap();
+        crate::db::init_connection(&conn).unwrap();
 
         persist_tz_offset(&conn);
 
         let saved = setting::get(&conn, "local_tz_offset_secs").unwrap();
-        assert!(saved.is_some(), "persist_tz_offset should write to app_setting");
+        assert!(
+            saved.is_some(),
+            "persist_tz_offset should write to app_setting"
+        );
         let offset: i64 = saved.unwrap().parse().unwrap();
         // 偏移应在合理范围内
         assert!(offset > -43200, "offset={offset} should be > -12h");

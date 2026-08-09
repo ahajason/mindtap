@@ -38,7 +38,12 @@ pub fn last_input_ms() -> Option<i64> {
 /// - last_active_at / now:UNIX epoch 毫秒
 /// - idle:空闲时长毫秒(与 now 相减得 idle 起点,不同时钟域但在同一扫描时刻取数)
 /// - idle_threshold_ms:空闲暂停阈值毫秒(由调用方从 app_setting 读取)
-pub fn should_auto_pause(last_active_at: Option<i64>, idle: Option<i64>, now: i64, idle_threshold_ms: i64) -> bool {
+pub fn should_auto_pause(
+    last_active_at: Option<i64>,
+    idle: Option<i64>,
+    now: i64,
+    idle_threshold_ms: i64,
+) -> bool {
     let Some(idle) = idle else { return false };
     if idle <= idle_threshold_ms {
         return false;
@@ -129,7 +134,12 @@ mod tests {
         let now = 1_000_000_000;
         let old_la = now - 20 * 60 * 1000;
         // 未超阈值(9 分钟 / 恰好 10 分钟)→ 不暂停
-        assert!(!should_auto_pause(Some(old_la), Some(9 * 60 * 1000), now, DEFAULT_IDLE_AUTO_PAUSE_MS));
+        assert!(!should_auto_pause(
+            Some(old_la),
+            Some(9 * 60 * 1000),
+            now,
+            DEFAULT_IDLE_AUTO_PAUSE_MS
+        ));
         assert!(!should_auto_pause(
             Some(old_la),
             Some(DEFAULT_IDLE_AUTO_PAUSE_MS),
@@ -137,7 +147,12 @@ mod tests {
             DEFAULT_IDLE_AUTO_PAUSE_MS
         ));
         // 超阈值 → 暂停
-        assert!(should_auto_pause(Some(old_la), Some(11 * 60 * 1000), now, DEFAULT_IDLE_AUTO_PAUSE_MS));
+        assert!(should_auto_pause(
+            Some(old_la),
+            Some(11 * 60 * 1000),
+            now,
+            DEFAULT_IDLE_AUTO_PAUSE_MS
+        ));
         // 卡 last_active_at 在 idle 起点之后(空闲前还在动)→ 不暂停
         assert!(!should_auto_pause(
             Some(now - 5 * 60 * 1000),
@@ -146,8 +161,18 @@ mod tests {
             DEFAULT_IDLE_AUTO_PAUSE_MS
         ));
         // 无 last_active_at / 无 idle(非 Windows fallback)→ 不暂停
-        assert!(!should_auto_pause(None, Some(11 * 60 * 1000), now, DEFAULT_IDLE_AUTO_PAUSE_MS));
-        assert!(!should_auto_pause(Some(old_la), None, now, DEFAULT_IDLE_AUTO_PAUSE_MS));
+        assert!(!should_auto_pause(
+            None,
+            Some(11 * 60 * 1000),
+            now,
+            DEFAULT_IDLE_AUTO_PAUSE_MS
+        ));
+        assert!(!should_auto_pause(
+            Some(old_la),
+            None,
+            now,
+            DEFAULT_IDLE_AUTO_PAUSE_MS
+        ));
     }
 
     // 自动暂停调用路径:mock last_input(idle 固定值) → 陈旧卡被 pause,新卡保持 active

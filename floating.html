@@ -29,12 +29,11 @@
             if (cmd === "plugin:event|listen") return 1;
             if (cmd === "plugin:event|unlisten") return null;
             if (cmd.startsWith("plugin:event|")) return null;
-            if (cmd === "timer_session_get_active") return null;
-            if (cmd === "timer_session_create") return { id: 1, task_title: "test", status: "active", started_at: null, paused_at: null, completed_at: null, focus_ms: 0, created_at: Date.now(), updated_at: Date.now() };
-            if (cmd === "timer_session_update_focus_ms") return null;
-            if (cmd === "timer_session_pause") return { id: 1, status: "paused", task_title: "test", started_at: null, paused_at: null, completed_at: null, focus_ms: 0, created_at: Date.now(), updated_at: Date.now() };
-            if (cmd === "timer_session_resume") return { id: 1, status: "active", task_title: "test", started_at: null, paused_at: null, completed_at: null, focus_ms: 0, created_at: Date.now(), updated_at: Date.now() };
-            if (cmd === "timer_session_complete") return { id: 1, status: "completed", task_title: "test", started_at: null, paused_at: null, completed_at: null, focus_ms: 0, created_at: Date.now(), updated_at: Date.now() };
+            if (cmd === "item_list") return [];
+            if (cmd === "item_create") return { id: 1, content: "test", type: "task", status: "todo", focus_ms: 0, last_active_at: null, progress_note: null, source: "manual", pending_ms: null, created_at: Date.now(), updated_at: Date.now() };
+            if (cmd === "item_start") return { item: { id: 1, content: "test", type: "task", status: "active", focus_ms: 0, last_active_at: Date.now(), progress_note: null, source: "manual", pending_ms: null, created_at: Date.now(), updated_at: Date.now() }, switched_from: [] };
+            if (cmd === "item_pause") return { item: { id: 1, content: "test", type: "task", status: "todo", focus_ms: 0, last_active_at: null, progress_note: null, source: "manual", pending_ms: null, created_at: Date.now(), updated_at: Date.now() }, pending_ms: null };
+            if (cmd === "item_complete") return { id: 1, content: "test", type: "task", status: "archived", focus_ms: 0, last_active_at: null, progress_note: null, source: "manual", pending_ms: null, created_at: Date.now(), updated_at: Date.now() };
             if (cmd === "app_exit") return null;
             return null;
           },

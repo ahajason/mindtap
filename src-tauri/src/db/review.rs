@@ -42,10 +42,7 @@ pub struct TimeRange {
 
 /// 获取今日复盘数据。
 /// `local_day_start` 由调用方传入(由 time::local_day_start_ms 计算),保持无状态。
-pub fn get_daily_review(
-    conn: &Connection,
-    local_day_start: i64,
-) -> Result<DailyReview, AppError> {
+pub fn get_daily_review(conn: &Connection, local_day_start: i64) -> Result<DailyReview, AppError> {
     let completed = get_completed_today(conn, local_day_start)?;
     let distribution = get_distribution_today(conn, local_day_start)?;
     let stale = get_stale_items(conn)?;
@@ -100,11 +97,15 @@ fn get_completed_today(conn: &Connection, day_start: i64) -> Result<Vec<Item>, A
             updated_at: row.get(10)?,
         })
     })?;
-    rows.collect::<rusqlite::Result<Vec<_>>>().map_err(AppError::from)
+    rows.collect::<rusqlite::Result<Vec<_>>>()
+        .map_err(AppError::from)
 }
 
 /// 今日专注分布:按 item 分组,sum focus_interval 的时长
-fn get_distribution_today(conn: &Connection, day_start: i64) -> Result<Vec<FocusDistribution>, AppError> {
+fn get_distribution_today(
+    conn: &Connection,
+    day_start: i64,
+) -> Result<Vec<FocusDistribution>, AppError> {
     let mut stmt = conn.prepare(
         "SELECT fi.item_id, i.content,
                 COALESCE(SUM(
@@ -127,7 +128,8 @@ fn get_distribution_today(conn: &Connection, day_start: i64) -> Result<Vec<Focus
             focus_ms: row.get(2)?,
         })
     })?;
-    rows.collect::<rusqlite::Result<Vec<_>>>().map_err(AppError::from)
+    rows.collect::<rusqlite::Result<Vec<_>>>()
+        .map_err(AppError::from)
 }
 
 /// 待确认卡: pending_ms IS NOT NULL, 未删除
@@ -154,7 +156,8 @@ fn get_stale_items(conn: &Connection) -> Result<Vec<Item>, AppError> {
             updated_at: row.get(10)?,
         })
     })?;
-    rows.collect::<rusqlite::Result<Vec<_>>>().map_err(AppError::from)
+    rows.collect::<rusqlite::Result<Vec<_>>>()
+        .map_err(AppError::from)
 }
 
 /// 今日未覆盖时段:找到 focus_interval 中 today 的完整区间,反向推导空档。
@@ -220,7 +223,7 @@ mod tests {
 
     fn fresh_db() -> Connection {
         let conn = Connection::open_in_memory().unwrap();
-        conn.execute_batch(crate::db::schema::CREATE_SQL).unwrap();
+        crate::db::init_connection(&conn).unwrap();
         conn
     }
 
@@ -362,7 +365,11 @@ mod tests {
         insert_item(&conn, "进行中B", "active", day_start + 500);
         // 待确认
         let stale_id = insert_item(&conn, "待确认C", "todo", day_start + 2000);
-        conn.execute("UPDATE item SET pending_ms = 30000 WHERE id = ?1", params![stale_id]).unwrap();
+        conn.execute(
+            "UPDATE item SET pending_ms = 30000 WHERE id = ?1",
+            params![stale_id],
+        )
+        .unwrap();
         // 专注分布
         let active_id = insert_item(&conn, "活跃D", "active", day_start + 100);
         insert_interval(&conn, active_id, day_start + 1000, Some(day_start + 3000));

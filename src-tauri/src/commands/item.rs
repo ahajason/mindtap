@@ -5,9 +5,7 @@
 use tauri::{AppHandle, Emitter, Manager, State};
 
 use crate::db::dormant::{self, DormantPayload};
-use crate::db::item::{
-    self, FocusInterval, Item, ListStatus, PauseResult, StartResult,
-};
+use crate::db::item::{self, FocusInterval, Item, ListStatus, PauseResult, StartResult};
 use crate::db::time;
 use crate::db::DbState;
 use crate::error::AppError;
@@ -18,7 +16,11 @@ fn emit_data_changed(app: &AppHandle) {
 }
 
 #[tauri::command]
-pub fn item_create(content: String, state: State<DbState>, app: AppHandle) -> Result<Item, AppError> {
+pub fn item_create(
+    content: String,
+    state: State<DbState>,
+    app: AppHandle,
+) -> Result<Item, AppError> {
     let conn = state.0.lock().map_err(|e| AppError(e.to_string()))?;
     let item = item::create(&conn, content)?;
     emit_data_changed(&app);
@@ -74,7 +76,12 @@ pub fn item_complete(id: i64, state: State<DbState>, app: AppHandle) -> Result<I
 }
 
 #[tauri::command]
-pub fn item_confirm_pending(id: i64, keep: bool, state: State<DbState>, app: AppHandle) -> Result<Item, AppError> {
+pub fn item_confirm_pending(
+    id: i64,
+    keep: bool,
+    state: State<DbState>,
+    app: AppHandle,
+) -> Result<Item, AppError> {
     let conn = state.0.lock().map_err(|e| AppError(e.to_string()))?;
     let item = item::confirm_pending(&conn, id, keep)?;
     emit_data_changed(&app);
@@ -82,7 +89,12 @@ pub fn item_confirm_pending(id: i64, keep: bool, state: State<DbState>, app: App
 }
 
 #[tauri::command]
-pub fn item_rename(id: i64, content: String, state: State<DbState>, app: AppHandle) -> Result<Item, AppError> {
+pub fn item_rename(
+    id: i64,
+    content: String,
+    state: State<DbState>,
+    app: AppHandle,
+) -> Result<Item, AppError> {
     let conn = state.0.lock().map_err(|e| AppError(e.to_string()))?;
     let item = item::rename(&conn, id, content)?;
     emit_data_changed(&app);
@@ -98,7 +110,11 @@ pub fn item_triage_todo(id: i64, state: State<DbState>, app: AppHandle) -> Resul
 }
 
 #[tauri::command]
-pub fn item_triage_archive(id: i64, state: State<DbState>, app: AppHandle) -> Result<Item, AppError> {
+pub fn item_triage_archive(
+    id: i64,
+    state: State<DbState>,
+    app: AppHandle,
+) -> Result<Item, AppError> {
     let conn = state.0.lock().map_err(|e| AppError(e.to_string()))?;
     let item = item::triage_archive(&conn, id)?;
     emit_data_changed(&app);
@@ -157,8 +173,8 @@ pub fn item_trigger_dormant(
     if !dev_mode {
         return Err(AppError("developer mode not enabled".to_string()));
     }
-    let item = item::get_by_id(&conn, id)?
-        .ok_or_else(|| AppError(format!("item {} not found", id)))?;
+    let item =
+        item::get_by_id(&conn, id)?.ok_or_else(|| AppError(format!("item {} not found", id)))?;
     let payload = DormantPayload {
         id: item.id,
         content: item.content.clone(),
@@ -196,9 +212,14 @@ pub fn item_get_idle(state: State<DbState>) -> Result<bool, AppError> {
     let now = time::now_ms();
     let conn = state.0.lock().map_err(|e| AppError(e.to_string()))?;
     let actives = item::list(&conn, ListStatus::Active, None)?;
-    Ok(actives
-        .iter()
-        .any(|it| crate::idle::should_auto_pause(it.last_active_at, idle, now, crate::idle::get_idle_ms(&conn))))
+    Ok(actives.iter().any(|it| {
+        crate::idle::should_auto_pause(
+            it.last_active_at,
+            idle,
+            now,
+            crate::idle::get_idle_ms(&conn),
+        )
+    }))
 }
 
 /// 列出已归档的卡(archived)。

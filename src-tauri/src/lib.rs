@@ -7,13 +7,13 @@ use tauri_plugin_notification::NotificationExt;
 pub mod commands;
 pub mod db;
 pub mod error;
-pub mod idle;
 pub mod foreground;
+pub mod idle;
 pub mod tray;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let builder = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         // V0.2.0.12 PATCH 对象 B:浮窗右键原生菜单需要 autostart_toggle。
         // 对照 V1.0 archive `.archive/src-tauri/src/lib.rs` 第 18-21 行;
@@ -121,15 +121,12 @@ pub fn run() {
                 }
             }
 
-            let db_state = db::init(app.handle());
-            match db_state {
-                Ok(state) => {
-                    app.manage(state);
-                    // V0.2.2: 统一后台线程,每 30s 执行多路扫描。
-                    // 1. 启动时: 立即执行一次失真检测(settle_dormant)
-                    // 2. 每 30s: 空闲自动暂停 + 失真检测 + 预留前台监听
-                    let app_handle = app.handle().clone();
-                    std::thread::spawn(move || {
+            // DbState 在 App::run 创建配置窗口前已完成注册，避免启动页 IPC 抢跑。
+            // V0.2.2: 统一后台线程,每 30s 执行多路扫描。
+            // 1. 启动时: 立即执行一次失真检测(settle_dormant)
+            // 2. 每 30s: 空闲自动暂停 + 失真检测 + 预留前台监听
+            let app_handle = app.handle().clone();
+            std::thread::spawn(move || {
                         // 辅助:emit floating:dormant + show bubble 窗口
                         fn emit_dormant(ah: &tauri::AppHandle, p: &crate::db::dormant::DormantPayload) {
                             let _ = ah.emit("floating:dormant", p);
@@ -225,19 +222,6 @@ pub fn run() {
                             }
                         }
                     });
-                }
-                Err(e) => {
-                    eprintln!("[setup] db init failed: {e}");
-                    app.dialog()
-                        .message(format!(
-                            "数据库初始化失败: {e}\n\n\
-                            应用无法启动。请删除 %APPDATA%\\com.mindtap.desktop\\projects.db 后重试。"
-                        ))
-                        .title("数据库错误")
-                        .buttons(MessageDialogButtons::Ok)
-                        .show(|_| {});
-                }
-            }
 
             Ok(())
         })
@@ -282,7 +266,26 @@ pub fn run() {
             // V0.2.2 P4 管理:回收站 + 永久删除。
             commands::item::item_list_deleted,
             commands::item::item_hard_delete,
-        ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        ]);
+
+    let app = match builder.build(tauri::generate_context!()) {
+        Ok(app) => app,
+        Err(err) => {
+            eprintln!("[startup] app build failed: {err}");
+            return;
+        }
+    };
+
+    match db::init(app.handle()) {
+        Ok(state) => {
+            app.manage(state);
+        }
+        Err(err) => {
+            // App::run 前事件循环尚未启动；不能使用 Tauri dialog，否则提示不会显示或可能阻塞。
+            eprintln!("[startup] db init failed: {err}");
+            return;
+        }
+    }
+
+    app.run(|_, _| {});
 }
