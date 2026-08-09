@@ -1,6 +1,8 @@
 # 用户本地配置（不进 git）
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
+.claude/**/*.lock
+.claude/**/cache/
 reasonix.toml
 
 # worktree（每个开发者本地路径不同，不进 git）
@@ -54,7 +56,11 @@ src-tauri/Cargo.lock
 .idea/
 .DS_Store
 Thumbs.db
+ehthumbs.db
+desktop.ini
 *.suo
+*.tsbuildinfo
+coverage/
 *.ntvs*
 *.njsproj
 *.sln
